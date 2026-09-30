@@ -1,0 +1,30 @@
+{
+  "name": "saju-engine",
+  "version": "0.1.0",
+  "description": "결정론적 사주팔자 계산 엔진 (Phase 1: 사주 원국 8글자 계산)",
+  "license": "MIT",
+  "type": "commonjs",
+  "main": "dist/src/index.js",
+  "types": "dist/src/index.d.ts",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "verify:boundaries": "ts-node src/verifyBoundaries.ts",
+    "verify:relations": "ts-node scripts/exhaustiveAudit.ts && ts-node scripts/exhaustiveAuditStem.ts",
+    "dev": "ts-node src/cli.ts",
+    "prompt": "ts-node src/promptCli.ts",
+    "interpret": "ts-node src/interpretCli.ts"
+  },
+  "dependencies": {
+    "lunar-javascript": "^1.7.3"
+  },
+  "devDependencies": {
+    "@types/jest": "^29.5.13",
+    "@types/node": "^20.14.10",
+    "jest": "^29.7.0",
+    "ts-jest": "^29.2.5",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.5.4"
+  }
+}

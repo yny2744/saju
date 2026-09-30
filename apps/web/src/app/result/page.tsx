@@ -1,0 +1,161 @@
+"use client";
+
+import { Suspense, useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
+import type { AnalyzeResultResponse, ApiErrorResponse } from "@/server/types";
+import { LoadingState, ErrorState } from "@/components/StatusScreens";
+import { ElementBadge } from "@/components/ElementBadge";
+import { AnalysisSection } from "@/components/AnalysisSection";
+
+type LoadState =
+  | { status: "loading" }
+  | { status: "error"; message: string }
+  | { status: "done"; data: AnalyzeResultResponse };
+
+const PILLAR_LABELS = [
+  { key: "year", label: "연주" },
+  { key: "month", label: "월주" },
+  { key: "day", label: "일주" },
+  { key: "hour", label: "시주" },
+] as const;
+
+function ResultBody() {
+  const searchParams = useSearchParams();
+  const id = searchParams.get("id");
+  const [state, setState] = useState<LoadState>({ status: "loading" });
+
+  useEffect(() => {
+    if (!id) {
+      setState({ status: "error", message: "잘못된 접근입니다. 다시 분석을 시작해주세요." });
+      return;
+    }
+
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch(`/api/saju/result/${encodeURIComponent(id)}`);
+        const data = await res.json();
+        if (cancelled) return;
+
+        if (!res.ok) {
+          const err = data as ApiErrorResponse;
+          setState({ status: "error", message: err.error?.message ?? "결과를 불러오지 못했습니다." });
+          return;
+        }
+        setState({ status: "done", data: data as AnalyzeResultResponse });
+      } catch {
+        if (!cancelled) {
+          setState({ status: "error", message: "네트워크 오류가 발생했습니다." });
+        }
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [id]);
+
+  if (state.status === "loading") {
+    return <LoadingState message="사주를 살펴보고 있어요..." />;
+  }
+
+  if (state.status === "error") {
+    return <ErrorState message={state.message} linkHref="/" linkLabel="다시 입력하러 가기" />;
+  }
+
+  const { nickname, saju, interpretation } = state.data;
+  const analysisEntries = Object.entries(interpretation.analysis as Record<string, unknown>);
+
+  return (
+    <main className="mx-auto min-h-screen max-w-xl px-5 pb-20 pt-12 sm:pt-16">
+      <header className="mb-8">
+        <p className="section-label mb-1.5">사주풀이 결과</p>
+        <h1 className="text-[26px] font-bold leading-snug">{nickname}님의 사주</h1>
+        <p className="mt-2 text-xs leading-relaxed" style={{ color: "var(--color-ink-faint)" }}>
+          {interpretation.disclaimer}
+        </p>
+      </header>
+
+      {/* 사주 원국 - 4기둥을 표 형태로 명확히 구분 */}
+      <section className="mb-8">
+        <h2 className="mb-3 text-base font-semibold">사주 원국</h2>
+        <div
+          className="grid grid-cols-4 divide-x divide-[var(--color-line)] rounded-xl"
+          style={{ borderWidth: 1, borderStyle: "solid", borderColor: "var(--color-line)" }}
+        >
+          {PILLAR_LABELS.map(({ key, label }) => (
+            <div key={key} className="px-2 py-4 text-center">
+              <div className="section-label mb-1.5">{label}</div>
+              <div className="text-lg font-bold" style={{ fontFamily: "var(--font-serif)" }}>
+                {saju.pillars[key]?.ganzhi ?? "－"}
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* 오행 · 십신 요약 */}
+      <section className="mb-8">
+        <h2 className="mb-3 text-base font-semibold">오행 · 십신</h2>
+        <div className="rounded-xl p-4" style={{ backgroundColor: "var(--color-paper-soft)" }}>
+          <div className="mb-2 flex flex-wrap items-center gap-2 text-sm">
+            <span style={{ color: "var(--color-ink-soft)" }}>우세 오행</span>
+            <ElementBadge element={interpretation.elements.dominant} />
+            {interpretation.elements.lacking && (
+              <>
+                <span className="ml-2" style={{ color: "var(--color-ink-soft)" }}>
+                  부족 오행
+                </span>
+                <ElementBadge element={interpretation.elements.lacking} />
+              </>
+            )}
+          </div>
+          <p className="mt-3 text-sm">
+            <span style={{ color: "var(--color-ink-soft)" }}>일간</span>{" "}
+            <b>{interpretation.tenGods.dayMaster}</b>
+          </p>
+          <p className="mt-1.5 text-sm leading-relaxed" style={{ color: "var(--color-ink-soft)" }}>
+            {interpretation.tenGods.summary}
+          </p>
+        </div>
+      </section>
+
+      {/* 상세 해석 - 문서형으로 제목+문단 구분 */}
+      <section className="mb-10">
+        <h2 className="mb-4 text-base font-semibold">상세 해석</h2>
+        <div className="space-y-6">
+          {analysisEntries.map(([key, value], i) => (
+            <div key={key}>
+              {i > 0 && <div className="hairline mb-6" />}
+              <AnalysisSection fieldKey={key} value={value} />
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <div className="space-y-2.5">
+        {id && (
+          <a href={`/products?resultId=${encodeURIComponent(id)}`} className="btn-primary block">
+            더 깊은 해석 보러가기 (유료)
+          </a>
+        )}
+        {id && (
+          <a href={`/fortune?resultId=${encodeURIComponent(id)}`} className="btn-secondary block">
+            오늘의 운세 보기
+          </a>
+        )}
+        <a href="/" className="block py-2 text-center text-sm underline underline-offset-4" style={{ color: "var(--color-ink-soft)" }}>
+          다시 분석하기
+        </a>
+      </div>
+    </main>
+  );
+}
+
+export default function ResultPage() {
+  return (
+    <Suspense fallback={<LoadingState message="불러오는 중..." />}>
+      <ResultBody />
+    </Suspense>
+  );
+}
