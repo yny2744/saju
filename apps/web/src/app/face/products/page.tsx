@@ -78,7 +78,9 @@ function FaceProductsBody() {
         successUrl: `${window.location.origin}/payment/success`,
         failUrl: `${window.location.origin}/payment/fail`,
       });
-    } catch {
+    } catch (err) {
+      // eslint-disable-next-line no-console
+      console.error("[관상 결제 시작 오류]", err);
       setError("결제 시작 중 오류가 발생했습니다.");
       setPurchasing(false);
     }
