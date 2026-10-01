@@ -4,6 +4,8 @@ import { Suspense, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import type { FortuneResultResponse, ApiErrorResponse } from "@/server/types";
 import { LoadingState, ErrorState } from "@/components/StatusScreens";
+import { CircularGauge } from "@/components/CircularGauge";
+import { fortuneStrengthScore } from "@/lib/fortuneScore";
 
 type LoadState =
   | { status: "loading" }
@@ -93,9 +95,18 @@ function FortuneBody() {
       </header>
 
       <section className="fortune-card mb-6">
-        <h2 className="mb-2 text-base font-semibold">오늘의 종합운</h2>
+        <h2 className="mb-3 text-base font-semibold">오늘의 종합운</h2>
+        <div className="mb-3 flex justify-center">
+          <CircularGauge
+            value={fortuneStrengthScore(fortune.relationToday.twelveStageOfDay)}
+            label={`오늘의 12운성 · ${fortune.relationToday.twelveStageOfDay}`}
+          />
+        </div>
         <p className="text-sm leading-relaxed" style={{ color: "var(--color-ink-soft)" }}>
           {result.summary}
+        </p>
+        <p className="mt-2 text-[11px]" style={{ color: "var(--color-ink-faint)" }}>
+          기운 지수는 전통 12운성 흐름을 참고한 지수이며, 과학적으로 확정된 값이 아닙니다.
         </p>
       </section>
 

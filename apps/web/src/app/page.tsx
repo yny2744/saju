@@ -88,6 +88,12 @@ export default function HomePage() {
   return (
     <main className="mx-auto min-h-screen max-w-md px-5 pb-16 pt-12 sm:pt-16">
       <header className="mb-8">
+        <p
+          className="mb-2.5 text-sm font-semibold"
+          style={{ fontFamily: "var(--font-serif)", color: "var(--color-accent)" }}
+        >
+          류결사주
+        </p>
         <div className="mb-3 flex flex-wrap gap-1.5">
           {["무료", "회원가입 불필요", "약 1분 소요"].map((badge) => (
             <span

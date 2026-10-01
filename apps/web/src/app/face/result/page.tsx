@@ -4,6 +4,7 @@ import { Suspense, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import type { FaceResultResponse, FaceApiErrorResponse } from "@/server/face/types";
 import { LoadingState, ErrorState } from "@/components/StatusScreens";
+import { faceTypeName } from "@/lib/faceType";
 
 type LoadState = { status: "loading" } | { status: "error"; message: string } | { status: "done"; data: FaceResultResponse };
 
@@ -50,13 +51,19 @@ function FaceResultBody() {
   if (state.status === "loading") return <LoadingState message="관상 풀이를 준비하고 있어요..." />;
   if (state.status === "error") return <ErrorState message={state.message} linkHref="/face" linkLabel="다시 시작하기" />;
 
-  const { nickname, result } = state.data;
+  const { nickname, result, buckets } = state.data;
 
   return (
     <main className="mx-auto min-h-screen max-w-xl px-5 pb-20 pt-12 sm:pt-16">
       <header className="mb-8">
         <p className="section-label mb-1.5">관상 풀이 결과</p>
         <h1 className="text-[26px] font-bold leading-snug">{nickname}님의 관상</h1>
+        <span
+          className="mt-2 inline-block rounded-full px-3 py-1 text-xs font-semibold"
+          style={{ backgroundColor: "var(--color-accent-soft)", color: "var(--color-accent)" }}
+        >
+          관상 유형 · {faceTypeName(buckets)}
+        </span>
         <p className="mt-2 text-xs leading-relaxed" style={{ color: "var(--color-ink-faint)" }}>
           {result.disclaimer}
         </p>

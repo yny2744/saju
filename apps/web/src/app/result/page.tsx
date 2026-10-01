@@ -5,6 +5,16 @@ import { useSearchParams } from "next/navigation";
 import type { AnalyzeResultResponse, ApiErrorResponse } from "@/server/types";
 import { LoadingState, ErrorState } from "@/components/StatusScreens";
 import { ElementBadge } from "@/components/ElementBadge";
+import { ElementRadarChart } from "@/components/ElementRadarChart";
+import { ShareCard } from "@/components/ShareCard";
+
+const ELEMENT_TAGLINE: Record<string, string> = {
+  목: "성장하고 뻗어나가는 기운",
+  화: "열정적이고 밝게 타오르는 기운",
+  토: "안정적이고 중심을 잡아주는 기운",
+  금: "단단하고 결단력 있는 기운",
+  수: "유연하고 지혜로운 기운",
+};
 import { AnalysisSection } from "@/components/AnalysisSection";
 
 type LoadState =
@@ -98,7 +108,10 @@ function ResultBody() {
       <section className="mb-8">
         <h2 className="mb-3 text-base font-semibold">오행 · 십신</h2>
         <div className="rounded-xl p-4" style={{ backgroundColor: "var(--color-paper-soft)" }}>
-          <div className="mb-2 flex flex-wrap items-center gap-2 text-sm">
+          <div className="mx-auto mb-2 aspect-square w-full max-w-[220px]">
+            <ElementRadarChart counts={saju.elements.summary.counts} />
+          </div>
+          <div className="mb-2 flex flex-wrap items-center justify-center gap-2 text-sm">
             <span style={{ color: "var(--color-ink-soft)" }}>우세 오행</span>
             <ElementBadge element={interpretation.elements.dominant} />
             {interpretation.elements.lacking && (
@@ -131,6 +144,17 @@ function ResultBody() {
             </div>
           ))}
         </div>
+      </section>
+
+      {/* 공유용 결과 카드 - 생년월일/출생시간/출생도시는 포함하지 않는다 */}
+      <section className="mb-10">
+        <h2 className="mb-4 text-base font-semibold">결과 카드 공유하기</h2>
+        <ShareCard
+          nickname={nickname}
+          dominant={interpretation.elements.dominant}
+          counts={saju.elements.summary.counts}
+          tagline={ELEMENT_TAGLINE[interpretation.elements.dominant] ?? ""}
+        />
       </section>
 
       <div className="space-y-2.5">
