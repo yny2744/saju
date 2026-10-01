@@ -31,11 +31,19 @@ interface RatioSpec {
   thresholds: [number, number];
 }
 
+/**
+ * ⚠️ 2026-10 실기기 테스트 중 foreheadHeightRatio/noseLengthToWidthRatio가
+ * 정상적인 얼굴 사진에서도 범위를 벗어나 거부되는 문제가 있었다 (원인은
+ * faceRatios.ts의 랜드마크 선택 오류 - 그쪽을 먼저 수정했다). 같은 문제가
+ * 재발해도 바로 재촬영을 요구하지 않도록, 두 항목은 범위를 더 넉넉하게
+ * 넓혀뒀다 - 진짜 "얼굴이 아닌 사진"을 거르는 용도이지, 비율을 정교하게
+ * 재단하는 용도가 아니기 때문이다.
+ */
 const RATIO_SPECS: RatioSpec[] = [
   { key: "faceLengthToWidthRatio", min: 0.8, max: 2.2, thresholds: [1.25, 1.5] },
-  { key: "foreheadHeightRatio", min: 0.15, max: 0.5, thresholds: [0.28, 0.36] },
+  { key: "foreheadHeightRatio", min: 0.05, max: 0.65, thresholds: [0.28, 0.36] },
   { key: "eyeSpacingRatio", min: 0.4, max: 1.6, thresholds: [0.85, 1.05] },
-  { key: "noseLengthToWidthRatio", min: 1.0, max: 3.5, thresholds: [1.8, 2.3] },
+  { key: "noseLengthToWidthRatio", min: 0.5, max: 4.5, thresholds: [1.8, 2.3] },
   { key: "mouthWidthRatio", min: 0.25, max: 0.65, thresholds: [0.4, 0.48] },
   { key: "jawWidthRatio", min: 0.4, max: 1.1, thresholds: [0.72, 0.85] },
 ];

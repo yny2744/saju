@@ -21,12 +21,13 @@ function fixtureLandmarks(): Point2D[] {
   set(263, 0.65, 0.4); // eyeRightOuter -> eyeWidthRight = 0.1, eyeSpacing = 0.1
   set(6, 0.5, 0.45); // noseBridge
   set(2, 0.5, 0.6); // noseBase -> noseLength = 0.15
-  set(1, 0.5, 0.62); // noseTip -> noseWidth = 0.02
+  set(129, 0.47, 0.58); // noseAlaLeft
+  set(358, 0.53, 0.58); // noseAlaRight -> noseWidth = 0.06
   set(61, 0.4, 0.75); // mouthLeft
   set(291, 0.6, 0.75); // mouthRight -> mouthWidth = 0.2
   set(172, 0.32, 0.8); // jawLeft
   set(397, 0.68, 0.8); // jawRight -> jawWidth = 0.36
-  set(9, 0.5, 0.42); // glabella -> foreheadHeight = 0.32
+  set(168, 0.5, 0.42); // glabella(코대 상단) -> foreheadHeight = 0.32
 
   return points;
 }
@@ -42,7 +43,7 @@ describe("computeFaceRatios (지시서 4조 - 좌표 축약 계산)", () => {
     expect(ratios.faceLengthToWidthRatio).toBeCloseTo(0.8 / 0.4, 5); // 2.0
     expect(ratios.foreheadHeightRatio).toBeCloseTo(0.32 / 0.8, 5); // 0.4
     expect(ratios.eyeSpacingRatio).toBeCloseTo(0.1 / 0.1, 5); // 1.0
-    expect(ratios.noseLengthToWidthRatio).toBeCloseTo(0.15 / 0.02, 5); // 7.5
+    expect(ratios.noseLengthToWidthRatio).toBeCloseTo(0.15 / 0.06, 5); // 2.5
     expect(ratios.mouthWidthRatio).toBeCloseTo(0.2 / 0.4, 5); // 0.5
     expect(ratios.jawWidthRatio).toBeCloseTo(0.36 / 0.4, 5); // 0.9
   });

@@ -10,9 +10,17 @@
  * 인덱스 출처: MediaPipe Face Mesh의 공개된 468/478포인트 표준 토폴로지에서
  * 널리 쓰이는 지점들이다 (예: 10=이마 상단, 152=턱 끝, 234/454=좌우 광대,
  * 33/133/362/263=좌우 눈 안쪽·바깥쪽 모서리, 1=코끝, 61/291=입 양끝).
- * ⚠️ 실기기 카메라로 직접 검증하지는 못했다 - 최종 보고서에 "실제 브라우저에서
- * 확인하지 못한 항목"으로 명시한다. 좌표가 어긋나 보이면 이 인덱스 상수만
- * 조정하면 된다(로직 자체는 바꿀 필요 없음).
+ *
+ * ⚠️ 2026-10 실기기 수정 이력: 처음 배포 후 실제 카메라로 테스트해보니
+ * 이마/코 비율이 "범위를 벗어났다"며 거부되는 문제가 발견됐다. 원인은 두 가지:
+ *   1) 코 너비를 코끝(1)-코밑(2) 축(세로 방향)으로 재고 있었다 - 이건 애초에
+ *      "너비"가 아니라 "길이" 방향이라 로직 자체가 잘못됐었다. 콧망울 좌우
+ *      (129, 358)로 교체했다.
+ *   2) 이마 높이의 기준점으로 쓰던 index 9(미간)가 foreheadTop(10)과 너무
+ *      가까운 지점이라 둘 사이 거리가 거의 0에 수렴했다. 충분히 떨어진
+ *      콧대 상단(168)으로 교체했다.
+ * 이 두 건 외의 나머지 지점은 아직 실기기로 추가 검증 중이다 - 비율이 계속
+ * 이상하게 나오면 이 LANDMARK 상수만 조정하면 된다(로직 자체는 안 바꿔도 됨).
  */
 export interface Point2D {
   x: number;
@@ -28,15 +36,23 @@ const LANDMARK = {
   eyeLeftInner: 133,
   eyeRightInner: 362,
   eyeRightOuter: 263,
-  noseTip: 1,
   noseBridge: 6,
   noseBase: 2,
+  /** 코 너비는 콧망울(좌우 nostril ala) 사이 거리로 잰다 - 코끝-코밑 축은
+   *  세로(길이) 방향이라 너비 측정에 쓰면 안 된다 (실기기 테스트에서 발견/수정). */
+  noseAlaLeft: 129,
+  noseAlaRight: 358,
   mouthLeft: 61,
   mouthRight: 291,
   jawLeft: 172,
   jawRight: 397,
-  /** 눈썹 사이(미간) 지점 - 이마 비율 계산의 기준점 */
-  glabella: 9,
+  /**
+   * 미간(눈썹 사이) 지점 - 이마 비율 계산의 기준점.
+   * 기존에 index 9를 썼으나 foreheadTop(10)과 너무 가까운 지점이라 둘 사이
+   * 거리가 거의 0에 수렴해 비율이 깨졌다 (실기기 테스트에서 발견). 코·눈 사이
+   * 콧대 상단(168)은 10과 충분히 떨어져 있어 더 안정적으로 측정된다.
+   */
+  glabella: 168,
 } as const;
 
 export interface FaceRatios {
@@ -80,7 +96,7 @@ export function computeFaceRatios(landmarks: Point2D[]): FaceRatios {
   const eyeWidthRight = dist(p(LANDMARK.eyeRightInner), p(LANDMARK.eyeRightOuter));
   const eyeSpacing = dist(p(LANDMARK.eyeLeftInner), p(LANDMARK.eyeRightInner));
   const noseLength = dist(p(LANDMARK.noseBridge), p(LANDMARK.noseBase));
-  const noseWidth = dist(p(LANDMARK.noseTip), p(LANDMARK.noseBase)) || 1e-6;
+  const noseWidth = dist(p(LANDMARK.noseAlaLeft), p(LANDMARK.noseAlaRight)) || 1e-6;
   const mouthWidth = dist(p(LANDMARK.mouthLeft), p(LANDMARK.mouthRight));
   const jawWidth = dist(p(LANDMARK.jawLeft), p(LANDMARK.jawRight));
   const foreheadHeight = dist(p(LANDMARK.foreheadTop), p(LANDMARK.glabella));
