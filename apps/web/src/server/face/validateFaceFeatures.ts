@@ -104,8 +104,11 @@ export function validateFaceAnalyzeInput(body: FaceAnalyzeRequestBody): FaceVali
     if (!isFiniteNumber(value)) {
       issues.push(`features.${spec.key}: 숫자 값이 필요합니다.`);
     } else if (value < spec.min || value > spec.max) {
+      // 디버깅 목적으로 실제 계산값을 메시지에 그대로 포함한다 (실기기 테스트
+      // 중 랜드마크 지점 선택 오류를 두 차례 겪었다 - 추측 대신 실측값을 보고
+      // 정확히 보정하기 위함). 서비스 안정화 후에는 더 간결한 문구로 정리한다.
       issues.push(
-        `features.${spec.key}: 얼굴 인식 결과가 올바르지 않습니다 (범위 ${spec.min}~${spec.max} 벗어남). 정면 사진으로 다시 시도해주세요.`
+        `features.${spec.key}: 얼굴 인식 결과가 올바르지 않습니다 (실측값 ${value}, 허용 범위 ${spec.min}~${spec.max}). 정면 사진으로 다시 시도해주세요.`
       );
     }
   }
