@@ -79,9 +79,11 @@ function FaceProductsBody() {
         failUrl: `${window.location.origin}/payment/fail`,
       });
     } catch (err) {
+      const tossCode = (err as { code?: string })?.code;
+      const tossMessage = (err as { message?: string })?.message;
       // eslint-disable-next-line no-console
-      console.error("[관상 결제 시작 오류]", err);
-      setError("결제 시작 중 오류가 발생했습니다.");
+      console.error("[관상 결제 시작 오류]", { code: tossCode, message: tossMessage, raw: err });
+      setError(`결제 시작 중 오류가 발생했습니다.${tossCode ? ` (code: ${tossCode})` : ""}`);
       setPurchasing(false);
     }
   }

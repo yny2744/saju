@@ -88,10 +88,14 @@ function ProductsBody() {
       // requestPayment가 성공하면 브라우저가 Toss 결제창으로 리다이렉트되므로
       // 이 아래 코드는 보통 실행되지 않는다.
     } catch (err) {
-      // 원인 파악을 위해 콘솔에 실제 에러를 남긴다 (사용자에게 노출되는 문구는 그대로 안전하게 유지).
+      // Toss SDK 에러 객체는 .code/.message를 따로 들고 있는 경우가 많아, 그냥
+      // console.error(err)만 찍으면 DevTools에서 접어놓은 상태로는 안 보일 수 있다.
+      // 진단을 위해 꺼내서 명시적으로 같이 찍는다 (사용자에게 노출되는 문구는 그대로 안전하게 유지).
+      const tossCode = (err as { code?: string })?.code;
+      const tossMessage = (err as { message?: string })?.message;
       // eslint-disable-next-line no-console
-      console.error("[결제 시작 오류]", err);
-      setError("결제 시작 중 오류가 발생했습니다.");
+      console.error("[결제 시작 오류]", { code: tossCode, message: tossMessage, raw: err });
+      setError(`결제 시작 중 오류가 발생했습니다.${tossCode ? ` (code: ${tossCode})` : ""}`);
       setPurchasing(null);
     }
   }
