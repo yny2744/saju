@@ -2,24 +2,13 @@
 
 import { Suspense, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import Script from "next/script";
+import { loadTossPayments, ANONYMOUS } from "@tosspayments/tosspayments-sdk";
 
 interface ProductDefinition {
   productType: "FREE_BASIC" | "BASIC" | "PREMIUM" | "FACE_PREMIUM";
   name: string;
   priceKRW: number;
   features: string[];
-}
-
-declare global {
-  interface Window {
-    TossPayments?: (clientKey: string) => {
-      requestPayment: (
-        method: string,
-        options: { amount: number; orderId: string; orderName: string; successUrl: string; failUrl: string }
-      ) => Promise<void>;
-    };
-  }
 }
 
 /**
@@ -73,15 +62,17 @@ function FaceProductsBody() {
       sessionStorage.setItem("phase5_orderToken", data.orderToken);
 
       const clientKey = process.env.NEXT_PUBLIC_TOSS_CLIENT_KEY;
-      if (!clientKey || !window.TossPayments) {
+      if (!clientKey) {
         setError("결제 모듈을 불러오지 못했습니다. 잠시 후 다시 시도해주세요.");
         setPurchasing(false);
         return;
       }
 
-      const tossPayments = window.TossPayments(clientKey);
-      await tossPayments.requestPayment("카드", {
-        amount: data.amountKRW,
+      const tossPayments = await loadTossPayments(clientKey);
+      const payment = tossPayments.payment({ customerKey: ANONYMOUS });
+      await payment.requestPayment({
+        method: "CARD",
+        amount: { currency: "KRW", value: data.amountKRW },
         orderId: data.orderId,
         orderName: data.productName,
         successUrl: `${window.location.origin}/payment/success`,
@@ -95,7 +86,6 @@ function FaceProductsBody() {
 
   return (
     <main className="mx-auto min-h-screen max-w-xl px-5 pb-20 pt-12 sm:pt-16">
-      <Script src="https://js.tosspayments.com/v1" strategy="afterInteractive" />
       <header className="mb-8">
         <p className="section-label mb-1.5">관상 심층 해석</p>
         <h1 className="text-[26px] font-bold leading-snug">인연 관상까지, 더 깊은 해석</h1>
