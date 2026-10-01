@@ -1,14 +1,23 @@
-import { calculateSaju, AIInterpretationFailedError, getCurrentKstYear } from "saju-engine";
+import { calculateSaju, generateSajuFreeInterpretation, getCurrentKstYear } from "saju-engine";
 import type { AnalyzeResultResponse, ValidatedAnalyzeInput } from "./types";
-import { getInterpretationEngine } from "./aiEngineProvider";
 
 /**
  * 지시서 6조: "API는 연결과 요청/응답 관리 역할만 담당한다" - 이 함수가 바로 그
- * 연결 지점이다. 여기서 사주 계산 로직이나 AI 해석 로직을 새로 작성하지 않고,
- * 이미 완성된 calculateSaju()와 AIInterpretationEngine을 순서대로 호출한다.
+ * 연결 지점이다. 여기서 사주 계산 로직이나 해석 로직을 새로 작성하지 않고,
+ * 이미 완성된 calculateSaju()와 규칙 기반 해석 생성기를 순서대로 호출한다.
  *
  *   calculateSaju()  → SajuJson (Saju Engine, Phase 1~2)
- *   engine.interpret() → InterpretationResult (AI Interpretation Engine, Phase 3)
+ *   generateSajuFreeInterpretation() → InterpretationResult (규칙 기반, AI 미사용)
+ *
+ * ⚠️ 2026-10 수정: 이 엔드포인트(/api/saju/analyze)는 validateAnalyzeInput.ts가
+ * productType을 FREE_BASIC 하나로만 제한하고 있어(SUPPORTED_PRODUCT_TYPES_PHASE4),
+ * 사실상 "무료 사주 맛보기" 전용이다. 기존에는 이 무료 경로도 유료 상품과 동일하게
+ * AIInterpretationEngine(Gemini/Anthropic)을 호출했는데, 이는 오늘의 운세·관상
+ * 무료판이 이미 지켜온 "무료는 AI 비용 없이" 원칙과 어긋났고, 실제로 방문자가
+ * 늘어나는 상황(예: 일 1,000명)에서 AI 호출 비용·속도 제한을 감당할 수 없는
+ * 구조였다. 그래서 무료 경로를 규칙 기반(generateSajuFreeInterpretation)으로
+ * 교체한다 - 유료(BASIC/PREMIUM) 경로(paidInterpretation.ts)는 전혀 건드리지
+ * 않았고, 거기는 여전히 AI를 그대로 사용한다.
  */
 export class SajuCalculationError extends Error {
   constructor(message: string) {
@@ -59,17 +68,13 @@ export async function analyzeSaju(input: ValidatedAnalyzeInput): Promise<Analyze
     throw new SajuCalculationError("사주 계산에 실패했습니다. 입력값을 다시 확인해주세요.");
   }
 
-  const engine = getInterpretationEngine();
-
   try {
-    const interpretation = await engine.interpret(saju, { productType: input.productType });
+    const interpretation = generateSajuFreeInterpretation(saju);
     return { nickname: input.nickname, saju, interpretation };
   } catch (err) {
+    // 규칙 기반이라 정상적으로는 실패하지 않지만(결정론적 순수 함수), 방어적으로 남겨둔다.
     // eslint-disable-next-line no-console
-    console.error("[phase4] AI Interpretation Engine 실패:", err);
-    if (err instanceof AIInterpretationFailedError) {
-      throw new AiInterpretationError("AI 해석 생성에 실패했습니다. 잠시 후 다시 시도해주세요.");
-    }
-    throw new AiInterpretationError("AI 해석 처리 중 알 수 없는 오류가 발생했습니다.");
+    console.error("[phase10] 무료 사주 해석 생성 실패:", err);
+    throw new AiInterpretationError("해석 생성에 실패했습니다. 잠시 후 다시 시도해주세요.");
   }
 }
