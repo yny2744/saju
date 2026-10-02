@@ -13,7 +13,11 @@ type Status = "idle" | "loading" | "error" | "done";
  * 만들어 MediaPipe(브라우저 WASM)로 분석한 뒤, 결과(비율 6개 + 신뢰도)만
  * onFeaturesExtracted로 부모에게 넘기고 이미지 객체 URL은 즉시 해제한다.
  */
-export function FaceCapture({ onFeaturesExtracted }: { onFeaturesExtracted: (features: FaceFeatureResult) => void }) {
+export function FaceCapture({
+  onFeaturesExtracted,
+}: {
+  onFeaturesExtracted: (features: FaceFeatureResult, photoDataUrl: string | null) => void;
+}) {
   const [consent, setConsent] = useState(false);
   const [status, setStatus] = useState<Status>("idle");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -32,7 +36,13 @@ export function FaceCapture({ onFeaturesExtracted }: { onFeaturesExtracted: (fea
       const image = await loadImage(objectUrl);
       const features = await extractFaceFeatures(image);
       setStatus("done");
-      onFeaturesExtracted(features);
+      // 결과 화면에서 "내 사진"을 보여주면 체감 품질이 크게 달라진다는 벤치마킹
+      // 결과를 반영했다 - 단, 서버로는 절대 보내지 않는다. 작은 썸네일로 축소해서
+      // 브라우저 sessionStorage에만 잠깐 보관하고(결과 화면 이동 시 state가 날아가므로),
+      // 이 탭을 닫으면 사라진다. 원본 이미지 자체는 여기서 만든 작은 복사본일 뿐,
+      // 원본 File/objectUrl은 아래 finally에서 그대로 해제한다.
+      const thumbnail = createThumbnail(image, 360);
+      onFeaturesExtracted(features, thumbnail);
     } catch (err) {
       setStatus("error");
       setErrorMessage(toUserMessage(err));
@@ -95,6 +105,22 @@ export function FaceCapture({ onFeaturesExtracted }: { onFeaturesExtracted: (fea
       )}
     </div>
   );
+}
+
+/** 결과 화면 표시용 작은 썸네일만 생성한다 (서버 전송 없음, 브라우저 메모리 내 처리). */
+function createThumbnail(image: HTMLImageElement, maxSize: number): string | null {
+  try {
+    const scale = Math.min(1, maxSize / Math.max(image.naturalWidth, image.naturalHeight));
+    const canvas = document.createElement("canvas");
+    canvas.width = Math.round(image.naturalWidth * scale);
+    canvas.height = Math.round(image.naturalHeight * scale);
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return null;
+    ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
+    return canvas.toDataURL("image/jpeg", 0.75);
+  } catch {
+    return null; // 썸네일 생성에 실패해도 분석 자체는 계속 진행한다 (부가 기능일 뿐).
+  }
 }
 
 function loadImage(src: string): Promise<HTMLImageElement> {

@@ -4,6 +4,7 @@ import { Suspense, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import type { FaceResultResponse, FaceApiErrorResponse } from "@/server/face/types";
 import { LoadingState, ErrorState } from "@/components/StatusScreens";
+import { FaceRadarChart } from "@/components/FaceRadarChart";
 import { faceTypeName } from "@/lib/faceType";
 
 type LoadState = { status: "loading" } | { status: "error"; message: string } | { status: "done"; data: FaceResultResponse };
@@ -21,6 +22,19 @@ function FaceResultBody() {
   const searchParams = useSearchParams();
   const id = searchParams.get("id");
   const [state, setState] = useState<LoadState>({ status: "loading" });
+  const [photoDataUrl, setPhotoDataUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    // 사진은 서버에서 받아오는 게 아니라, 촬영 직후 같은 브라우저 탭의
+    // sessionStorage에 잠깐 저장해둔 것을 읽어올 뿐이다 (없으면 그냥 생략 -
+    // 예: 결과 링크를 다른 기기에서 열었거나 탭을 새로 연 경우).
+    if (!id) return;
+    try {
+      setPhotoDataUrl(sessionStorage.getItem(`face_photo_${id}`));
+    } catch {
+      setPhotoDataUrl(null);
+    }
+  }, [id]);
 
   useEffect(() => {
     if (!id) {
@@ -57,17 +71,39 @@ function FaceResultBody() {
     <main className="mx-auto min-h-screen max-w-xl px-5 pb-20 pt-12 sm:pt-16">
       <header className="mb-8">
         <p className="section-label mb-1.5">관상 풀이 결과</p>
-        <h1 className="text-[26px] font-bold leading-snug">{nickname}님의 관상</h1>
-        <span
-          className="mt-2 inline-block rounded-full px-3 py-1 text-xs font-semibold"
-          style={{ backgroundColor: "var(--color-accent-soft)", color: "var(--color-accent)" }}
-        >
-          관상 유형 · {faceTypeName(buckets)}
-        </span>
-        <p className="mt-2 text-xs leading-relaxed" style={{ color: "var(--color-ink-faint)" }}>
+        <div className="flex items-center gap-4">
+          {photoDataUrl && (
+            // eslint-disable-next-line @next/next/no-img-element -- 서버를 거치지 않는 브라우저 로컬 데이터 URL이라 next/image 최적화 대상이 아니다.
+            <img
+              src={photoDataUrl}
+              alt=""
+              className="h-20 w-20 shrink-0 rounded-full object-cover"
+              style={{ border: "2px solid var(--color-line)" }}
+            />
+          )}
+          <div>
+            <h1 className="text-[26px] font-bold leading-snug">{nickname}님의 관상</h1>
+            <span
+              className="mt-2 inline-block rounded-full px-3 py-1 text-xs font-semibold"
+              style={{ backgroundColor: "var(--color-accent-soft)", color: "var(--color-accent)" }}
+            >
+              관상 유형 · {faceTypeName(buckets)}
+            </span>
+          </div>
+        </div>
+        <p className="mt-3 text-xs leading-relaxed" style={{ color: "var(--color-ink-faint)" }}>
           {result.disclaimer}
         </p>
       </header>
+
+      <section className="mb-8 rounded-xl p-4" style={{ backgroundColor: "var(--color-paper-soft)" }}>
+        <h2 className="mb-2 text-center text-sm font-semibold" style={{ color: "var(--color-ink-soft)" }}>
+          특징 분포
+        </h2>
+        <div className="mx-auto aspect-square w-full max-w-[220px]">
+          <FaceRadarChart buckets={buckets} />
+        </div>
+      </section>
 
       <section className="mb-8">
         <h2 className="mb-4 text-base font-semibold">얼굴 특징 풀이</h2>

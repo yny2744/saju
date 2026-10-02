@@ -168,7 +168,7 @@ function ResultBody() {
             오늘의 운세 보기
           </a>
         )}
-        <a href="/" className="block py-2 text-center text-sm underline underline-offset-4" style={{ color: "var(--color-ink-soft)" }}>
+        <a href="/start" className="block py-2 text-center text-sm underline underline-offset-4" style={{ color: "var(--color-ink-soft)" }}>
           다시 분석하기
         </a>
       </div>

@@ -16,7 +16,7 @@ export default function FaceEntryPage() {
   const [submitting, setSubmitting] = useState(false);
   const [issues, setIssues] = useState<string[]>([]);
 
-  async function handleFeatures(features: FaceFeatureResult) {
+  async function handleFeatures(features: FaceFeatureResult, photoDataUrl: string | null) {
     if (!nickname.trim()) {
       setIssues(["닉네임을 입력해주세요."]);
       return;
@@ -42,6 +42,18 @@ export default function FaceEntryPage() {
         setIssues(data?.error?.issues ?? [data?.error?.message ?? "분석 요청에 실패했습니다."]);
         setSubmitting(false);
         return;
+      }
+
+      // 사진은 서버에 보내지 않고, 이 브라우저 탭의 sessionStorage에만 잠깐
+      // 보관해서 결과 화면에서 "내 사진"을 같이 보여주는 데 쓴다. 탭을 닫거나
+      // 다른 기기/브라우저에서 같은 결과 링크를 열면 사진 없이 텍스트만 보인다
+      // (사진이 서버를 거치지 않았으니 당연한 동작이고, 의도된 설계다).
+      if (photoDataUrl) {
+        try {
+          sessionStorage.setItem(`face_photo_${data.id}`, photoDataUrl);
+        } catch {
+          // sessionStorage 용량 초과 등은 무시한다 - 사진 미리보기는 부가 기능일 뿐이다.
+        }
       }
 
       router.push(`/face/result?id=${encodeURIComponent(data.id)}`);

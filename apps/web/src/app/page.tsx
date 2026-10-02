@@ -1,294 +1,76 @@
-"use client";
-
-import { useState } from "react";
-import { useRouter } from "next/navigation";
-
-type CalendarType = "solar" | "lunar";
-type Gender = "male" | "female";
-type ZiHourMethod = "standard" | "yaja_joja_split";
-
-interface FormState {
-  nickname: string;
-  gender: Gender;
-  calendarType: CalendarType;
-  date: string;
-  time: string;
-  timeUnknown: boolean;
-  birthCity: string;
-  applySolarTimeCorrection: boolean;
-  ziHourMethod: ZiHourMethod;
-}
-
-const initialState: FormState = {
-  nickname: "",
-  gender: "female",
-  calendarType: "solar",
-  date: "",
-  time: "",
-  timeUnknown: false,
-  birthCity: "",
-  applySolarTimeCorrection: false,
-  ziHourMethod: "standard",
-};
+import { Footer } from "@/components/Footer";
 
 /**
- * 지시서 22/23조: 입력 화면 + 분석 중 로딩 처리 + 중복 제출 방지.
- * 지시서 10조: 출생정보를 URL에 절대 넣지 않는다 - 여기서는 fetch body로만 보내고,
- * 성공하면 서버가 발급한 id만으로 /result?id=... 로 이동한다.
+ * 지시서: "서비스 소개 + 가격 + 시작하기 버튼" 수준의 최소 랜딩 화면.
+ * 특정 브랜드 톤(용사주식 정통 포지셔닝 / 청월당식 캐주얼 포지셔닝)을
+ * 아직 정하지 않았으므로 중립적으로 작성했다 - 양동전략의 실제 랜딩은
+ * Phase 15(랜딩페이지 생성기)에서 제대로 만든다. 이 화면은 Toss 가맹 심사와
+ * 당장의 서비스 오픈을 위한 최소 버전이다.
  *
- * Phase 8: 화면 구성만 개선했다 - 요청 바디/엔드포인트/에러 처리 흐름은 그대로다.
+ * 서버 컴포넌트로 작성했다 - 입력 폼(상태/이벤트 필요)은 /start로 분리되어
+ * 있어서 이 페이지는 정적 텍스트와 링크만 있으면 된다.
  */
-export default function HomePage() {
-  const router = useRouter();
-  const [form, setForm] = useState<FormState>(initialState);
-  const [submitting, setSubmitting] = useState(false);
-  const [issues, setIssues] = useState<string[]>([]);
-
-  function update<K extends keyof FormState>(key: K, value: FormState[K]) {
-    setForm((prev) => ({ ...prev, [key]: value }));
-  }
-
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    if (submitting) return; // 중복 제출 방지
-    setSubmitting(true);
-    setIssues([]);
-
-    try {
-      const res = await fetch("/api/saju/analyze", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          nickname: form.nickname,
-          gender: form.gender,
-          calendarType: form.calendarType,
-          date: form.date,
-          time: form.timeUnknown ? undefined : form.time || undefined,
-          birthCity: form.birthCity || undefined,
-          applySolarTimeCorrection: form.applySolarTimeCorrection,
-          ziHourMethod: form.ziHourMethod,
-        }),
-      });
-
-      const data = await res.json();
-
-      if (!res.ok) {
-        setIssues(data?.error?.issues ?? [data?.error?.message ?? "분석 요청에 실패했습니다."]);
-        setSubmitting(false);
-        return;
-      }
-
-      router.push(`/result?id=${encodeURIComponent(data.id)}`);
-    } catch {
-      setIssues(["네트워크 오류가 발생했습니다. 잠시 후 다시 시도해주세요."]);
-      setSubmitting(false);
-    }
-  }
-
+export default function LandingPage() {
   return (
-    <main className="mx-auto min-h-screen max-w-md px-5 pb-16 pt-12 sm:pt-16">
-      <header className="mb-8">
+    <>
+      <main className="mx-auto min-h-screen max-w-xl px-5 pb-16 pt-14 sm:pt-20">
         <p
-          className="mb-2.5 text-sm font-semibold"
+          className="mb-3 text-sm font-semibold"
           style={{ fontFamily: "var(--font-serif)", color: "var(--color-accent)" }}
         >
           류결사주
         </p>
-        <div className="mb-3 flex flex-wrap gap-1.5">
-          {["무료", "회원가입 불필요", "약 1분 소요"].map((badge) => (
-            <span
-              key={badge}
-              className="rounded-full px-2.5 py-1 text-[11px] font-medium"
-              style={{ backgroundColor: "var(--color-accent-soft)", color: "var(--color-accent)" }}
-            >
-              {badge}
-            </span>
-          ))}
-        </div>
-        <h1 className="text-[26px] font-bold leading-snug">
+        <h1 className="mb-4 text-[32px] font-bold leading-snug">
           생년월일로 보는
           <br />
-          나의 사주풀이
+          나의 사주·운세·관상
         </h1>
-        <p className="mt-2 text-sm leading-relaxed" style={{ color: "var(--color-ink-soft)" }}>
-          태어난 날짜와 시간으로 사주 원국을 계산하고, 성향·재물·연애·직업 흐름을 풀어드려요.
+        <p className="mb-8 text-[15px] leading-relaxed" style={{ color: "var(--color-ink-soft)" }}>
+          전통 명리학을 바탕으로 사주 원국, 오행과 십신, 올해의 흐름을 풀어드려요. 오늘의 운세와 얼굴 사진
+          기반 관상 풀이도 무료로 체험하실 수 있고, 더 깊은 해석은 결제 후 바로 확인하실 수 있어요.
         </p>
-      </header>
 
-      <form onSubmit={handleSubmit} className="space-y-7">
-        {/* 그룹 1: 기본 정보 */}
-        <fieldset className="space-y-4">
-          <legend className="section-label mb-1">기본 정보</legend>
+        <a href="/start" className="btn-primary mb-10 block text-center">
+          무료로 내 사주 보기
+        </a>
 
-          <div>
-            <label htmlFor="nickname" className="mb-1.5 block text-sm font-medium">
-              닉네임
-            </label>
-            <input
-              id="nickname"
-              type="text"
-              required
-              maxLength={20}
-              value={form.nickname}
-              onChange={(e) => update("nickname", e.target.value)}
-              className="field-input"
-              placeholder="결과 화면에 표시될 이름 (실명 아니어도 돼요)"
-            />
-          </div>
-
-          <div>
-            <span className="mb-1.5 block text-sm font-medium">성별</span>
-            <div className="segmented" role="radiogroup" aria-label="성별">
-              {(["female", "male"] as const).map((g) => (
-                <button
-                  key={g}
-                  type="button"
-                  role="radio"
-                  aria-checked={form.gender === g}
-                  data-active={form.gender === g}
-                  onClick={() => update("gender", g)}
-                  className="segmented-option"
-                >
-                  {g === "female" ? "여성" : "남성"}
-                </button>
-              ))}
-            </div>
-          </div>
-        </fieldset>
-
-        <div className="hairline" />
-
-        {/* 그룹 2: 생년월일 */}
-        <fieldset className="space-y-4">
-          <legend className="section-label mb-1">생년월일</legend>
-
-          <div>
-            <span className="mb-1.5 block text-sm font-medium">양력 · 음력</span>
-            <div className="segmented" role="radiogroup" aria-label="양력 또는 음력">
-              {(["solar", "lunar"] as const).map((c) => (
-                <button
-                  key={c}
-                  type="button"
-                  role="radio"
-                  aria-checked={form.calendarType === c}
-                  data-active={form.calendarType === c}
-                  onClick={() => update("calendarType", c)}
-                  className="segmented-option"
-                >
-                  {c === "solar" ? "양력" : "음력"}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <div>
-            <label htmlFor="date" className="mb-1.5 block text-sm font-medium">
-              생년월일
-            </label>
-            <input
-              id="date"
-              type="date"
-              required
-              value={form.date}
-              onChange={(e) => update("date", e.target.value)}
-              className="field-input"
-            />
-          </div>
-        </fieldset>
-
-        <div className="hairline" />
-
-        {/* 그룹 3: 출생시간 · 출생지 */}
-        <fieldset className="space-y-4">
-          <legend className="section-label mb-1">출생시간</legend>
-
-          <div>
-            <label htmlFor="time" className="mb-1.5 block text-sm font-medium">
-              태어난 시간
-            </label>
-            <div className="flex items-center gap-3">
-              <input
-                id="time"
-                type="time"
-                disabled={form.timeUnknown}
-                value={form.time}
-                onChange={(e) => update("time", e.target.value)}
-                className="field-input flex-1"
-              />
-              <label className="flex shrink-0 items-center gap-1.5 text-sm" style={{ color: "var(--color-ink-soft)" }}>
-                <input
-                  type="checkbox"
-                  checked={form.timeUnknown}
-                  onChange={(e) => update("timeUnknown", e.target.checked)}
-                  className="h-4 w-4"
-                />
-                시간 모름
-              </label>
-            </div>
-          </div>
-
-          <div>
-            <label htmlFor="birthCity" className="mb-1.5 block text-sm font-medium">
-              출생 도시 <span style={{ color: "var(--color-ink-faint)" }}>(선택)</span>
-            </label>
-            <input
-              id="birthCity"
-              type="text"
-              maxLength={50}
-              value={form.birthCity}
-              onChange={(e) => update("birthCity", e.target.value)}
-              className="field-input"
-              placeholder="예: 서울"
-            />
-          </div>
-        </fieldset>
-
-        <details className="rounded-xl px-4 py-3" style={{ backgroundColor: "var(--color-paper-soft)" }}>
-          <summary className="cursor-pointer text-sm font-medium" style={{ color: "var(--color-ink-soft)" }}>
-            정밀 옵션 (선택)
-          </summary>
-          <div className="mt-3 space-y-3">
-            <label className="flex items-center gap-2 text-sm">
-              <input
-                type="checkbox"
-                checked={form.applySolarTimeCorrection}
-                onChange={(e) => update("applySolarTimeCorrection", e.target.checked)}
-                className="h-4 w-4"
-              />
-              태양시 보정 적용
-            </label>
-            <div>
-              <label htmlFor="ziHourMethod" className="mb-1.5 block text-sm font-medium">
-                자시(子時) 처리 방식
-              </label>
-              <select
-                id="ziHourMethod"
-                value={form.ziHourMethod}
-                onChange={(e) => update("ziHourMethod", e.target.value as ZiHourMethod)}
-                className="field-input"
-              >
-                <option value="standard">표준 (23:00부터 다음날로 처리)</option>
-                <option value="yaja_joja_split">야자시 · 조자시 분리</option>
-              </select>
-            </div>
-          </div>
-        </details>
-
-        {issues.length > 0 && (
-          <ul
-            className="rounded-lg px-3.5 py-3 text-sm"
-            style={{ backgroundColor: "var(--color-accent-soft)", color: "var(--color-accent)" }}
-          >
-            {issues.map((issue) => (
-              <li key={issue}>{issue}</li>
-            ))}
+        <section className="mb-10 space-y-3">
+          <h2 className="section-label">이런 걸 보실 수 있어요</h2>
+          <ul className="space-y-2 text-sm" style={{ color: "var(--color-ink-soft)" }}>
+            <li>· 사주 원국, 오행·십신 분포와 성향·재물·연애·직업 흐름 (무료)</li>
+            <li>· 오늘의 운세와 일진 (무료)</li>
+            <li>· 얼굴 사진으로 보는 관상 풀이 (무료, 사진은 기기 안에서만 분석)</li>
           </ul>
-        )}
+        </section>
 
-        <button type="submit" disabled={submitting} className="btn-primary">
-          {submitting ? "사주를 살펴보고 있어요..." : "무료로 내 사주 보기"}
-        </button>
-      </form>
-    </main>
+        <section className="mb-10">
+          <h2 className="section-label mb-3">더 깊은 해석이 필요하면</h2>
+          <div className="space-y-2.5">
+            <div className="flex items-center justify-between rounded-xl p-3.5" style={{ backgroundColor: "var(--color-paper-soft)" }}>
+              <span className="text-sm">베이직 심층 분석</span>
+              <span className="text-sm font-semibold">3,900원</span>
+            </div>
+            <div className="flex items-center justify-between rounded-xl p-3.5" style={{ backgroundColor: "var(--color-paper-soft)" }}>
+              <span className="text-sm">프리미엄 종합 리포트</span>
+              <span className="text-sm font-semibold">9,900원</span>
+            </div>
+            <div className="flex items-center justify-between rounded-xl p-3.5" style={{ backgroundColor: "var(--color-paper-soft)" }}>
+              <span className="text-sm">관상 심층 해석 · 인연 궁합</span>
+              <span className="text-sm font-semibold">4,900원</span>
+            </div>
+          </div>
+        </section>
+
+        <a href="/start" className="btn-secondary block text-center">
+          시작하기
+        </a>
+
+        <p className="mt-6 text-xs leading-relaxed" style={{ color: "var(--color-ink-faint)" }}>
+          모든 사주·운세·관상 콘텐츠는 전통 문화·오락 목적의 참고 정보이며, 성격·재물·건강·연애 등을
+          과학적으로 확정하지 않습니다.
+        </p>
+      </main>
+      <Footer />
+    </>
   );
 }
