@@ -50,21 +50,28 @@ const TRUST_POINTS = [
   },
 ];
 
-const CHAPTERS = [
+/**
+ * 청월당 벤치마킹: 이모지 제목 + 색깔 카드 + 친근한 말투로 묶은 섹션.
+ * 색상은 전부 오행(이미 ElementRadarChart에 쓰던 실제 데이터 색상) 팔레트를
+ * 재사용했다 - 임의로 예쁜 색을 고른 게 아니라 우리 서비스의 실제 상징색이다.
+ */
+const CASUAL_SECTIONS = [
   {
-    label: "1장 · 무료로 보기",
+    emoji: "✨",
+    title: "지금 바로, 공짜로",
     items: [
-      { name: "만세력 · 사주 원국", desc: "오행·십신·신강신약", price: "무료" },
-      { name: "오늘의 운세", desc: "매일 바뀌는 일진 풀이", price: "무료" },
-      { name: "관상 분석", desc: "얼굴 사진으로 보는 관상", price: "무료" },
+      { name: "사주 원국", desc: "오행·십신이 한눈에", price: "무료", color: "#3d6b4c" },
+      { name: "오늘의 운세", desc: "매일 바뀌는 일진", price: "무료", color: "#b54a3f" },
+      { name: "관상 분석", desc: "사진으로 보는 관상", price: "무료", color: "#2f4a73" },
     ],
   },
   {
-    label: "2장 · 더 깊은 해석",
+    emoji: "🔎",
+    title: "더 궁금하다면",
     items: [
-      { name: "베이직 심층 분석", desc: "연애·재물·직업·올해 운세", price: "3,900원" },
-      { name: "프리미엄 종합 리포트", desc: "베이직 전체 + 월별 흐름", price: "9,900원" },
-      { name: "관상 심층 해석 · 인연 궁합", desc: "얼굴 특징 상세 + 어울리는 인연", price: "4,900원" },
+      { name: "베이직 심층 분석", desc: "연애·재물·직업·올해 운세", price: "3,900원", color: "#b08d57" },
+      { name: "프리미엄 종합 리포트", desc: "베이직 전체 + 월별 흐름", price: "9,900원", color: "#9c3b3b" },
+      { name: "인연 관상 궁합", desc: "어울리는 인연의 관상적 특징", price: "4,900원", color: "#6e7075" },
     ],
   },
 ];
@@ -138,32 +145,34 @@ export default function LandingPage() {
           </div>
         </section>
 
-        {/* 상품 - 장 구조 */}
+        {/* 상품 - 청월당식 이모지+컬러카드 섹션 */}
         <section className="mb-10">
-          {CHAPTERS.map((ch) => (
-            <div key={ch.label} className="mb-7">
-              <h2 className="mb-3 text-sm font-semibold" style={{ color: "var(--color-ink-faint)" }}>
-                {ch.label}
+          {CASUAL_SECTIONS.map((sec) => (
+            <div key={sec.title} className="mb-8">
+              <h2 className="mb-3 flex items-center gap-1.5 text-base font-bold">
+                <span>{sec.emoji}</span>
+                {sec.title}
               </h2>
-              <div className="space-y-2">
-                {ch.items.map((item) => (
+              <div className="grid grid-cols-3 gap-2.5">
+                {sec.items.map((item) => (
                   <div
                     key={item.name}
-                    className="flex items-center justify-between rounded-xl px-4 py-3"
-                    style={{ border: "1px solid var(--color-line)" }}
+                    className="flex flex-col justify-between rounded-2xl p-3"
+                    style={{ backgroundColor: `${item.color}14`, border: `1px solid ${item.color}33` }}
                   >
-                    <div>
-                      <p className="text-[14px] font-medium">{item.name}</p>
-                      <p className="mt-0.5 text-xs" style={{ color: "var(--color-ink-faint)" }}>
-                        {item.desc}
-                      </p>
-                    </div>
-                    <span
-                      className="shrink-0 pl-3 text-sm font-semibold"
-                      style={{ color: item.price === "무료" ? "var(--color-ink-faint)" : "var(--color-accent)" }}
+                    <div
+                      className="mb-2 flex h-9 w-9 items-center justify-center rounded-full text-[13px] font-bold text-white"
+                      style={{ backgroundColor: item.color }}
                     >
+                      {item.price === "무료" ? "0" : "₩"}
+                    </div>
+                    <p className="text-[13px] font-semibold leading-snug">{item.name}</p>
+                    <p className="mt-0.5 text-[11px] leading-snug" style={{ color: "var(--color-ink-faint)" }}>
+                      {item.desc}
+                    </p>
+                    <p className="mt-2 text-[12px] font-bold" style={{ color: item.color }}>
                       {item.price}
-                    </span>
+                    </p>
                   </div>
                 ))}
               </div>
