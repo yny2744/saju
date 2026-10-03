@@ -1,5 +1,6 @@
 import { Footer } from "@/components/Footer";
 import { LoginButtons } from "@/components/LoginButtons";
+import { Logo } from "@/components/Logo";
 import { SajuEmblemIllustration, FortuneSunMoonIllustration, FaceReadingIllustration } from "@/components/LandingIllustrations";
 
 /**
@@ -90,10 +91,8 @@ export default function LandingPage() {
         {/* 헤더 + 로그인 */}
         <div className="mb-8 flex items-center justify-between">
           <div>
-            <p className="text-base font-bold" style={{ fontFamily: "var(--font-serif)", color: "var(--color-accent)" }}>
-              류결사주
-            </p>
-            <p className="text-[11px]" style={{ color: "var(--color-ink-faint)" }}>
+            <Logo height={34} />
+            <p className="mt-0.5 text-[11px]" style={{ color: "var(--color-ink-faint)" }}>
               류결의 명견만리
             </p>
           </div>
