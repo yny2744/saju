@@ -61,21 +61,27 @@ const CASUAL_SECTIONS = [
     emoji: "✨",
     title: "지금 바로, 공짜로",
     items: [
-      { name: "사주 원국", desc: "오행·십신이 한눈에", price: "무료", color: "#3d6b4c" },
-      { name: "오늘의 운세", desc: "매일 바뀌는 일진", price: "무료", color: "#b54a3f" },
-      { name: "관상 분석", desc: "사진으로 보는 관상", price: "무료", color: "#2f4a73" },
+      { name: "사주 원국", desc: "오행·십신이 한눈에", price: "무료", color: "#3d6b4c", href: "/start" },
+      { name: "오늘의 운세", desc: "매일 바뀌는 일진", price: "무료", color: "#b54a3f", href: "/start" },
+      { name: "관상 분석", desc: "사진으로 보는 관상", price: "무료", color: "#2f4a73", href: "/face" },
     ],
   },
   {
     emoji: "🔎",
     title: "더 궁금하다면",
     items: [
-      { name: "베이직 심층 분석", desc: "연애·재물·직업·올해 운세", price: "3,900원", color: "#b08d57" },
-      { name: "프리미엄 종합 리포트", desc: "베이직 전체 + 월별 흐름", price: "9,900원", color: "#9c3b3b" },
-      { name: "인연 관상 궁합", desc: "어울리는 인연의 관상적 특징", price: "4,900원", color: "#6e7075" },
+      { name: "베이직 심층 분석", desc: "연애·재물·직업·올해 운세", price: "3,900원", color: "#b08d57", href: "/start" },
+      { name: "프리미엄 종합 리포트", desc: "베이직 전체 + 월별 흐름", price: "9,900원", color: "#9c3b3b", href: "/start" },
+      { name: "인연 관상 궁합", desc: "어울리는 인연의 관상적 특징", price: "4,900원", color: "#6e7075", href: "/face" },
     ],
   },
 ];
+/**
+ * 베이직/프리미엄/인연궁합처럼 결제가 필요한 상품은 먼저 무료 분석(resultId)이
+ * 있어야 구매 화면(/products, /face/products)에 진입할 수 있다 - 그래서 유료
+ * 카드도 "결제 화면"이 아니라 "그 상품의 출발점"(사주는 /start, 관상은 /face)으로
+ * 링크한다. 실제 결제 유도는 무료 결과 화면의 기존 CTA가 그대로 담당한다.
+ */
 
 export default function LandingPage() {
   return (
@@ -180,9 +186,10 @@ export default function LandingPage() {
               </h2>
               <div className="grid grid-cols-3 gap-2.5">
                 {sec.items.map((item) => (
-                  <div
+                  <a
                     key={item.name}
-                    className="flex flex-col justify-between rounded-2xl p-3"
+                    href={item.href}
+                    className="flex flex-col justify-between rounded-2xl p-3 transition-transform active:scale-95"
                     style={{ backgroundColor: `${item.color}14`, border: `1px solid ${item.color}33` }}
                   >
                     <div
@@ -198,7 +205,7 @@ export default function LandingPage() {
                     <p className="mt-2 text-[12px] font-bold" style={{ color: item.color }}>
                       {item.price}
                     </p>
-                  </div>
+                  </a>
                 ))}
               </div>
             </div>
