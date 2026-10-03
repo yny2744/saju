@@ -33,7 +33,9 @@ export function LoginButtons() {
   if (me) {
     return (
       <div className="flex items-center justify-between rounded-full px-4 py-2" style={{ backgroundColor: "var(--color-paper-soft)" }}>
-        <span className="text-[13px] font-medium">{me.nickname}님</span>
+        <a href="/mypage" className="text-[13px] font-medium">
+          {me.nickname}님
+        </a>
         <button type="button" onClick={handleLogout} className="text-xs underline underline-offset-4" style={{ color: "var(--color-ink-faint)" }}>
           로그아웃
         </button>

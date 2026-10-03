@@ -25,6 +25,9 @@ import type { AnalyzeRequestBody, ValidatedAnalyzeInput } from "./types";
 const SUPPORTED_PRODUCT_TYPES_PHASE4 = ["FREE_BASIC"] as const;
 
 const NICKNAME_MAX_LENGTH = 20;
+const HANJA_NAME_MAX_LENGTH = 10;
+/** 한자(CJK 통합 한자 + 확장 A) 범위만 허용한다. 사주 계산에는 쓰지 않고, 결과 화면 표시용일 뿐이다. */
+const HANJA_ONLY_RE = /^[\u4E00-\u9FFF\u3400-\u4DBF]+$/;
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 const TIME_RE = /^([01]\d|2[0-3]):([0-5]\d)$/;
 const MIN_YEAR = 1900;
@@ -85,6 +88,23 @@ export function validateAnalyzeInput(body: AnalyzeRequestBody): ValidationResult
       issues.push("nickname: 닉네임에 사용할 수 없는 문자가 포함되어 있습니다.");
     } else {
       nickname = trimmed;
+    }
+  }
+
+  // --- 한자이름 (선택) ---
+  let hanjaName: string | undefined;
+  if (body.hanjaName !== undefined && body.hanjaName !== null && body.hanjaName !== "") {
+    if (!isNonEmptyString(body.hanjaName)) {
+      issues.push("hanjaName: 문자열이어야 합니다.");
+    } else {
+      const trimmed = body.hanjaName.trim();
+      if (trimmed.length > HANJA_NAME_MAX_LENGTH) {
+        issues.push(`hanjaName: 한자이름은 ${HANJA_NAME_MAX_LENGTH}자 이하로 입력해주세요.`);
+      } else if (!HANJA_ONLY_RE.test(trimmed)) {
+        issues.push("hanjaName: 한자(漢字)만 입력해주세요.");
+      } else {
+        hanjaName = trimmed;
+      }
     }
   }
 
@@ -165,6 +185,7 @@ export function validateAnalyzeInput(body: AnalyzeRequestBody): ValidationResult
     ok: true,
     value: {
       nickname,
+      hanjaName,
       sajuInput: {
         calendarType: body.calendarType as "solar" | "lunar",
         date: body.date as string,

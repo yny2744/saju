@@ -31,6 +31,22 @@
     "Segoe UI", sans-serif;
 }
 
+/**
+ * 접근성 표시 설정 (Phase 10.5, 내 사주함). localStorage에 저장된 값을
+ * AccessibilityInit.tsx가 <html>의 data-* 속성으로 반영하면 이 규칙이
+ * 전체 사이트에 적용된다. 40대 이상 이용자 배려 차원 - 글자 크기/대비를
+ * 키울 뿐, 레이아웃 자체는 안 건드린다.
+ */
+html[data-font-size="large"] {
+  font-size: 19px; /* 기본 16px 대비 확대, rem 단위를 쓰는 모든 요소에 함께 반영됨 */
+}
+html[data-contrast="high"] {
+  --color-ink: #000000;
+  --color-ink-soft: #1a1a1a;
+  --color-ink-faint: #3a3a3a;
+  --color-line: #8a8a8a;
+}
+
 @layer base {
   html {
     -webkit-tap-highlight-color: transparent;

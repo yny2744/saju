@@ -12,6 +12,40 @@ function validBody(overrides: Partial<AnalyzeRequestBody> = {}): AnalyzeRequestB
   };
 }
 
+describe("validateAnalyzeInput - hanjaName (선택, Phase 10.5)", () => {
+  test("비워두면 통과하고 undefined로 남는다", () => {
+    const result = validateAnalyzeInput(validBody());
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(result.value.hanjaName).toBeUndefined();
+    }
+  });
+
+  test("한자만 입력하면 통과하고 그대로 반환된다", () => {
+    const result = validateAnalyzeInput(validBody({ hanjaName: "柳南榮" }));
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(result.value.hanjaName).toBe("柳南榮");
+    }
+  });
+
+  test("한글이 섞여 있으면 거부한다", () => {
+    const result = validateAnalyzeInput(validBody({ hanjaName: "柳남영" }));
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(result.issues.some((i) => i.startsWith("hanjaName"))).toBe(true);
+    }
+  });
+
+  test("10자를 초과하면 거부한다", () => {
+    const result = validateAnalyzeInput(validBody({ hanjaName: "柳".repeat(11) }));
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(result.issues.some((i) => i.startsWith("hanjaName"))).toBe(true);
+    }
+  });
+});
+
 describe("validateAnalyzeInput", () => {
   test("정상 입력이면 통과하고 SajuInput/닉네임/productType을 반환한다", () => {
     const result = validateAnalyzeInput(validBody());

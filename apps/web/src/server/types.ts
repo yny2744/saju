@@ -20,6 +20,8 @@ import type {
 /** 웹 입력 화면에서 서버로 보내는 원본 요청 바디 (검증 전, 아직 unknown 취급) */
 export interface AnalyzeRequestBody {
   nickname?: unknown;
+  /** 선택 입력. 결과 화면 표시용일 뿐, 사주 계산에는 전혀 관여하지 않는다 (nickname과 동일한 원칙). */
+  hanjaName?: unknown;
   gender?: unknown;
   calendarType?: unknown;
   date?: unknown;
@@ -36,6 +38,8 @@ export interface AnalyzeRequestBody {
 export interface ValidatedAnalyzeInput {
   /** 결과 화면 표시용. 사주 계산에는 관여하지 않는다 (명세서 8조: 닉네임과 계산 데이터 분리). */
   nickname: string;
+  /** 선택 입력, 있으면 결과 화면에 "이름(漢字)"처럼 같이 표시한다. 계산에는 관여하지 않는다. */
+  hanjaName?: string;
   sajuInput: SajuInput;
   productType: ProductType;
 }
@@ -49,6 +53,7 @@ export interface AnalyzeAcceptedResponse {
 /** GET /api/saju/result/[id] 성공 응답 */
 export interface AnalyzeResultResponse {
   nickname: string;
+  hanjaName?: string;
   saju: SajuJson;
   interpretation: InterpretationResult;
 }

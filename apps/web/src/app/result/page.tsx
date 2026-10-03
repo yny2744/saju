@@ -73,14 +73,18 @@ function ResultBody() {
     return <ErrorState message={state.message} linkHref="/" linkLabel="다시 입력하러 가기" />;
   }
 
-  const { nickname, saju, interpretation } = state.data;
+  const { nickname, hanjaName, saju, interpretation } = state.data;
   const analysisEntries = Object.entries(interpretation.analysis as Record<string, unknown>);
 
   return (
     <main className="mx-auto min-h-screen max-w-xl px-5 pb-20 pt-12 sm:pt-16">
       <header className="mb-8">
         <p className="section-label mb-1.5">사주풀이 결과</p>
-        <h1 className="text-[26px] font-bold leading-snug">{nickname}님의 사주</h1>
+        <h1 className="text-[26px] font-bold leading-snug">
+          {nickname}
+          {hanjaName && <span className="font-normal" style={{ color: "var(--color-ink-faint)" }}>({hanjaName})</span>}
+          님의 사주
+        </h1>
         <p className="mt-2 text-xs leading-relaxed" style={{ color: "var(--color-ink-faint)" }}>
           {interpretation.disclaimer}
         </p>

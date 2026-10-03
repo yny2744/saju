@@ -10,6 +10,7 @@ type ZiHourMethod = "standard" | "yaja_joja_split";
 
 interface FormState {
   nickname: string;
+  hanjaName: string;
   gender: Gender;
   calendarType: CalendarType;
   date: string;
@@ -22,6 +23,7 @@ interface FormState {
 
 const initialState: FormState = {
   nickname: "",
+  hanjaName: "",
   gender: "female",
   calendarType: "solar",
   date: "",
@@ -64,6 +66,7 @@ export default function StartPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           nickname: form.nickname,
+          hanjaName: form.hanjaName || undefined,
           gender: form.gender,
           calendarType: form.calendarType,
           date: form.date,
@@ -127,7 +130,7 @@ export default function StartPage() {
 
             <div>
               <label htmlFor="nickname" className="mb-1.5 block text-sm font-medium">
-                닉네임
+                이름
               </label>
               <input
                 id="nickname"
@@ -137,8 +140,26 @@ export default function StartPage() {
                 value={form.nickname}
                 onChange={(e) => update("nickname", e.target.value)}
                 className="field-input"
-                placeholder="결과 화면에 표시될 이름 (실명 아니어도 돼요)"
+                placeholder="예: 홍길동 (닉네임도 괜찮아요)"
               />
+            </div>
+
+            <div>
+              <label htmlFor="hanjaName" className="mb-1.5 block text-sm font-medium">
+                한자이름 <span style={{ color: "var(--color-ink-faint)" }}>(선택)</span>
+              </label>
+              <input
+                id="hanjaName"
+                type="text"
+                maxLength={10}
+                value={form.hanjaName}
+                onChange={(e) => update("hanjaName", e.target.value)}
+                className="field-input"
+                placeholder="예: 柳南榮 (모르시면 비워두셔도 돼요)"
+              />
+              <p className="mt-1.5 text-xs" style={{ color: "var(--color-ink-faint)" }}>
+                결과 화면에 이름과 함께 표시돼요. 사주 계산 자체에는 쓰이지 않아요.
+              </p>
             </div>
 
             <div>
