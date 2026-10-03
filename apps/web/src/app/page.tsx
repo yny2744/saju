@@ -1,7 +1,7 @@
 import { Footer } from "@/components/Footer";
 import { LoginButtons } from "@/components/LoginButtons";
-import { Logo } from "@/components/Logo";
 import { SajuEmblemIllustration, FortuneSunMoonIllustration, FaceReadingIllustration } from "@/components/LandingIllustrations";
+import { CasualLanding } from "@/components/CasualLanding";
 
 /**
  * 믹스 랜딩페이지 (Phase 10.5, 2026-10).
@@ -84,15 +84,29 @@ const CASUAL_SECTIONS = [
  * 링크한다. 실제 결제 유도는 무료 결과 화면의 기존 CTA가 그대로 담당한다.
  */
 
+/**
+ * 투트랙 운영: 같은 레포·같은 코드를 Vercel 프로젝트 두 개(예: saju-web,
+ * saju-web2)가 각자 배포한다. 어느 쪽이 "류결사주"(이 아래 믹스 버전)를
+ * 보여주고 어느 쪽이 "류결의사주"(청월당풍)를 보여줄지는, 코드가 아니라
+ * 각 Vercel 프로젝트에 설정하는 환경변수 하나로 정해진다 -
+ * NEXT_PUBLIC_LANDING_VARIANT=casual로 설정된 쪽만 메인 화면이 바뀐다.
+ * 기본값(설정 안 함)은 지금까지 쓰던 "류결사주" 믹스 버전이다.
+ */
 export default function LandingPage() {
+  if (process.env.NEXT_PUBLIC_LANDING_VARIANT === "casual") {
+    return <CasualLanding />;
+  }
+
   return (
     <>
       <main className="mx-auto min-h-screen max-w-xl px-5 pb-16 pt-12 sm:pt-16">
         {/* 헤더 + 로그인 */}
         <div className="mb-8 flex items-center justify-between">
           <div>
-            <Logo height={34} />
-            <p className="mt-0.5 text-[11px]" style={{ color: "var(--color-ink-faint)" }}>
+            <p className="text-base font-bold" style={{ fontFamily: "var(--font-serif)", color: "var(--color-accent)" }}>
+              류결사주
+            </p>
+            <p className="text-[11px]" style={{ color: "var(--color-ink-faint)" }}>
               류결의 명견만리
             </p>
           </div>
