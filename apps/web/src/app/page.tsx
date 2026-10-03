@@ -1,5 +1,6 @@
 import { Footer } from "@/components/Footer";
 import { LoginButtons } from "@/components/LoginButtons";
+import { SajuEmblemIllustration, FortuneSunMoonIllustration, FaceReadingIllustration } from "@/components/LandingIllustrations";
 
 /**
  * 믹스 랜딩페이지 (Phase 10.5, 2026-10).
@@ -95,6 +96,9 @@ export default function LandingPage() {
 
         {/* 히어로 */}
         <div className="mt-10 mb-10">
+          <div className="mx-auto mb-5 h-28 w-28">
+            <SajuEmblemIllustration />
+          </div>
           <div className="mb-3 flex flex-wrap gap-1.5">
             {["무료", "회원가입 불필요", "약 1분 소요"].map((badge) => (
               <span
@@ -119,6 +123,27 @@ export default function LandingPage() {
             무료로 내 사주 보기
           </a>
         </div>
+
+        {/* 이런 걸 보실 수 있어요 - 일러스트 3장 */}
+        <section className="mb-12 grid grid-cols-3 gap-3">
+          {[
+            { Illustration: SajuEmblemIllustration, label: "사주 원국" },
+            { Illustration: FortuneSunMoonIllustration, label: "오늘의 운세" },
+            { Illustration: FaceReadingIllustration, label: "관상 분석" },
+          ].map(({ Illustration, label }) => (
+            <div key={label} className="flex flex-col items-center">
+              <div
+                className="mb-2 flex h-20 w-20 items-center justify-center rounded-2xl p-3"
+                style={{ backgroundColor: "var(--color-paper-soft)" }}
+              >
+                <Illustration />
+              </div>
+              <p className="text-xs font-medium" style={{ color: "var(--color-ink-soft)" }}>
+                {label}
+              </p>
+            </div>
+          ))}
+        </section>
 
         {/* 왜 류결사주인가 */}
         <section className="mb-12">
