@@ -13,15 +13,19 @@
   "dependencies": {
     "@mediapipe/tasks-vision": "^1.0.1",
     "@tosspayments/tosspayments-sdk": "^2.9.0",
+    "bcryptjs": "^3.0.3",
     "html-to-image": "^1.11.13",
     "next": "^14.2.5",
+    "pg": "^8.23.1",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "saju-engine": "file:../saju-engine"
   },
   "devDependencies": {
+    "@types/bcryptjs": "^2.4.6",
     "@types/jest": "^29.5.13",
     "@types/node": "^20.14.10",
+    "@types/pg": "^8.23.1",
     "@types/react": "^18.3.3",
     "@types/react-dom": "^18.3.0",
     "autoprefixer": "^10.4.19",

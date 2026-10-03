@@ -1,46 +1,62 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 /**
- * 로그인 버튼(카카오/이메일) — 지금은 UI 진입점만 만들어둔다.
+ * 로그인 버튼(카카오/이메일) — /login 페이지로 보내는 진입점이다.
  *
- * ⚠️ 실제 로그인은 아직 동작하지 않는다. 카카오 로그인은 카카오 개발자센터
- * 앱 등록+API 키가 있어야 하고(외부 절차, 유샘이 직접 해야 함), 이메일/
- * 아이디·비번 로그인은 회원 정보를 저장할 데이터베이스가 있어야 하는데
- * (Phase 11 Postgres 도입 전), 지금 서비스는 의도적으로 "저장 안 하고 30분
- * 뒤 사라지는" 무상태 구조라 회원 저장소 자체가 없다. 그래서 버튼을 누르면
- * "준비 중" 안내만 뜨게 해뒀다 - 죽은 링크(아무 반응 없음)보다는 솔직하게
- * 상태를 알려주는 쪽이 낫다고 판단했다.
+ * ⚠️ DATABASE_URL/KAKAO_REST_API_KEY가 아직 설정 안 된 환경에서는 실제
+ * 로그인/회원가입 API 호출 시 서버가 명확한 에러를 반환한다(조용히 가짜로
+ * 성공 처리하지 않는다) - /login 페이지가 그 에러 메시지를 그대로 보여준다.
+ *
+ * 로그인 상태면 닉네임 + 로그아웃 버튼으로 바뀐다.
  */
 export function LoginButtons() {
-  const [notice, setNotice] = useState<string | null>(null);
+  const [me, setMe] = useState<{ nickname: string } | null | "loading">("loading");
 
-  return (
-    <div>
-      <div className="flex gap-2">
-        <button
-          type="button"
-          onClick={() => setNotice("카카오 로그인은 준비 중이에요. 곧 만나요!")}
-          className="flex flex-1 items-center justify-center gap-1.5 rounded-full py-2.5 text-[13px] font-medium"
-          style={{ backgroundColor: "#fee500", color: "#191600" }}
-        >
-          카카오 로그인
-        </button>
-        <button
-          type="button"
-          onClick={() => setNotice("이메일 로그인은 준비 중이에요. 곧 만나요!")}
-          className="flex flex-1 items-center justify-center gap-1.5 rounded-full py-2.5 text-[13px] font-medium"
-          style={{ border: "1px solid var(--color-line)", color: "var(--color-ink-soft)" }}
-        >
-          이메일 로그인
+  useEffect(() => {
+    fetch("/api/auth/me")
+      .then((res) => res.json())
+      .then((data) => setMe(data.user))
+      .catch(() => setMe(null));
+  }, []);
+
+  async function handleLogout() {
+    await fetch("/api/auth/logout", { method: "POST" }).catch(() => {});
+    window.location.reload();
+  }
+
+  if (me === "loading") {
+    return <div className="h-[42px]" />; // 레이아웃 흔들림 방지용 자리만 차지
+  }
+
+  if (me) {
+    return (
+      <div className="flex items-center justify-between rounded-full px-4 py-2" style={{ backgroundColor: "var(--color-paper-soft)" }}>
+        <span className="text-[13px] font-medium">{me.nickname}님</span>
+        <button type="button" onClick={handleLogout} className="text-xs underline underline-offset-4" style={{ color: "var(--color-ink-faint)" }}>
+          로그아웃
         </button>
       </div>
-      {notice && (
-        <p className="mt-2 text-center text-xs" style={{ color: "var(--color-ink-faint)" }}>
-          {notice}
-        </p>
-      )}
+    );
+  }
+
+  return (
+    <div className="flex gap-2">
+      <a
+        href="/api/auth/kakao/start"
+        className="flex flex-1 items-center justify-center gap-1.5 rounded-full py-2.5 text-[13px] font-medium"
+        style={{ backgroundColor: "#fee500", color: "#191600" }}
+      >
+        카카오 로그인
+      </a>
+      <a
+        href="/login"
+        className="flex flex-1 items-center justify-center gap-1.5 rounded-full py-2.5 text-[13px] font-medium"
+        style={{ border: "1px solid var(--color-line)", color: "var(--color-ink-soft)" }}
+      >
+        이메일 로그인
+      </a>
     </div>
   );
 }
