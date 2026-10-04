@@ -55,11 +55,24 @@ export function SajuPillarsCard({ saju }: { saju: SajuJson }) {
                 <div className="text-[10px]" style={{ color: "var(--color-ink-faint)" }} title="지장간">
                   {c.hiddenStems.join("")}
                 </div>
+                {c.twelveStage && (
+                  <div
+                    className="mx-auto mt-1.5 w-fit rounded px-1.5 py-0.5 text-[10px]"
+                    style={{ backgroundColor: "var(--color-paper)", color: "var(--color-ink-soft)" }}
+                    title="12운성"
+                  >
+                    {c.twelveStage}
+                  </div>
+                )}
               </>
             )}
           </div>
         ))}
       </div>
+
+      <p className="mt-2 text-[11px]" style={{ color: "var(--color-ink-faint)" }}>
+        글자 위·아래 작은 글씨는 십신, 맨 아래는 지장간과 12운성이에요.
+      </p>
 
       {hourUnknown && (
         <p className="mt-2 text-xs leading-relaxed" style={{ color: "var(--color-ink-faint)" }}>

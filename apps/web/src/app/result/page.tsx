@@ -19,6 +19,16 @@ const ELEMENT_TAGLINE: Record<string, string> = {
 import { AnalysisSection } from "@/components/AnalysisSection";
 import { FreeAnalysisBoards, isFreeAnalysisShape } from "@/components/FreeAnalysisBoards";
 import { buildFreeAnalysisKeywords } from "@/lib/freeAnalysisKeywords";
+import { ElementBalance, RelationsTable, DaeunTimeline } from "@/components/ManseSections";
+import { elementShares, yinYangCount, relationRows, daeunCells, kstDateString } from "@/lib/manseView";
+import type { ElementKo } from "@/lib/pillarView";
+import type { SajuJson } from "saju-engine";
+
+function birthLine(saju: SajuJson): string {
+  const [y, m, d] = saju.birth.date.split("-").map(Number);
+  const cal = saju.birth.calendarType === "solar" ? "양력" : "음력";
+  return `${cal} ${y}년 ${m}월 ${d}일${saju.birth.time ? ` ${saju.birth.time}` : " · 시간 모름"}`;
+}
 
 type LoadState =
   | { status: "loading" }
@@ -78,12 +88,15 @@ function ResultBody() {
   return (
     <main className="mx-auto min-h-screen max-w-xl px-5 pb-20 pt-12 sm:pt-16">
       <header className="mb-8">
-        <p className="section-label mb-1.5">사주풀이 결과</p>
+        <p className="section-label mb-1.5">무료 만세력</p>
         <h1 className="text-[26px] font-bold leading-snug">
           {nickname}
           {hanjaName && <span className="font-normal" style={{ color: "var(--color-ink-faint)" }}>({hanjaName})</span>}
-          님의 사주
+          님의 만세력
         </h1>
+        <p className="mt-1.5 text-[13px]" style={{ color: "var(--color-ink-soft)" }}>
+          {birthLine(saju)}
+        </p>
       </header>
 
       {/* 사주 원국 - 4기둥을 표 형태로 명확히 구분 */}
@@ -91,6 +104,13 @@ function ResultBody() {
           <h2 className="mb-3 text-base font-semibold">사주 원국</h2>
           <SajuPillarsCard saju={saju} />
         </section>
+
+      <ElementBalance
+        shares={elementShares(saju)}
+        dominant={saju.elements.summary.dominant as ElementKo}
+        lacking={saju.elements.summary.lacking as ElementKo[]}
+        yinYang={yinYangCount(saju)}
+      />
 
       {/* 십신 분포 - 문장형 제목 + 막대그래프 (엔진 십신에 지장간 가중치를 더한 값) */}
       <section className="mb-8">
@@ -108,6 +128,13 @@ function ResultBody() {
           </p>
         </div>
       </section>
+
+      <RelationsTable rows={relationRows(saju)} />
+
+      <DaeunTimeline
+        cells={daeunCells(saju, kstDateString())}
+        seun={{ year: saju.seun.year, stem: saju.seun.pillar.stem, branch: saju.seun.pillar.branch, tenGod: saju.seun.tenGod }}
+      />
 
       {/* 상세 해석 - 문서형으로 제목+문단 구분 */}
       <section className="mb-10">
@@ -145,7 +172,7 @@ function ResultBody() {
         )}
         {id && (
           <a href={`/fortune?resultId=${encodeURIComponent(id)}`} className="btn-secondary block">
-            오늘의 운세 보기
+            오늘·내일의 운세 보기
           </a>
         )}
         <a href="/start" className="block py-2 text-center text-sm underline underline-offset-4" style={{ color: "var(--color-ink-soft)" }}>

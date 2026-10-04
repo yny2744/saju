@@ -113,7 +113,7 @@ export default function YongStylePreviewPage() {
             className="block rounded-full py-3.5 text-center text-sm font-semibold"
             style={{ backgroundColor: DARK.gold, color: "#1a1409" }}
           >
-            무료로 내 사주 보기
+            무료로 내 만세력 보기
           </a>
           <a
             href="#products"

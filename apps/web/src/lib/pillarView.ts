@@ -37,6 +37,8 @@ export interface PillarColumn {
   branch?: { hangul: string; hanja: string; element: ElementKo; tenGod: string };
   /** 지장간 (여기→중기→정기 순, 엔진이 준 순서 그대로). 예: ["정","을","기"] */
   hiddenStems: string[];
+  /** 일간 기준 이 지지의 12운성 (엔진 twelveStages 값 그대로) */
+  twelveStage?: string;
 }
 
 export function buildPillarColumns(saju: SajuJson): PillarColumn[] {
@@ -68,6 +70,7 @@ export function buildPillarColumns(saju: SajuJson): PillarColumn[] {
         tenGod: branchInfo?.primary ?? "",
       },
       hiddenStems: hidden.map((h) => h.stem),
+      twelveStage: (saju.twelveStages.stages as Record<string, string | undefined>)[key],
     };
   });
 }

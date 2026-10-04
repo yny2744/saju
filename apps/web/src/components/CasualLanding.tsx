@@ -17,8 +17,8 @@ import { LoginButtons } from "@/components/LoginButtons";
  */
 
 const FREE_ROW = [
-  { emoji: "🔮", name: "사주 맛보기", desc: "오행·십신이 한눈에", href: "/start" },
-  { emoji: "☀️", name: "오늘의 운세", desc: "매일 바뀌는 일진", href: "/start" },
+  { emoji: "🔮", name: "무료 만세력", desc: "오행·십신이 한눈에", href: "/start" },
+  { emoji: "☀️", name: "오늘·내일의 운세", desc: "매일 바뀌는 일진", href: "/start?next=fortune" },
   { emoji: "🪞", name: "관상 보기", desc: "사진으로 보는 관상", href: "/face" },
 ];
 

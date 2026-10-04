@@ -85,7 +85,14 @@ export default function StartPage() {
         return;
       }
 
-      router.push(`/result?id=${encodeURIComponent(data.id)}`);
+      // 메인 화면 "오늘의 운세"에서 들어온 경우(?next=fortune)는 만세력을 거치지 않고 바로 운세로 보낸다.
+      // 허용값은 fortune 하나뿐이라 임의 주소로 이동시킬 수 없다.
+      const next = new URLSearchParams(window.location.search).get("next");
+      router.push(
+        next === "fortune"
+          ? `/fortune?resultId=${encodeURIComponent(data.id)}`
+          : `/result?id=${encodeURIComponent(data.id)}`
+      );
     } catch {
       setIssues(["네트워크 오류가 발생했습니다. 잠시 후 다시 시도해주세요."]);
       setSubmitting(false);

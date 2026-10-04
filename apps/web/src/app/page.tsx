@@ -61,8 +61,8 @@ const CASUAL_SECTIONS = [
     emoji: "✨",
     title: "지금 바로, 공짜로",
     items: [
-      { name: "사주 원국", desc: "오행·십신이 한눈에", price: "무료", color: "#3d6b4c", href: "/start" },
-      { name: "오늘의 운세", desc: "매일 바뀌는 일진", price: "무료", color: "#b54a3f", href: "/start" },
+      { name: "무료 만세력", desc: "원국·오행·십신·대운이 한눈에", price: "무료", color: "#3d6b4c", href: "/start" },
+      { name: "오늘·내일의 운세", desc: "매일 바뀌는 일진", price: "무료", color: "#b54a3f", href: "/start?next=fortune" },
       { name: "관상 분석", desc: "사진으로 보는 관상", price: "무료", color: "#2f4a73", href: "/face" },
     ],
   },
@@ -138,7 +138,7 @@ export default function LandingPage() {
             운세와 관상도 무료로 체험해보세요.
           </p>
           <a href="/start" className="btn-primary mt-6 block text-center">
-            무료로 내 사주 보기
+            무료로 내 만세력 보기
           </a>
         </div>
 

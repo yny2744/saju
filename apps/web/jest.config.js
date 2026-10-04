@@ -11,6 +11,8 @@ module.exports = {
   testEnvironment: "node",
   rootDir: ".",
   testMatch: ["<rootDir>/tests/**/*.test.ts"],
+  // src 코드의 "@/..." 경로 별칭을 테스트에서도 그대로 쓰기 위함 (tsconfig paths와 동일)
+  moduleNameMapper: { "^@/(.*)$": "<rootDir>/src/$1" },
   globals: {
     "ts-jest": {
       tsconfig: "tsconfig.jest.json",
