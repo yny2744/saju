@@ -5,19 +5,12 @@ import { Suspense, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import type { FaceResultResponse, FaceApiErrorResponse } from "@/server/face/types";
 import { LoadingState, ErrorState } from "@/components/StatusScreens";
-import { FaceRadarChart } from "@/components/FaceRadarChart";
+import { FaceFeatureTable } from "@/components/FaceFeatureTable";
 import { faceTypeName } from "@/lib/faceType";
 
 type LoadState = { status: "loading" } | { status: "error"; message: string } | { status: "done"; data: FaceResultResponse };
 
-const FEATURE_LABELS: Array<{ key: keyof FaceResultResponse["result"]["features"]; label: string }> = [
-  { key: "faceShape", label: "얼굴형" },
-  { key: "forehead", label: "이마" },
-  { key: "eyes", label: "눈매" },
-  { key: "nose", label: "코" },
-  { key: "mouth", label: "입매" },
-  { key: "jaw", label: "턱선" },
-];
+
 
 function FaceResultBody() {
   const searchParams = useSearchParams();
@@ -99,9 +92,6 @@ function FaceResultBody() {
             </span>
           </div>
         </div>
-        <p className="mt-3 text-xs leading-relaxed" style={{ color: "var(--color-ink-faint)" }}>
-          {result.disclaimer}
-        </p>
       </header>
 
       {faceMap && (
@@ -123,28 +113,13 @@ function FaceResultBody() {
         </section>
       )}
 
-      <section className="mb-8 rounded-xl p-4" style={{ backgroundColor: "var(--color-paper-soft)" }}>
-        <h2 className="mb-2 text-center text-sm font-semibold" style={{ color: "var(--color-ink-soft)" }}>
-          특징 분포
-        </h2>
-        <div className="mx-auto aspect-square w-full max-w-[220px]">
-          <FaceRadarChart buckets={buckets} />
-        </div>
-      </section>
-
+      {/* 얼굴 특징 - 만세력과 같은 표 형식 (부위 · 3단계 눈금 · 키워드, 누르면 풀이) */}
       <section className="mb-8">
-        <h2 className="mb-4 text-base font-semibold">얼굴 특징 풀이</h2>
-        <div className="space-y-6">
-          {FEATURE_LABELS.map(({ key, label }, i) => (
-            <div key={key}>
-              {i > 0 && <div className="hairline mb-6" />}
-              <h3 className="mb-1.5 text-[15px] font-semibold">{label}</h3>
-              <p className="text-sm leading-relaxed" style={{ color: "var(--color-ink-soft)" }}>
-                {result.features[key]}
-              </p>
-            </div>
-          ))}
-        </div>
+        <p className="section-label mb-1">얼굴 특징</p>
+        <h2 className="mb-3 text-lg font-bold">
+          {faceTypeName(buckets)} 얼굴이에요
+        </h2>
+        <FaceFeatureTable buckets={buckets} texts={result.features} />
       </section>
 
       <section className="mb-8 rounded-xl px-4 py-4" style={{ backgroundColor: "var(--color-ink)", color: "var(--color-paper)" }}>
@@ -164,6 +139,10 @@ function FaceResultBody() {
           다시 분석하기
         </a>
       </div>
+
+      <p className="mt-8 text-center text-[11px] leading-relaxed" style={{ color: "var(--color-ink-faint)" }}>
+        {result.disclaimer}
+      </p>
     </main>
   );
 }
