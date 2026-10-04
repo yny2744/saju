@@ -7,6 +7,7 @@ import { LoadingState, ErrorState } from "@/components/StatusScreens";
 import { ElementBadge } from "@/components/ElementBadge";
 import { ElementRadarChart } from "@/components/ElementRadarChart";
 import { ShareCard } from "@/components/ShareCard";
+import { SajuPillarsCard } from "@/components/SajuPillarsCard";
 
 const ELEMENT_TAGLINE: Record<string, string> = {
   목: "성장하고 뻗어나가는 기운",
@@ -22,12 +23,6 @@ type LoadState =
   | { status: "error"; message: string }
   | { status: "done"; data: AnalyzeResultResponse };
 
-const PILLAR_LABELS = [
-  { key: "year", label: "연주" },
-  { key: "month", label: "월주" },
-  { key: "day", label: "일주" },
-  { key: "hour", label: "시주" },
-] as const;
 
 function ResultBody() {
   const searchParams = useSearchParams();
@@ -92,21 +87,9 @@ function ResultBody() {
 
       {/* 사주 원국 - 4기둥을 표 형태로 명확히 구분 */}
       <section className="mb-8">
-        <h2 className="mb-3 text-base font-semibold">사주 원국</h2>
-        <div
-          className="grid grid-cols-4 divide-x divide-[var(--color-line)] rounded-xl"
-          style={{ borderWidth: 1, borderStyle: "solid", borderColor: "var(--color-line)" }}
-        >
-          {PILLAR_LABELS.map(({ key, label }) => (
-            <div key={key} className="px-2 py-4 text-center">
-              <div className="section-label mb-1.5">{label}</div>
-              <div className="text-lg font-bold" style={{ fontFamily: "var(--font-serif)" }}>
-                {saju.pillars[key]?.ganzhi ?? "－"}
-              </div>
-            </div>
-          ))}
-        </div>
-      </section>
+          <h2 className="mb-3 text-base font-semibold">사주 원국</h2>
+          <SajuPillarsCard saju={saju} />
+        </section>
 
       {/* 오행 · 십신 요약 */}
       <section className="mb-8">
