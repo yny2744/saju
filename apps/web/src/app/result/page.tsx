@@ -4,10 +4,10 @@ import { Suspense, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import type { AnalyzeResultResponse, ApiErrorResponse } from "@/server/types";
 import { LoadingState, ErrorState } from "@/components/StatusScreens";
-import { ElementBadge } from "@/components/ElementBadge";
-import { ElementRadarChart } from "@/components/ElementRadarChart";
 import { ShareCard } from "@/components/ShareCard";
 import { SajuPillarsCard } from "@/components/SajuPillarsCard";
+import { TenGodBarChart } from "@/components/TenGodBarChart";
+import { buildTenGodDistribution, topHeadline, TEN_GOD_HINT } from "@/lib/tenGodDistribution";
 
 const ELEMENT_TAGLINE: Record<string, string> = {
   목: "성장하고 뻗어나가는 기운",
@@ -70,6 +70,7 @@ function ResultBody() {
 
   const { nickname, hanjaName, saju, interpretation } = state.data;
   const analysisEntries = Object.entries(interpretation.analysis as Record<string, unknown>);
+  const tenGodDist = buildTenGodDistribution(saju);
 
   return (
     <main className="mx-auto min-h-screen max-w-xl px-5 pb-20 pt-12 sm:pt-16">
@@ -80,9 +81,6 @@ function ResultBody() {
           {hanjaName && <span className="font-normal" style={{ color: "var(--color-ink-faint)" }}>({hanjaName})</span>}
           님의 사주
         </h1>
-        <p className="mt-2 text-xs leading-relaxed" style={{ color: "var(--color-ink-faint)" }}>
-          {interpretation.disclaimer}
-        </p>
       </header>
 
       {/* 사주 원국 - 4기둥을 표 형태로 명확히 구분 */}
@@ -91,31 +89,19 @@ function ResultBody() {
           <SajuPillarsCard saju={saju} />
         </section>
 
-      {/* 오행 · 십신 요약 */}
+      {/* 십신 분포 - 문장형 제목 + 막대그래프 (엔진 십신에 지장간 가중치를 더한 값) */}
       <section className="mb-8">
-        <h2 className="mb-3 text-base font-semibold">오행 · 십신</h2>
-        <div className="rounded-xl p-4" style={{ backgroundColor: "var(--color-paper-soft)" }}>
-          <div className="mx-auto mb-2 aspect-square w-full max-w-[220px]">
-            <ElementRadarChart counts={saju.elements.summary.counts} />
-          </div>
-          <div className="mb-2 flex flex-wrap items-center justify-center gap-2 text-sm">
-            <span style={{ color: "var(--color-ink-soft)" }}>우세 오행</span>
-            <ElementBadge element={interpretation.elements.dominant} />
-            {interpretation.elements.lacking && (
-              <>
-                <span className="ml-2" style={{ color: "var(--color-ink-soft)" }}>
-                  부족 오행
-                </span>
-                <ElementBadge element={interpretation.elements.lacking} />
-              </>
-            )}
-          </div>
-          <p className="mt-3 text-sm">
-            <span style={{ color: "var(--color-ink-soft)" }}>일간</span>{" "}
-            <b>{interpretation.tenGods.dayMaster}</b>
+        <p className="section-label mb-1">십신 분포</p>
+        <h2 className="mb-1 text-lg font-bold">{topHeadline(tenGodDist.top)}</h2>
+        {tenGodDist.top.length === 1 && (
+          <p className="mb-3 text-sm leading-relaxed" style={{ color: "var(--color-ink-soft)" }}>
+            {TEN_GOD_HINT[tenGodDist.top[0]]}
           </p>
-          <p className="mt-1.5 text-sm leading-relaxed" style={{ color: "var(--color-ink-soft)" }}>
-            {interpretation.tenGods.summary}
+        )}
+        <div className="rounded-xl p-4" style={{ backgroundColor: "var(--color-paper-soft)" }}>
+          <TenGodBarChart dist={tenGodDist} />
+          <p className="mt-3 text-[11px] leading-relaxed" style={{ color: "var(--color-ink-faint)" }}>
+            일간({interpretation.tenGods.dayMaster})을 기준으로 천간·지지와 지장간의 비중을 함께 반영했어요.
           </p>
         </div>
       </section>
@@ -159,6 +145,11 @@ function ResultBody() {
           다시 분석하기
         </a>
       </div>
+
+      {/* 면책 문구 - 첫 화면 제목 아래에서 결과 맨 아래로 옮김 (모든 페이지 하단 고지·이용약관 제9조는 별도 유지) */}
+      <p className="mt-8 text-center text-[11px] leading-relaxed" style={{ color: "var(--color-ink-faint)" }}>
+        {interpretation.disclaimer}
+      </p>
     </main>
   );
 }
