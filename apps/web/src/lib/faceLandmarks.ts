@@ -1,8 +1,8 @@
 "use client";
 
-import { FaceLandmarker, FaceDetector, FilesetResolver } from "@mediapipe/tasks-vision";
+import { FaceLandmarker, FaceDetector, FilesetResolver, ImageSegmenter } from "@mediapipe/tasks-vision";
 import { computeFaceRatios, InsufficientLandmarksError, type FaceRatios } from "./faceRatios";
-import { drawFaceMap, type FaceMapResult } from "./faceMap";
+import { drawFaceMap, type FaceMapResult, type PersonMask } from "./faceMap";
 
 /**
  * Phase 9 조사 보고서(승인됨)의 결론에 따라 @mediapipe/tasks-vision(Apache-2.0,
@@ -25,6 +25,9 @@ import { drawFaceMap, type FaceMapResult } from "./faceMap";
 const WASM_BASE_URL = "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/wasm";
 const FACE_LANDMARKER_MODEL_URL =
   "https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task";
+// 관상도에서 배경(벽·사물)을 지우기 위한 사람 영역 분할 모델 (화상회의 배경 흐림과 같은 종류, 기기 안에서 실행)
+const SELFIE_SEGMENTER_MODEL_URL =
+  "https://storage.googleapis.com/mediapipe-models/image_segmenter/selfie_segmenter/float16/latest/selfie_segmenter.tflite";
 const FACE_DETECTOR_MODEL_URL =
   "https://storage.googleapis.com/mediapipe-models/face_detector/blaze_face_short_range/float16/1/blaze_face_short_range.tflite";
 
@@ -82,6 +85,41 @@ async function getFaceDetector(): Promise<FaceDetector> {
   return detectorPromise;
 }
 
+let segmenterPromise: Promise<ImageSegmenter> | null = null;
+
+async function getSegmenter(): Promise<ImageSegmenter> {
+  if (!segmenterPromise) {
+    segmenterPromise = (async () => {
+      const vision = await FilesetResolver.forVisionTasks(WASM_BASE_URL);
+      return ImageSegmenter.createFromOptions(vision, {
+        baseOptions: { modelAssetPath: SELFIE_SEGMENTER_MODEL_URL },
+        runningMode: "IMAGE",
+        outputConfidenceMasks: true,
+        outputCategoryMask: false,
+      });
+    })().catch((err) => {
+      segmenterPromise = null;
+      throw err;
+    });
+  }
+  return segmenterPromise;
+}
+
+/** 사람 영역 마스크(0~1). 실패하면 null → 관상도는 얼굴 둘레 타원으로 배경을 지운다. */
+async function getPersonMask(image: HTMLImageElement): Promise<PersonMask | null> {
+  try {
+    const segmenter = await getSegmenter();
+    const result = segmenter.segment(image);
+    const mask = result.confidenceMasks?.[0];
+    if (!mask) return null;
+    const out: PersonMask = { data: new Float32Array(mask.getAsFloat32Array()), width: mask.width, height: mask.height };
+    result.confidenceMasks?.forEach((m) => m.close());
+    return out;
+  } catch {
+    return null;
+  }
+}
+
 const MIN_CONFIDENCE = 0.5;
 
 /**
@@ -132,7 +170,8 @@ export async function analyzeFace(
 
   try {
     const ratios = computeFaceRatios(landmarks);
-    return { features: { ...ratios, detectionConfidence: confidence }, faceMap: drawFaceMap(image, landmarks) };
+    const personMask = await getPersonMask(image);
+    return { features: { ...ratios, detectionConfidence: confidence }, faceMap: drawFaceMap(image, landmarks, personMask) };
   } catch (err) {
     if (err instanceof InsufficientLandmarksError) {
       throw new FaceDetectionError("얼굴 윤곽을 충분히 분석하지 못했습니다. 다시 촬영해주세요.", "LANDMARKS_FAILED");

@@ -23,6 +23,13 @@ export interface SamJeong {
   lower: number;
 }
 
+/** 사람 영역 확률(0~1) 마스크 - 원본 사진 크기 기준 */
+export interface PersonMask {
+  data: Float32Array;
+  width: number;
+  height: number;
+}
+
 export interface FaceMapResult {
   dataUrl: string;
   /** 머리카락 경계를 못 찾으면 null (상정 측정 불가) */
@@ -75,7 +82,7 @@ function blur(src: Float32Array, w: number, h: number, r: number): Float32Array 
   return a;
 }
 
-export function drawFaceMap(image: HTMLImageElement, landmarks: Point[]): FaceMapResult | null {
+export function drawFaceMap(image: HTMLImageElement, landmarks: Point[], personMask: PersonMask | null = null): FaceMapResult | null {
   try {
     const iw = image.naturalWidth;
     const ih = image.naturalHeight;
@@ -111,9 +118,37 @@ export function drawFaceMap(image: HTMLImageElement, landmarks: Point[]): FaceMa
     const inv = new Float32Array(W * H);
     for (let i = 0; i < W * H; i++) inv[i] = 255 - gray[i];
     const invBlur = blur(inv, W, H, Math.max(3, Math.round(W / 80)));
+    // 배경 지우기: 사람 영역 마스크가 있으면 그것을, 없으면 얼굴 둘레 타원(머리 포함)을 쓴다
+    const keep = new Float32Array(W * H);
+    if (personMask) {
+      const mx = personMask.width / iw;
+      const my = personMask.height / ih;
+      for (let y = 0; y < H; y++) {
+        const sy = Math.min(personMask.height - 1, Math.floor((cy0 + y / scale) * my));
+        for (let x = 0; x < W; x++) {
+          const sx = Math.min(personMask.width - 1, Math.floor((cx0 + x / scale) * mx));
+          keep[y * W + x] = personMask.data[sy * personMask.width + sx];
+        }
+      }
+    } else {
+      const ecx = ((fx0 + fx1) / 2 - cx0) * scale;
+      const ecy = ((fy0 + fy1) / 2 - fh * 0.12 - cy0) * scale;
+      const rx = fw * 0.62 * scale;
+      const ry = fh * 0.78 * scale;
+      for (let y = 0; y < H; y++) {
+        for (let x = 0; x < W; x++) {
+          const r = Math.hypot((x - ecx) / rx, (y - ecy) / ry);
+          keep[y * W + x] = r < 0.85 ? 1 : r > 1.0 ? 0 : (1.0 - r) / 0.15;
+        }
+      }
+    }
+    const keepSoft = blur(keep, W, H, 2);
+
     for (let i = 0; i < W * H; i++) {
       const dodge = Math.min(255, (gray[i] * 256) / Math.max(1, 255 - invBlur[i]));
-      const t = Math.min(1, Math.max(0, ((dodge - 90) * 1.6) / 255));
+      const sketchT = Math.min(1, Math.max(0, ((dodge - 90) * 1.6) / 255));
+      const k = Math.min(1, Math.max(0, (keepSoft[i] - 0.15) / 0.7));
+      const t = sketchT * k + (1 - k); // 배경(k=0)은 종이색
       d[i * 4] = t * PAPER[0] + (1 - t) * INK[0];
       d[i * 4 + 1] = t * PAPER[1] + (1 - t) * INK[1];
       d[i * 4 + 2] = t * PAPER[2] + (1 - t) * INK[2];
