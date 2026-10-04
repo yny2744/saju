@@ -1,5 +1,6 @@
 "use client";
 
+import { PurchaseNotice } from "@/components/PurchaseNotice";
 import { Suspense, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { loadTossPayments, ANONYMOUS } from "@tosspayments/tosspayments-sdk";
@@ -135,6 +136,8 @@ function ProductsBody() {
           </div>
         ))}
       </div>
+
+      <PurchaseNotice />
     </main>
   );
 }

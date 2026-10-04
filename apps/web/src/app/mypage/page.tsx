@@ -1,8 +1,9 @@
 "use client";
 
+import { isLive } from "@/lib/launchMode";
+import { ComingSoon } from "@/components/ComingSoon";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Footer } from "@/components/Footer";
 import { readA11yPrefs, saveA11yPrefs, type A11yPrefs } from "@/components/AccessibilityInit";
 
 /**
@@ -19,7 +20,7 @@ import { readA11yPrefs, saveA11yPrefs, type A11yPrefs } from "@/components/Acces
 
 type User = { nickname: string; email: string | null };
 
-export default function MyPage() {
+function MyPageBody() {
   const router = useRouter();
   const [user, setUser] = useState<User | null | "loading">("loading");
   const [prefs, setPrefs] = useState<A11yPrefs>({ fontSize: "normal", contrast: "normal" });
@@ -189,7 +190,10 @@ export default function MyPage() {
           )}
         </section>
       </main>
-      <Footer />
     </>
   );
+}
+
+export default function MyPage() {
+  return isLive() ? <MyPageBody /> : <ComingSoon title="내 사주함" />;
 }

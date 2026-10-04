@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { blockIfNotLive } from "@/server/launchGuard";
 import { exchangeKakaoCode } from "@/server/auth/kakao";
 import { findOrCreateKakaoUser } from "@/server/auth/users";
 import { createSession, SESSION_COOKIE_NAME } from "@/server/auth/session";
@@ -6,6 +7,8 @@ import { createSession, SESSION_COOKIE_NAME } from "@/server/auth/session";
 export const runtime = "nodejs";
 
 export async function GET(request: NextRequest) {
+  const blocked = blockIfNotLive();
+  if (blocked) return blocked;
   const code = request.nextUrl.searchParams.get("code");
   if (!code) {
     return NextResponse.redirect(new URL("/login?error=kakao_denied", request.nextUrl.origin));

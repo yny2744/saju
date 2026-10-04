@@ -1,5 +1,4 @@
 import { BUSINESS_INFO } from "@/lib/businessInfo";
-import { Footer } from "@/components/Footer";
 
 export const metadata = { title: `이용약관 | ${BUSINESS_INFO.serviceName}` };
 
@@ -82,6 +81,9 @@ export default function TermsPage() {
               <br />
               2. 회사는 서비스의 내용, 상품 구성, 가격을 변경할 수 있으며, 변경 시 서비스 화면을 통해
               공지합니다.
+              <br />
+              3. 유료 콘텐츠(심층 해석 결과)는 결제 승인 후 24시간 동안 열람할 수 있으며, 이 기간이 지나면 다시
+              열람할 수 없습니다. 이용자는 필요한 경우 결과 화면을 캡처하는 등 직접 보관해야 합니다.
             </p>
           </section>
 
@@ -176,7 +178,6 @@ export default function TermsPage() {
           </section>
         </div>
       </main>
-      <Footer />
     </>
   );
 }

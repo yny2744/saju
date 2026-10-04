@@ -26,8 +26,15 @@ const SUPPORTED_PRODUCT_TYPES_PHASE4 = ["FREE_BASIC"] as const;
 
 const NICKNAME_MAX_LENGTH = 20;
 const HANJA_NAME_MAX_LENGTH = 10;
-/** 한자(CJK 통합 한자 + 확장 A) 범위만 허용한다. 사주 계산에는 쓰지 않고, 결과 화면 표시용일 뿐이다. */
-const HANJA_ONLY_RE = /^[\u4E00-\u9FFF\u3400-\u4DBF]+$/;
+/**
+ * 한자(Han 문자 전체)만 허용한다. 사주 계산에는 쓰지 않고, 결과 화면 표시용일 뿐이다.
+ *
+ * ⚠️ 2026-10 수정: 예전엔 U+4E00~9FFF(일반 한자 영역)만 허용했는데, 한국어 입력기의 한자 변환은
+ * 두음법칙 때문에 같은 글자를 "호환 한자"(U+F900~FAFF)로 입력하는 경우가 있어, 눈으로는 정상인
+ * 한자가 "한자만 입력해주세요" 오류로 거부됐다. Script=Han은 호환 한자까지 포함하고,
+ * 아래 normalize("NFC")가 호환 한자를 표준 한자로 바꿔서 저장·표시를 일정하게 만든다.
+ */
+const HANJA_ONLY_RE = /^\p{Script=Han}+$/u;
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 const TIME_RE = /^([01]\d|2[0-3]):([0-5]\d)$/;
 const MIN_YEAR = 1900;
@@ -97,7 +104,7 @@ export function validateAnalyzeInput(body: AnalyzeRequestBody): ValidationResult
     if (!isNonEmptyString(body.hanjaName)) {
       issues.push("hanjaName: 문자열이어야 합니다.");
     } else {
-      const trimmed = body.hanjaName.trim();
+      const trimmed = body.hanjaName.trim().normalize("NFC");
       if (trimmed.length > HANJA_NAME_MAX_LENGTH) {
         issues.push(`hanjaName: 한자이름은 ${HANJA_NAME_MAX_LENGTH}자 이하로 입력해주세요.`);
       } else if (!HANJA_ONLY_RE.test(trimmed)) {

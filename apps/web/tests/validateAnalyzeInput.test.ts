@@ -29,6 +29,14 @@ describe("validateAnalyzeInput - hanjaName (선택, Phase 10.5)", () => {
     }
   });
 
+  test("한국어 입력기가 만드는 호환 한자(U+F914)도 통과하고 표준 한자(U+6A02)로 정규화된다", () => {
+    const result = validateAnalyzeInput(validBody({ hanjaName: "\uF914" }));
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(result.value.hanjaName).toBe("\u6A02");
+    }
+  });
+
   test("한글이 섞여 있으면 거부한다", () => {
     const result = validateAnalyzeInput(validBody({ hanjaName: "柳남영" }));
     expect(result.ok).toBe(false);

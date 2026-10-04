@@ -1,4 +1,3 @@
-import { Footer } from "@/components/Footer";
 import { LoginButtons } from "@/components/LoginButtons";
 import { SajuEmblemIllustration, FortuneSunMoonIllustration, FaceReadingIllustration } from "@/components/LandingIllustrations";
 import { CasualLanding } from "@/components/CasualLanding";
@@ -234,7 +233,6 @@ export default function LandingPage() {
           과학적으로 확정하지 않습니다.
         </p>
       </main>
-      <Footer />
     </>
   );
 }

@@ -1,4 +1,3 @@
-import { Footer } from "@/components/Footer";
 import { LoginButtons } from "@/components/LoginButtons";
 
 /**
@@ -129,7 +128,6 @@ export function CasualLanding() {
           과학적으로 확정하지 않습니다.
         </p>
       </main>
-      <Footer />
     </>
   );
 }

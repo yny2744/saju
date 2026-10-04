@@ -1,8 +1,8 @@
 "use client";
 
+import { isLive } from "@/lib/launchMode";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Footer } from "@/components/Footer";
 
 type CalendarType = "solar" | "lunar";
 type Gender = "male" | "female";
@@ -140,10 +140,11 @@ export default function StartPage() {
                 value={form.nickname}
                 onChange={(e) => update("nickname", e.target.value)}
                 className="field-input"
-                placeholder="예: 홍길동 (닉네임도 괜찮아요)"
+                placeholder="예: 홍길동"
               />
             </div>
 
+            {isLive() && (
             <div>
               <label htmlFor="hanjaName" className="mb-1.5 block text-sm font-medium">
                 한자이름 <span style={{ color: "var(--color-ink-faint)" }}>(선택)</span>
@@ -161,6 +162,7 @@ export default function StartPage() {
                 결과 화면에 이름과 함께 표시돼요. 사주 계산 자체에는 쓰이지 않아요.
               </p>
             </div>
+            )}
 
             <div>
               <span className="mb-1.5 block text-sm font-medium">성별</span>
@@ -316,7 +318,6 @@ export default function StartPage() {
           </button>
         </form>
       </main>
-      <Footer />
     </>
   );
 }

@@ -1,5 +1,6 @@
 "use client";
 
+import { PurchaseNotice } from "@/components/PurchaseNotice";
 import { Suspense, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { loadTossPayments, ANONYMOUS } from "@tosspayments/tosspayments-sdk";
@@ -120,6 +121,8 @@ function FaceProductsBody() {
           </button>
         </div>
       )}
+
+      <PurchaseNotice />
 
       <p className="mt-6 text-xs leading-relaxed" style={{ color: "var(--color-ink-faint)" }}>
         모든 관상 해석은 전통 문화 콘텐츠이며, 성격·운명·재산·건강·연애를 과학적으로 확정하지 않습니다. 인연의

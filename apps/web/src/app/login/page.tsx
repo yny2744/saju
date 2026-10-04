@@ -1,8 +1,9 @@
 "use client";
 
+import { isLive } from "@/lib/launchMode";
+import { ComingSoon } from "@/components/ComingSoon";
 import { Suspense, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Footer } from "@/components/Footer";
 
 const ERROR_MESSAGES: Record<string, string> = {
   kakao_not_configured: "카카오 로그인은 아직 준비 중이에요.",
@@ -147,12 +148,10 @@ function LoginPageBody() {
 }
 
 export default function LoginPage() {
+  if (!isLive()) return <ComingSoon title="로그인" />;
   return (
-    <>
-      <Suspense fallback={<div className="py-24 text-center text-sm">불러오는 중...</div>}>
-        <LoginPageBody />
-      </Suspense>
-      <Footer />
-    </>
+    <Suspense fallback={<div className="py-24 text-center text-sm">불러오는 중...</div>}>
+      <LoginPageBody />
+    </Suspense>
   );
 }

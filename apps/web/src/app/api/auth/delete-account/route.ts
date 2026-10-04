@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { blockIfNotLive } from "@/server/launchGuard";
 import { db } from "@/server/auth/db";
 import { getUserBySessionToken, SESSION_COOKIE_NAME } from "@/server/auth/session";
 
@@ -10,6 +11,8 @@ export const runtime = "nodejs";
  * 자동으로 같이 삭제된다 (db.ts의 스키마 참고).
  */
 export async function DELETE(request: NextRequest) {
+  const blocked = blockIfNotLive();
+  if (blocked) return blocked;
   const token = request.cookies.get(SESSION_COOKIE_NAME)?.value;
   const user = await getUserBySessionToken(token);
 
