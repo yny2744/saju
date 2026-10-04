@@ -17,6 +17,8 @@ const ELEMENT_TAGLINE: Record<string, string> = {
   수: "유연하고 지혜로운 기운",
 };
 import { AnalysisSection } from "@/components/AnalysisSection";
+import { FreeAnalysisBoards, isFreeAnalysisShape } from "@/components/FreeAnalysisBoards";
+import { buildFreeAnalysisKeywords } from "@/lib/freeAnalysisKeywords";
 
 type LoadState =
   | { status: "loading" }
@@ -69,7 +71,8 @@ function ResultBody() {
   }
 
   const { nickname, hanjaName, saju, interpretation } = state.data;
-  const analysisEntries = Object.entries(interpretation.analysis as Record<string, unknown>);
+  const analysisRecord = interpretation.analysis as Record<string, unknown>;
+  const analysisEntries = Object.entries(analysisRecord);
   const tenGodDist = buildTenGodDistribution(saju);
 
   return (
@@ -109,14 +112,18 @@ function ResultBody() {
       {/* 상세 해석 - 문서형으로 제목+문단 구분 */}
       <section className="mb-10">
         <h2 className="mb-4 text-base font-semibold">상세 해석</h2>
-        <div className="space-y-6">
-          {analysisEntries.map(([key, value], i) => (
-            <div key={key}>
-              {i > 0 && <div className="hairline mb-6" />}
-              <AnalysisSection fieldKey={key} value={value} />
-            </div>
-          ))}
-        </div>
+        {interpretation.meta?.provider === "rule-engine" && isFreeAnalysisShape(analysisRecord) ? (
+          <FreeAnalysisBoards analysis={analysisRecord} kw={buildFreeAnalysisKeywords(saju)} />
+        ) : (
+          <div className="space-y-6">
+            {analysisEntries.map(([key, value], i) => (
+              <div key={key}>
+                {i > 0 && <div className="hairline mb-6" />}
+                <AnalysisSection fieldKey={key} value={value} />
+              </div>
+            ))}
+          </div>
+        )}
       </section>
 
       {/* 공유용 결과 카드 - 생년월일/출생시간/출생도시는 포함하지 않는다 */}
