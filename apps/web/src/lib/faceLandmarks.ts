@@ -2,6 +2,7 @@
 
 import { FaceLandmarker, FaceDetector, FilesetResolver } from "@mediapipe/tasks-vision";
 import { computeFaceRatios, InsufficientLandmarksError, type FaceRatios } from "./faceRatios";
+import { drawFaceMap, type FaceMapResult } from "./faceMap";
 
 /**
  * Phase 9 조사 보고서(승인됨)의 결론에 따라 @mediapipe/tasks-vision(Apache-2.0,
@@ -95,6 +96,17 @@ const MIN_CONFIDENCE = 0.5;
  * 비율 6개 + 신뢰도 1개만 있다.
  */
 export async function extractFaceFeatures(image: HTMLImageElement): Promise<FaceFeatureResult> {
+  return (await analyzeFace(image)).features;
+}
+
+/**
+ * extractFaceFeatures와 같은 분석에 더해, 같은 얼굴 점으로 관상도(스케치 그림)를 브라우저 안에서 그린다.
+ * features(서버로 가는 값)와 faceMap(이 탭에만 보관하는 그림)을 반드시 따로 반환한다 -
+ * faceMap을 features에 섞으면 그림이 서버로 전송되므로 절대 합치지 않는다.
+ */
+export async function analyzeFace(
+  image: HTMLImageElement
+): Promise<{ features: FaceFeatureResult; faceMap: FaceMapResult | null }> {
   const detector = await getFaceDetector();
   const detection = detector.detect(image);
 
@@ -120,7 +132,7 @@ export async function extractFaceFeatures(image: HTMLImageElement): Promise<Face
 
   try {
     const ratios = computeFaceRatios(landmarks);
-    return { ...ratios, detectionConfidence: confidence };
+    return { features: { ...ratios, detectionConfidence: confidence }, faceMap: drawFaceMap(image, landmarks) };
   } catch (err) {
     if (err instanceof InsufficientLandmarksError) {
       throw new FaceDetectionError("얼굴 윤곽을 충분히 분석하지 못했습니다. 다시 촬영해주세요.", "LANDMARKS_FAILED");

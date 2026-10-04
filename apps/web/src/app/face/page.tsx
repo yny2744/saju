@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { FaceCapture } from "@/components/FaceCapture";
 import type { FaceFeatureResult } from "@/lib/faceLandmarks";
+import type { FaceMapResult } from "@/lib/faceMap";
 
 /**
  * Phase 9 지시서 3조: "관상 서비스는 사주 결과가 없어도 독립적으로 이용할 수
@@ -16,7 +17,7 @@ export default function FaceEntryPage() {
   const [submitting, setSubmitting] = useState(false);
   const [issues, setIssues] = useState<string[]>([]);
 
-  async function handleFeatures(features: FaceFeatureResult, photoDataUrl: string | null) {
+  async function handleFeatures(features: FaceFeatureResult, photoDataUrl: string | null, faceMap: FaceMapResult | null) {
     if (!nickname.trim()) {
       setIssues(["닉네임을 입력해주세요."]);
       return;
@@ -53,6 +54,15 @@ export default function FaceEntryPage() {
           sessionStorage.setItem(`face_photo_${data.id}`, photoDataUrl);
         } catch {
           // sessionStorage 용량 초과 등은 무시한다 - 사진 미리보기는 부가 기능일 뿐이다.
+        }
+      }
+
+      // 관상도(스케치 그림)도 사진과 같은 원칙 - 서버로 보내지 않고 이 탭에만 보관한다.
+      if (faceMap) {
+        try {
+          sessionStorage.setItem(`face_map_${data.id}`, JSON.stringify(faceMap));
+        } catch {
+          // 용량 초과 시 관상도만 생략
         }
       }
 

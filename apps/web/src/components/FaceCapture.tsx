@@ -1,7 +1,8 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { FaceDetectionError, extractFaceFeatures, type FaceFeatureResult } from "@/lib/faceLandmarks";
+import { FaceDetectionError, analyzeFace, type FaceFeatureResult } from "@/lib/faceLandmarks";
+import type { FaceMapResult } from "@/lib/faceMap";
 
 type Status = "idle" | "loading" | "error" | "done";
 
@@ -16,7 +17,7 @@ type Status = "idle" | "loading" | "error" | "done";
 export function FaceCapture({
   onFeaturesExtracted,
 }: {
-  onFeaturesExtracted: (features: FaceFeatureResult, photoDataUrl: string | null) => void;
+  onFeaturesExtracted: (features: FaceFeatureResult, photoDataUrl: string | null, faceMap: FaceMapResult | null) => void;
 }) {
   const [consent, setConsent] = useState(false);
   const [status, setStatus] = useState<Status>("idle");
@@ -34,7 +35,7 @@ export function FaceCapture({
     const objectUrl = URL.createObjectURL(file);
     try {
       const image = await loadImage(objectUrl);
-      const features = await extractFaceFeatures(image);
+      const { features, faceMap } = await analyzeFace(image);
       setStatus("done");
       // 결과 화면에서 "내 사진"을 보여주면 체감 품질이 크게 달라진다는 벤치마킹
       // 결과를 반영했다 - 단, 서버로는 절대 보내지 않는다. 작은 썸네일로 축소해서
@@ -42,7 +43,7 @@ export function FaceCapture({
       // 이 탭을 닫으면 사라진다. 원본 이미지 자체는 여기서 만든 작은 복사본일 뿐,
       // 원본 File/objectUrl은 아래 finally에서 그대로 해제한다.
       const thumbnail = createThumbnail(image, 360);
-      onFeaturesExtracted(features, thumbnail);
+      onFeaturesExtracted(features, thumbnail, faceMap);
     } catch (err) {
       setStatus("error");
       setErrorMessage(toUserMessage(err));
