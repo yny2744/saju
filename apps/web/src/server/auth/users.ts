@@ -6,6 +6,32 @@ export interface User {
   email: string | null;
   nickname: string;
   kakaoId: string | null;
+  /** 필수 동의(이용약관·개인정보 수집·이용·만 14세 이상)를 마쳤는지 */
+  termsAgreed: boolean;
+  /** 선택 동의: 마케팅·광고 정보 수신 */
+  marketingAgreed: boolean;
+}
+
+interface UserRow {
+  id: string;
+  email: string | null;
+  nickname: string;
+  kakao_id: string | null;
+  terms_agreed_at: Date | null;
+  marketing_agreed: boolean;
+}
+
+const USER_COLUMNS = "id, email, nickname, kakao_id, terms_agreed_at, marketing_agreed";
+
+function toUser(row: UserRow): User {
+  return {
+    id: row.id,
+    email: row.email,
+    nickname: row.nickname,
+    kakaoId: row.kakao_id,
+    termsAgreed: row.terms_agreed_at !== null,
+    marketingAgreed: row.marketing_agreed,
+  };
 }
 
 const BCRYPT_COST = 10;
@@ -37,17 +63,23 @@ export function isValidPassword(value: string): boolean {
   return value.length >= 8 && value.length <= 72; // bcrypt는 72바이트까지만 실제로 사용한다
 }
 
-export async function createUserWithEmail(email: string, password: string, nickname: string): Promise<User> {
+/** 이메일 가입은 가입 화면에서 동의를 함께 받으므로, 필수 동의 시각을 가입과 동시에 기록한다. */
+export async function createUserWithEmail(
+  email: string,
+  password: string,
+  nickname: string,
+  marketingAgreed: boolean
+): Promise<User> {
   const pool = await db();
   const passwordHash = await bcrypt.hash(password, BCRYPT_COST);
   try {
-    const result = await pool.query<{ id: string; email: string; nickname: string }>(
-      `INSERT INTO users (email, password_hash, nickname) VALUES ($1, $2, $3)
-       RETURNING id, email, nickname`,
-      [email.toLowerCase(), passwordHash, nickname]
+    const result = await pool.query<UserRow>(
+      `INSERT INTO users (email, password_hash, nickname, terms_agreed_at, marketing_agreed, marketing_agreed_at)
+       VALUES ($1, $2, $3, now(), $4::boolean, CASE WHEN $4::boolean THEN now() ELSE NULL END)
+       RETURNING ${USER_COLUMNS}`,
+      [email.toLowerCase(), passwordHash, nickname, marketingAgreed]
     );
-    const row = result.rows[0];
-    return { id: row.id, email: row.email, nickname: row.nickname, kakaoId: null };
+    return toUser(result.rows[0]);
   } catch (err) {
     // Postgres unique_violation
     if (err && typeof err === "object" && "code" in err && (err as { code: string }).code === "23505") {
@@ -59,8 +91,8 @@ export async function createUserWithEmail(email: string, password: string, nickn
 
 export async function verifyEmailLogin(email: string, password: string): Promise<User> {
   const pool = await db();
-  const result = await pool.query<{ id: string; email: string; nickname: string; password_hash: string | null }>(
-    `SELECT id, email, nickname, password_hash FROM users WHERE email = $1`,
+  const result = await pool.query<UserRow & { password_hash: string | null }>(
+    `SELECT ${USER_COLUMNS}, password_hash FROM users WHERE email = $1`,
     [email.toLowerCase()]
   );
   const row = result.rows[0];
@@ -69,7 +101,7 @@ export async function verifyEmailLogin(email: string, password: string): Promise
   const matches = await bcrypt.compare(password, row.password_hash);
   if (!matches) throw new InvalidCredentialsError();
 
-  return { id: row.id, email: row.email, nickname: row.nickname, kakaoId: null };
+  return toUser(row);
 }
 
 /**
@@ -80,30 +112,43 @@ export async function verifyEmailLogin(email: string, password: string): Promise
  */
 export async function findOrCreateKakaoUser(kakaoId: string, nickname: string): Promise<User> {
   const pool = await db();
-  const existing = await pool.query<{ id: string; email: string | null; nickname: string }>(
-    `SELECT id, email, nickname FROM users WHERE kakao_id = $1`,
-    [kakaoId]
-  );
-  if (existing.rows[0]) {
-    const row = existing.rows[0];
-    return { id: row.id, email: row.email, nickname: row.nickname, kakaoId };
-  }
+  const existing = await pool.query<UserRow>(`SELECT ${USER_COLUMNS} FROM users WHERE kakao_id = $1`, [kakaoId]);
+  if (existing.rows[0]) return toUser(existing.rows[0]);
 
-  const created = await pool.query<{ id: string; email: string | null; nickname: string }>(
-    `INSERT INTO users (kakao_id, nickname) VALUES ($1, $2) RETURNING id, email, nickname`,
+  // 처음 온 카카오 사용자는 아직 우리 약관에 동의하지 않은 상태(terms_agreed_at NULL) -
+  // 콜백이 /consent 화면으로 보내 동의를 받는다.
+  const created = await pool.query<UserRow>(
+    `INSERT INTO users (kakao_id, nickname) VALUES ($1, $2) RETURNING ${USER_COLUMNS}`,
     [kakaoId, nickname]
   );
-  const row = created.rows[0];
-  return { id: row.id, email: row.email, nickname: row.nickname, kakaoId };
+  return toUser(created.rows[0]);
 }
 
 export async function getUserById(id: string): Promise<User | null> {
   const pool = await db();
-  const result = await pool.query<{ id: string; email: string | null; nickname: string; kakao_id: string | null }>(
-    `SELECT id, email, nickname, kakao_id FROM users WHERE id = $1`,
-    [id]
-  );
+  const result = await pool.query<UserRow>(`SELECT ${USER_COLUMNS} FROM users WHERE id = $1`, [id]);
   const row = result.rows[0];
-  if (!row) return null;
-  return { id: row.id, email: row.email, nickname: row.nickname, kakaoId: row.kakao_id };
+  return row ? toUser(row) : null;
+}
+
+/** 가입 동의 기록 (카카오 첫 로그인 후 /consent 화면). 필수 동의 시각과 선택(마케팅) 동의 여부를 남긴다. */
+export async function recordConsent(userId: string, marketingAgreed: boolean): Promise<void> {
+  const pool = await db();
+  await pool.query(
+    `UPDATE users
+        SET terms_agreed_at = COALESCE(terms_agreed_at, now()),
+            marketing_agreed = $2::boolean,
+            marketing_agreed_at = CASE WHEN $2::boolean THEN now() ELSE NULL END
+      WHERE id = $1`,
+    [userId, marketingAgreed]
+  );
+}
+
+/** 마케팅 수신 동의/철회 (내 사주함). 철회도 동의만큼 쉽게 할 수 있어야 한다. */
+export async function setMarketingAgreed(userId: string, agreed: boolean): Promise<void> {
+  const pool = await db();
+  await pool.query(
+    `UPDATE users SET marketing_agreed = $2::boolean, marketing_agreed_at = CASE WHEN $2::boolean THEN now() ELSE NULL END WHERE id = $1`,
+    [userId, agreed]
+  );
 }

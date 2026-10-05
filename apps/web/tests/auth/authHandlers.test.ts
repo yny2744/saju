@@ -60,8 +60,21 @@ describe("handleSignup - 입력값 검증 (DB 호출 전에 끝남)", () => {
     expect(res.status).toBe(400);
   });
 
+  test("필수 약관 동의가 빠지면 400 (DB 호출 전에 거절)", async () => {
+    const res = await handleSignup({ email: "user@example.com", password: "password123", nickname: "홍길동", agreeTerms: true });
+    expect(res.status).toBe(400);
+    expect((res.body as { error: { code: string } }).error.code).toBe("CONSENT_REQUIRED");
+  });
+
   test("입력값은 유효하지만 DB가 없으면(테스트 환경) 500으로 명확히 실패한다 - 조용히 가짜 성공 처리하지 않는다", async () => {
-    const res = await handleSignup({ email: "user@example.com", password: "password123", nickname: "홍길동" });
+    const res = await handleSignup({
+      email: "user@example.com",
+      password: "password123",
+      nickname: "홍길동",
+      agreeTerms: true,
+      agreePrivacy: true,
+      agreeAge: true,
+    });
     expect(res.status).toBe(500);
     expect(res.session).toBeUndefined();
   });

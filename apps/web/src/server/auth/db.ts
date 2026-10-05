@@ -53,6 +53,31 @@ async function ensureSchema(): Promise<void> {
       created_at TIMESTAMPTZ NOT NULL DEFAULT now()
     );
   `);
+  // 수정안 3번: 가입 동의(필수/선택 분리). 기존 테이블에도 안전하게 붙도록 ADD COLUMN IF NOT EXISTS.
+  await db.query(`
+    ALTER TABLE users
+      ADD COLUMN IF NOT EXISTS terms_agreed_at TIMESTAMPTZ,
+      ADD COLUMN IF NOT EXISTS marketing_agreed BOOLEAN NOT NULL DEFAULT false,
+      ADD COLUMN IF NOT EXISTS marketing_agreed_at TIMESTAMPTZ;
+  `);
+  // 수정안 3번: 저장된 사람(나·가족) - 다음 방문 때 드롭다운으로 불러온다. 회원 탈퇴 시 함께 삭제(CASCADE).
+  await db.query(`
+    CREATE TABLE IF NOT EXISTS saju_profiles (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      name TEXT NOT NULL,
+      hanja_name TEXT,
+      gender TEXT NOT NULL,
+      calendar_type TEXT NOT NULL,
+      is_leap_month BOOLEAN NOT NULL DEFAULT false,
+      birth_date TEXT NOT NULL,
+      birth_time TEXT,
+      birth_city TEXT,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+      updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+    );
+  `);
+  await db.query(`CREATE INDEX IF NOT EXISTS saju_profiles_user_idx ON saju_profiles(user_id);`);
   schemaReady = true;
 }
 

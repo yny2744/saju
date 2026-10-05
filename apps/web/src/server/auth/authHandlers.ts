@@ -1,5 +1,7 @@
 import {
   createUserWithEmail,
+  recordConsent,
+  setMarketingAgreed,
   verifyEmailLogin,
   EmailAlreadyUsedError,
   InvalidCredentialsError,
@@ -21,12 +23,25 @@ interface AuthErrorBody {
 }
 
 interface AuthUserBody {
-  user: { nickname: string; email: string | null };
+  user: { nickname: string; email: string | null; termsAgreed: boolean; marketingAgreed: boolean };
 }
 
 function toPublicUser(user: User): AuthUserBody["user"] {
-  return { nickname: user.nickname, email: user.email };
+  return { nickname: user.nickname, email: user.email, termsAgreed: user.termsAgreed, marketingAgreed: user.marketingAgreed };
 }
+
+/**
+ * 가입 동의 읽기. 필수 3개(이용약관, 개인정보 수집·이용, 만 14세 이상)가 모두 true여야 하고,
+ * 마케팅 수신은 선택이다. 필수가 빠지면 null.
+ */
+export function readConsent(body: Record<string, unknown>): { marketing: boolean } | null {
+  if (body.agreeTerms !== true || body.agreePrivacy !== true || body.agreeAge !== true) return null;
+  return { marketing: body.agreeMarketing === true };
+}
+
+const CONSENT_REQUIRED_ERROR: AuthErrorBody = {
+  error: { code: "CONSENT_REQUIRED", message: "필수 약관에 모두 동의해주세요." },
+};
 
 export async function handleSignup(rawBody: unknown): Promise<AuthHandlerResult<AuthUserBody | AuthErrorBody>> {
   if (typeof rawBody !== "object" || rawBody === null) {
@@ -49,9 +64,11 @@ export async function handleSignup(rawBody: unknown): Promise<AuthHandlerResult<
   if (!nickname || nickname.length > 20) {
     return { status: 400, body: { error: { code: "INVALID_NICKNAME", message: "닉네임을 1~20자로 입력해주세요." } } };
   }
+  const consent = readConsent(body);
+  if (!consent) return { status: 400, body: CONSENT_REQUIRED_ERROR };
 
   try {
-    const user = await createUserWithEmail(email, password, nickname);
+    const user = await createUserWithEmail(email, password, nickname, consent.marketing);
     const session = await createSession(user.id);
     return { status: 200, body: { user: toPublicUser(user) }, session };
   } catch (err) {
@@ -98,4 +115,32 @@ export async function handleLogout(token: string | undefined): Promise<AuthHandl
 export async function handleMe(token: string | undefined): Promise<AuthHandlerResult<{ user: AuthUserBody["user"] | null }>> {
   const user = await getUserBySessionToken(token);
   return { status: 200, body: { user: user ? toPublicUser(user) : null } };
+}
+
+/** 카카오 첫 로그인 후 /consent 화면에서 보내는 동의 */
+export async function handleConsent(
+  token: string | undefined,
+  rawBody: unknown
+): Promise<AuthHandlerResult<AuthUserBody | AuthErrorBody>> {
+  const user = await getUserBySessionToken(token);
+  if (!user) return { status: 401, body: { error: { code: "NOT_LOGGED_IN", message: "로그인이 필요합니다." } } };
+  if (typeof rawBody !== "object" || rawBody === null) {
+    return { status: 400, body: { error: { code: "INVALID_BODY", message: "요청 형식이 올바르지 않습니다." } } };
+  }
+  const consent = readConsent(rawBody as Record<string, unknown>);
+  if (!consent) return { status: 400, body: CONSENT_REQUIRED_ERROR };
+  await recordConsent(user.id, consent.marketing);
+  return { status: 200, body: { user: toPublicUser({ ...user, termsAgreed: true, marketingAgreed: consent.marketing }) } };
+}
+
+/** 내 사주함의 마케팅 수신 동의/철회 */
+export async function handleMarketing(
+  token: string | undefined,
+  rawBody: unknown
+): Promise<AuthHandlerResult<AuthUserBody | AuthErrorBody>> {
+  const user = await getUserBySessionToken(token);
+  if (!user) return { status: 401, body: { error: { code: "NOT_LOGGED_IN", message: "로그인이 필요합니다." } } };
+  const agreed = typeof rawBody === "object" && rawBody !== null && (rawBody as Record<string, unknown>).agreed === true;
+  await setMarketingAgreed(user.id, agreed);
+  return { status: 200, body: { user: toPublicUser({ ...user, marketingAgreed: agreed }) } };
 }

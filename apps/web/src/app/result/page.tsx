@@ -19,7 +19,8 @@ const ELEMENT_TAGLINE: Record<string, string> = {
 import { AnalysisSection } from "@/components/AnalysisSection";
 import { FreeAnalysisBoards, isFreeAnalysisShape } from "@/components/FreeAnalysisBoards";
 import { buildFreeAnalysisKeywords } from "@/lib/freeAnalysisKeywords";
-import { ElementBalance, RelationsTable, DaeunTimeline } from "@/components/ManseSections";
+import { ElementBalance, NeededEnergySection, RelationsTable, DaeunTimeline } from "@/components/ManseSections";
+import { neededEnergy } from "@/lib/neededEnergy";
 import { elementShares, yinYangCount, relationRows, daeunCells, kstDateString } from "@/lib/manseView";
 import type { ElementKo } from "@/lib/pillarView";
 import type { SajuJson } from "saju-engine";
@@ -111,6 +112,8 @@ function ResultBody() {
         lacking={saju.elements.summary.lacking as ElementKo[]}
         yinYang={yinYangCount(saju)}
       />
+
+      <NeededEnergySection need={neededEnergy(saju)} />
 
       {/* 십신 분포 - 문장형 제목 + 막대그래프 (엔진 십신에 지장간 가중치를 더한 값) */}
       <section className="mb-8">

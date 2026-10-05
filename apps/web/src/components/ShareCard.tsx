@@ -4,6 +4,12 @@ import { useRef, useState } from "react";
 import { ElementRadarChart } from "@/components/ElementRadarChart";
 
 /**
+ * 공유 카드에 찍히는 사이트 주소. 도메인이 바뀌면 Vercel 환경변수 NEXT_PUBLIC_SITE_HOST만 바꾸고 재배포하면 된다
+ * (NEXT_PUBLIC_ 값은 빌드 시점에 박힘). 값이 없으면 현재 Vercel 기본 주소를 쓴다.
+ */
+const SITE_HOST = process.env.NEXT_PUBLIC_SITE_HOST || "saju-web-khaki.vercel.app";
+
+/**
  * "공유용 결과 카드" — SNS에 올려도 되는 정보만 따로 모아 이미지로 저장한다.
  *
  * 개인정보 원칙(지시서 10조와 동일한 원칙을 공유 기능에도 그대로 적용):
@@ -69,7 +75,7 @@ export function ShareCard({
           {tagline}
         </p>
         <p className="mt-4 text-center text-[10px]" style={{ color: "var(--color-ink-faint)" }}>
-          ryugyeol-saju.vercel.app
+          {SITE_HOST}
         </p>
       </div>
 

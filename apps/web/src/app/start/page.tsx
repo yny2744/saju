@@ -1,8 +1,10 @@
 "use client";
 
-import { isLive } from "@/lib/launchMode";
-import { useState } from "react";
+import { isLive, isLoginRequired } from "@/lib/launchMode";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { MemberGate, type MemberInfo } from "@/components/MemberGate";
+import { profileSummary, type SavedProfile } from "@/lib/profileView";
 
 type CalendarType = "solar" | "lunar";
 type Gender = "male" | "female";
@@ -13,6 +15,7 @@ interface FormState {
   hanjaName: string;
   gender: Gender;
   calendarType: CalendarType;
+  isLeapMonth: boolean;
   date: string;
   time: string;
   timeUnknown: boolean;
@@ -26,6 +29,7 @@ const initialState: FormState = {
   hanjaName: "",
   gender: "female",
   calendarType: "solar",
+  isLeapMonth: false,
   date: "",
   time: "",
   timeUnknown: false,
@@ -45,10 +49,68 @@ const initialState: FormState = {
  * 바뀌었다.
  */
 export default function StartPage() {
+  return <MemberGate>{(member) => <StartForm member={member} />}</MemberGate>;
+}
+
+/**
+ * 수정안 3번: 로그인한 사람은 "저장한 사람" 드롭다운으로 이름·생년월일시를 한 번에 불러오고,
+ * 새로 입력한 정보는 "내 사주함에 저장" 체크가 켜져 있으면 분석 성공 후 계정에 저장한다.
+ */
+function StartForm({ member }: { member: MemberInfo | null }) {
   const router = useRouter();
   const [form, setForm] = useState<FormState>(initialState);
   const [submitting, setSubmitting] = useState(false);
   const [issues, setIssues] = useState<string[]>([]);
+  const [profiles, setProfiles] = useState<SavedProfile[]>([]);
+  const [selectedId, setSelectedId] = useState("");
+  const [saveToAccount, setSaveToAccount] = useState(true);
+
+  useEffect(() => {
+    if (!member) return;
+    fetch("/api/profiles")
+      .then((r) => (r.ok ? r.json() : { profiles: [] }))
+      .then((d: { profiles?: SavedProfile[] }) => setProfiles(d.profiles ?? []))
+      .catch(() => {});
+  }, [member]);
+
+  function loadProfile(id: string) {
+    setSelectedId(id);
+    const p = profiles.find((x) => x.id === id);
+    if (!p) {
+      setForm(initialState);
+      return;
+    }
+    setForm((prev) => ({
+      ...prev,
+      nickname: p.name,
+      hanjaName: p.hanjaName ?? "",
+      gender: p.gender,
+      calendarType: p.calendarType,
+      isLeapMonth: p.isLeapMonth,
+      date: p.date,
+      time: p.time ?? "",
+      timeUnknown: p.time === null,
+      birthCity: p.birthCity ?? "",
+    }));
+  }
+
+  async function saveProfileIfWanted() {
+    if (!member || !saveToAccount) return;
+    await fetch("/api/profiles", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        name: form.nickname,
+        hanjaName: form.hanjaName || undefined,
+        gender: form.gender,
+        calendarType: form.calendarType,
+        isLeapMonth: form.calendarType === "lunar" && form.isLeapMonth,
+        date: form.date,
+        time: form.timeUnknown ? undefined : form.time || undefined,
+        birthCity: form.birthCity || undefined,
+      }),
+    }).catch(() => {}); // 저장 실패는 사주 보기를 막지 않는다
+  }
 
   function update<K extends keyof FormState>(key: K, value: FormState[K]) {
     setForm((prev) => ({ ...prev, [key]: value }));
@@ -69,6 +131,7 @@ export default function StartPage() {
           hanjaName: form.hanjaName || undefined,
           gender: form.gender,
           calendarType: form.calendarType,
+          isLeapMonth: form.calendarType === "lunar" ? form.isLeapMonth : undefined,
           date: form.date,
           time: form.timeUnknown ? undefined : form.time || undefined,
           birthCity: form.birthCity || undefined,
@@ -80,10 +143,16 @@ export default function StartPage() {
       const data = await res.json();
 
       if (!res.ok) {
-        setIssues(data?.error?.issues ?? [data?.error?.message ?? "분석 요청에 실패했습니다."]);
+        const leapHint =
+          data?.error?.code === "SAJU_CALCULATION_FAILED" && form.calendarType === "lunar" && form.isLeapMonth
+            ? ["그 해 그 달에는 윤달이 없어요. '윤달에 태어났어요' 체크를 다시 확인해주세요."]
+            : null;
+        setIssues(leapHint ?? data?.error?.issues ?? [data?.error?.message ?? "분석 요청에 실패했습니다."]);
         setSubmitting(false);
         return;
       }
+
+      await saveProfileIfWanted();
 
       // 메인 화면 "오늘의 운세"에서 들어온 경우(?next=fortune)는 만세력을 거치지 않고 바로 운세로 보낸다.
       // 허용값은 fortune 하나뿐이라 임의 주소로 이동시킬 수 없다.
@@ -110,7 +179,7 @@ export default function StartPage() {
             류결사주
           </p>
           <div className="mb-3 flex flex-wrap gap-1.5">
-            {["무료", "회원가입 불필요", "약 1분 소요"].map((badge) => (
+            {(isLoginRequired() ? ["무료", "약 1분 소요"] : ["무료", "회원가입 불필요", "약 1분 소요"]).map((badge) => (
               <span
                 key={badge}
                 className="rounded-full px-2.5 py-1 text-[11px] font-medium"
@@ -131,6 +200,24 @@ export default function StartPage() {
         </header>
 
         <form onSubmit={handleSubmit} className="space-y-7">
+          {/* 저장한 사람 불러오기 (로그인한 경우) */}
+          {member && profiles.length > 0 && (
+            <div className="rounded-xl p-4" style={{ backgroundColor: "var(--color-paper-soft)" }}>
+              <label htmlFor="savedProfile" className="mb-1.5 block text-sm font-medium">
+                저장한 사람 불러오기
+              </label>
+              <select id="savedProfile" value={selectedId} onChange={(e) => loadProfile(e.target.value)} className="field-input">
+                <option value="">새로 입력하기</option>
+                {profiles.map((p) => (
+                  <option key={p.id} value={p.id}>
+                    {p.name}
+                    {p.hanjaName ? ` ${p.hanjaName}` : ""} · {profileSummary(p)}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+
           {/* 그룹 1: 기본 정보 */}
           <fieldset className="space-y-4">
             <legend className="section-label mb-1">기본 정보</legend>
@@ -214,6 +301,20 @@ export default function StartPage() {
                   </button>
                 ))}
               </div>
+              {form.calendarType === "lunar" && (
+                <label className="mt-2.5 flex items-center gap-2 text-sm">
+                  <input
+                    type="checkbox"
+                    checked={form.isLeapMonth}
+                    onChange={(e) => update("isLeapMonth", e.target.checked)}
+                    className="h-4 w-4"
+                  />
+                  윤달에 태어났어요
+                  <span className="text-xs" style={{ color: "var(--color-ink-faint)" }}>
+                    (예: 윤4월)
+                  </span>
+                </label>
+              )}
             </div>
 
             <div>
@@ -318,6 +419,13 @@ export default function StartPage() {
                 <li key={issue}>{issue}</li>
               ))}
             </ul>
+          )}
+
+          {member && (
+            <label className="flex items-center gap-2 text-sm" style={{ color: "var(--color-ink-soft)" }}>
+              <input type="checkbox" checked={saveToAccount} onChange={(e) => setSaveToAccount(e.target.checked)} className="h-4 w-4" />
+              다음에 바로 불러오도록 저장하기
+            </label>
           )}
 
           <button type="submit" disabled={submitting} className="btn-primary">

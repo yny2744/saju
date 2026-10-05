@@ -1,4 +1,5 @@
 import { LoginButtons } from "@/components/LoginButtons";
+import { isLoginRequired } from "@/lib/launchMode";
 import { SajuEmblemIllustration, FortuneSunMoonIllustration, FaceReadingIllustration } from "@/components/LandingIllustrations";
 import { CasualLanding } from "@/components/CasualLanding";
 
@@ -118,7 +119,7 @@ export default function LandingPage() {
             <SajuEmblemIllustration />
           </div>
           <div className="mb-3 flex flex-wrap gap-1.5">
-            {["무료", "회원가입 불필요", "약 1분 소요"].map((badge) => (
+            {(isLoginRequired() ? ["무료", "카카오로 바로 시작", "약 1분 소요"] : ["무료", "회원가입 불필요", "약 1분 소요"]).map((badge) => (
               <span
                 key={badge}
                 className="rounded-full px-2.5 py-1 text-[11px] font-medium"

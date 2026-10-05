@@ -1,6 +1,6 @@
 "use client";
 
-import { isLive } from "@/lib/launchMode";
+import { isAuthEnabled } from "@/lib/launchMode";
 import { useEffect, useState } from "react";
 
 /**
@@ -16,7 +16,7 @@ export function LoginButtons() {
   const [me, setMe] = useState<{ nickname: string } | null | "loading">("loading");
 
   useEffect(() => {
-    if (!isLive()) {
+    if (!isAuthEnabled()) {
       setMe(null);
       return;
     }
@@ -31,7 +31,7 @@ export function LoginButtons() {
     window.location.reload();
   }
 
-  if (!isLive()) return null; // 접수용(review) 모드: 로그인은 승인 후에 연다
+  if (!isAuthEnabled()) return null; // 접수용(review) 모드: 로그인은 승인 후에 연다
 
   if (me === "loading") {
     return <div className="h-[42px]" />; // 레이아웃 흔들림 방지용 자리만 차지

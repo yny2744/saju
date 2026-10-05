@@ -1,9 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
-import { blockIfNotLive } from "@/server/launchGuard";
+import { blockIfAuthOff } from "@/server/launchGuard";
 import { db } from "@/server/auth/db";
 import { getUserBySessionToken, SESSION_COOKIE_NAME } from "@/server/auth/session";
 
 export const runtime = "nodejs";
+// 로그인 상태(쿠키)에 따라 응답이 달라지므로 빌드 때 미리 만들어 두면 안 된다
+export const dynamic = "force-dynamic";
 
 /**
  * 회원탈퇴 - users 테이블에서 본인 행을 삭제한다. sessions는
@@ -11,7 +13,7 @@ export const runtime = "nodejs";
  * 자동으로 같이 삭제된다 (db.ts의 스키마 참고).
  */
 export async function DELETE(request: NextRequest) {
-  const blocked = blockIfNotLive();
+  const blocked = blockIfAuthOff();
   if (blocked) return blocked;
   const token = request.cookies.get(SESSION_COOKIE_NAME)?.value;
   const user = await getUserBySessionToken(token);

@@ -5,12 +5,19 @@ import { useRouter } from "next/navigation";
 import { FaceCapture } from "@/components/FaceCapture";
 import type { FaceFeatureResult } from "@/lib/faceLandmarks";
 import type { FaceMapResult } from "@/lib/faceMap";
+import { MemberGate } from "@/components/MemberGate";
+import { isLoginRequired } from "@/lib/launchMode";
 
 /**
  * Phase 9 지시서 3조: "관상 서비스는 사주 결과가 없어도 독립적으로 이용할 수
  * 있어야 한다." - 이 화면은 /result?id=... 같은 선행 조건 없이 바로 진입 가능하다.
  */
 export default function FaceEntryPage() {
+  // 수정안 3번: 로그인 필수 스위치가 켜지면 관상도 로그인 후 이용
+  return <MemberGate>{() => <FaceEntryBody />}</MemberGate>;
+}
+
+function FaceEntryBody() {
   const router = useRouter();
   const [nickname, setNickname] = useState("");
   const [relationshipPreference, setRelationshipPreference] = useState("");
@@ -77,7 +84,7 @@ export default function FaceEntryPage() {
     <main className="mx-auto min-h-screen max-w-md px-5 pb-16 pt-12 sm:pt-16">
       <header className="mb-8">
         <div className="mb-3 flex flex-wrap gap-1.5">
-          {["무료", "회원가입 불필요", "사진 서버 전송 안 함"].map((badge) => (
+          {(isLoginRequired() ? ["무료", "사진 서버 전송 안 함"] : ["무료", "회원가입 불필요", "사진 서버 전송 안 함"]).map((badge) => (
             <span
               key={badge}
               className="rounded-full px-2.5 py-1 text-[11px] font-medium"

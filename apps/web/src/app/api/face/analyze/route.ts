@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { requireMemberIfLoginRequired } from "@/server/memberGate";
 import { handleFaceAnalyzeRequest } from "@/server/face/faceRequestHandlers";
 import { clientKeyOf } from "@/server/httpUtils";
 
@@ -6,6 +7,9 @@ import { clientKeyOf } from "@/server/httpUtils";
 export const runtime = "nodejs";
 
 export async function POST(request: NextRequest) {
+  const gate = await requireMemberIfLoginRequired(request);
+  if (gate) return gate;
+
   let rawBody: unknown;
   try {
     rawBody = await request.json();

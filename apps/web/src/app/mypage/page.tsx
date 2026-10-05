@@ -1,6 +1,7 @@
 "use client";
 
-import { isLive } from "@/lib/launchMode";
+import { isAuthEnabled } from "@/lib/launchMode";
+import { profileSummary, type SavedProfile } from "@/lib/profileView";
 import { ComingSoon } from "@/components/ComingSoon";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -18,7 +19,8 @@ import { readA11yPrefs, saveA11yPrefs, type A11yPrefs } from "@/components/Acces
  * 로그인 안 한 상태로 들어오면 /login으로 보낸다.
  */
 
-type User = { nickname: string; email: string | null };
+type User = { nickname: string; email: string | null; marketingAgreed?: boolean };
+
 
 function MyPageBody() {
   const router = useRouter();
@@ -26,6 +28,8 @@ function MyPageBody() {
   const [prefs, setPrefs] = useState<A11yPrefs>({ fontSize: "normal", contrast: "normal" });
   const [deleting, setDeleting] = useState(false);
   const [confirmingDelete, setConfirmingDelete] = useState(false);
+  const [profiles, setProfiles] = useState<SavedProfile[]>([]);
+  const [marketing, setMarketing] = useState(false);
 
   useEffect(() => {
     setPrefs(readA11yPrefs());
@@ -37,6 +41,11 @@ function MyPageBody() {
           return;
         }
         setUser(data.user);
+        setMarketing(Boolean(data.user.marketingAgreed));
+        fetch("/api/profiles")
+          .then((r) => (r.ok ? r.json() : { profiles: [] }))
+          .then((d) => setProfiles(d.profiles ?? []))
+          .catch(() => {});
       })
       .catch(() => router.replace("/login"));
   }, [router]);
@@ -45,6 +54,21 @@ function MyPageBody() {
     const merged = { ...prefs, ...next };
     setPrefs(merged);
     saveA11yPrefs(merged);
+  }
+
+  async function removeProfile(id: string) {
+    const res = await fetch(`/api/profiles/${id}`, { method: "DELETE" }).catch(() => null);
+    if (res?.ok) setProfiles((list) => list.filter((p) => p.id !== id));
+  }
+
+  async function toggleMarketing(agreed: boolean) {
+    setMarketing(agreed);
+    const res = await fetch("/api/auth/marketing", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ agreed }),
+    }).catch(() => null);
+    if (!res?.ok) setMarketing(!agreed); // 실패하면 원래대로
   }
 
   async function handleLogout() {
@@ -90,6 +114,52 @@ function MyPageBody() {
               </p>
             </div>
           </div>
+        </section>
+
+        {/* 저장한 사람 */}
+        <section className="mb-7">
+          <h2 className="section-label mb-3">저장한 사람</h2>
+          {profiles.length === 0 ? (
+            <p className="rounded-xl px-4 py-3 text-sm" style={{ backgroundColor: "var(--color-paper-soft)", color: "var(--color-ink-faint)" }}>
+              아직 저장한 사람이 없어요. 사주를 볼 때 저장하면 여기에 모여요.
+            </p>
+          ) : (
+            <ul className="overflow-hidden rounded-xl" style={{ border: "1px solid var(--color-line)" }}>
+              {profiles.map((p, i) => (
+                <li
+                  key={p.id}
+                  className="flex items-center justify-between gap-2 px-4 py-3"
+                  style={i > 0 ? { borderTop: "1px solid var(--color-line)" } : undefined}
+                >
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-semibold">
+                      {p.name}
+                      {p.hanjaName && (
+                        <span className="ml-1.5 font-normal" style={{ fontFamily: "var(--font-serif)", color: "var(--color-ink-soft)" }}>
+                          {p.hanjaName}
+                        </span>
+                      )}
+                    </p>
+                    <p className="text-xs" style={{ color: "var(--color-ink-faint)" }}>
+                      {profileSummary(p)}
+                    </p>
+                  </div>
+                  <button type="button" onClick={() => removeProfile(p.id)} className="shrink-0 text-xs underline underline-offset-4" style={{ color: "var(--color-ink-faint)" }}>
+                    삭제
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
+
+        {/* 알림 설정 (마케팅 수신 동의/철회) */}
+        <section className="mb-7">
+          <h2 className="section-label mb-3">알림 설정</h2>
+          <label className="flex items-center justify-between rounded-xl px-4 py-3 text-sm" style={{ backgroundColor: "var(--color-paper-soft)" }}>
+            새 운세·이벤트 소식 받기
+            <input type="checkbox" checked={marketing} onChange={(e) => toggleMarketing(e.target.checked)} className="h-5 w-5" />
+          </label>
         </section>
 
         {/* 표시 설정 */}
@@ -165,7 +235,7 @@ function MyPageBody() {
           ) : (
             <div className="rounded-xl p-4" style={{ backgroundColor: "var(--color-accent-soft)" }}>
               <p className="mb-3 text-sm" style={{ color: "var(--color-accent)" }}>
-                정말 탈퇴하시겠어요? 계정 정보가 모두 삭제되며 되돌릴 수 없어요.
+                정말 탈퇴하시겠어요? 계정 정보와 저장한 사람 정보가 모두 삭제되며 되돌릴 수 없어요.
               </p>
               <div className="flex gap-2">
                 <button
@@ -195,5 +265,5 @@ function MyPageBody() {
 }
 
 export default function MyPage() {
-  return isLive() ? <MyPageBody /> : <ComingSoon title="내 사주함" />;
+  return isAuthEnabled() ? <MyPageBody /> : <ComingSoon title="내 사주함" />;
 }

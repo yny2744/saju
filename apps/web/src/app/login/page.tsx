@@ -1,6 +1,8 @@
 "use client";
 
-import { isLive } from "@/lib/launchMode";
+import { isAuthEnabled, isLoginRequired } from "@/lib/launchMode";
+import { safeNext } from "@/lib/safeNext";
+import { ConsentChecks, EMPTY_CONSENT, requiredConsentDone, type ConsentState } from "@/components/ConsentChecks";
 import { ComingSoon } from "@/components/ComingSoon";
 import { Suspense, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -15,6 +17,9 @@ function LoginPageBody() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const urlError = searchParams.get("error");
+  // 로그인 후 돌아갈 화면 (예: 무료 사주 입력 화면). 우리 사이트 안의 경로만 허용.
+  const next = safeNext(searchParams.get("next")) ?? "/";
+  const [consent, setConsent] = useState<ConsentState>(EMPTY_CONSENT);
 
   const [mode, setMode] = useState<"login" | "signup">("login");
   const [email, setEmail] = useState("");
@@ -26,6 +31,10 @@ function LoginPageBody() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (submitting) return;
+    if (mode === "signup" && !requiredConsentDone(consent)) {
+      setError("필수 약관에 모두 동의해주세요.");
+      return;
+    }
     setSubmitting(true);
     setError(null);
 
@@ -33,7 +42,7 @@ function LoginPageBody() {
       const res = await fetch(`/api/auth/${mode}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(mode === "signup" ? { email, password, nickname } : { email, password }),
+        body: JSON.stringify(mode === "signup" ? { email, password, nickname, ...consent } : { email, password }),
       });
       const data = await res.json();
       if (!res.ok) {
@@ -41,7 +50,12 @@ function LoginPageBody() {
         setSubmitting(false);
         return;
       }
-      router.push("/");
+      // 이메일 로그인인데 아직 약관 동의 기록이 없는 예전 계정이면 동의 화면을 먼저 거친다
+      if (mode === "login" && data?.user && !data.user.termsAgreed) {
+        router.push(`/consent?next=${encodeURIComponent(next)}`);
+        return;
+      }
+      router.push(next);
       router.refresh();
     } catch {
       setError("네트워크 오류가 발생했습니다. 잠시 후 다시 시도해주세요.");
@@ -54,12 +68,17 @@ function LoginPageBody() {
       <p className="mb-1 text-sm font-semibold" style={{ fontFamily: "var(--font-serif)", color: "var(--color-accent)" }}>
         류결사주
       </p>
-      <h1 className="mb-7 text-[24px] font-bold">{mode === "login" ? "로그인" : "회원가입"}</h1>
+      <h1 className={`${isLoginRequired() ? "mb-2" : "mb-7"} text-[24px] font-bold`}>{mode === "login" ? "로그인" : "회원가입"}</h1>
+      {isLoginRequired() && (
+        <p className="mb-7 text-sm leading-relaxed" style={{ color: "var(--color-ink-soft)" }}>
+          카카오로 바로 시작하세요. 입력한 생년월일은 내 사주함에 저장돼서 다음부터는 다시 입력하지 않아도 돼요.
+        </p>
+      )}
 
       <button
         type="button"
         onClick={() => {
-          window.location.href = "/api/auth/kakao/start";
+          window.location.href = `/api/auth/kakao/start?next=${encodeURIComponent(next)}`;
         }}
         className="mb-5 block w-full rounded-full py-3 text-center text-sm font-medium"
         style={{ backgroundColor: "#fee500", color: "#191600" }}
@@ -121,6 +140,8 @@ function LoginPageBody() {
           />
         </div>
 
+        {mode === "signup" && <ConsentChecks value={consent} onChange={setConsent} />}
+
         {error && (
           <p className="rounded-lg px-3.5 py-2.5 text-sm" style={{ backgroundColor: "var(--color-accent-soft)", color: "var(--color-accent)" }}>
             {error}
@@ -148,7 +169,7 @@ function LoginPageBody() {
 }
 
 export default function LoginPage() {
-  if (!isLive()) return <ComingSoon title="로그인" />;
+  if (!isAuthEnabled()) return <ComingSoon title="로그인" />;
   return (
     <Suspense fallback={<div className="py-24 text-center text-sm">불러오는 중...</div>}>
       <LoginPageBody />

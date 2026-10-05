@@ -8,6 +8,7 @@ import {
   type RelationRow,
 } from "@/lib/manseView";
 import { STEM_ELEMENT, BRANCH_ELEMENT } from "saju-engine/dist/src/rules/fiveElementTables";
+import { ENERGY_GUIDE, type NeededEnergy } from "@/lib/neededEnergy";
 
 /** 무료 만세력 화면의 표·그래프 묶음. 값은 전부 엔진 계산 결과를 그대로 쓴다. */
 
@@ -188,6 +189,70 @@ export function DaeunTimeline({ cells, seun }: { cells: DaeunCell[]; seun: { yea
       </div>
       <p className="mt-1.5 text-[11px] leading-relaxed" style={{ color: "var(--color-ink-faint)" }}>
         대운이 언제 어떻게 작용하는지 풀이는 유료 해석에서 확인할 수 있어요. 시작 나이는 반올림한 값이에요.
+      </p>
+    </section>
+  );
+}
+
+/* ── 나에게 필요한 기운 (수정안 1번) ───────────────────────────── */
+export function NeededEnergySection({ need }: { need: NeededEnergy }) {
+  const names = need.elements.map((el) => `${ELEMENT_NATURE[el]}(${ELEMENT_HANJA[el]})`).join("·");
+  const lead = need.elements.map((el) => ELEMENT_NATURE[el]).join("·");
+  return (
+    <section className="mb-8">
+      <p className="section-label mb-1">나에게 필요한 기운</p>
+      <h2 className="mb-1 text-lg font-bold">
+        {names}의 기운을 곁에 두면 좋아요
+      </h2>
+      <p className="mb-3 text-sm leading-relaxed" style={{ color: "var(--color-ink-soft)" }}>
+        {need.reason === "lacking"
+          ? `내 사주에는 ${lead}의 기운이 비어 있어요. 일상에서 이 기운을 조금씩 채우면 균형에 도움이 된다고 봐요.`
+          : `내 사주에서 ${lead}의 기운이 가장 옅어요. 일상에서 이 기운을 조금씩 채우면 균형에 도움이 된다고 봐요.`}
+      </p>
+      <div className="space-y-2.5">
+        {need.elements.map((el) => {
+          const g = ENERGY_GUIDE[el];
+          return (
+            <div key={el} className="rounded-xl p-4" style={{ backgroundColor: "var(--color-paper-soft)" }}>
+              <div className="mb-3 flex items-center gap-2">
+                <span className="text-[22px] font-bold leading-none" style={{ fontFamily: "var(--font-serif)", color: color(el) }}>
+                  {ELEMENT_HANJA[el]}
+                </span>
+                <span className="text-[14px] font-semibold">{ELEMENT_NATURE[el]}의 기운</span>
+              </div>
+              <dl className="grid grid-cols-[52px_1fr] gap-y-2.5 text-[13px]">
+                <dt style={{ color: "var(--color-ink-faint)" }}>색</dt>
+                <dd className="flex flex-wrap items-center gap-3">
+                  {g.colors.map((c) => (
+                    <span key={c.name} className="flex items-center gap-1.5">
+                      <span
+                        aria-hidden
+                        className="inline-block h-4 w-4 rounded-full"
+                        style={{ backgroundColor: c.hex, border: "1px solid var(--color-line)" }}
+                      />
+                      {c.name}
+                    </span>
+                  ))}
+                </dd>
+                <dt style={{ color: "var(--color-ink-faint)" }}>방위</dt>
+                <dd>{g.direction}</dd>
+                <dt style={{ color: "var(--color-ink-faint)" }}>숫자</dt>
+                <dd className="tabular-nums">{g.numbers}</dd>
+                <dt style={{ color: "var(--color-ink-faint)" }}>가까이</dt>
+                <dd className="flex flex-wrap gap-1.5">
+                  {g.near.map((n) => (
+                    <span key={n} className="rounded-full px-2 py-0.5 text-[12px]" style={{ backgroundColor: "var(--color-paper)", border: "1px solid var(--color-line)" }}>
+                      {n}
+                    </span>
+                  ))}
+                </dd>
+              </dl>
+            </div>
+          );
+        })}
+      </div>
+      <p className="mt-1.5 text-[11px] leading-relaxed" style={{ color: "var(--color-ink-faint)" }}>
+        색·방위·숫자는 전통 오행 배속(숫자는 하도 河圖)을 따른 참고 정보예요.
       </p>
     </section>
   );
