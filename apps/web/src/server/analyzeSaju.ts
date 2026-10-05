@@ -70,7 +70,7 @@ export async function analyzeSaju(input: ValidatedAnalyzeInput): Promise<Analyze
 
   try {
     const interpretation = generateSajuFreeInterpretation(saju);
-    return { nickname: input.nickname, hanjaName: input.hanjaName, saju, interpretation };
+    return { nickname: input.nickname, hanjaName: input.hanjaName, ...(input.focus ? { focus: input.focus } : {}), saju, interpretation };
   } catch (err) {
     // 규칙 기반이라 정상적으로는 실패하지 않지만(결정론적 순수 함수), 방어적으로 남겨둔다.
     // eslint-disable-next-line no-console

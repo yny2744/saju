@@ -37,12 +37,25 @@ describe("validateAnalyzeInput - hanjaName (선택, Phase 10.5)", () => {
     }
   });
 
-  test("한글이 섞여 있으면 거부한다", () => {
+  test("한자 선택 팝업에서 '없음/모름'을 고른 글자는 한글로 남으므로, 한자+한글은 허용한다 (2026-10-05)", () => {
     const result = validateAnalyzeInput(validBody({ hanjaName: "柳남영" }));
-    expect(result.ok).toBe(false);
-    if (!result.ok) {
-      expect(result.issues.some((i) => i.startsWith("hanjaName"))).toBe(true);
+    expect(result.ok).toBe(true);
+    if (result.ok) expect(result.value.hanjaName).toBe("柳남영");
+  });
+
+  test("한자가 한 글자도 없거나 다른 문자가 섞이면 거부한다", () => {
+    for (const hanjaName of ["유남영", "柳A영", "柳 南"]) {
+      const result = validateAnalyzeInput(validBody({ hanjaName }));
+      expect(result.ok).toBe(false);
     }
+  });
+
+  test("가장 궁금한 것(focus)은 정해진 값만 받는다", () => {
+    const ok = validateAnalyzeInput(validBody({ focus: "love" }));
+    expect(ok.ok && ok.value.focus).toBe("love");
+    const none = validateAnalyzeInput(validBody({}));
+    expect(none.ok && none.value.focus).toBeUndefined();
+    expect(validateAnalyzeInput(validBody({ focus: "money" })).ok).toBe(false);
   });
 
   test("10자를 초과하면 거부한다", () => {

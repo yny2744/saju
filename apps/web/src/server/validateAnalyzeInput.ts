@@ -1,4 +1,5 @@
 import type { AnalyzeRequestBody, ValidatedAnalyzeInput } from "./types";
+import { isFocus } from "@/lib/focus";
 
 /**
  * 지시서 7조: "프론트엔드 검증만 믿지 않는다" - 서버에서 반드시 다시 검증한다.
@@ -34,7 +35,12 @@ const HANJA_NAME_MAX_LENGTH = 10;
  * 한자가 "한자만 입력해주세요" 오류로 거부됐다. Script=Han은 호환 한자까지 포함하고,
  * 아래 normalize("NFC")가 호환 한자를 표준 한자로 바꿔서 저장·표시를 일정하게 만든다.
  */
-const HANJA_ONLY_RE = /^\p{Script=Han}+$/u;
+/**
+ * 한자이름: 한자, 또는 한자 + 한글(글자별 선택 팝업에서 "없음/모름"을 고른 글자는 한글로 남는다).
+ * 한자가 한 글자도 없으면(전부 한글) 한자이름으로 보지 않는다.
+ */
+const HANJA_NAME_RE = /^[\p{Script=Han}\uAC00-\uD7A3]+$/u;
+const HAS_HAN_RE = /\p{Script=Han}/u;
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 const TIME_RE = /^([01]\d|2[0-3]):([0-5]\d)$/;
 const MIN_YEAR = 1900;
@@ -107,8 +113,8 @@ export function validateAnalyzeInput(body: AnalyzeRequestBody): ValidationResult
       const trimmed = body.hanjaName.trim().normalize("NFC");
       if (trimmed.length > HANJA_NAME_MAX_LENGTH) {
         issues.push(`hanjaName: 한자이름은 ${HANJA_NAME_MAX_LENGTH}자 이하로 입력해주세요.`);
-      } else if (!HANJA_ONLY_RE.test(trimmed)) {
-        issues.push("hanjaName: 한자(漢字)만 입력해주세요.");
+      } else if (!HANJA_NAME_RE.test(trimmed) || !HAS_HAN_RE.test(trimmed)) {
+        issues.push("hanjaName: 한자(漢字)로 입력해주세요.");
       } else {
         hanjaName = trimmed;
       }
@@ -184,6 +190,11 @@ export function validateAnalyzeInput(body: AnalyzeRequestBody): ValidationResult
     );
   }
 
+  // --- 가장 궁금한 것 (선택) ---
+  if (body.focus !== undefined && body.focus !== null && !isFocus(body.focus)) {
+    issues.push("focus: 'love' | 'work' | 'health' | 'relationship' 중 하나여야 합니다.");
+  }
+
   if (issues.length > 0) {
     return { ok: false, issues };
   }
@@ -193,6 +204,7 @@ export function validateAnalyzeInput(body: AnalyzeRequestBody): ValidationResult
     value: {
       nickname,
       hanjaName,
+      ...(isFocus(body.focus) ? { focus: body.focus } : {}),
       sajuInput: {
         calendarType: body.calendarType as "solar" | "lunar",
         date: body.date as string,

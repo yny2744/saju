@@ -1,4 +1,5 @@
 import type { FreeAnalysisKeywords } from "@/lib/freeAnalysisKeywords";
+import { FOCUS_TRAIT_KEYS, type Focus } from "@/lib/focus";
 
 /**
  * 무료 결과 "상세 해석"을 도표 2개로 묶어 보여준다.
@@ -22,17 +23,45 @@ export function isFreeAnalysisShape(analysis: Record<string, unknown>): analysis
   return FREE_ANALYSIS_KEYS.every((k) => typeof analysis[k] === "string");
 }
 
-export function FreeAnalysisBoards({ analysis, kw }: { analysis: Record<string, string>; kw: FreeAnalysisKeywords }) {
+export function FreeAnalysisBoards({
+  analysis,
+  kw,
+  focus,
+}: {
+  analysis: Record<string, string>;
+  kw: FreeAnalysisKeywords;
+  /** 입력 화면 ③에서 고른 분야 - 그 줄을 맨 위로 올리고 펼쳐 둔다 */
+  focus?: Focus;
+}) {
+  const focusKeys: string[] = focus ? FOCUS_TRAIT_KEYS[focus] : [];
+  const rows = [...TRAIT_ROWS].sort((a, b) => Number(focusKeys.includes(b.key)) - Number(focusKeys.includes(a.key)));
   return (
     <div className="space-y-8">
       {/* 도표 1 */}
       <div>
         <h3 className="mb-2.5 text-[15px] font-semibold">나의 기본 성향</h3>
         <div className="overflow-hidden rounded-xl" style={{ border: "1px solid var(--color-line)", backgroundColor: "var(--color-paper-soft)" }}>
-          {TRAIT_ROWS.map(({ key, label }, i) => (
-            <details key={key} className="group" style={i > 0 ? { borderTop: "1px solid var(--color-line)" } : undefined}>
+          {rows.map(({ key, label }, i) => {
+            const hot = focusKeys.includes(key);
+            return (
+            <details
+              key={key}
+              open={hot || undefined}
+              className="group"
+              style={{
+                ...(i > 0 ? { borderTop: "1px solid var(--color-line)" } : {}),
+                ...(hot ? { backgroundColor: "var(--color-accent-soft)" } : {}),
+              }}
+            >
               <summary className="flex cursor-pointer list-none items-center gap-3 px-3.5 py-3 [&::-webkit-details-marker]:hidden">
-                <span className="w-[62px] shrink-0 text-[13px] font-semibold">{label}</span>
+                <span className="w-[62px] shrink-0 text-[13px] font-semibold">
+                  {label}
+                  {hot && (
+                    <span className="mt-0.5 block text-[10px] font-semibold" style={{ color: "var(--color-accent)" }}>
+                      관심 분야
+                    </span>
+                  )}
+                </span>
                 <span className="flex flex-1 flex-wrap gap-1.5">
                   {kw.traits[key].map((k) => (
                     <span
@@ -52,7 +81,8 @@ export function FreeAnalysisBoards({ analysis, kw }: { analysis: Record<string, 
                 {analysis[key]}
               </p>
             </details>
-          ))}
+            );
+          })}
         </div>
         <p className="mt-1.5 text-[11px]" style={{ color: "var(--color-ink-faint)" }}>
           항목을 누르면 설명이 펼쳐져요.

@@ -32,6 +32,8 @@ export interface AnalyzeRequestBody {
   ziHourMethod?: unknown;
   isLeapMonth?: unknown;
   productType?: unknown;
+  /** 선택 입력 ③ "가장 궁금한 것" */
+  focus?: unknown;
 }
 
 /** 검증을 통과한 뒤의 안전한 입력값 */
@@ -40,6 +42,7 @@ export interface ValidatedAnalyzeInput {
   nickname: string;
   /** 선택 입력, 있으면 결과 화면에 "이름(漢字)"처럼 같이 표시한다. 계산에는 관여하지 않는다. */
   hanjaName?: string;
+  focus?: import("@/lib/focus").Focus;
   sajuInput: SajuInput;
   productType: ProductType;
 }
@@ -54,6 +57,8 @@ export interface AnalyzeAcceptedResponse {
 export interface AnalyzeResultResponse {
   nickname: string;
   hanjaName?: string;
+  /** 입력 화면 ③ "가장 궁금한 것" (선택) - 무료 결과 강조 + 유료 풀이 초점 */
+  focus?: import("@/lib/focus").Focus;
   saju: SajuJson;
   interpretation: InterpretationResult;
 }

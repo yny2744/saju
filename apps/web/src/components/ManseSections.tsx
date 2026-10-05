@@ -195,12 +195,19 @@ export function DaeunTimeline({ cells, seun }: { cells: DaeunCell[]; seun: { yea
 }
 
 /* ── 나에게 필요한 기운 (수정안 1번) ───────────────────────────── */
-export function NeededEnergySection({ need }: { need: NeededEnergy }) {
+export function NeededEnergySection({ need, highlight }: { need: NeededEnergy; highlight?: boolean }) {
   const names = need.elements.map((el) => `${ELEMENT_NATURE[el]}(${ELEMENT_HANJA[el]})`).join("·");
   const lead = need.elements.map((el) => ELEMENT_NATURE[el]).join("·");
   return (
     <section className="mb-8">
-      <p className="section-label mb-1">나에게 필요한 기운</p>
+      <p className="section-label mb-1">
+        나에게 필요한 기운
+        {highlight && (
+          <span className="ml-1.5 rounded-full px-2 py-0.5 text-[10px] font-semibold" style={{ backgroundColor: "var(--color-accent-soft)", color: "var(--color-accent)" }}>
+            관심 분야 · 건강
+          </span>
+        )}
+      </p>
       <h2 className="mb-1 text-lg font-bold">
         {names}의 기운을 곁에 두면 좋아요
       </h2>
@@ -208,6 +215,7 @@ export function NeededEnergySection({ need }: { need: NeededEnergy }) {
         {need.reason === "lacking"
           ? `내 사주에는 ${lead}의 기운이 비어 있어요. 일상에서 이 기운을 조금씩 채우면 균형에 도움이 된다고 봐요.`
           : `내 사주에서 ${lead}의 기운이 가장 옅어요. 일상에서 이 기운을 조금씩 채우면 균형에 도움이 된다고 봐요.`}
+        {highlight && " 사주에서는 오행이 고르게 어울리는지를 몸과 마음의 균형과 이어서 살펴봐요."}
       </p>
       <div className="space-y-2.5">
         {need.elements.map((el) => {

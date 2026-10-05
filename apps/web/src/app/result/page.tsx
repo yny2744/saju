@@ -20,6 +20,7 @@ import { AnalysisSection } from "@/components/AnalysisSection";
 import { FreeAnalysisBoards, isFreeAnalysisShape } from "@/components/FreeAnalysisBoards";
 import { buildFreeAnalysisKeywords } from "@/lib/freeAnalysisKeywords";
 import { ElementBalance, NeededEnergySection, RelationsTable, DaeunTimeline } from "@/components/ManseSections";
+import { focusLabel } from "@/lib/focus";
 import { neededEnergy } from "@/lib/neededEnergy";
 import { elementShares, yinYangCount, relationRows, daeunCells, kstDateString } from "@/lib/manseView";
 import type { ElementKo } from "@/lib/pillarView";
@@ -81,7 +82,7 @@ function ResultBody() {
     return <ErrorState message={state.message} linkHref="/" linkLabel="다시 입력하러 가기" />;
   }
 
-  const { nickname, hanjaName, saju, interpretation } = state.data;
+  const { nickname, hanjaName, focus, saju, interpretation } = state.data;
   const analysisRecord = interpretation.analysis as Record<string, unknown>;
   const analysisEntries = Object.entries(analysisRecord);
   const tenGodDist = buildTenGodDistribution(saju);
@@ -98,6 +99,15 @@ function ResultBody() {
         <p className="mt-1.5 text-[13px]" style={{ color: "var(--color-ink-soft)" }}>
           {birthLine(saju)}
         </p>
+        {focus && (
+          <a
+            href={focus === "health" ? "#needed-energy" : "#detail"}
+            className="mt-3 inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[12px] font-semibold"
+            style={{ backgroundColor: "var(--color-accent-soft)", color: "var(--color-accent)" }}
+          >
+            관심 분야 · {focusLabel(focus)} — 먼저 보기 ↓
+          </a>
+        )}
       </header>
 
       {/* 사주 원국 - 4기둥을 표 형태로 명확히 구분 */}
@@ -113,7 +123,9 @@ function ResultBody() {
         yinYang={yinYangCount(saju)}
       />
 
-      <NeededEnergySection need={neededEnergy(saju)} />
+      <div id="needed-energy" className="scroll-mt-6">
+        <NeededEnergySection need={neededEnergy(saju)} highlight={focus === "health"} />
+      </div>
 
       {/* 십신 분포 - 문장형 제목 + 막대그래프 (엔진 십신에 지장간 가중치를 더한 값) */}
       <section className="mb-8">
@@ -140,10 +152,10 @@ function ResultBody() {
       />
 
       {/* 상세 해석 - 문서형으로 제목+문단 구분 */}
-      <section className="mb-10">
+      <section id="detail" className="mb-10 scroll-mt-6">
         <h2 className="mb-4 text-base font-semibold">상세 해석</h2>
         {interpretation.meta?.provider === "rule-engine" && isFreeAnalysisShape(analysisRecord) ? (
-          <FreeAnalysisBoards analysis={analysisRecord} kw={buildFreeAnalysisKeywords(saju)} />
+          <FreeAnalysisBoards analysis={analysisRecord} kw={buildFreeAnalysisKeywords(saju)} focus={focus} />
         ) : (
           <div className="space-y-6">
             {analysisEntries.map(([key, value], i) => (
