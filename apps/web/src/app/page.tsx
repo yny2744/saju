@@ -1,239 +1,226 @@
-import { LoginButtons } from "@/components/LoginButtons";
-import { isLoginRequired } from "@/lib/launchMode";
-import { SajuEmblemIllustration, FortuneSunMoonIllustration, FaceReadingIllustration } from "@/components/LandingIllustrations";
 import { CasualLanding } from "@/components/CasualLanding";
+import { OhaengEmblem } from "@/components/landing/OhaengEmblem";
+import { ProductIcon } from "@/components/landing/ProductIcon";
+import { HeaderAuth } from "@/components/landing/HeaderAuth";
+import { LANDING_PRODUCTS } from "@/lib/landingProducts";
+import { BUSINESS_INFO } from "@/lib/businessInfo";
 
 /**
- * 믹스 랜딩페이지 (Phase 10.5, 2026-10).
+ * 류결사주 대문 (2026-10-06 개편, 유샘 승인).
  *
- * 용사주(정통·숫자·신뢰 중심)와 청월당(장 구조·친근한 톤)을 벤치마킹해서
- * "구조적 아이디어"만 가져왔다 - 색상·심볼·캐릭터·카피는 그대로 베끼지
- * 않았다 (이전 /v/yong 버전이 용사주를 너무 그대로 복제해서 지우고 다시
- * 만든 결과물이다):
- *   - 용사주에서: "왜 류결사주인가"라는 번호 매긴 신뢰 섹션 구조만 차용
- *     (용 엠블럼, 검정+금색, 一二三四五 한자 번호는 안 씀)
- *   - 청월당에서: 상품을 "장(章)" 단위로 묶어서 보여주는 구조만 차용
- *     (캐릭터 일러스트, 웹툰 말풍선, 가짜 카운트다운은 안 씀)
+ * 구조는 용사주 대문을 따랐다: 머리줄 → 가운데 문양 → 한 줄 소개 + 큰 버튼 → 안내 문구 → 상품 카드 →
+ * 질문 카드 → "왜 류결사주인가" 번호 목록 → 아래쪽 안내.
+ * 그림·문구는 류결사주 것으로 새로 만들었다 (용 그림·카피는 쓰지 않음).
  *
- * 정직성 원칙 (반복해서 지킴):
- *   - 실이용자가 아직 0명이라 후기 섹션 없음
- *   - "국내 1위", "~협업" 같은 근거 없는 주장 없음
- *   - 관상/사주에 대해 우리가 실제로 구현하지 않은 고전 체계(마의상법 등)를
- *     인용하지 않음
- *   - 가격은 지금 실제 승인된 가격만 사용
- *
- * "류결의 명견만리"는 상표가 아니라 작은 슬로건 한 줄로만 사용한다 (상표
- * 충돌 우려로 전면에 크게 내세우지 않기로 함 - decisions.md 참고).
- *
- * 로그인(카카오/이메일) 버튼은 UI 진입점만 있고 아직 실제로 동작하지
- * 않는다 (LoginButtons.tsx 참고 - 회원 DB가 없어 Phase 11/12 선행 필요).
+ * 지키는 원칙:
+ *   - 후기 칸 없음: 실제 후기가 쌓이면 그때 붙인다 (지어낸 후기 금지).
+ *   - 우리 엔진이 실제로 하는 것만 적는다 (토정비결·자미두수·기문둔갑 등 하지 않는 계산은 안 적음).
+ *   - 남을 깎는 문구 대신 우리 장점을 말한다.
+ *   - 가격은 lib/landingProducts.ts 임시값 (결정 대기).
+ *   - 로고는 유샘이 만든다 - 그 전까지 머리줄은 글자 "류결사주".
  */
 
-const TRUST_POINTS = [
+const WHY = [
   {
-    num: "1",
-    title: "결정론적 명리학 계산 엔진",
-    body: "60갑자 전체, 오행·십신 수치까지 정해진 계산식으로 산출합니다. 사주 자체를 AI가 추측하지 않습니다.",
+    num: "一",
+    title: "절기(節氣) 기준 정밀 만세력",
+    body: "해(年)와 달(月)이 바뀌는 기준을 달력 날짜가 아닌 절입 시각으로 잡아 사주를 세웁니다. 음력과 윤달 생일도 그대로 넣을 수 있습니다.",
   },
   {
-    num: "2",
-    title: "대운·세운까지 생략 없이",
-    body: "평생의 10년 단위 흐름(대운)부터 올해의 흐름(세운)까지 계산합니다.",
+    num: "二",
+    title: "태어난 곳의 시간까지",
+    body: "출생 지역에 따라 실제 해의 시간을 보정하고, 자시(子時)를 어떻게 나눌지도 고를 수 있습니다.",
   },
   {
-    num: "3",
-    title: "계산은 엔진이, 문장은 AI가",
-    body: "유료 심층 해석은 이미 계산된 수치를 AI가 글로 풀어 쓰는 역할만 합니다.",
+    num: "三",
+    title: "한자 이름을 한 글자씩",
+    body: "이름 소리에 맞는 한자를 뜻과 함께 보여 드려, 글자마다 직접 골라 넣을 수 있습니다.",
   },
   {
-    num: "4",
-    title: "사진은 기기 안에서만",
-    body: "관상 분석은 촬영한 사진을 서버로 보내지 않고, 이용자의 기기 안에서만 분석합니다.",
+    num: "四",
+    title: "명리학(命理學) 원국 분석",
+    body: "천간·지지 여덟 글자에서 오행, 십신(十神), 신강신약, 대운·세운까지 정해진 계산식으로 풀어 냅니다.",
+  },
+  {
+    num: "五",
+    title: "사진이 밖으로 나가지 않는 관상",
+    body: "얼굴의 비율과 이목구비를 이용자의 휴대폰 안에서 살핍니다. 사진은 서버로 보내지 않습니다.",
   },
 ];
 
-/**
- * 청월당 벤치마킹: 이모지 제목 + 색깔 카드 + 친근한 말투로 묶은 섹션.
- * 색상은 전부 오행(이미 ElementRadarChart에 쓰던 실제 데이터 색상) 팔레트를
- * 재사용했다 - 임의로 예쁜 색을 고른 게 아니라 우리 서비스의 실제 상징색이다.
- */
-const CASUAL_SECTIONS = [
-  {
-    emoji: "✨",
-    title: "지금 바로, 공짜로",
-    items: [
-      { name: "무료 만세력", desc: "원국·오행·십신·대운이 한눈에", price: "무료", color: "#3d6b4c", href: "/start" },
-      { name: "오늘·내일의 운세", desc: "매일 바뀌는 일진", price: "무료", color: "#b54a3f", href: "/start?next=fortune" },
-      { name: "관상 분석", desc: "사진으로 보는 관상", price: "무료", color: "#2f4a73", href: "/face" },
-    ],
-  },
-  {
-    emoji: "🔎",
-    title: "더 궁금하다면",
-    items: [
-      { name: "베이직 심층 분석", desc: "연애·재물·직업·올해 운세", price: "3,900원", color: "#b08d57", href: "/start" },
-      { name: "프리미엄 종합 리포트", desc: "베이직 전체 + 월별 흐름", price: "9,900원", color: "#9c3b3b", href: "/start" },
-      { name: "인연 관상 궁합", desc: "어울리는 인연의 관상적 특징", price: "4,900원", color: "#6e7075", href: "/face" },
-    ],
-  },
-];
-/**
- * 베이직/프리미엄/인연궁합처럼 결제가 필요한 상품은 먼저 무료 분석(resultId)이
- * 있어야 구매 화면(/products, /face/products)에 진입할 수 있다 - 그래서 유료
- * 카드도 "결제 화면"이 아니라 "그 상품의 출발점"(사주는 /start, 관상은 /face)으로
- * 링크한다. 실제 결제 유도는 무료 결과 화면의 기존 CTA가 그대로 담당한다.
- */
+const GOLD = "#9a7a45";
 
-/**
- * 투트랙 운영: 같은 레포·같은 코드를 Vercel 프로젝트 두 개(예: saju-web,
- * saju-web2)가 각자 배포한다. 어느 쪽이 "류결사주"(이 아래 믹스 버전)를
- * 보여주고 어느 쪽이 "류결의사주"(청월당풍)를 보여줄지는, 코드가 아니라
- * 각 Vercel 프로젝트에 설정하는 환경변수 하나로 정해진다 -
- * NEXT_PUBLIC_LANDING_VARIANT=casual로 설정된 쪽만 메인 화면이 바뀐다.
- * 기본값(설정 안 함)은 지금까지 쓰던 "류결사주" 믹스 버전이다.
- */
 export default function LandingPage() {
   if (process.env.NEXT_PUBLIC_LANDING_VARIANT === "casual") {
     return <CasualLanding />;
   }
 
   return (
-    <>
-      <main className="mx-auto min-h-screen max-w-xl px-5 pb-16 pt-12 sm:pt-16">
-        {/* 헤더 + 로그인 */}
-        <div className="mb-8 flex items-center justify-between">
-          <div>
-            <p className="text-base font-bold" style={{ fontFamily: "var(--font-serif)", color: "var(--color-accent)" }}>
-              류결사주
-            </p>
-            <p className="text-[11px]" style={{ color: "var(--color-ink-faint)" }}>
-              류결의 명견만리
-            </p>
-          </div>
-        </div>
-        <LoginButtons />
+    <main className="min-h-screen pb-10">
+      {/* 머리줄 */}
+      <header className="mx-auto flex max-w-xl items-center justify-between px-5 py-4" style={{ borderBottom: "1px solid var(--color-line)" }}>
+        <a href="/" className="text-[20px] font-bold" style={{ fontFamily: "var(--font-serif)", color: GOLD }}>
+          류결사주
+        </a>
+        <HeaderAuth />
+      </header>
 
-        {/* 히어로 */}
-        <div className="mt-10 mb-10">
-          <div className="mx-auto mb-5 h-28 w-28">
-            <SajuEmblemIllustration />
+      <div className="mx-auto max-w-xl px-5">
+        {/* 가운데 문양 + 소개 + 큰 버튼 */}
+        <section className="pt-10 pb-12 text-center">
+          <div className="mx-auto h-[200px] w-[200px]">
+            <OhaengEmblem />
           </div>
-          <div className="mb-3 flex flex-wrap gap-1.5">
-            {(isLoginRequired() ? ["무료", "카카오로 바로 시작", "약 1분 소요"] : ["무료", "회원가입 불필요", "약 1분 소요"]).map((badge) => (
-              <span
-                key={badge}
-                className="rounded-full px-2.5 py-1 text-[11px] font-medium"
-                style={{ backgroundColor: "var(--color-accent-soft)", color: "var(--color-accent)" }}
-              >
-                {badge}
-              </span>
-            ))}
-          </div>
-          <h1 className="mb-3 text-[28px] font-bold leading-snug">
-            생년월일로 보는
-            <br />
-            나의 사주·운세·관상
-          </h1>
-          <p className="text-[15px] leading-relaxed" style={{ color: "var(--color-ink-soft)" }}>
-            정해진 계산식으로 오행·십신·대운·세운을 산출하고, AI는 그 결과를 풀어 쓰는 역할만 합니다. 오늘의
-            운세와 관상도 무료로 체험해보세요.
+          <p className="mt-8 text-[13px] tracking-[0.2em]" style={{ color: GOLD }}>
+            류결의 명견만리
           </p>
-          <a href="/start" className="btn-primary mt-6 block text-center">
-            무료로 내 만세력 보기
+          <h1 className="mt-2 text-[28px] font-bold leading-snug" style={{ fontFamily: "var(--font-serif)" }}>
+            타고난 여덟 글자,
+            <br />
+            제대로 읽어 드립니다
+          </h1>
+          <p className="mt-4 text-[15px] leading-relaxed" style={{ color: "var(--color-ink-soft)" }}>
+            절기로 세우고 한자 이름까지 살피는
+            <br />
+            정통 명리 사주, 류결사주입니다.
+          </p>
+          <a
+            href="/start"
+            className="mx-auto mt-8 block max-w-xs rounded-2xl py-4 text-[18px] font-bold"
+            style={{ fontFamily: "var(--font-serif)", backgroundColor: "var(--color-accent)", color: "#fff", boxShadow: "0 6px 20px rgba(156,59,59,0.22)" }}
+          >
+            무료 만세력 보기
           </a>
-        </div>
+        </section>
 
-        {/* 이런 걸 보실 수 있어요 - 일러스트 3장 */}
-        <section className="mb-12 grid grid-cols-3 gap-3">
-          {[
-            { Illustration: SajuEmblemIllustration, label: "사주 원국" },
-            { Illustration: FortuneSunMoonIllustration, label: "오늘의 운세" },
-            { Illustration: FaceReadingIllustration, label: "관상 분석" },
-          ].map(({ Illustration, label }) => (
-            <div key={label} className="flex flex-col items-center">
-              <div
-                className="mb-2 flex h-20 w-20 items-center justify-center rounded-2xl p-3"
-                style={{ backgroundColor: "var(--color-paper-soft)" }}
-              >
-                <Illustration />
-              </div>
-              <p className="text-xs font-medium" style={{ color: "var(--color-ink-soft)" }}>
-                {label}
-              </p>
-            </div>
-          ))}
+        <div className="hairline" />
+
+        {/* 안내 문구 + 상품 카드 */}
+        <section className="py-12">
+          <p className="mb-8 text-center text-[15px] leading-loose" style={{ fontFamily: "var(--font-serif)", color: GOLD }}>
+            사주는 태어난 순간의 하늘과 땅의 기록입니다.
+            <br />
+            점(占)이 아니라 풀이이니
+            <br />
+            편안한 마음으로 내 흐름을 살펴보세요.
+          </p>
+
+          <div className="space-y-3">
+            {LANDING_PRODUCTS.map((p) => {
+              const inner = (
+                <>
+                  <div className="shrink-0">
+                    <ProductIcon kind={p.icon} />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-[17px] font-bold" style={{ fontFamily: "var(--font-serif)" }}>
+                      {p.name}
+                    </p>
+                    <p className="mt-0.5 text-[13px]" style={{ color: "var(--color-ink-soft)" }}>
+                      {p.desc}
+                    </p>
+                  </div>
+                  <div className="shrink-0 text-right">
+                    {p.soon ? (
+                      <span className="rounded-full px-2.5 py-1 text-[12px] font-medium" style={{ backgroundColor: "var(--color-paper-soft)", color: "var(--color-ink-faint)" }}>
+                        곧 열려요
+                      </span>
+                    ) : (
+                      <span className="text-[19px] font-bold" style={{ fontFamily: "var(--font-serif)", color: p.price === "무료" ? "var(--color-element-wood)" : GOLD }}>
+                        {p.price}
+                      </span>
+                    )}
+                  </div>
+                </>
+              );
+              const cls = "flex items-center gap-4 rounded-2xl px-4 py-5";
+              const style = { border: `1px solid ${p.soon ? "var(--color-line)" : "#d8c49a"}`, backgroundColor: "#fffdf8", opacity: p.soon ? 0.75 : 1 };
+              return p.soon || !p.href ? (
+                <div key={p.name} className={cls} style={style}>
+                  {inner}
+                </div>
+              ) : (
+                <a key={p.name} href={p.href} className={`${cls} transition-transform active:scale-[0.98]`} style={style}>
+                  {inner}
+                </a>
+              );
+            })}
+          </div>
+
+          <p className="mt-5 text-center text-[13px]" style={{ color: "var(--color-ink-faint)" }}>
+            입력한 정보는 내 사주함에 저장하거나
+            <br />
+            언제든 지울 수 있습니다.
+          </p>
+        </section>
+
+        <div className="hairline" />
+
+        {/* 질문 카드 */}
+        <section className="py-12">
+          <div className="rounded-2xl px-5 py-8 text-center" style={{ border: "1px solid #d8c49a", backgroundColor: "#fffdf8" }}>
+            <p className="text-[16px] leading-loose" style={{ fontFamily: "var(--font-serif)", color: "var(--color-ink-soft)" }}>
+              사주 볼 때, 양력 생일만 넣으셨나요?
+              <br />
+              이름 한자는 물어보던가요?
+            </p>
+            <p className="mt-5 text-[18px] font-bold leading-relaxed" style={{ fontFamily: "var(--font-serif)", color: GOLD }}>
+              절기와 음력, 한자까지 살펴야
+              <br />
+              비로소 내 사주입니다
+            </p>
+          </div>
         </section>
 
         {/* 왜 류결사주인가 */}
-        <section className="mb-12">
-          <h2 className="mb-5 text-lg font-bold" style={{ fontFamily: "var(--font-serif)" }}>
-            왜 류결사주인가
-          </h2>
-          <div className="space-y-3">
-            {TRUST_POINTS.map((p) => (
-              <div key={p.num} className="rounded-xl p-3.5" style={{ backgroundColor: "var(--color-paper-soft)" }}>
-                <div className="mb-1 flex items-center gap-2">
-                  <span
-                    className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-bold"
-                    style={{ backgroundColor: "var(--color-accent-soft)", color: "var(--color-accent)" }}
-                  >
-                    {p.num}
+        <section className="pb-12">
+          <div className="rounded-2xl px-5 py-8" style={{ backgroundColor: "#fffdf8", boxShadow: "0 4px 18px rgba(0,0,0,0.07)" }}>
+            <h2 className="text-center text-[24px] font-bold" style={{ fontFamily: "var(--font-serif)", color: GOLD }}>
+              왜 류결사주인가
+            </h2>
+            <p className="mt-3 text-center text-[14px] leading-relaxed" style={{ color: "var(--color-ink-soft)" }}>
+              · 절기 기준 계산 · 한자 이름 입력
+              <br />
+              흐트러짐 없이 세운 사주
+            </p>
+            <div className="mt-8 space-y-6">
+              {WHY.map((w) => (
+                <div key={w.num} className="flex gap-3">
+                  <span className="w-6 shrink-0 text-[18px]" style={{ fontFamily: "var(--font-serif)", color: GOLD }}>
+                    {w.num}
                   </span>
-                  <h3 className="text-sm font-semibold">{p.title}</h3>
+                  <div>
+                    <h3 className="text-[16px] font-bold" style={{ fontFamily: "var(--font-serif)", color: GOLD }}>
+                      {w.title}
+                    </h3>
+                    <p className="mt-1.5 text-[14px] leading-relaxed" style={{ color: "var(--color-ink-soft)" }}>
+                      {w.body}
+                    </p>
+                  </div>
                 </div>
-                <p className="pl-8 text-[13px] leading-relaxed" style={{ color: "var(--color-ink-soft)" }}>
-                  {p.body}
-                </p>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
         </section>
 
-        {/* 상품 - 청월당식 이모지+컬러카드 섹션 */}
-        <section className="mb-10">
-          {CASUAL_SECTIONS.map((sec) => (
-            <div key={sec.title} className="mb-8">
-              <h2 className="mb-3 flex items-center gap-1.5 text-base font-bold">
-                <span>{sec.emoji}</span>
-                {sec.title}
-              </h2>
-              <div className="grid grid-cols-3 gap-2.5">
-                {sec.items.map((item) => (
-                  <a
-                    key={item.name}
-                    href={item.href}
-                    className="flex flex-col justify-between rounded-2xl p-3 transition-transform active:scale-95"
-                    style={{ backgroundColor: `${item.color}14`, border: `1px solid ${item.color}33` }}
-                  >
-                    <div
-                      className="mb-2 flex h-9 w-9 items-center justify-center rounded-full text-[13px] font-bold text-white"
-                      style={{ backgroundColor: item.color }}
-                    >
-                      {item.price === "무료" ? "0" : "₩"}
-                    </div>
-                    <p className="text-[13px] font-semibold leading-snug">{item.name}</p>
-                    <p className="mt-0.5 text-[11px] leading-snug" style={{ color: "var(--color-ink-faint)" }}>
-                      {item.desc}
-                    </p>
-                    <p className="mt-2 text-[12px] font-bold" style={{ color: item.color }}>
-                      {item.price}
-                    </p>
-                  </a>
-                ))}
-              </div>
-            </div>
-          ))}
+        {/* 아래쪽 */}
+        <section className="text-center">
+          <a href="/start" className="block rounded-2xl py-4 text-[17px] font-bold" style={{ fontFamily: "var(--font-serif)", backgroundColor: "var(--color-accent)", color: "#fff" }}>
+            무료 만세력 보기
+          </a>
+          <p className="mt-8 text-[18px] font-bold" style={{ fontFamily: "var(--font-serif)", color: GOLD }}>
+            류결사주
+          </p>
+          <p className="mt-2 text-[13px] leading-relaxed" style={{ color: "var(--color-ink-faint)" }}>
+            본 서비스는 오락·참고 목적이며
+            <br />
+            중요한 결정의 근거로 삼지 마십시오.
+          </p>
+          <a href={`mailto:${BUSINESS_INFO.csEmail}`} className="mt-4 inline-block text-[13px] underline underline-offset-4" style={{ color: "var(--color-ink-soft)" }}>
+            문의하기
+          </a>
         </section>
-
-        <a href="/start" className="btn-secondary block text-center">
-          시작하기
-        </a>
-
-        <p className="mt-6 text-xs leading-relaxed" style={{ color: "var(--color-ink-faint)" }}>
-          모든 사주·운세·관상 콘텐츠는 전통 문화·오락 목적의 참고 정보이며, 성격·재물·건강·연애 등을
-          과학적으로 확정하지 않습니다.
-        </p>
-      </main>
-    </>
+      </div>
+    </main>
   );
 }
