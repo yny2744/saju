@@ -20,17 +20,23 @@ export function isLive(): boolean {
 }
 
 /**
- * 수정안 3번(2026-10-05): 무료 사주부터 카카오 로그인을 기본으로 한다.
- *
- * DB(neon)·카카오 키가 준비되기 전에 이 기능을 켜면 아무도 사주를 볼 수 없게 되므로, 별도 스위치로 둔다.
- * 준비가 끝나면 배포 환경변수 NEXT_PUBLIC_LOGIN_REQUIRED=true 로 바꾸고 재배포한다.
- * (값이 없거나 다른 값이면 꺼짐 = 지금처럼 로그인 없이 이용)
+ * 2026-10-06 유샘 확정(용사주 방식): 무료(만세력·오늘의 운세·관상)는 로그인 없이 본다.
+ * 로그인은 가입 선물 복채·990원 사주보기·친구 초대·내 사주함에서만 쓴다.
+ * (이전 수정안 3번 "무료부터 로그인 필수"를 대체 - 무료 화면을 막는 곳은 이제 없다)
  */
 export function isLoginRequired(): boolean {
+  return false;
+}
+
+/**
+ * 회원 기능 스위치. 배포 환경변수 NEXT_PUBLIC_LOGIN_REQUIRED=true 는 이제 "회원 기능(로그인·복채·내 사주함) 켜기"
+ * 뜻으로 쓴다 - Vercel 설정은 그대로 두면 된다. (DB·카카오 키가 없는 환경에서는 꺼 둔다)
+ */
+export function isMemberFeatureOn(): boolean {
   return process.env.NEXT_PUBLIC_LOGIN_REQUIRED === "true";
 }
 
-/** 로그인·회원 화면/API를 열지 여부: 승인 후(live)이거나, 로그인 필수 스위치가 켜졌을 때 */
+/** 로그인·회원 화면/API를 열지 여부: 승인 후(live)이거나, 회원 기능 스위치가 켜졌을 때 */
 export function isAuthEnabled(): boolean {
-  return isLive() || isLoginRequired();
+  return isLive() || isMemberFeatureOn();
 }

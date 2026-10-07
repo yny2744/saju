@@ -20,7 +20,7 @@ export interface LandingProduct {
 
 export const LANDING_PRODUCTS: LandingProduct[] = [
   { icon: "report", name: "평생 사주 리포트", desc: "평생의 흐름을 한 권에", price: "9,900원", soon: true, pricePending: true },
-  { icon: "basic", name: "기본 사주풀이", desc: "성격·재물·연애·올해 흐름", price: "990원", href: "/start", pricePending: true },
+  { icon: "basic", name: "기본 사주풀이", desc: "7가지 주제 풀이 · 가입하면 첫 1회 무료", price: "990원", href: "/start", pricePending: true },
   { icon: "manse", name: "만세력", desc: "여덟 글자·오행·신강신약·대운", price: "무료", href: "/start" },
   { icon: "face", name: "관상", desc: "얼굴 사진으로 보는 타고난 기질", price: "무료", href: "/face", pricePending: true },
   { icon: "match", name: "궁합", desc: "두 사람의 사주로 보는 인연", price: "990원", soon: true, pricePending: true },

@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from "next/server";
-import { requireMemberIfLoginRequired } from "@/server/memberGate";
 import { handleAnalyzeRequest } from "@/server/requestHandlers";
 
 // Node.js 런타임 명시 (Saju Engine이 lunar-javascript 등 Node 대상 계산을 수행하므로 Edge 런타임을 쓰지 않는다).
@@ -10,8 +9,6 @@ function clientKeyOf(request: NextRequest): string {
 }
 
 export async function POST(request: NextRequest) {
-  const gate = await requireMemberIfLoginRequired(request);
-  if (gate) return gate;
 
   let rawBody: unknown;
   try {

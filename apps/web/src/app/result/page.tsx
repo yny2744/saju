@@ -21,6 +21,8 @@ import { FreeAnalysisBoards, isFreeAnalysisShape } from "@/components/FreeAnalys
 import { buildFreeAnalysisKeywords } from "@/lib/freeAnalysisKeywords";
 import { ElementBalance, NeededEnergySection, RelationsTable, DaeunTimeline } from "@/components/ManseSections";
 import { focusLabel } from "@/lib/focus";
+import { ReadingCta } from "@/components/bokchae/ReadingCta";
+import { PENDING_RESULT_KEY } from "@/lib/bokchae";
 import { neededEnergy } from "@/lib/neededEnergy";
 import { elementShares, yinYangCount, relationRows, daeunCells, kstDateString } from "@/lib/manseView";
 import type { ElementKo } from "@/lib/pillarView";
@@ -40,10 +42,28 @@ type LoadState =
 
 function ResultBody() {
   const searchParams = useSearchParams();
-  const id = searchParams.get("id");
+  const queryId = searchParams.get("id");
+  const resume = searchParams.get("resume") === "1";
+  // undefined = 아직 확인 중. 카카오 가입 후 "/result?resume=1"로 돌아오면 브라우저에 기억해 둔 결과를 다시 연다.
+  const [id, setId] = useState<string | null | undefined>(queryId ?? undefined);
   const [state, setState] = useState<LoadState>({ status: "loading" });
 
   useEffect(() => {
+    if (queryId) return setId(queryId);
+    let stored: string | null = null;
+    if (resume) {
+      try {
+        stored = localStorage.getItem(PENDING_RESULT_KEY);
+      } catch {
+        stored = null;
+      }
+    }
+    setId(stored);
+    if (stored) window.history.replaceState(null, "", `/result?id=${encodeURIComponent(stored)}`);
+  }, [queryId, resume]);
+
+  useEffect(() => {
+    if (id === undefined) return;
     if (!id) {
       setState({ status: "error", message: "잘못된 접근입니다. 다시 분석을 시작해주세요." });
       return;
@@ -168,6 +188,9 @@ function ResultBody() {
         )}
       </section>
 
+      {/* 이어서 보기 - 990원 사주보기 (가입 선물 복채로 첫 풀이 무료) */}
+      {id && <ReadingCta resultId={id} nickname={nickname} focus={focus} />}
+
       {/* 공유용 결과 카드 - 생년월일/출생시간/출생도시는 포함하지 않는다 */}
       <section className="mb-10">
         <h2 className="mb-4 text-base font-semibold">결과 카드 공유하기</h2>
@@ -180,11 +203,6 @@ function ResultBody() {
       </section>
 
       <div className="space-y-2.5">
-        {id && (
-          <a href={`/products?resultId=${encodeURIComponent(id)}`} className="btn-primary block">
-            더 깊은 해석 보러가기 (유료)
-          </a>
-        )}
         {id && (
           <a href={`/fortune?resultId=${encodeURIComponent(id)}`} className="btn-secondary block">
             오늘·내일의 운세 보기

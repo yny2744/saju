@@ -92,7 +92,7 @@ describe("StatelessTokenResultStore - Phase4 최종 수정 지시서 3조/4조",
       const { id } = store.save(fakeResult());
       Date.now = realNow;
 
-      const future = realNow() + 31 * 60 * 1000; // TTL(30분)을 넘긴 미래 시점
+      const future = realNow() + 25 * 60 * 60 * 1000; // TTL(24시간, 2026-10-06 변경)을 넘긴 미래 시점
       Date.now = () => future;
       expect(store.get(id)).toBeNull();
     } finally {

@@ -78,6 +78,50 @@ async function ensureSchema(): Promise<void> {
     );
   `);
   await db.query(`CREATE INDEX IF NOT EXISTS saju_profiles_user_idx ON saju_profiles(user_id);`);
+
+  // 2026-10-06 상용화 구조: 복채(선물·보상) 장부, 친구 초대, 저장된 유료 풀이.
+  await db.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS ref_code TEXT UNIQUE;`);
+  // 복채 장부 - 잔액은 amount 합계. (user_id, kind, ref) 유니크로 같은 보상이 두 번 들어가지 않는다.
+  await db.query(`
+    CREATE TABLE IF NOT EXISTS bokchae_ledger (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      amount INTEGER NOT NULL,
+      kind TEXT NOT NULL,
+      label TEXT NOT NULL,
+      ref TEXT NOT NULL DEFAULT '',
+      created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+      UNIQUE (user_id, kind, ref)
+    );
+  `);
+  await db.query(`CREATE INDEX IF NOT EXISTS bokchae_ledger_user_idx ON bokchae_ledger(user_id, created_at DESC);`);
+  // 친구 초대 - 초대받은 사람 한 명당 한 줄(두 번 인정되지 않음)
+  await db.query(`
+    CREATE TABLE IF NOT EXISTS referrals (
+      referred_user_id UUID PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+      referrer_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      rewarded BOOLEAN NOT NULL DEFAULT false,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+    );
+  `);
+  await db.query(`CREATE INDEX IF NOT EXISTS referrals_referrer_idx ON referrals(referrer_id);`);
+  // 유료 풀이 저장 - 한 번 쓴 풀이는 다시 AI를 부르지 않고 내 사주함에서 언제든 다시 본다.
+  // source_key: 같은 사람(생년월일시·성별·이름)·같은 관심 분야로 두 번 결제되지 않게 막는 키.
+  await db.query(`
+    CREATE TABLE IF NOT EXISTS readings (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      product TEXT NOT NULL,
+      source_key TEXT NOT NULL,
+      nickname TEXT NOT NULL,
+      focus TEXT,
+      header JSONB NOT NULL,
+      content JSONB NOT NULL,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+      UNIQUE (user_id, product, source_key)
+    );
+  `);
+  await db.query(`CREATE INDEX IF NOT EXISTS readings_user_idx ON readings(user_id, created_at DESC);`);
   schemaReady = true;
 }
 

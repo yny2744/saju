@@ -6,15 +6,13 @@ import { ComingSoon } from "@/components/ComingSoon";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { readA11yPrefs, saveA11yPrefs, type A11yPrefs } from "@/components/AccessibilityInit";
+import { BokchaePanel } from "@/components/bokchae/BokchaePanel";
 
 /**
  * 내 사주함(마이페이지) — Phase 10.5, 용사주 벤치마킹에서 구조만 차용.
  *
- * ⚠️ 지금 구현된 범위: 프로필(닉네임/이메일/가입방식), 표시 설정(글자크기·
- * 대비), 계정 관리(로그아웃·회원탈퇴)뿐이다. 용사주의 "지인 정보 등록",
- * "추천 링크(복채 리워드)", "복채 충전·이용내역"은 전부 별도의 새 DB
- * 테이블(저장된 지인 사주, 추천 관계, 지갑/사용로그)이 필요한 더 큰 작업이라
- * 아직 안 만들었다 - 있는 것처럼 보이면 안 돼서, 이 화면엔 아예 넣지 않았다.
+ * 구현 범위: 프로필, 복채 잔액·내 사주풀이·친구 초대·이용내역(2026-10-06), 저장한 사람, 알림 설정,
+ * 표시 설정, 계정 관리. 복채는 선물·보상으로만 지급한다(돈 받고 충전하지 않음).
  *
  * 로그인 안 한 상태로 들어오면 /login으로 보낸다.
  */
@@ -115,6 +113,8 @@ function MyPageBody() {
             </div>
           </div>
         </section>
+
+        <BokchaePanel />
 
         {/* 저장한 사람 */}
         <section className="mb-7">
@@ -235,7 +235,7 @@ function MyPageBody() {
           ) : (
             <div className="rounded-xl p-4" style={{ backgroundColor: "var(--color-accent-soft)" }}>
               <p className="mb-3 text-sm" style={{ color: "var(--color-accent)" }}>
-                정말 탈퇴하시겠어요? 계정 정보와 저장한 사람 정보가 모두 삭제되며 되돌릴 수 없어요.
+                정말 탈퇴하시겠어요? 계정 정보, 저장한 사람, 사주풀이, 복채가 모두 삭제되며 되돌릴 수 없어요.
               </p>
               <div className="flex gap-2">
                 <button

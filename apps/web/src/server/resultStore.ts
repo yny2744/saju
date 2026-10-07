@@ -44,7 +44,8 @@ export interface ResultStore {
   get(id: string): AnalyzeResultResponse | null;
 }
 
-const TTL_MS = 30 * 60 * 1000; // 30분 - 결과를 확인하기 충분하되 무한정 보관하지 않는 값
+// 2026-10-06: 30분 → 24시간. 무료 결과를 본 뒤 카카오 가입·990원 사주보기로 넘어가는 동안 결과가 사라지지 않게.
+const TTL_MS = 24 * 60 * 60 * 1000;
 const ALGORITHM = "aes-256-gcm";
 const IV_LENGTH = 12; // GCM 표준 IV 길이(byte)
 const DEV_ONLY_FALLBACK_SECRET = "dev-only-insecure-default-result-token-secret";

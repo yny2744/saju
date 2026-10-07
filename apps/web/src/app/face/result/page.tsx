@@ -130,11 +130,13 @@ function FaceResultBody() {
       </section>
 
       <div className="space-y-2.5">
-        {id && (
-          <a href={`/face/products?resultId=${encodeURIComponent(id)}`} className="btn-primary block">
-            인연 관상까지 깊게 보러가기 (유료)
-          </a>
-        )}
+        {/* 2026-10-06: 유료 관상(4,900원)은 결제사 승인 후 새 가격 구조로 다시 연다 - 그 전엔 숨김 */}
+        <p className="rounded-xl px-4 py-3 text-center text-sm" style={{ backgroundColor: "var(--color-paper-soft)", color: "var(--color-ink-faint)" }}>
+          관상 심층 풀이 · 곧 열려요
+        </p>
+        <a href="/start" className="btn-primary block text-center">
+          무료 만세력도 보기
+        </a>
         <a href="/face" className="block py-2 text-center text-sm underline underline-offset-4" style={{ color: "var(--color-ink-soft)" }}>
           다시 분석하기
         </a>

@@ -10,6 +10,17 @@ import {
   type User,
 } from "./users";
 import { createSession, deleteSession, getUserBySessionToken } from "./session";
+import { onNewMember } from "@/server/bokchae/ledger";
+
+/** 새 회원 선물·초대 보상. 실패해도 가입·동의 자체는 막지 않는다. */
+async function rewardNewMember(userId: string, refCode: string | undefined): Promise<void> {
+  try {
+    await onNewMember(userId, refCode);
+  } catch (err) {
+    // eslint-disable-next-line no-console
+    console.error("[bokchae] 가입 선물/초대 보상 실패:", err);
+  }
+}
 
 export interface AuthHandlerResult<T> {
   status: number;
@@ -43,7 +54,7 @@ const CONSENT_REQUIRED_ERROR: AuthErrorBody = {
   error: { code: "CONSENT_REQUIRED", message: "필수 약관에 모두 동의해주세요." },
 };
 
-export async function handleSignup(rawBody: unknown): Promise<AuthHandlerResult<AuthUserBody | AuthErrorBody>> {
+export async function handleSignup(rawBody: unknown, refCode?: string): Promise<AuthHandlerResult<AuthUserBody | AuthErrorBody>> {
   if (typeof rawBody !== "object" || rawBody === null) {
     return { status: 400, body: { error: { code: "INVALID_BODY", message: "요청 형식이 올바르지 않습니다." } } };
   }
@@ -69,6 +80,7 @@ export async function handleSignup(rawBody: unknown): Promise<AuthHandlerResult<
 
   try {
     const user = await createUserWithEmail(email, password, nickname, consent.marketing);
+    await rewardNewMember(user.id, refCode);
     const session = await createSession(user.id);
     return { status: 200, body: { user: toPublicUser(user) }, session };
   } catch (err) {
@@ -120,7 +132,8 @@ export async function handleMe(token: string | undefined): Promise<AuthHandlerRe
 /** 카카오 첫 로그인 후 /consent 화면에서 보내는 동의 */
 export async function handleConsent(
   token: string | undefined,
-  rawBody: unknown
+  rawBody: unknown,
+  refCode?: string
 ): Promise<AuthHandlerResult<AuthUserBody | AuthErrorBody>> {
   const user = await getUserBySessionToken(token);
   if (!user) return { status: 401, body: { error: { code: "NOT_LOGGED_IN", message: "로그인이 필요합니다." } } };
@@ -130,6 +143,7 @@ export async function handleConsent(
   const consent = readConsent(rawBody as Record<string, unknown>);
   if (!consent) return { status: 400, body: CONSENT_REQUIRED_ERROR };
   await recordConsent(user.id, consent.marketing);
+  if (!user.termsAgreed) await rewardNewMember(user.id, refCode); // 처음 동의 = 새 회원
   return { status: 200, body: { user: toPublicUser({ ...user, termsAgreed: true, marketingAgreed: consent.marketing }) } };
 }
 
