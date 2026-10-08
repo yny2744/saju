@@ -15,7 +15,7 @@ export function InviteCard({ refCode, invited }: { refCode: string; invited: num
   }
 
   return (
-    <div className="rounded-2xl p-5" style={{ border: "1px solid #d8c49a", backgroundColor: "#fffdf8" }}>
+    <div className="rounded-2xl p-5" style={{ border: "1px solid var(--color-gold-line)", backgroundColor: "var(--color-card)" }}>
       <p className="text-[17px] font-bold" style={{ fontFamily: "var(--font-serif)" }}>
         친구 초대하고 {CURRENCY_NAME} 받기
       </p>

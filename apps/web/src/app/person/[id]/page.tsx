@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { isAuthEnabled } from "@/lib/launchMode";
 import { ComingSoon } from "@/components/ComingSoon";
 import { LoadingState, ErrorState } from "@/components/StatusScreens";
-import { EXTRA_KEYS, TOPICS, TOPIC_KEYS, isTopicKey, type AnyTopicKey, type TopicKey } from "@/lib/topics";
+import { BUNDLE_SUGGESTIONS, EXTRA_KEYS, TOPICS, TOPIC_KEYS, isTopicKey, type AnyTopicKey, type TopicKey } from "@/lib/topics";
 import { CURRENCY_NAME, PRICE, formatNyang } from "@/lib/yeopjeon";
 import { PersonHeader } from "@/components/yeopjeon/PersonHeader";
 import { InviteCard } from "@/components/yeopjeon/InviteCard";
@@ -19,7 +19,7 @@ import type { PersonSummary } from "@/server/readings/readings";
  *  - 주소 ?buy=deep&topic=money, ?buy=bundle3, ?buy=bundle12 로 들어오면 그 구매 창을 바로 연다.
  */
 
-const GOLD = "#9a7a45";
+const GOLD = "var(--color-gold)";
 type Mode = "deep" | "bundle3" | "bundle12";
 
 interface Confirm {
@@ -141,7 +141,7 @@ function PersonBody({ id }: { id: string }) {
         <div className="mb-5">
           <p
             className="rounded-xl px-4 py-3 text-center text-[14px]"
-            style={{ backgroundColor: notice.kind === "done" ? "#eef5ef" : "var(--color-accent-soft)", color: notice.kind === "done" ? "var(--color-element-wood)" : "var(--color-accent)" }}
+            style={{ backgroundColor: notice.kind === "done" ? "#eef5ef" : "var(--color-danger-soft)", color: notice.kind === "done" ? "var(--color-element-wood)" : "var(--color-danger)" }}
           >
             {notice.text}
           </p>
@@ -157,6 +157,38 @@ function PersonBody({ id }: { id: string }) {
         <p className="mb-3 rounded-xl px-4 py-3 text-center text-[14px] font-semibold" style={{ backgroundColor: "var(--color-accent-soft)", color: "var(--color-accent)" }}>
           몰아볼 운 3가지를 골라 주세요 ({picking.length}/3)
         </p>
+      )}
+      {picking && (
+        <div className="mb-4">
+          <p className="mb-2 text-center text-[12px]" style={{ color: "var(--color-ink-faint)" }}>
+            추천 묶음을 누르면 한 번에 골라져요
+          </p>
+          <div className="grid grid-cols-2 gap-2">
+            {BUNDLE_SUGGESTIONS.map((b) => {
+              const avail = b.topics.filter((t) => !owned.has(t));
+              const on = avail.length > 0 && avail.every((t) => picking.includes(t)) && picking.length === avail.length;
+              return (
+                <button
+                  key={b.title}
+                  type="button"
+                  disabled={avail.length === 0}
+                  onClick={() => setPicking(avail)}
+                  className="rounded-xl px-3 py-2.5 text-left disabled:opacity-40"
+                  style={{ border: on ? "2px solid var(--color-accent)" : "1px solid var(--color-gold-line)", backgroundColor: "var(--color-card)" }}
+                >
+                  <span className="block text-[14px] font-bold" style={{ fontFamily: "var(--font-serif)" }}>
+                    {b.title}
+                  </span>
+                  <span className="mt-0.5 block text-[11.5px] leading-snug" style={{ color: "var(--color-ink-soft)" }}>
+                    {b.topics.map((t) => TOPICS[t].title).join(", ")}
+                    {avail.length < 3 && avail.length > 0 ? " (이미 열린 운 제외)" : ""}
+                    {avail.length === 0 ? " · 모두 열림" : ""}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
       )}
 
       {/* 12가지 운 */}
@@ -179,8 +211,8 @@ function PersonBody({ id }: { id: string }) {
             </>
           );
           const style = {
-            border: picked ? "2px solid var(--color-accent)" : `1px solid ${open ? "#d8c49a" : "var(--color-line)"}`,
-            backgroundColor: open ? "#fffdf8" : "var(--color-paper-soft)",
+            border: picked ? "2px solid var(--color-accent)" : `1px solid ${open ? "var(--color-gold-line)" : "var(--color-line)"}`,
+            backgroundColor: open ? "var(--color-card)" : "var(--color-paper-soft)",
           };
           if (open) {
             return (
@@ -210,7 +242,7 @@ function PersonBody({ id }: { id: string }) {
       <div className="mt-3 grid grid-cols-2 gap-2.5">
         {EXTRA_KEYS.map((t) =>
           owned.has(t) ? (
-            <a key={t} href={`/person/${id}/${t}`} className="block rounded-xl px-3.5 py-3" style={{ border: "1px solid #d8c49a", backgroundColor: "#fffdf8" }}>
+            <a key={t} href={`/person/${id}/${t}`} className="block rounded-xl px-3.5 py-3" style={{ border: "1px solid var(--color-gold-line)", backgroundColor: "var(--color-card)" }}>
               <span className="text-[15px] font-bold">{TOPICS[t].title}</span>
               <span className="mt-1 block text-[12px]" style={{ color: "var(--color-ink-faint)" }}>
                 열림 · 눌러서 보기
@@ -233,7 +265,7 @@ function PersonBody({ id }: { id: string }) {
       {lockedTopics.length > 0 && !picking && (
         <section className="mt-8 grid grid-cols-1 gap-3">
           {lockedTopics.length >= 3 && (
-            <button type="button" onClick={() => setPicking([])} className="rounded-2xl p-5 text-left" style={{ border: "1px solid #d8c49a", backgroundColor: "#fffdf8" }}>
+            <button type="button" onClick={() => setPicking([])} className="rounded-2xl p-5 text-left" style={{ border: "1px solid var(--color-gold-line)", backgroundColor: "var(--color-card)" }}>
               <span className="flex items-baseline justify-between">
                 <span className="text-[17px] font-bold" style={{ fontFamily: "var(--font-serif)" }}>
                   3가지 몰아보기
@@ -245,9 +277,12 @@ function PersonBody({ id }: { id: string }) {
               <span className="mt-1 block text-[13px]" style={{ color: "var(--color-ink-soft)" }}>
                 따로 보면 {formatNyang(PRICE.DEEP * 3)} · 가장 궁금한 세 가지를 골라 깊게
               </span>
+              <span className="mt-1 block text-[12px]" style={{ color: "var(--color-ink-faint)" }}>
+                추천 묶음 {BUNDLE_SUGGESTIONS.map((b) => b.title).join(" · ")}
+              </span>
             </button>
           )}
-          <button type="button" onClick={() => setConfirm({ mode: "bundle12", topics: [] })} className="rounded-2xl p-5 text-left" style={{ border: "1px solid #d8c49a", backgroundColor: "#fffdf8" }}>
+          <button type="button" onClick={() => setConfirm({ mode: "bundle12", topics: [] })} className="rounded-2xl p-5 text-left" style={{ border: "1px solid var(--color-gold-line)", backgroundColor: "var(--color-card)" }}>
             <span className="flex items-baseline justify-between">
               <span className="text-[17px] font-bold" style={{ fontFamily: "var(--font-serif)" }}>
                 12가지 전부 보기

@@ -228,13 +228,13 @@ function MyPageBody() {
               type="button"
               onClick={() => setConfirmingDelete(true)}
               className="block w-full rounded-xl px-4 py-3 text-left text-sm"
-              style={{ color: "var(--color-accent)" }}
+              style={{ color: "var(--color-danger)" }}
             >
               회원탈퇴
             </button>
           ) : (
-            <div className="rounded-xl p-4" style={{ backgroundColor: "var(--color-accent-soft)" }}>
-              <p className="mb-3 text-sm" style={{ color: "var(--color-accent)" }}>
+            <div className="rounded-xl p-4" style={{ backgroundColor: "var(--color-danger-soft)" }}>
+              <p className="mb-3 text-sm" style={{ color: "var(--color-danger)" }}>
                 정말 탈퇴하시겠어요? 계정 정보, 저장한 사람, 사주풀이, 엽전이 모두 삭제되며 되돌릴 수 없어요.
               </p>
               <div className="flex gap-2">

@@ -123,7 +123,7 @@ export function RelationsTable({ rows }: { rows: RelationRow[] }) {
                   <td className="px-3 py-2 text-[15px]" style={{ fontFamily: "var(--font-serif)" }}>
                     {r.chars}
                   </td>
-                  <td className="px-3 py-2 font-semibold" style={{ color: r.tone === "good" ? "var(--color-element-wood)" : "var(--color-accent)" }}>
+                  <td className="px-3 py-2 font-semibold" style={{ color: r.tone === "good" ? "var(--color-element-wood)" : "var(--color-danger)" }}>
                     {r.label}
                   </td>
                   <td className="px-3 py-2 text-right" style={{ color: "var(--color-ink-soft)" }}>

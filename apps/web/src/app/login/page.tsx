@@ -144,7 +144,7 @@ function LoginPageBody() {
         {mode === "signup" && <ConsentChecks value={consent} onChange={setConsent} />}
 
         {error && (
-          <p className="rounded-lg px-3.5 py-2.5 text-sm" style={{ backgroundColor: "var(--color-accent-soft)", color: "var(--color-accent)" }}>
+          <p className="rounded-lg px-3.5 py-2.5 text-sm" style={{ backgroundColor: "var(--color-danger-soft)", color: "var(--color-danger)" }}>
             {error}
           </p>
         )}

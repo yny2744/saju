@@ -140,8 +140,9 @@ export const FOCUS_TOPICS: Record<Focus, TopicKey[]> = {
   relationship: ["relationship"],
 };
 
-/** 대문 "3가지 몰아보기" 추천 묶음 */
+/** 3가지 몰아보기 추천 묶음 - 4묶음이 12가지 운을 빠짐없이 나눠 담는다 (2026-10-09 수정안 16) */
 export const BUNDLE_SUGGESTIONS: Array<{ title: string; topics: [TopicKey, TopicKey, TopicKey] }> = [
+  { title: "타고난 나", topics: ["nature", "relationship", "daeun"] },
   { title: "든든한 노후", topics: ["money", "health", "family"] },
   { title: "인연과 가정", topics: ["love", "marriage", "year"] },
   { title: "일과 성공", topics: ["job", "promotion", "business"] },

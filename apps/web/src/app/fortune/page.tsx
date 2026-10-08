@@ -149,7 +149,7 @@ function FortuneContent({ nickname, view, dayWord }: { nickname: string; view: F
             <span
               key={i}
               className="rounded-full px-2.5 py-0.5 text-[12px] font-semibold"
-              style={{ backgroundColor: "var(--color-paper-soft)", color: c.tone === "good" ? "var(--color-element-wood)" : "var(--color-accent)" }}
+              style={{ backgroundColor: "var(--color-paper-soft)", color: c.tone === "good" ? "var(--color-element-wood)" : "var(--color-danger)" }}
             >
               {c.text}
             </span>
@@ -200,7 +200,7 @@ function FortuneContent({ nickname, view, dayWord }: { nickname: string; view: F
                   {a.text}
                 </p>
                 {a.evidence.map((e, j) => (
-                  <p key={j} className="mt-1.5 text-[12px] leading-relaxed" style={{ color: e.tone === "good" ? "var(--color-element-wood)" : "var(--color-accent)" }}>
+                  <p key={j} className="mt-1.5 text-[12px] leading-relaxed" style={{ color: e.tone === "good" ? "var(--color-element-wood)" : "var(--color-danger)" }}>
                     · {e.text}
                   </p>
                 ))}

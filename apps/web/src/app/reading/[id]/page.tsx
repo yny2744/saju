@@ -18,7 +18,7 @@ import type { StoredReading } from "@/server/readings/readings";
  * (2026-10-06 이전 맛보기는 사람 정보가 없어 깊게 보기 버튼 대신 다시 보기 안내만 보인다.)
  */
 
-const GOLD = "#9a7a45";
+const GOLD = "var(--color-gold)";
 /** 10-06판 맛보기의 예전 주제 이름 → 지금 주제 */
 const LEGACY_KEY: Record<string, string> = { career: "job" };
 
@@ -56,7 +56,7 @@ function ReadingBody({ id }: { id: string }) {
         {content.sections.map((s) => {
           const key = LEGACY_KEY[s.key] ?? s.key;
           return (
-            <section key={s.key} className="rounded-2xl p-5" style={{ border: "1px solid var(--color-line)", backgroundColor: "#fffdf8" }}>
+            <section key={s.key} className="rounded-2xl p-5" style={{ border: "1px solid var(--color-line)", backgroundColor: "var(--color-card)" }}>
               <h2 className="flex items-center gap-2 text-[19px] font-bold" style={{ fontFamily: "var(--font-serif)", color: GOLD }}>
                 {s.title}
                 {focusKeys.includes(key) && (
@@ -91,7 +91,7 @@ function ReadingBody({ id }: { id: string }) {
 
       {personId ? (
         <section className="mt-8 grid grid-cols-1 gap-3 sm:grid-cols-2">
-          <a href={`/person/${personId}?buy=bundle3`} className="rounded-2xl p-5 text-center" style={{ border: "1px solid #d8c49a", backgroundColor: "#fffdf8" }}>
+          <a href={`/person/${personId}?buy=bundle3`} className="rounded-2xl p-5 text-center" style={{ border: "1px solid var(--color-gold-line)", backgroundColor: "var(--color-card)" }}>
             <p className="text-[17px] font-bold" style={{ fontFamily: "var(--font-serif)" }}>
               3가지 몰아보기
             </p>
@@ -102,7 +102,7 @@ function ReadingBody({ id }: { id: string }) {
               {formatNyang(PRICE.BUNDLE3)}
             </p>
           </a>
-          <a href={`/person/${personId}?buy=bundle12`} className="rounded-2xl p-5 text-center" style={{ border: "1px solid #d8c49a", backgroundColor: "#fffdf8" }}>
+          <a href={`/person/${personId}?buy=bundle12`} className="rounded-2xl p-5 text-center" style={{ border: "1px solid var(--color-gold-line)", backgroundColor: "var(--color-card)" }}>
             <p className="text-[17px] font-bold" style={{ fontFamily: "var(--font-serif)" }}>
               12가지 전부 보기
             </p>

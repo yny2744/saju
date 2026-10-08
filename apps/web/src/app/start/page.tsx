@@ -553,7 +553,7 @@ function StartForm({ member }: { member: MemberInfo | null }) {
         </details>
 
         {issues.length > 0 && (
-          <ul className="rounded-lg px-3.5 py-3 text-sm" style={{ backgroundColor: "var(--color-accent-soft)", color: "var(--color-accent)" }}>
+          <ul className="rounded-lg px-3.5 py-3 text-sm" style={{ backgroundColor: "var(--color-danger-soft)", color: "var(--color-danger)" }}>
             {issues.map((issue) => (
               <li key={issue}>{issue}</li>
             ))}

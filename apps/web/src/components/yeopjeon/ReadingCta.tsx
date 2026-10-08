@@ -10,7 +10,7 @@ import { InviteCard } from "./InviteCard";
 import { WritingOverlay } from "./WritingOverlay";
 import { reportClientError, useYeopjeon } from "./useYeopjeon";
 
-const GOLD = "#9a7a45";
+const GOLD = "var(--color-gold)";
 const WRITING_STEPS = ["사주 여덟 글자를 다시 살피고 있어요", "타고난 성향과 큰 흐름을 보고 있어요", "연애·재물·일을 풀고 있어요", "건강과 사람 복을 보고 있어요", "마지막으로 다듬고 있어요"];
 
 type Me = { nickname: string; termsAgreed: boolean } | null;
@@ -158,13 +158,13 @@ export function ReadingCta({ resultId, nickname, focus }: { resultId: string; ni
           </>
         )}
         <div className="mt-4 grid grid-cols-2 gap-2">
-          <button type="button" disabled={busy !== null} onClick={() => goPerson("bundle3")} className="rounded-xl px-2 py-3 text-[13px] font-semibold disabled:opacity-60" style={{ border: "1px solid #d8c49a" }}>
+          <button type="button" disabled={busy !== null} onClick={() => goPerson("bundle3")} className="rounded-xl px-2 py-3 text-[13px] font-semibold disabled:opacity-60" style={{ border: "1px solid var(--color-gold-line)" }}>
             3가지 몰아보기
             <span className="block text-[12px] font-normal" style={{ color: GOLD }}>
               {formatNyang(PRICE.BUNDLE3)}
             </span>
           </button>
-          <button type="button" disabled={busy !== null} onClick={() => goPerson("bundle12")} className="rounded-xl px-2 py-3 text-[13px] font-semibold disabled:opacity-60" style={{ border: "1px solid #d8c49a" }}>
+          <button type="button" disabled={busy !== null} onClick={() => goPerson("bundle12")} className="rounded-xl px-2 py-3 text-[13px] font-semibold disabled:opacity-60" style={{ border: "1px solid var(--color-gold-line)" }}>
             12가지 전부 보기
             <span className="block text-[12px] font-normal" style={{ color: GOLD }}>
               {formatNyang(PRICE.BUNDLE12)}
@@ -176,7 +176,7 @@ export function ReadingCta({ resultId, nickname, focus }: { resultId: string; ni
   }
 
   return (
-    <section className="mb-8 rounded-2xl p-5" style={{ border: "1px solid #d8c49a", backgroundColor: "#fffdf8" }}>
+    <section className="mb-8 rounded-2xl p-5" style={{ border: "1px solid var(--color-gold-line)", backgroundColor: "var(--color-card)" }}>
       <p className="text-center text-[13px]" style={{ color: GOLD }}>
         이어서 보기 · 맛보기 {formatNyang(PRICE.TASTE)}
       </p>
@@ -208,7 +208,7 @@ export function ReadingCta({ resultId, nickname, focus }: { resultId: string; ni
 
       <div className="mt-5">{action}</div>
       {error && (
-        <p className="mt-3 text-center text-[13px]" style={{ color: "var(--color-accent)" }}>
+        <p className="mt-3 text-center text-[13px]" style={{ color: "var(--color-danger)" }}>
           {error}
         </p>
       )}

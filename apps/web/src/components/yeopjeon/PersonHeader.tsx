@@ -1,6 +1,6 @@
 import type { ReadingHeader } from "@/server/readings/readings";
 
-const GOLD = "#9a7a45";
+const GOLD = "var(--color-gold)";
 
 /** 풀이 화면 맨 위: 이름 · 생년월일 · 네 기둥 */
 export function PersonHeader({ header, kicker, title, sub }: { header: ReadingHeader; kicker: string; title: string; sub?: string }) {

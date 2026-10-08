@@ -16,7 +16,7 @@ import type { DeepContent } from "@/server/readings/generateReading";
  * 이미 산 운이라 쓰다가 실패해도 다시 누르면 엽전은 빠지지 않는다.
  */
 
-const GOLD = "#9a7a45";
+const GOLD = "var(--color-gold)";
 
 type State =
   | { status: "loading" }
@@ -76,7 +76,7 @@ function TopicBody({ id, topic }: { id: string; topic: string }) {
   if (state.status === "error") {
     return (
       <main className="mx-auto min-h-screen max-w-xl px-5 pb-20 pt-16 text-center">
-        <p className="text-[15px]" style={{ color: "var(--color-accent)" }}>
+        <p className="text-[15px]" style={{ color: "var(--color-danger)" }}>
           {state.message}
         </p>
         <button type="button" onClick={() => write(state.header)} className="btn-primary mx-auto mt-6 block max-w-xs">
@@ -102,7 +102,7 @@ function TopicBody({ id, topic }: { id: string; topic: string }) {
 
       <div className="space-y-5">
         {content.parts.map((p, i) => (
-          <section key={i} className="rounded-2xl p-5" style={{ border: "1px solid var(--color-line)", backgroundColor: "#fffdf8" }}>
+          <section key={i} className="rounded-2xl p-5" style={{ border: "1px solid var(--color-line)", backgroundColor: "var(--color-card)" }}>
             <h2 className="text-[18px] font-bold" style={{ fontFamily: "var(--font-serif)", color: GOLD }}>
               {p.heading}
             </h2>

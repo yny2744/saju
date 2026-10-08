@@ -5,7 +5,7 @@ import { TOPIC_KEYS } from "@/lib/topics";
 import { InviteCard } from "./InviteCard";
 import { useYeopjeon } from "./useYeopjeon";
 
-const GOLD = "#9a7a45";
+const GOLD = "var(--color-gold)";
 
 function fmtDate(iso: string): string {
   const d = new Date(iso);
@@ -28,7 +28,7 @@ export function YeopjeonPanel() {
   return (
     <>
       {/* 잔액 */}
-      <section className="mb-7 flex items-center justify-between rounded-2xl px-5 py-4" style={{ border: "1px solid #d8c49a", backgroundColor: "#fffdf8" }}>
+      <section className="mb-7 flex items-center justify-between rounded-2xl px-5 py-4" style={{ border: "1px solid var(--color-gold-line)", backgroundColor: "var(--color-card)" }}>
         <div>
           <p className="text-[13px]" style={{ color: "var(--color-ink-faint)" }}>
             내 {CURRENCY_NAME}
@@ -97,7 +97,7 @@ export function YeopjeonPanel() {
                     {fmtDate(e.createdAt)}
                   </p>
                 </div>
-                <span className="shrink-0 text-[15px] font-bold" style={{ color: e.amount >= 0 ? "var(--color-element-wood)" : "var(--color-accent)" }}>
+                <span className="shrink-0 text-[15px] font-bold" style={{ color: e.amount >= 0 ? "var(--color-element-wood)" : "var(--color-danger)" }}>
                   {e.amount >= 0 ? "+" : "−"}
                   {formatNyang(Math.abs(e.amount))}
                 </span>

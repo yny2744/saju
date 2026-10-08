@@ -93,7 +93,7 @@ export function FaceCapture({
       </button>
 
       {status === "error" && errorMessage && (
-        <div className="rounded-lg px-3.5 py-3 text-sm" style={{ backgroundColor: "var(--color-accent-soft)", color: "var(--color-accent)" }}>
+        <div className="rounded-lg px-3.5 py-3 text-sm" style={{ backgroundColor: "var(--color-danger-soft)", color: "var(--color-danger)" }}>
           {errorMessage}
           <button
             type="button"

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import { AccessibilityInit } from "@/components/AccessibilityInit";
 import { Footer } from "@/components/Footer";
+import { SiteHeader } from "@/components/SiteHeader";
 import { RefCapture } from "@/components/yeopjeon/RefCapture";
 
 export const metadata: Metadata = {
@@ -12,9 +13,10 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="ko">
-      <body className="min-h-screen bg-slate-50 text-slate-900">
+      <body className="min-h-screen">
         <AccessibilityInit />
         <RefCapture />
+        <SiteHeader />
         {children}
         {/* 전자상거래법상 사업자 고지는 결제 화면을 포함한 모든 화면에 상시 노출한다 */}
         <Footer />

@@ -130,7 +130,7 @@ export function HanjaPicker({
       {/* 후보 */}
       <div className="mt-4 max-h-[46vh] overflow-y-auto">
         {loadError ? (
-          <p className="py-6 text-center text-sm" style={{ color: "var(--color-accent)" }}>
+          <p className="py-6 text-center text-sm" style={{ color: "var(--color-danger)" }}>
             한자 사전을 불러오지 못했어요. 잠시 후 다시 열어 주세요.
           </p>
         ) : !dict ? (

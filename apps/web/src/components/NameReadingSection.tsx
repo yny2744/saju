@@ -27,7 +27,7 @@ function loadDict(): Promise<NameHanjaDict> {
   return dictCache;
 }
 
-const GOLD = "#9a7a45";
+const GOLD = "var(--color-gold)";
 const elColor = (el: string) => (el ? `var(--color-element-${ELEMENT_TOKEN[el as ElementKo]})` : "var(--color-ink-faint)");
 const FLOW_LABEL: Record<string, string> = { 생: "→ 살려 줌", 받음: "← 도움 받음", 같음: "= 같은 기운", 극: "✕ 부딪힘", 눌림: "✕ 눌림" };
 const VERDICT: Record<NameReadingResult["verdict"], { label: string; text: string }> = {
@@ -60,7 +60,7 @@ export function NameReadingSection({ nickname, hanjaName, saju }: { nickname: st
         </span>
       </div>
 
-      <div className="rounded-2xl p-5" style={{ border: "1px solid #d8c49a", backgroundColor: "#fffdf8" }}>
+      <div className="rounded-2xl p-5" style={{ border: "1px solid var(--color-gold-line)", backgroundColor: "var(--color-card)" }}>
         {/* 글자별 */}
         <div className="flex justify-center gap-2">
           {result.chars.map((c, i) => (
@@ -104,7 +104,7 @@ export function NameReadingSection({ nickname, hanjaName, saju }: { nickname: st
                   <span>
                     <b>{s.name}</b> <span style={{ color: "var(--color-ink-faint)" }}>{s.meaning}</span>
                   </span>
-                  <span className="shrink-0 font-bold" style={{ color: s.lucky ? "var(--color-element-wood)" : "var(--color-accent)" }}>
+                  <span className="shrink-0 font-bold" style={{ color: s.lucky ? "var(--color-element-wood)" : "var(--color-danger)" }}>
                     {s.value}수 · {s.lucky ? "길" : "주의"}
                   </span>
                 </li>

@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import type { TtiDay } from "@/server/ttiService";
 import { BRANCHES, TTI, ttiOfYear, type Branch } from "@/lib/tti";
 
-const GOLD = "#9a7a45";
+const GOLD = "var(--color-gold)";
 const SAVED_KEY = "ryugyeol_my_tti";
 const SAVED_YEAR_KEY = "ryugyeol_my_tti_year";
 
@@ -73,7 +73,7 @@ export function TtiBoard({ today, tomorrow }: { today: TtiDay; tomorrow: TtiDay 
             type="button"
             onClick={() => setTab(k)}
             className="rounded-xl py-3 text-[15px] font-bold"
-            style={tab === k ? { backgroundColor: "#fffdf8", color: "var(--color-ink)", boxShadow: "0 1px 4px rgba(0,0,0,0.08)" } : { color: "var(--color-ink-faint)" }}
+            style={tab === k ? { backgroundColor: "var(--color-card)", color: "var(--color-ink)", boxShadow: "0 1px 4px rgba(0,0,0,0.08)" } : { color: "var(--color-ink-faint)" }}
           >
             {k === "today" ? "오늘" : "내일"}
             <span className="block text-[12px] font-normal">{dateLabel(k === "today" ? today.date : tomorrow.date)}</span>
@@ -94,13 +94,13 @@ export function TtiBoard({ today, tomorrow }: { today: TtiDay; tomorrow: TtiDay 
                 type="button"
                 onClick={() => choose(t.branch)}
                 className="block w-full rounded-xl py-2.5 text-center"
-                style={{ border: sel ? "2px solid var(--color-accent)" : "1px solid var(--color-line)", backgroundColor: sel ? "var(--color-accent-soft)" : "#fffdf8" }}
+                style={{ border: sel ? "2px solid var(--color-accent)" : "1px solid var(--color-line)", backgroundColor: sel ? "var(--color-accent-soft)" : "var(--color-card)" }}
               >
                 {TTI_IMAGE ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img src={`/tti/${t.branch}.webp`} alt="" className="mx-auto h-11 w-11" />
                 ) : (
-                  <span className="block text-[24px] leading-tight" style={{ fontFamily: "var(--font-serif)", color: GOLD }}>
+                  <span className="foil-text block text-[24px] font-bold leading-tight" style={{ fontFamily: "var(--font-serif)" }}>
                     {t.hanja}
                   </span>
                 )}
@@ -137,7 +137,7 @@ export function TtiBoard({ today, tomorrow }: { today: TtiDay; tomorrow: TtiDay 
       {/* 풀이 */}
       <div id="tti-detail" className="scroll-mt-4">
         {f ? (
-          <section className="mt-6 rounded-2xl p-5" style={{ border: "1px solid #d8c49a", backgroundColor: "#fffdf8" }}>
+          <section className="mt-6 rounded-2xl p-5" style={{ border: "1px solid var(--color-gold-line)", backgroundColor: "var(--color-card)" }}>
             <div className="flex items-center justify-between">
               <h2 className="text-[20px] font-bold" style={{ fontFamily: "var(--font-serif)" }}>
                 {f.animal}띠 <span style={{ color: GOLD }}>{f.hanja}</span>
@@ -207,7 +207,7 @@ export function TtiBoard({ today, tomorrow }: { today: TtiDay; tomorrow: TtiDay 
       </div>
 
       {/* 내 사주로 */}
-      <a href="/start" className="mt-6 block rounded-2xl p-5 text-center" style={{ backgroundColor: "var(--color-accent)", color: "#fff" }}>
+      <a href="/start" className="btn-band mt-6 block rounded-2xl p-5 text-center">
         <span className="block text-[17px] font-bold" style={{ fontFamily: "var(--font-serif)" }}>
           띠는 열두 가지, 사주는 한 사람뿐
         </span>

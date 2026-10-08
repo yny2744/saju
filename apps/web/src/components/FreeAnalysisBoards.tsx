@@ -103,7 +103,7 @@ export function FreeAnalysisBoards({
         </div>
         <div className="mt-2.5 grid grid-cols-2 gap-2.5">
           <YearCell title="기회" keyword={kw.opportunity} text={analysis.opportunity} color="var(--color-element-wood)" />
-          <YearCell title="주의할 점" keyword={kw.caution} text={analysis.caution} color="var(--color-accent)" />
+          <YearCell title="주의할 점" keyword={kw.caution} text={analysis.caution} color="var(--color-danger)" />
         </div>
       </div>
     </div>

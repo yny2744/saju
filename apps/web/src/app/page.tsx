@@ -1,7 +1,6 @@
 import { CasualLanding } from "@/components/CasualLanding";
 import { OhaengEmblem } from "@/components/landing/OhaengEmblem";
 import { ProductIcon, type Kind } from "@/components/landing/ProductIcon";
-import { HeaderAuth } from "@/components/landing/HeaderAuth";
 import { BUSINESS_INFO } from "@/lib/businessInfo";
 import { BUNDLE_SUGGESTIONS, EXTRA_KEYS, TOPICS, TOPIC_KEYS } from "@/lib/topics";
 import { CURRENCY_NAME, INVITE_CUMULATIVE, PRICE, WELCOME_GIFT, formatNyang } from "@/lib/yeopjeon";
@@ -9,9 +8,10 @@ import { CURRENCY_NAME, INVITE_CUMULATIVE, PRICE, WELCOME_GIFT, formatNyang } fr
 /**
  * 류결사주 대문 (2026-10-08 수정안 13번 재구성, 유샘 확정 순서).
  *
- *   머리줄 → 문양 + 한 줄 소개 → 왜 류결사주인가(一~五) → ① 무료로 시작하기 + 가입 선물 엽전
- *   → ② 엽전으로 보는 12가지 운 (맛보기 990 → 깊게 보기 4,900) → ③ 3가지 몰아보기 9,900
- *   → ④ 12가지 전부 보기 29,500 → ⑤ 친구 초대 → 아래쪽
+ *   (머리줄은 모든 화면 공통 SiteHeader) → 문양 + 한 줄 소개 → 왜 류결사주인가(一~五)
+ *   → 무료로 시작하기 + 가입 선물 엽전 → 엽전으로 보는 12가지 운 (맛보기 990 → 깊게 보기 4,900)
+ *   → 3가지 몰아보기 9,900 (추천 4묶음) → 12가지 전부 보기 29,500 → 친구 초대 → 아래쪽
+ *   2026-10-09: 섹션 번호(①~⑤) 삭제(수정안 17), 감청 금장 배색(18), 추천 4묶음(16).
  *
  * 지키는 원칙:
  *   - 후기 칸 없음: 실제 후기가 쌓이면 그때 붙인다 (지어낸 후기 금지).
@@ -56,16 +56,21 @@ const FREE: Array<{ icon: Kind; name: string; desc: string; href: string }> = [
   { icon: "face", name: "관상", desc: "얼굴 사진으로 보는 타고난 기질", href: "/face" },
 ];
 
-const GOLD = "#9a7a45";
-const CARD = { border: "1px solid #d8c49a", backgroundColor: "#fffdf8" } as const;
+const GOLD = "var(--color-gold)";
+/** 금색 이중 테두리 카드 */
+const CARD = {
+  border: "1px solid var(--color-gold-line)",
+  backgroundColor: "var(--color-card)",
+  boxShadow: "inset 0 0 0 3px var(--color-card), inset 0 0 0 4px var(--color-gold-soft)",
+} as const;
 
-function SectionTitle({ no, title, sub }: { no: string; title: string; sub?: string }) {
+function SectionTitle({ title, sub }: { title: string; sub?: string }) {
   return (
     <div className="mb-5 text-center">
-      <p className="text-[13px] tracking-[0.15em]" style={{ color: GOLD }}>
-        {no}
-      </p>
-      <h2 className="mt-1 text-[23px] font-bold leading-snug" style={{ fontFamily: "var(--font-serif)" }}>
+      <div className="gold-ornament" aria-hidden>
+        <i />
+      </div>
+      <h2 className="mt-2 text-[23px] font-bold leading-snug" style={{ fontFamily: "var(--font-serif)" }}>
         {title}
       </h2>
       {sub && (
@@ -84,14 +89,6 @@ export default function LandingPage() {
 
   return (
     <main className="min-h-screen pb-10">
-      {/* 머리줄 */}
-      <header className="mx-auto flex max-w-xl items-center justify-between px-5 py-4" style={{ borderBottom: "1px solid var(--color-line)" }}>
-        <a href="/" className="text-[20px] font-bold" style={{ fontFamily: "var(--font-serif)", color: GOLD }}>
-          류결사주
-        </a>
-        <HeaderAuth />
-      </header>
-
       <div className="mx-auto max-w-xl px-5">
         {/* 문양 + 한 줄 소개 */}
         <section className="pb-10 pt-10 text-center">
@@ -113,8 +110,8 @@ export default function LandingPage() {
           </p>
           <a
             href="/start"
-            className="mx-auto mt-8 block max-w-xs rounded-2xl py-4 text-[18px] font-bold"
-            style={{ fontFamily: "var(--font-serif)", backgroundColor: "var(--color-accent)", color: "#fff", boxShadow: "0 6px 20px rgba(156,59,59,0.22)" }}
+            className="btn-band mx-auto mt-8 block max-w-xs rounded-2xl py-4 text-[18px] font-bold"
+            style={{ fontFamily: "var(--font-serif)" }}
           >
             무료 만세력 보기
           </a>
@@ -122,8 +119,8 @@ export default function LandingPage() {
 
         {/* 왜 류결사주인가 */}
         <section className="pb-12">
-          <div className="rounded-2xl px-5 py-8" style={{ backgroundColor: "#fffdf8", boxShadow: "0 4px 18px rgba(0,0,0,0.07)" }}>
-            <h2 className="text-center text-[24px] font-bold" style={{ fontFamily: "var(--font-serif)", color: GOLD }}>
+          <div className="rounded-2xl px-5 py-8" style={{ ...CARD, boxShadow: `${CARD.boxShadow}, 0 4px 18px rgba(22,41,74,0.07)` }}>
+            <h2 className="text-center text-[24px] font-bold" style={{ fontFamily: "var(--font-serif)", color: "var(--color-accent)" }}>
               왜 류결사주인가
             </h2>
             <p className="mt-3 text-center text-[14px] leading-relaxed" style={{ color: "var(--color-ink-soft)" }}>
@@ -134,11 +131,11 @@ export default function LandingPage() {
             <div className="mt-8 space-y-6">
               {WHY.map((w) => (
                 <div key={w.num} className="flex gap-3">
-                  <span className="w-6 shrink-0 text-[18px]" style={{ fontFamily: "var(--font-serif)", color: GOLD }}>
+                  <span className="foil-text w-6 shrink-0 text-[19px] font-bold" style={{ fontFamily: "var(--font-serif)" }}>
                     {w.num}
                   </span>
                   <div>
-                    <h3 className="text-[16px] font-bold" style={{ fontFamily: "var(--font-serif)", color: GOLD }}>
+                    <h3 className="text-[16px] font-bold" style={{ fontFamily: "var(--font-serif)", color: "var(--color-accent)" }}>
                       {w.title}
                     </h3>
                     <p className="mt-1.5 text-[14px] leading-relaxed" style={{ color: "var(--color-ink-soft)" }}>
@@ -155,7 +152,7 @@ export default function LandingPage() {
 
         {/* ① 무료로 시작하기 */}
         <section className="py-12">
-          <SectionTitle no="①" title="무료로 시작하기" sub="로그인 없이 바로 볼 수 있어요" />
+          <SectionTitle title="무료로 시작하기" sub="로그인 없이 바로 볼 수 있어요" />
           <div className="space-y-3">
             {FREE.map((p) => (
               <a key={p.name} href={p.href} className="flex items-center gap-4 rounded-2xl px-4 py-4 transition-transform active:scale-[0.98]" style={CARD}>
@@ -170,7 +167,7 @@ export default function LandingPage() {
                     {p.desc}
                   </span>
                 </span>
-                <span className="shrink-0 text-[17px] font-bold" style={{ fontFamily: "var(--font-serif)", color: "var(--color-element-wood)" }}>
+                <span className="shrink-0 rounded-full px-2.5 py-0.5 text-[13px] font-bold" style={{ color: "var(--color-accent)", border: "1px solid var(--color-gold-line)" }}>
                   무료
                 </span>
               </a>
@@ -195,7 +192,7 @@ export default function LandingPage() {
 
         {/* ② 엽전으로 보는 12가지 운 */}
         <section className="py-12">
-          <SectionTitle no="②" title={`${CURRENCY_NAME}으로 보는 12가지 운`} sub="먼저 12가지를 짧게 맛보고, 마음에 걸리는 운은 깊게 풀어 드려요" />
+          <SectionTitle title={`${CURRENCY_NAME}으로 보는 12가지 운`} sub="먼저 12가지를 짧게 맛보고, 마음에 걸리는 운은 깊게 풀어 드려요" />
           <div className="mb-5 flex flex-wrap items-center justify-center gap-1.5 whitespace-nowrap text-[12px]">
             <span className="rounded-full px-2.5 py-1.5" style={{ backgroundColor: "var(--color-paper-soft)" }}>
               무료 만세력
@@ -213,7 +210,7 @@ export default function LandingPage() {
             {TOPIC_KEYS.map((k) => (
               <li key={k}>
                 <a href="/start" className="block rounded-xl px-2 py-3 text-center" style={CARD}>
-                  <span className="block text-[22px] leading-tight" style={{ fontFamily: "var(--font-serif)", color: GOLD }}>
+                  <span className="foil-text block text-[23px] font-bold leading-tight" style={{ fontFamily: "var(--font-serif)" }}>
                     {TOPICS[k].hanja}
                   </span>
                   <span className="mt-0.5 block text-[14px] font-bold">{TOPICS[k].title}</span>
@@ -233,7 +230,7 @@ export default function LandingPage() {
 
         {/* ③ 3가지 몰아보기 */}
         <section className="py-12">
-          <SectionTitle no="③" title={`3가지 운 몰아보기 · ${formatNyang(PRICE.BUNDLE3)}`} sub="가장 궁금한 세 가지만 골라 깊게 보세요" />
+          <SectionTitle title={`3가지 운 몰아보기 · ${formatNyang(PRICE.BUNDLE3)}`} sub="가장 궁금한 세 가지만 골라 깊게 보세요" />
           <div className="space-y-2.5">
             {BUNDLE_SUGGESTIONS.map((b) => (
               <div key={b.title} className="flex items-center justify-between gap-3 rounded-2xl px-4 py-4" style={CARD}>
@@ -247,11 +244,15 @@ export default function LandingPage() {
             ))}
           </div>
           <p className="mt-4 text-center text-[15px]">
-            따로 보면 <s style={{ color: "var(--color-ink-faint)" }}>{formatNyang(PRICE.DEEP * 3)}</s> →{" "}
+            한 묶음 따로 보면 <s style={{ color: "var(--color-ink-faint)" }}>{formatNyang(PRICE.DEEP * 3)}</s> →{" "}
             <b style={{ color: "var(--color-accent)" }}>몰아보면 {formatNyang(PRICE.BUNDLE3)}</b>
           </p>
-          <p className="mt-1 text-center text-[13px]" style={{ color: "var(--color-ink-faint)" }}>
-            12가지 중 어떤 세 가지든 고를 수 있어요
+          <p className="mt-1.5 text-center text-[14px]">
+            네 묶음을 다 보면 <s style={{ color: "var(--color-ink-faint)" }}>{formatNyang(PRICE.BUNDLE3 * BUNDLE_SUGGESTIONS.length)}</s> →{" "}
+            <b style={{ color: "var(--color-accent)" }}>전부 보기 {formatNyang(PRICE.BUNDLE12)}</b>
+          </p>
+          <p className="mt-1.5 text-center text-[13px]" style={{ color: "var(--color-ink-faint)" }}>
+            묶음 말고도 12가지 중 어떤 세 가지든 고를 수 있어요
           </p>
         </section>
 
@@ -259,7 +260,7 @@ export default function LandingPage() {
 
         {/* ④ 12가지 전부 보기 */}
         <section className="py-12">
-          <SectionTitle no="④" title={`12가지 전부 보기 · ${formatNyang(PRICE.BUNDLE12)}`} sub="한 사람의 평생을 한 번에" />
+          <SectionTitle title={`12가지 전부 보기 · ${formatNyang(PRICE.BUNDLE12)}`} sub="한 사람의 평생을 한 번에" />
           <div className="rounded-2xl p-5" style={CARD}>
             <p className="text-center text-[14px] leading-relaxed">
               {TOPIC_KEYS.map((k) => TOPICS[k].title).join(", ")}
@@ -278,7 +279,7 @@ export default function LandingPage() {
 
         {/* ⑤ 친구 초대 */}
         <section className="py-12">
-          <SectionTitle no="⑤" title={`친구 초대하고 ${CURRENCY_NAME} 받기`} sub="친구도 가입 선물을 받아요" />
+          <SectionTitle title={`친구 초대하고 ${CURRENCY_NAME} 받기`} sub="친구도 가입 선물을 받아요" />
           <div className="grid grid-cols-3 gap-2 text-center">
             {[
               { n: 1, label: "맛보기 1회" },
@@ -308,10 +309,10 @@ export default function LandingPage() {
 
         {/* 아래쪽 */}
         <section className="pt-4 text-center">
-          <a href="/start" className="block rounded-2xl py-4 text-[17px] font-bold" style={{ fontFamily: "var(--font-serif)", backgroundColor: "var(--color-accent)", color: "#fff" }}>
+          <a href="/start" className="btn-band block rounded-2xl py-4 text-[17px] font-bold" style={{ fontFamily: "var(--font-serif)" }}>
             무료 만세력 보기
           </a>
-          <p className="mt-8 text-[18px] font-bold" style={{ fontFamily: "var(--font-serif)", color: GOLD }}>
+          <p className="foil-text mt-8 text-[20px] font-black" style={{ fontFamily: "var(--font-serif)" }}>
             류결사주
           </p>
           <p className="mt-2 text-[13px] leading-relaxed" style={{ color: "var(--color-ink-faint)" }}>

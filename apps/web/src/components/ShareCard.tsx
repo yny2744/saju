@@ -83,7 +83,7 @@ export function ShareCard({
         {saving ? "저장 중..." : "결과 카드 이미지로 저장"}
       </button>
       {error && (
-        <p className="mt-2 text-center text-xs" style={{ color: "var(--color-accent)" }}>
+        <p className="mt-2 text-center text-xs" style={{ color: "var(--color-danger)" }}>
           {error}
         </p>
       )}

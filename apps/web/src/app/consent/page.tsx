@@ -53,7 +53,7 @@ function ConsentBody() {
       </p>
       <ConsentChecks value={consent} onChange={setConsent} />
       {error && (
-        <p className="mt-4 rounded-lg px-3.5 py-2.5 text-sm" style={{ backgroundColor: "var(--color-accent-soft)", color: "var(--color-accent)" }}>
+        <p className="mt-4 rounded-lg px-3.5 py-2.5 text-sm" style={{ backgroundColor: "var(--color-danger-soft)", color: "var(--color-danger)" }}>
           {error}
         </p>
       )}
