@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { blockIfAuthOff } from "@/server/launchGuard";
 import { handleConsent } from "@/server/auth/authHandlers";
 import { SESSION_COOKIE_NAME } from "@/server/auth/session";
-import { REF_COOKIE_NAME } from "@/lib/bokchae";
+import { REF_COOKIE_NAME } from "@/lib/yeopjeon";
 
 export const runtime = "nodejs";
 // 로그인 상태(쿠키)에 따라 응답이 달라지므로 빌드 때 미리 만들어 두면 안 된다

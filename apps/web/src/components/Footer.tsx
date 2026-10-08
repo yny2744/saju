@@ -17,6 +17,9 @@ export function Footer() {
           <a href="/privacy" className="underline underline-offset-2">
             개인정보처리방침
           </a>
+          <a href={`mailto:${BUSINESS_INFO.csEmail}?subject=${encodeURIComponent("[류결사주 문의]")}`} className="font-semibold underline underline-offset-2" style={{ color: "var(--color-ink-soft)" }}>
+            문의하기
+          </a>
         </div>
         <p>
           {BUSINESS_INFO.companyName} ({BUSINESS_INFO.serviceName}) · 대표 {BUSINESS_INFO.representative}

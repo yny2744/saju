@@ -1,4 +1,4 @@
-import type { ProductIcon as Kind } from "@/lib/landingProducts";
+export type Kind = "report" | "basic" | "manse" | "face" | "match" | "today" | "tti" | "name";
 
 /** 대문 상품 카드 왼쪽 아이콘 - 오리지널 SVG, 오행 색 재사용 */
 export function ProductIcon({ kind }: { kind: Kind }) {
@@ -48,6 +48,28 @@ export function ProductIcon({ kind }: { kind: Kind }) {
           <circle cx="15" cy="20" r="10" fill="var(--color-element-fire)" fillOpacity="0.85" />
           <circle cx="25" cy="20" r="10" fill="var(--color-element-water)" fillOpacity="0.85" />
           <path d="M20 11.3 A10 10 0 0 1 20 28.7 A10 10 0 0 1 20 11.3Z" fill="var(--color-element-earth)" />
+        </>
+      )}
+      {kind === "tti" && (
+        <>
+          <circle cx="20" cy="20" r="14" fill="none" stroke={gold} strokeWidth="1.5" />
+          {Array.from({ length: 12 }).map((_, i) => {
+            const a = (i * Math.PI) / 6 - Math.PI / 2;
+            return <circle key={i} cx={20 + Math.cos(a) * 14} cy={20 + Math.sin(a) * 14} r="2.2" fill={i % 3 === 0 ? "var(--color-accent)" : gold} />;
+          })}
+          <text x="20" y="24.5" textAnchor="middle" fontSize="12" fill="var(--color-ink)" style={{ fontFamily: "var(--font-serif)" }}>
+            子
+          </text>
+        </>
+      )}
+      {kind === "name" && (
+        <>
+          <rect x="8" y="6" width="24" height="28" rx="3" fill="var(--color-paper-soft)" stroke="var(--color-ink-soft)" strokeWidth="1.2" />
+          <text x="20" y="18" textAnchor="middle" fontSize="10" fill="var(--color-accent)" style={{ fontFamily: "var(--font-serif)" }}>
+            名
+          </text>
+          <line x1="12" y1="23" x2="28" y2="23" stroke={gold} strokeWidth="1.2" />
+          <line x1="12" y1="27.5" x2="24" y2="27.5" stroke={gold} strokeWidth="1.2" />
         </>
       )}
       {kind === "today" && (

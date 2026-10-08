@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import { AccessibilityInit } from "@/components/AccessibilityInit";
 import { Footer } from "@/components/Footer";
-import { RefCapture } from "@/components/bokchae/RefCapture";
+import { RefCapture } from "@/components/yeopjeon/RefCapture";
 
 export const metadata: Metadata = {
   title: "류결사주",

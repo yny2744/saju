@@ -41,7 +41,7 @@ export function saveA11yPrefs(prefs: A11yPrefs) {
 
 /**
  * 루트 레이아웃에 한 번만 넣어두면, 저장된 글자크기/대비 설정을 모든 페이지
- * 로드 시 <html> 속성으로 반영한다. 설정 자체은 /mypage(내 사주함)의
+ * 로드 시 <html> 속성으로 반영한다. 설정 자체은 /mypage(내 복주머니)의
  * 표시 설정에서 바꾼다 - 이 컴포넌트는 "적용"만 담당한다.
  */
 export function AccessibilityInit() {

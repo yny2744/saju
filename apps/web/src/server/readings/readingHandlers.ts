@@ -1,22 +1,33 @@
 import { getCurrentKstYear } from "saju-engine";
 import { getUserBySessionToken } from "@/server/auth/session";
 import { getResult } from "@/server/resultStore";
-import { ensureRefCode, getBalance, grant, inviteStats, listLedger, InsufficientBokchaeError } from "@/server/bokchae/ledger";
-import { SAJU_READING_PRICE, WELCOME_GIFT } from "@/lib/bokchae";
-import { generateSajuReading } from "./generateReading";
+import { ensureRefCode, getBalance, grant, inviteStats, listLedger, InsufficientYeopjeonError } from "@/server/yeopjeon/ledger";
+import { CURRENCY_NAME, PRICE, WELCOME_GIFT } from "@/lib/yeopjeon";
+import { isAnyTopicKey } from "@/lib/topics";
+import { notifyError } from "@/server/alert";
+import { generateDeep, generateTaste } from "./generateReading";
 import {
-  PRODUCT_SAJU_990,
+  PurchaseError,
+  createPerson,
   findReadingByKey,
+  getPersonRow,
+  getPersonSummary,
   getReading,
-  listReadings,
-  purchaseAndSave,
-  readingHeader,
+  getTopicReading,
+  isUnlocked,
+  listPersons,
+  purchaseTaste,
+  purchaseTopics,
   readingSourceKey,
+  saveTopicReading,
+  type PurchaseMode,
 } from "./readings";
 
-type Result<T> = { status: number; body: T | { error: { code: string; message: string } } };
+type ErrBody = { error: { code: string; message: string } };
+type Result<T> = { status: number; body: T | ErrBody };
 
-const err = (status: number, code: string, message: string) => ({ status, body: { error: { code, message } } });
+const err = (status: number, code: string, message: string): { status: number; body: ErrBody } => ({ status, body: { error: { code, message } } });
+const SHORT = () => err(402, "INSUFFICIENT_YEOPJEON", `${CURRENCY_NAME}이 부족해요.`);
 
 async function member(token: string | undefined) {
   const user = await getUserBySessionToken(token);
@@ -25,65 +36,68 @@ async function member(token: string | undefined) {
   return { user } as const;
 }
 
-/** 내 복채·이용내역·초대 정보·저장된 풀이 */
-export async function handleBokchaeSummary(token: string | undefined): Promise<Result<unknown>> {
+function resultFrom(rawBody: unknown) {
+  const resultId = typeof rawBody === "object" && rawBody !== null ? (rawBody as Record<string, unknown>).resultId : undefined;
+  if (typeof resultId !== "string" || !resultId) return { error: err(400, "INVALID_INPUT", "결과 정보가 없어요.") } as const;
+  const result = getResult(resultId);
+  if (!result) return { error: err(410, "RESULT_EXPIRED", "결과 보관 시간이 지났어요. 사주를 다시 입력해 주세요.") } as const;
+  return { result } as const;
+}
+
+/** 내 엽전·이용내역·초대 정보·풀이한 사람들 */
+export async function handleYeopjeonSummary(token: string | undefined): Promise<Result<unknown>> {
   const m = await member(token);
   if ("error" in m) return m.error!;
   // 이 기능 전에 가입한 회원도 가입 선물을 받게 한다 (멱등 - 이미 받았으면 아무 일 없음)
-  await grant(m.user.id, WELCOME_GIFT, "welcome", "회원가입 축하 복채");
-  const [balance, ledger, refCode, stats, readings] = await Promise.all([
+  await grant(m.user.id, WELCOME_GIFT, "welcome", `회원가입 축하 ${CURRENCY_NAME}`);
+  const [balance, ledger, refCode, stats, persons] = await Promise.all([
     getBalance(m.user.id),
     listLedger(m.user.id),
     ensureRefCode(m.user.id),
     inviteStats(m.user.id),
-    listReadings(m.user.id),
+    listPersons(m.user.id),
   ]);
-  return { status: 200, body: { balance, ledger, refCode, invited: stats.invited, readings } };
+  return { status: 200, body: { balance, ledger, refCode, invited: stats.invited, persons } };
 }
 
 /**
- * 990원 사주보기 만들기. 무료 결과 id(resultId)를 받아:
- *  1) 이미 같은 사람·관심 분야로 산 풀이가 있으면 그것을 돌려줌(재결제·AI 재호출 없음)
- *  2) 잔액 확인 → AI 풀이 생성 → 복채 차감 + 저장(한 트랜잭션)
+ * 맛보기(990냥). 무료 결과 id(resultId)를 받아:
+ *  1) 같은 사람·관심 분야로 이미 산 맛보기가 있으면 그것을 돌려줌(재차감·AI 재호출 없음)
+ *  2) 잔액 확인 → AI 풀이 → 사람 저장 + 엽전 차감 + 풀이 저장(한 트랜잭션)
  */
-export async function handleCreateReading(token: string | undefined, rawBody: unknown): Promise<Result<{ id: string }>> {
+export async function handleCreateReading(token: string | undefined, rawBody: unknown): Promise<Result<{ id: string; personId: string | null }>> {
   const m = await member(token);
   if ("error" in m) return m.error!;
-  const resultId = typeof rawBody === "object" && rawBody !== null ? (rawBody as Record<string, unknown>).resultId : undefined;
-  if (typeof resultId !== "string" || !resultId) return err(400, "INVALID_INPUT", "결과 정보가 없어요.");
+  const r = resultFrom(rawBody);
+  if ("error" in r) return r.error!;
+  const { result } = r;
 
-  const result = getResult(resultId);
-  if (!result) return err(410, "RESULT_EXPIRED", "결과 보관 시간이 지났어요. 사주를 다시 입력해 주세요.");
-
-  const sourceKey = readingSourceKey(result.saju, result.nickname, result.focus);
-  const existing = await findReadingByKey(m.user.id, PRODUCT_SAJU_990, sourceKey);
-  if (existing) return { status: 200, body: { id: existing } };
+  const existing = await findReadingByKey(m.user.id, readingSourceKey(result.saju, result.nickname, result.focus));
+  if (existing) return { status: 200, body: existing };
 
   // AI 비용을 쓰기 전에 잔액부터 확인 (최종 확인은 저장 트랜잭션에서 한 번 더)
-  const balance = await getBalance(m.user.id);
-  if (balance < SAJU_READING_PRICE) return err(402, "INSUFFICIENT_BOKCHAE", "복채가 부족해요.");
+  if ((await getBalance(m.user.id)) < PRICE.TASTE) return SHORT();
 
   let content;
   try {
-    content = await generateSajuReading(result.saju, result.nickname, result.focus, getCurrentKstYear());
+    content = await generateTaste(result.saju, result.nickname, result.focus, getCurrentKstYear());
   } catch (e) {
-    // eslint-disable-next-line no-console
-    console.error("[reading] AI 풀이 생성 실패:", e);
-    return err(502, "READING_FAILED", "풀이를 만드는 중 문제가 생겼어요. 복채는 빠지지 않았어요. 잠시 후 다시 시도해 주세요.");
+    notifyError("맛보기 풀이 생성 실패", e);
+    return err(502, "READING_FAILED", `풀이를 만드는 중 문제가 생겼어요. ${CURRENCY_NAME}은 빠지지 않았어요. 잠시 후 다시 시도해 주세요.`);
   }
 
   try {
-    const id = await purchaseAndSave({
+    const saved = await purchaseTaste({
       userId: m.user.id,
-      sourceKey,
+      saju: result.saju,
       nickname: result.nickname,
+      hanjaName: result.hanjaName,
       focus: result.focus,
-      header: readingHeader(result.saju, result.nickname, result.hanjaName),
       content,
     });
-    return { status: 200, body: { id } };
+    return { status: 200, body: saved };
   } catch (e) {
-    if (e instanceof InsufficientBokchaeError) return err(402, "INSUFFICIENT_BOKCHAE", "복채가 부족해요.");
+    if (e instanceof InsufficientYeopjeonError) return SHORT();
     throw e;
   }
 }
@@ -94,4 +108,71 @@ export async function handleGetReading(token: string | undefined, id: string): P
   const reading = await getReading(m.user.id, id);
   if (!reading) return err(404, "NOT_FOUND", "풀이를 찾을 수 없어요.");
   return { status: 200, body: { reading } };
+}
+
+/** 풀이 대상(사람) 만들기 - 결제 없음. 무료 결과에서 바로 몰아보기·전부 보기로 갈 때 쓴다. */
+export async function handleCreatePerson(token: string | undefined, rawBody: unknown): Promise<Result<{ id: string }>> {
+  const m = await member(token);
+  if ("error" in m) return m.error!;
+  const r = resultFrom(rawBody);
+  if ("error" in r) return r.error!;
+  const id = await createPerson({
+    userId: m.user.id,
+    saju: r.result.saju,
+    nickname: r.result.nickname,
+    hanjaName: r.result.hanjaName,
+    focus: r.result.focus,
+  });
+  return { status: 200, body: { id } };
+}
+
+export async function handleGetPerson(token: string | undefined, personId: string): Promise<Result<unknown>> {
+  const m = await member(token);
+  if ("error" in m) return m.error!;
+  const person = await getPersonSummary(m.user.id, personId);
+  if (!person) return err(404, "NOT_FOUND", "풀이 대상을 찾을 수 없어요.");
+  const balance = await getBalance(m.user.id);
+  return { status: 200, body: { person, balance } };
+}
+
+/** 깊게 보기(4,900) · 몰아보기(9,900) · 전부 보기(29,500) - 주제 열람권만 사고, 풀이는 누를 때 쓴다 */
+export async function handlePurchase(token: string | undefined, personId: string, rawBody: unknown): Promise<Result<{ unlocked: string[] }>> {
+  const m = await member(token);
+  if ("error" in m) return m.error!;
+  const body = typeof rawBody === "object" && rawBody !== null ? (rawBody as Record<string, unknown>) : {};
+  const mode = body.mode;
+  if (mode !== "deep" && mode !== "bundle3" && mode !== "bundle12") return err(400, "INVALID_INPUT", "상품 종류가 올바르지 않아요.");
+  try {
+    const unlocked = await purchaseTopics({ userId: m.user.id, personId, mode: mode as PurchaseMode, topics: body.topics });
+    return { status: 200, body: { unlocked } };
+  } catch (e) {
+    if (e instanceof InsufficientYeopjeonError) return SHORT();
+    if (e instanceof PurchaseError) return err(e.code === "NOT_FOUND" ? 404 : 400, e.code, e.message);
+    throw e;
+  }
+}
+
+/** 열린 주제의 깊은 풀이 보기. generate=true 이면 아직 없을 때 지금 쓴다. */
+export async function handleTopic(token: string | undefined, personId: string, topic: string, generate: boolean): Promise<Result<unknown>> {
+  const m = await member(token);
+  if ("error" in m) return m.error!;
+  if (!isAnyTopicKey(topic)) return err(404, "NOT_FOUND", "없는 운이에요.");
+  const person = await getPersonRow(m.user.id, personId);
+  if (!person) return err(404, "NOT_FOUND", "풀이 대상을 찾을 수 없어요.");
+  if (!(await isUnlocked(personId, topic))) return err(403, "LOCKED", "아직 열지 않은 운이에요.");
+
+  const stored = await getTopicReading(personId, topic);
+  if (stored) return { status: 200, body: { status: "ready", content: stored, header: person.header } };
+  if (!generate) return { status: 200, body: { status: "pending", header: person.header } };
+
+  try {
+    const year = getCurrentKstYear();
+    const content = await generateDeep(person.saju, person.nickname, topic, year);
+    if (topic === "year" || topic === "monthly") content.title = `${content.title} (${year}년)`;
+    const saved = await saveTopicReading(personId, topic, content);
+    return { status: 200, body: { status: "ready", content: saved, header: person.header } };
+  } catch (e) {
+    notifyError(`깊은 풀이 생성 실패 (${topic})`, e);
+    return err(502, "READING_FAILED", "풀이를 쓰는 중 문제가 생겼어요. 이미 연 운이라 다시 눌러도 엽전은 빠지지 않아요.");
+  }
 }

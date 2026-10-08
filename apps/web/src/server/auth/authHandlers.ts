@@ -10,7 +10,7 @@ import {
   type User,
 } from "./users";
 import { createSession, deleteSession, getUserBySessionToken } from "./session";
-import { onNewMember } from "@/server/bokchae/ledger";
+import { onNewMember } from "@/server/yeopjeon/ledger";
 
 /** 새 회원 선물·초대 보상. 실패해도 가입·동의 자체는 막지 않는다. */
 async function rewardNewMember(userId: string, refCode: string | undefined): Promise<void> {
@@ -18,7 +18,7 @@ async function rewardNewMember(userId: string, refCode: string | undefined): Pro
     await onNewMember(userId, refCode);
   } catch (err) {
     // eslint-disable-next-line no-console
-    console.error("[bokchae] 가입 선물/초대 보상 실패:", err);
+    console.error("[yeopjeon] 가입 선물/초대 보상 실패:", err);
   }
 }
 
@@ -147,7 +147,7 @@ export async function handleConsent(
   return { status: 200, body: { user: toPublicUser({ ...user, termsAgreed: true, marketingAgreed: consent.marketing }) } };
 }
 
-/** 내 사주함의 마케팅 수신 동의/철회 */
+/** 내 복주머니의 마케팅 수신 동의/철회 */
 export async function handleMarketing(
   token: string | undefined,
   rawBody: unknown

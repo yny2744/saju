@@ -21,8 +21,9 @@ import { FreeAnalysisBoards, isFreeAnalysisShape } from "@/components/FreeAnalys
 import { buildFreeAnalysisKeywords } from "@/lib/freeAnalysisKeywords";
 import { ElementBalance, NeededEnergySection, RelationsTable, DaeunTimeline } from "@/components/ManseSections";
 import { focusLabel } from "@/lib/focus";
-import { ReadingCta } from "@/components/bokchae/ReadingCta";
-import { PENDING_RESULT_KEY } from "@/lib/bokchae";
+import { ReadingCta } from "@/components/yeopjeon/ReadingCta";
+import { NameReadingSection } from "@/components/NameReadingSection";
+import { PENDING_RESULT_KEY } from "@/lib/yeopjeon";
 import { neededEnergy } from "@/lib/neededEnergy";
 import { elementShares, yinYangCount, relationRows, daeunCells, kstDateString } from "@/lib/manseView";
 import type { ElementKo } from "@/lib/pillarView";
@@ -147,6 +148,11 @@ function ResultBody() {
         <NeededEnergySection need={neededEnergy(saju)} highlight={focus === "health"} />
       </div>
 
+      {/* 무료 이름 풀이 (수정안 11번) */}
+      <div id="name-reading" className="scroll-mt-6">
+        <NameReadingSection nickname={nickname} hanjaName={hanjaName} saju={saju} />
+      </div>
+
       {/* 십신 분포 - 문장형 제목 + 막대그래프 (엔진 십신에 지장간 가중치를 더한 값) */}
       <section className="mb-8">
         <p className="section-label mb-1">십신 분포</p>
@@ -188,7 +194,7 @@ function ResultBody() {
         )}
       </section>
 
-      {/* 이어서 보기 - 990원 사주보기 (가입 선물 복채로 첫 풀이 무료) */}
+      {/* 이어서 보기 - 12가지 운 맛보기 990냥 (가입 선물 엽전으로 첫 맛보기 무료) */}
       {id && <ReadingCta resultId={id} nickname={nickname} focus={focus} />}
 
       {/* 공유용 결과 카드 - 생년월일/출생시간/출생도시는 포함하지 않는다 */}
@@ -204,7 +210,7 @@ function ResultBody() {
 
       <div className="space-y-2.5">
         {id && (
-          <a href={`/fortune?resultId=${encodeURIComponent(id)}`} className="btn-secondary block">
+          <a href={`/fortune?resultId=${encodeURIComponent(id)}`} className="btn-secondary block text-center">
             오늘·내일의 운세 보기
           </a>
         )}

@@ -6,13 +6,13 @@ import { ComingSoon } from "@/components/ComingSoon";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { readA11yPrefs, saveA11yPrefs, type A11yPrefs } from "@/components/AccessibilityInit";
-import { BokchaePanel } from "@/components/bokchae/BokchaePanel";
+import { YeopjeonPanel } from "@/components/yeopjeon/YeopjeonPanel";
 
 /**
- * 내 사주함(마이페이지) — Phase 10.5, 용사주 벤치마킹에서 구조만 차용.
+ * 내 복주머니(마이페이지) — Phase 10.5, 용사주 벤치마킹에서 구조만 차용.
  *
- * 구현 범위: 프로필, 복채 잔액·내 사주풀이·친구 초대·이용내역(2026-10-06), 저장한 사람, 알림 설정,
- * 표시 설정, 계정 관리. 복채는 선물·보상으로만 지급한다(돈 받고 충전하지 않음).
+ * 구현 범위: 프로필, 엽전 잔액·내 사주풀이(사람별 12가지 운)·친구 초대·이용내역, 저장한 사람, 알림 설정,
+ * 표시 설정, 계정 관리. 엽전은 선물·보상으로만 지급한다(돈 받고 충전하지 않음).
  *
  * 로그인 안 한 상태로 들어오면 /login으로 보낸다.
  */
@@ -94,7 +94,7 @@ function MyPageBody() {
   return (
     <>
       <main className="mx-auto min-h-screen max-w-sm px-5 pb-16 pt-12 sm:pt-16">
-        <h1 className="mb-7 text-[24px] font-bold">내 사주함</h1>
+        <h1 className="mb-7 text-[24px] font-bold">내 복주머니</h1>
 
         {/* 프로필 */}
         <section className="mb-7 rounded-2xl p-4" style={{ backgroundColor: "var(--color-paper-soft)" }}>
@@ -114,7 +114,7 @@ function MyPageBody() {
           </div>
         </section>
 
-        <BokchaePanel />
+        <YeopjeonPanel />
 
         {/* 저장한 사람 */}
         <section className="mb-7">
@@ -235,7 +235,7 @@ function MyPageBody() {
           ) : (
             <div className="rounded-xl p-4" style={{ backgroundColor: "var(--color-accent-soft)" }}>
               <p className="mb-3 text-sm" style={{ color: "var(--color-accent)" }}>
-                정말 탈퇴하시겠어요? 계정 정보, 저장한 사람, 사주풀이, 복채가 모두 삭제되며 되돌릴 수 없어요.
+                정말 탈퇴하시겠어요? 계정 정보, 저장한 사람, 사주풀이, 엽전이 모두 삭제되며 되돌릴 수 없어요.
               </p>
               <div className="flex gap-2">
                 <button
@@ -265,5 +265,5 @@ function MyPageBody() {
 }
 
 export default function MyPage() {
-  return isAuthEnabled() ? <MyPageBody /> : <ComingSoon title="내 사주함" />;
+  return isAuthEnabled() ? <MyPageBody /> : <ComingSoon title="내 복주머니" />;
 }

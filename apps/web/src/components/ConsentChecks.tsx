@@ -69,7 +69,7 @@ export function ConsentChecks({ value, onChange }: { value: ConsentState; onChan
         ))}
       </div>
       <p className="mt-3 text-[11px] leading-relaxed" style={{ color: "var(--color-ink-faint)" }}>
-        선택 항목은 동의하지 않아도 모든 서비스를 이용할 수 있고, 내 사주함에서 언제든 바꿀 수 있어요.
+        선택 항목은 동의하지 않아도 모든 서비스를 이용할 수 있고, 내 복주머니에서 언제든 바꿀 수 있어요.
       </p>
     </div>
   );

@@ -144,7 +144,7 @@ export async function recordConsent(userId: string, marketingAgreed: boolean): P
   );
 }
 
-/** 마케팅 수신 동의/철회 (내 사주함). 철회도 동의만큼 쉽게 할 수 있어야 한다. */
+/** 마케팅 수신 동의/철회 (내 복주머니). 철회도 동의만큼 쉽게 할 수 있어야 한다. */
 export async function setMarketingAgreed(userId: string, agreed: boolean): Promise<void> {
   const pool = await db();
   await pool.query(

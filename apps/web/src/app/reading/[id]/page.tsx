@@ -5,25 +5,28 @@ import { isAuthEnabled } from "@/lib/launchMode";
 import { ComingSoon } from "@/components/ComingSoon";
 import { LoadingState, ErrorState } from "@/components/StatusScreens";
 import { focusLabel, isFocus } from "@/lib/focus";
-import { InviteCard } from "@/components/bokchae/InviteCard";
-import { useBokchae } from "@/components/bokchae/useBokchae";
+import { FOCUS_TOPICS, isTopicKey } from "@/lib/topics";
+import { PRICE, formatNyang } from "@/lib/yeopjeon";
+import { InviteCard } from "@/components/yeopjeon/InviteCard";
+import { PersonHeader } from "@/components/yeopjeon/PersonHeader";
+import { useYeopjeon } from "@/components/yeopjeon/useYeopjeon";
 import type { StoredReading } from "@/server/readings/readings";
 
 /**
- * 990원 사주보기 결과 (저장된 풀이 - 내 사주함에서 언제든 다시 열람, AI 재호출 없음).
- * 각 주제 끝 "이어보기 4,900원"과 맨 아래 "전부 보기 29,500원"은 결제사 승인 후 연다(지금은 "곧 열려요").
+ * 맛보기 결과 (990냥, 저장된 풀이 - 내 복주머니에서 언제든 다시 열람, AI 재호출 없음).
+ * 주제마다 "깊게 보기 4,900냥", 아래에 "3가지 몰아보기 9,900냥"·"12가지 전부 보기 29,500냥"으로 이어진다.
+ * (2026-10-06 이전 맛보기는 사람 정보가 없어 깊게 보기 버튼 대신 다시 보기 안내만 보인다.)
  */
 
 const GOLD = "#9a7a45";
-const FOCUS_KEYS: Record<string, string[]> = { love: ["love"], work: ["career", "money"], health: ["health"], relationship: ["relationship"] };
-const DEEP_PRICE = "4,900원";
-const ALL_PRICE = "29,500원";
+/** 10-06판 맛보기의 예전 주제 이름 → 지금 주제 */
+const LEGACY_KEY: Record<string, string> = { career: "job" };
 
 function ReadingBody({ id }: { id: string }) {
   const [state, setState] = useState<{ status: "loading" } | { status: "error"; message: string } | { status: "done"; reading: StoredReading }>({
     status: "loading",
   });
-  const { data: bokchae } = useBokchae(state.status === "done");
+  const { data: wallet } = useYeopjeon(state.status === "done");
 
   useEffect(() => {
     fetch(`/api/readings/${encodeURIComponent(id)}`)
@@ -40,90 +43,92 @@ function ReadingBody({ id }: { id: string }) {
   }, [id]);
 
   if (state.status === "loading") return <LoadingState message="풀이를 불러오고 있어요..." />;
-  if (state.status === "error") return <ErrorState message={state.message} linkHref="/mypage" linkLabel="내 사주함으로" />;
+  if (state.status === "error") return <ErrorState message={state.message} linkHref="/mypage" linkLabel="내 복주머니로" />;
 
-  const { header, content, focus, createdAt } = state.reading;
+  const { header, content, focus, createdAt, personId } = state.reading;
+  const focusKeys: string[] = focus && isFocus(focus) ? FOCUS_TOPICS[focus] : [];
 
   return (
     <main className="mx-auto min-h-screen max-w-xl px-5 pb-20 pt-12 sm:pt-16">
-      <header className="mb-8 text-center">
-        <p className="text-[13px]" style={{ color: GOLD }}>
-          류결사주 · 사주보기
-        </p>
-        <h1 className="mt-1 text-[26px] font-bold" style={{ fontFamily: "var(--font-serif)" }}>
-          {header.nickname}
-          {header.hanjaName && <span className="font-normal" style={{ color: "var(--color-ink-faint)" }}>({header.hanjaName})</span>}
-          님의 사주풀이
-        </h1>
-        <p className="mt-1.5 text-[13px]" style={{ color: "var(--color-ink-soft)" }}>
-          {header.birth}
-          {focus && isFocus(focus) && ` · 관심 분야 ${focusLabel(focus)}`}
-        </p>
-        <div className="mx-auto mt-4 grid max-w-xs grid-cols-4 gap-2">
-          {header.pillars.map((p) => (
-            <div key={p.label} className="rounded-lg py-2" style={{ backgroundColor: "var(--color-paper-soft)" }}>
-              <p className="text-[11px]" style={{ color: "var(--color-ink-faint)" }}>
-                {p.label}
-              </p>
-              <p className="text-[17px] font-bold" style={{ fontFamily: "var(--font-serif)" }}>
-                {p.ganzhi ?? "—"}
-              </p>
-            </div>
-          ))}
-        </div>
-      </header>
+      <PersonHeader header={header} kicker={`류결사주 · 맛보기 ${formatNyang(PRICE.TASTE)}`} title="12가지 운 맛보기" sub={focus && isFocus(focus) ? `관심 분야 ${focusLabel(focus)}` : undefined} />
 
-      <div className="space-y-6">
-        {content.sections.map((s) => (
-          <section key={s.key} className="rounded-2xl p-5" style={{ border: "1px solid var(--color-line)", backgroundColor: "#fffdf8" }}>
-            <h2 className="flex items-center gap-2 text-[19px] font-bold" style={{ fontFamily: "var(--font-serif)", color: GOLD }}>
-              {s.title}
-              {focus && isFocus(focus) && FOCUS_KEYS[focus].includes(s.key) && (
-                <span className="rounded-full px-2 py-0.5 text-[11px] font-medium" style={{ backgroundColor: "var(--color-accent-soft)", color: "var(--color-accent)" }}>
-                  관심 분야
-                </span>
-              )}
-            </h2>
-            <div className="mt-3 space-y-3 text-[15.5px] leading-[1.85]">
-              {s.body.split(/\n+/).map((para, j) => (
-                <p key={j}>{para}</p>
-              ))}
-            </div>
-            {s.deeper && (
-              <div className="mt-4 flex items-center justify-between gap-3 rounded-xl px-4 py-3" style={{ backgroundColor: "var(--color-paper-soft)" }}>
-                <p className="text-[13px] leading-snug" style={{ color: "var(--color-ink-soft)" }}>
-                  {s.deeper}
-                </p>
-                <span className="shrink-0 rounded-full px-2.5 py-1 text-[12px]" style={{ border: "1px solid var(--color-line)", color: "var(--color-ink-faint)" }}>
-                  이어보기 {DEEP_PRICE} · 곧 열려요
-                </span>
+      <div className="space-y-5">
+        {content.sections.map((s) => {
+          const key = LEGACY_KEY[s.key] ?? s.key;
+          return (
+            <section key={s.key} className="rounded-2xl p-5" style={{ border: "1px solid var(--color-line)", backgroundColor: "#fffdf8" }}>
+              <h2 className="flex items-center gap-2 text-[19px] font-bold" style={{ fontFamily: "var(--font-serif)", color: GOLD }}>
+                {s.title}
+                {focusKeys.includes(key) && (
+                  <span className="rounded-full px-2 py-0.5 text-[11px] font-medium" style={{ backgroundColor: "var(--color-accent-soft)", color: "var(--color-accent)" }}>
+                    관심 분야
+                  </span>
+                )}
+              </h2>
+              <div className="mt-3 space-y-3 text-[15.5px] leading-[1.85]">
+                {s.body.split(/\n+/).map((para, j) => (
+                  <p key={j}>{para}</p>
+                ))}
               </div>
-            )}
-          </section>
-        ))}
+              {personId && isTopicKey(key) && (
+                <a
+                  href={`/person/${personId}?buy=deep&topic=${key}`}
+                  className="mt-4 flex items-center justify-between gap-3 rounded-xl px-4 py-3"
+                  style={{ backgroundColor: "var(--color-paper-soft)" }}
+                >
+                  <span className="text-[13px] leading-snug" style={{ color: "var(--color-ink-soft)" }}>
+                    {s.deeper || "이 운을 더 깊게 풀어 드립니다."}
+                  </span>
+                  <span className="shrink-0 rounded-full px-3 py-1.5 text-[12px] font-bold text-white" style={{ backgroundColor: "var(--color-accent)" }}>
+                    깊게 보기 {formatNyang(PRICE.DEEP)}
+                  </span>
+                </a>
+              )}
+            </section>
+          );
+        })}
       </div>
 
-      <section className="mt-8 rounded-2xl p-5 text-center" style={{ border: "1px solid #d8c49a", backgroundColor: "#fffdf8" }}>
-        <p className="text-[18px] font-bold" style={{ fontFamily: "var(--font-serif)" }}>
-          평생 사주 리포트 · {ALL_PRICE}
+      {personId ? (
+        <section className="mt-8 grid grid-cols-1 gap-3 sm:grid-cols-2">
+          <a href={`/person/${personId}?buy=bundle3`} className="rounded-2xl p-5 text-center" style={{ border: "1px solid #d8c49a", backgroundColor: "#fffdf8" }}>
+            <p className="text-[17px] font-bold" style={{ fontFamily: "var(--font-serif)" }}>
+              3가지 몰아보기
+            </p>
+            <p className="mt-1 text-[13px]" style={{ color: "var(--color-ink-soft)" }}>
+              가장 궁금한 세 가지를 깊게
+            </p>
+            <p className="mt-2 text-[18px] font-bold" style={{ color: GOLD }}>
+              {formatNyang(PRICE.BUNDLE3)}
+            </p>
+          </a>
+          <a href={`/person/${personId}?buy=bundle12`} className="rounded-2xl p-5 text-center" style={{ border: "1px solid #d8c49a", backgroundColor: "#fffdf8" }}>
+            <p className="text-[17px] font-bold" style={{ fontFamily: "var(--font-serif)" }}>
+              12가지 전부 보기
+            </p>
+            <p className="mt-1 text-[13px]" style={{ color: "var(--color-ink-soft)" }}>
+              12가지 운 + 월별 운세 · 개운법
+            </p>
+            <p className="mt-2 text-[18px] font-bold" style={{ color: GOLD }}>
+              {formatNyang(PRICE.BUNDLE12)}
+            </p>
+          </a>
+        </section>
+      ) : (
+        <p className="mt-8 rounded-xl px-4 py-3 text-center text-[13px]" style={{ backgroundColor: "var(--color-paper-soft)", color: "var(--color-ink-soft)" }}>
+          깊게 보기는 무료 만세력을 다시 본 뒤 &quot;이어서 보기&quot;에서 열 수 있어요.
         </p>
-        <p className="mt-1 text-[13px]" style={{ color: "var(--color-ink-soft)" }}>
-          모든 주제 깊게 + 평생 대운 흐름 · 월별 운세 · 개운법
-        </p>
-        <p className="mt-3 inline-block rounded-full px-3 py-1 text-[12px]" style={{ backgroundColor: "var(--color-paper-soft)", color: "var(--color-ink-faint)" }}>
-          곧 열려요
-        </p>
-      </section>
+      )}
 
-      {bokchae && (
+      {wallet && (
         <section className="mt-8">
-          <InviteCard refCode={bokchae.refCode} invited={bokchae.invited} />
+          <InviteCard refCode={wallet.refCode} invited={wallet.invited} />
         </section>
       )}
 
       <div className="mt-8 space-y-2.5">
         <a href="/mypage" className="btn-secondary block text-center">
-          내 사주함
+          내 복주머니
         </a>
         <a href="/start" className="block py-2 text-center text-sm underline underline-offset-4" style={{ color: "var(--color-ink-soft)" }}>
           다른 사람 사주 보기

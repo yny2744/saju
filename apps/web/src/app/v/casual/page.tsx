@@ -1,9 +1,9 @@
-import { notFound } from "next/navigation";
-import { CasualLanding } from "@/components/CasualLanding";
-import { isLive } from "@/lib/launchMode";
+import { redirect } from "next/navigation";
 
-/** 항상 "류결의사주" 화면을 보여주는 미리보기 경로. 접수용(review) 모드에서는 존재하지 않는 주소(404)로 처리한다. */
-export default function CasualLandingPreview() {
-  if (!isLive()) notFound();
-  return <CasualLanding />;
+/**
+ * 2026-10-08: 예전 시안 미리보기 주소. 예전 가격(3,900/9,900/4,900원)이 그대로 보여서 대문으로 보낸다.
+ * 류결의사주(2030 트랙) 화면은 확장 단계에서 새 가격 구조로 다시 만든다 (components/CasualLanding.tsx 는 남겨 둠).
+ */
+export default function LegacyPreviewPage() {
+  redirect("/");
 }

@@ -79,9 +79,9 @@ async function ensureSchema(): Promise<void> {
   `);
   await db.query(`CREATE INDEX IF NOT EXISTS saju_profiles_user_idx ON saju_profiles(user_id);`);
 
-  // 2026-10-06 상용화 구조: 복채(선물·보상) 장부, 친구 초대, 저장된 유료 풀이.
+  // 2026-10-06 상용화 구조: 엽전(선물·보상, 10-08 복채에서 이름 변경) 장부, 친구 초대, 저장된 유료 풀이.
   await db.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS ref_code TEXT UNIQUE;`);
-  // 복채 장부 - 잔액은 amount 합계. (user_id, kind, ref) 유니크로 같은 보상이 두 번 들어가지 않는다.
+  // 엽전 장부(테이블 이름은 예전 그대로 bokchae_ledger) - 잔액은 amount 합계. (user_id, kind, ref) 유니크로 같은 보상이 두 번 들어가지 않는다.
   await db.query(`
     CREATE TABLE IF NOT EXISTS bokchae_ledger (
       id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -105,7 +105,8 @@ async function ensureSchema(): Promise<void> {
     );
   `);
   await db.query(`CREATE INDEX IF NOT EXISTS referrals_referrer_idx ON referrals(referrer_id);`);
-  // 유료 풀이 저장 - 한 번 쓴 풀이는 다시 AI를 부르지 않고 내 사주함에서 언제든 다시 본다.
+  await db.query(`ALTER TABLE referrals ADD COLUMN IF NOT EXISTS nth INTEGER;`);
+  // 유료 풀이 저장 - 한 번 쓴 풀이는 다시 AI를 부르지 않고 내 복주머니에서 언제든 다시 본다.
   // source_key: 같은 사람(생년월일시·성별·이름)·같은 관심 분야로 두 번 결제되지 않게 막는 키.
   await db.query(`
     CREATE TABLE IF NOT EXISTS readings (
@@ -122,6 +123,47 @@ async function ensureSchema(): Promise<void> {
     );
   `);
   await db.query(`CREATE INDEX IF NOT EXISTS readings_user_idx ON readings(user_id, created_at DESC);`);
+
+  // 2026-10-08 12가지 운 상품: 사람(풀이 대상) · 주제 열람권 · 주제별 깊은 풀이.
+  // persons: 회원이 풀이를 산 사람 한 명(나·가족). 사주 계산 결과를 그대로 보관해 두고, 주제를 누를 때마다 다시 꺼내 쓴다
+  //          (무료 결과 토큰은 24시간 뒤 사라지므로). person_key = 생년월일시·성별·이름으로 만든 키 (관심 분야는 제외).
+  await db.query(`
+    CREATE TABLE IF NOT EXISTS persons (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      person_key TEXT NOT NULL,
+      nickname TEXT NOT NULL,
+      hanja_name TEXT,
+      focus TEXT,
+      saju JSONB NOT NULL,
+      header JSONB NOT NULL,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+      UNIQUE (user_id, person_key)
+    );
+  `);
+  await db.query(`CREATE INDEX IF NOT EXISTS persons_user_idx ON persons(user_id, created_at DESC);`);
+  await db.query(`ALTER TABLE readings ADD COLUMN IF NOT EXISTS person_id UUID REFERENCES persons(id) ON DELETE CASCADE;`);
+  // 주제 열람권 - 깊게 보기·몰아보기·전부 보기로 산 주제. via = deep | bundle3 | bundle12
+  await db.query(`
+    CREATE TABLE IF NOT EXISTS topic_unlocks (
+      person_id UUID NOT NULL REFERENCES persons(id) ON DELETE CASCADE,
+      topic TEXT NOT NULL,
+      via TEXT NOT NULL,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+      PRIMARY KEY (person_id, topic)
+    );
+  `);
+  // 주제별 깊은 풀이 - 손님이 주제를 처음 누를 때 쓰고 저장(다시 볼 때 AI 재호출 없음)
+  await db.query(`
+    CREATE TABLE IF NOT EXISTS topic_readings (
+      person_id UUID NOT NULL REFERENCES persons(id) ON DELETE CASCADE,
+      topic TEXT NOT NULL,
+      content JSONB NOT NULL,
+      model TEXT,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+      PRIMARY KEY (person_id, topic)
+    );
+  `);
   schemaReady = true;
 }
 
