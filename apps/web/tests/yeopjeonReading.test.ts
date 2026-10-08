@@ -8,6 +8,8 @@ import {
   buildTastePrompt,
   generateDeep,
   generateTaste,
+  fillName,
+  NAME_TOKEN,
   orderSections,
   parseDeepResponse,
   parseTasteResponse,
@@ -117,7 +119,7 @@ describe("월건 (월별 운세 데이터)", () => {
 
 describe("AI 요청문·응답 처리", () => {
   it("맛보기: 엔진 데이터 그대로, 관심 분야는 가장 길게", () => {
-    const p = buildTastePrompt(saju, "유남영", ["money", "job", "promotion"], "work", 2026);
+    const p = buildTastePrompt(saju, ["money", "job", "promotion"], "work", 2026);
     expect(p).toContain(saju.pillars.day.ganzhi);
     expect(p).toMatch(/"money":.*가장 자세히/);
     expect(p).toMatch(/"job":.*가장 자세히/);
@@ -126,13 +128,41 @@ describe("AI 요청문·응답 처리", () => {
   });
 
   it("깊게 보기 월별: 계산된 월건을 함께 넣는다", () => {
-    const p = buildDeepPrompt(saju, "유남영", "monthly", 2026);
+    const p = buildDeepPrompt(saju, "monthly", 2026);
     expect(p).toContain("경인월");
     expect(p).toContain("2026년");
   });
 
   it("깊게 보기 개운법: 필요한 기운의 색·방향을 함께 넣는다", () => {
-    expect(buildDeepPrompt(saju, "유남영", "gaeun", 2026)).toMatch(/보완하면 좋은 오행/);
+    expect(buildDeepPrompt(saju, "gaeun", 2026)).toMatch(/보완하면 좋은 오행/);
+  });
+
+  it("손님 이름은 AI로 보내지 않고, 돌아온 풀이에 서버가 채운다 (수정안 14)", async () => {
+    for (const p of [buildTastePrompt(saju, ["love", "marriage", "family"], "love", 2026), buildDeepPrompt(saju, "money", 2026), buildDeepPrompt(saju, "monthly", 2026)]) {
+      expect(p).not.toContain("유남영");
+      expect(p).toContain(`${NAME_TOKEN}님`);
+    }
+    expect(fillName("{이름}님은 재물 그릇이 커요. ｛이름｝님, { 이름 }님", "유남영")).toBe("유남영님은 재물 그릇이 커요. 유남영님, 유남영님");
+    expect(fillName("{이름}님", "$&$1")).toBe("$&$1님");
+    // AI가 표시를 그대로 써서 돌려준 경우 → 저장되는 풀이에는 실제 이름이 들어간다
+    const echo = {
+      providerName: "echo",
+      modelName: "echo",
+      async complete(_s: string, user: string) {
+        expect(user).not.toContain("유남영");
+        if (user.includes("# 요청: 깊게 보기")) {
+          return JSON.stringify({ summary: "{이름}님 요약", parts: [1, 2].map((i) => ({ heading: `{이름}님 ${i}`, body: "{이름}님은 " + "가".repeat(30) })) });
+        }
+        const keys = [...user.matchAll(/^- "(\w+)":/gm)].map((m) => m[1]);
+        return JSON.stringify({ sections: keys.map((key) => ({ key, body: "{이름}님은 " + "나".repeat(30), deeper: "{이름}님께 더" })) });
+      },
+    };
+    const taste = await generateTaste(saju, "유남영", undefined, 2026, echo);
+    expect(taste.sections.every((s) => s.body.startsWith("유남영님은") && s.deeper === "유남영님께 더")).toBe(true);
+    const deep = await generateDeep(saju, "유남영", "money", 2026, echo);
+    expect(deep.summary).toBe("유남영님 요약");
+    expect(deep.parts[0]).toMatchObject({ heading: "유남영님 1" });
+    expect(JSON.stringify([taste, deep])).not.toContain("{이름}");
   });
 
   it("코드블록이 섞인 응답도 읽고, 빠진 주제는 실패", () => {

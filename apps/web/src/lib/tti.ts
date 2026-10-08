@@ -7,6 +7,10 @@ import type { ElementKo } from "@/lib/pillarView";
  *   우선순위: 충 > 육합 > 삼합 > 형 > 해 > 파 > 같은 띠 > 평
  * 문구는 관계별로 정해 둔 것 중 날짜에 따라 골라 쓴다(같은 관계라도 매일 같은 말이 반복되지 않게).
  * 일진 자체는 엔진(calculateDailyGanzhi)이 계산한다.
+ *
+ * 년생별 한 줄 (2026-10-09 수정안 15): 같은 띠라도 태어난 해의 간지(예: 62년 임인 · 74년 갑인 · 86년 병인)가 다르므로
+ *   태어난 해의 천간과 그날 일진 천간의 관계(합·비화·인성·식상·재성·관성)로 년생마다 다른 한 줄을 붙인다.
+ *   범위는 그해 기준 만 40~75세(36년 = 띠마다 3개 년생)로, 해가 바뀌면 자동으로 한 해씩 옮겨 간다.
  */
 
 export const BRANCHES = ["자", "축", "인", "묘", "진", "사", "오", "미", "신", "유", "술", "해"] as const;
@@ -135,6 +139,113 @@ const LUCKY_COLOR: Record<ElementKo, string> = { 목: "초록", 화: "빨강", �
 const LUCKY_DIRECTION: Record<ElementKo, string> = { 목: "동쪽", 화: "남쪽", 토: "가운데", 금: "서쪽", 수: "북쪽" };
 const LUCKY_NUMBER: Record<ElementKo, string> = { 목: "3·8", 화: "2·7", 토: "5·10", 금: "4·9", 수: "1·6" };
 
+// ───────────────────────── 년생별 한 줄 ─────────────────────────
+
+/** 년생별 운세 범위: 그해 기준 만 40~75세 (36년 = 12띠 × 3) */
+export const AGE_MIN = 40;
+export const AGE_MAX = 75;
+
+export const STEMS = ["갑", "을", "병", "정", "무", "기", "경", "신", "임", "계"] as const;
+export type Stem = (typeof STEMS)[number];
+const STEM_ELEMENT: Record<Stem, ElementKo> = { 갑: "목", 을: "목", 병: "화", 정: "화", 무: "토", 기: "토", 경: "금", 신: "금", 임: "수", 계: "수" };
+/** 이 오행이 이기는(극하는) 오행 */
+const CONTROLS: Record<ElementKo, ElementKo> = { 목: "토", 화: "금", 토: "수", 금: "목", 수: "화" };
+const STEM_HAP = new Set(["갑기", "을경", "병신", "정임", "무계"].map((p) => pairKey(p[0], p[1])));
+
+/** 태어난 해의 간지 (입춘 기준이 아니라 그해 대표 간지 - 띠와 같은 기준) */
+export function yearGanzhi(year: number): { stem: Stem; branch: Branch; ganzhi: string } {
+  const stem = STEMS[(((year - 4) % 10) + 10) % 10];
+  const branch = BRANCHES[(((year - 4) % 12) + 12) % 12];
+  return { stem, branch, ganzhi: stem + branch };
+}
+
+export type StemRelation = "합" | "비화" | "인성" | "식상" | "재성" | "관성";
+
+/** 태어난 해 천간(나) 기준으로 본 그날 일진 천간과의 관계 */
+export function stemRelation(birth: Stem, day: Stem): StemRelation {
+  if (birth !== day && STEM_HAP.has(pairKey(birth, day))) return "합";
+  const me = STEM_ELEMENT[birth];
+  const d = STEM_ELEMENT[day];
+  if (me === d) return "비화";
+  if (MOTHER[me] === d) return "인성"; // 일진이 나를 낳아 줌 - 도움
+  if (MOTHER[d] === me) return "식상"; // 내가 일진을 낳아 줌 - 표현·베풂, 기운이 나감
+  if (CONTROLS[me] === d) return "재성"; // 내가 이김 - 재물·실속
+  return "관성"; // 일진이 나를 이김 - 책임·부담
+}
+
+type AgeBand = "40대" | "50대" | "60대" | "70대";
+function ageBand(age: number): AgeBand {
+  return age >= 70 ? "70대" : age >= 60 ? "60대" : age >= 50 ? "50대" : "40대";
+}
+
+/** 관계 × 나이대별 문구 (나이대에 맞는 관심사: 40대 일·자녀 / 50대 재물·자리 / 60대 건강·가족 / 70대 마음·평안) */
+const YEAR_TEXT: Record<StemRelation, Record<AgeBand, string[]>> = {
+  합: {
+    "40대": ["뜻이 맞는 사람과 손잡기 좋은 날이에요. 미뤄 둔 협의나 약속을 오늘 꺼내 보세요.", "일도 집안일도 손발이 맞는 날이에요. 주변의 도움을 편하게 받으세요."],
+    "50대": ["오래 알고 지낸 사람에게서 좋은 제안이 올 수 있어요. 귀를 열어 두세요.", "함께하는 일에 운이 붙는 날이에요. 혼자 하기보다 같이 하세요."],
+    "60대": ["반가운 연락이나 만남이 있는 날이에요. 먼저 안부를 전해 보세요.", "가족과 마음이 잘 통하는 날이에요. 같이 식사하며 이야기를 나눠 보세요."],
+    "70대": ["자녀나 손주에게서 기쁜 소식이 들릴 수 있어요.", "마음 맞는 벗과 차 한잔하기 좋은 날이에요. 웃을 일이 생깁니다."],
+  },
+  비화: {
+    "40대": ["동료나 형제와 힘을 모으면 일이 수월해요. 다만 경쟁심은 내려놓으세요.", "내 뜻대로 밀고 나가고 싶은 날이에요. 한 번 더 상대 입장을 들어 보세요."],
+    "50대": ["비슷한 처지의 사람과 정보를 나누면 득이 됩니다. 돈거래는 분명하게 하세요.", "자존심 대결은 피하는 게 좋아요. 한발 물러서면 오히려 얻는 게 있습니다."],
+    "60대": ["친구나 형제와 어울리기 좋은 날이에요. 모임 자리에서 기운을 얻습니다.", "고집을 조금만 내려놓으면 집안이 한결 편안해집니다."],
+    "70대": ["오랜 친구와의 만남이 활력이 되는 날이에요.", "형제나 친척 일로 마음 쓸 일이 생겨도 너무 걱정 마세요. 잘 풀립니다."],
+  },
+  인성: {
+    "40대": ["윗사람이나 선배의 조언이 큰 도움이 되는 날이에요. 배우는 일에 운이 따릅니다.", "서류·계약·자격 관련 일이 순조로워요. 미뤄 둔 공부를 시작해 보세요."],
+    "50대": ["든든한 도움이 들어오는 날이에요. 혼자 끙끙대지 말고 의논하세요.", "문서나 집 관련 일에 좋은 흐름이 있어요. 꼼꼼히 챙기면 득이 됩니다."],
+    "60대": ["마음이 차분해지고 생각이 맑아지는 날이에요. 책을 읽거나 무언가 배우기에 좋습니다.", "자녀나 주변의 따뜻한 배려를 받는 날이에요. 고마운 마음을 표현해 보세요."],
+    "70대": ["몸과 마음이 편안한 날이에요. 푹 쉬면 기운이 차오릅니다.", "주변의 보살핌이 따뜻하게 느껴지는 날이에요. 도움은 편히 받으세요."],
+  },
+  식상: {
+    "40대": ["아이디어와 말솜씨가 빛나는 날이에요. 발표나 제안에 좋지만 말이 앞서지 않게 하세요.", "자녀 일로 바쁠 수 있어요. 기운을 너무 쏟지 말고 쉬는 시간을 챙기세요."],
+    "50대": ["베푼 만큼 돌아오는 날이에요. 다만 지갑은 계획한 만큼만 여세요.", "하고 싶은 말이 많아지는 날이에요. 한 번 삼키면 관계가 더 좋아집니다."],
+    "60대": ["취미나 손으로 하는 일이 즐거운 날이에요. 다만 무리하면 쉽게 지칩니다.", "자식·손주 챙기느라 기운이 빠질 수 있어요. 내 몸도 함께 챙기세요."],
+    "70대": ["이야기 나눌 사람이 반가운 날이에요. 가벼운 산책길 대화가 좋습니다.", "기운이 밖으로 새기 쉬운 날이에요. 일찍 쉬고 따뜻하게 드세요."],
+  },
+  재성: {
+    "40대": ["실속을 챙기기 좋은 날이에요. 받을 돈이나 미뤄 둔 정산을 정리해 보세요.", "일한 만큼 성과가 보이는 날이에요. 다만 욕심내서 일을 벌이지는 마세요."],
+    "50대": ["재물 흐름이 살아나는 날이에요. 작은 이익이라도 차곡차곡 챙기세요.", "돈 되는 정보가 들어올 수 있어요. 큰 결정은 하루 더 살펴보고 하세요."],
+    "60대": ["살림이 알뜰하게 돌아가는 날이에요. 장보기에도 운이 있습니다.", "뜻밖의 용돈이나 작은 이익이 생길 수 있어요."],
+    "70대": ["필요한 것이 제때 손에 들어오는 날이에요.", "살림을 정리하면 잊고 있던 물건이나 돈을 찾을 수 있어요."],
+  },
+  관성: {
+    "40대": ["책임질 일이 늘어나는 날이에요. 잘 해내면 평가가 올라갑니다.", "윗선의 요구가 까다로울 수 있어요. 원칙대로 차분히 처리하세요."],
+    "50대": ["자리와 체면을 지켜야 하는 날이에요. 말 한마디를 신중하게 하세요.", "부담스러운 부탁이 들어올 수 있어요. 무리하게 떠안지 마세요."],
+    "60대": ["몸이 무겁게 느껴질 수 있어요. 일정을 줄이고 쉬어 가세요.", "규칙과 약속을 잘 지키면 탈 없이 지나가는 날이에요."],
+    "70대": ["무리한 외출은 피하고 집에서 편히 쉬세요.", "평소 불편한 곳을 살피는 날이에요. 천천히 움직이세요."],
+  },
+};
+
+export interface TtiYearLine {
+  /** 태어난 해 (예: 1962) */
+  year: number;
+  /** "62년생" */
+  label: string;
+  /** 그해 간지 (예: 임인) */
+  ganzhi: string;
+  relation: StemRelation;
+  text: string;
+}
+
+/** 이 띠의 년생 목록 (그해 기준 만 40~75세, 띠마다 3개) */
+export function ttiBirthYears(branch: Branch, refYear: number): number[] {
+  const out: number[] = [];
+  for (let y = refYear - AGE_MAX; y <= refYear - AGE_MIN; y++) if (yearGanzhi(y).branch === branch) out.push(y);
+  return out;
+}
+
+export function ttiYearLines(branch: Branch, dayStem: Stem, date: string): TtiYearLine[] {
+  const refYear = Number(date.slice(0, 4));
+  return ttiBirthYears(branch, refYear).map((year) => {
+    const g = yearGanzhi(year);
+    const relation = stemRelation(g.stem, dayStem);
+    const arr = YEAR_TEXT[relation][ageBand(refYear - year)];
+    return { year, label: `${String(year).slice(2)}년생`, ganzhi: g.ganzhi, relation, text: arr[(dayIndex(date) + year) % arr.length] };
+  });
+}
+
 export interface TtiFortune {
   branch: Branch;
   hanja: string;
@@ -149,6 +260,8 @@ export interface TtiFortune {
   luckyColor: string;
   luckyDirection: string;
   luckyNumber: string;
+  /** 년생별 한 줄 (만 40~75세, 3개) - 일진 천간을 모르면 빈 배열 */
+  years: TtiYearLine[];
 }
 
 /** 날짜 문자열(YYYY-MM-DD)을 정수로 - 문구 고르기용 */
@@ -157,7 +270,7 @@ function dayIndex(date: string): number {
   return Math.floor(Date.UTC(y, m - 1, d) / 86400000);
 }
 
-export function ttiFortune(tti: TtiInfo, dayBranch: Branch, date: string): TtiFortune {
+export function ttiFortune(tti: TtiInfo, dayBranch: Branch, date: string, dayStem?: Stem): TtiFortune {
   const relation = relationOf(tti.branch, dayBranch);
   const t = TEXT[relation];
   const base = dayIndex(date) + BRANCHES.indexOf(tti.branch);
@@ -177,11 +290,12 @@ export function ttiFortune(tti: TtiInfo, dayBranch: Branch, date: string): TtiFo
     luckyColor: LUCKY_COLOR[lucky],
     luckyDirection: LUCKY_DIRECTION[lucky],
     luckyNumber: LUCKY_NUMBER[lucky],
+    years: dayStem ? ttiYearLines(tti.branch, dayStem, date) : [],
   };
 }
 
-export function allTtiFortunes(dayBranch: Branch, date: string): TtiFortune[] {
-  return TTI.map((t) => ttiFortune(t, dayBranch, date));
+export function allTtiFortunes(dayBranch: Branch, date: string, dayStem?: Stem): TtiFortune[] {
+  return TTI.map((t) => ttiFortune(t, dayBranch, date, dayStem));
 }
 
 /** 태어난 해 → 띠 (양력 1~2월 초 생은 입춘·설 전이면 전해 띠일 수 있음 - 화면에서 안내) */

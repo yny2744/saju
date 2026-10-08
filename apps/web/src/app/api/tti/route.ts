@@ -8,6 +8,7 @@ export const dynamic = "force-dynamic";
 
 /**
  * 띠별 운세 데이터 (무료, 로그인 없음). 영상 자동화(n8n) 등에서 불러 쓴다.
+ * 띠마다 years[] 에 만 40~75세 년생별 한 줄(label "62년생", ganzhi, text)이 3개씩 들어 있다.
  *   /api/tti              → 오늘(한국 시간)
  *   /api/tti?day=tomorrow → 내일
  *   /api/tti?date=2026-10-09 → 그 날짜 (2000~2100년)

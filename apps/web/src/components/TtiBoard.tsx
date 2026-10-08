@@ -6,6 +6,7 @@ import { BRANCHES, TTI, ttiOfYear, type Branch } from "@/lib/tti";
 
 const GOLD = "#9a7a45";
 const SAVED_KEY = "ryugyeol_my_tti";
+const SAVED_YEAR_KEY = "ryugyeol_my_tti_year";
 
 /**
  * 띠별 운세 화면. 오늘/내일 탭 → 12띠 → 내 띠 풀이.
@@ -29,6 +30,8 @@ export function TtiBoard({ today, tomorrow }: { today: TtiDay; tomorrow: TtiDay 
     try {
       const saved = localStorage.getItem(SAVED_KEY);
       if (saved && (BRANCHES as readonly string[]).includes(saved)) setMine(saved as Branch);
+      const savedYear = localStorage.getItem(SAVED_YEAR_KEY);
+      if (savedYear && /^\d{4}$/.test(savedYear)) setYear(savedYear);
     } catch {
       /* 저장소를 못 써도 괜찮음 */
     }
@@ -37,10 +40,11 @@ export function TtiBoard({ today, tomorrow }: { today: TtiDay; tomorrow: TtiDay 
     if (hourKst >= 18) setTab("tomorrow");
   }, []);
 
-  function choose(b: Branch) {
+  function choose(b: Branch, fromYear?: string) {
     setMine(b);
     try {
       localStorage.setItem(SAVED_KEY, b);
+      if (fromYear) localStorage.setItem(SAVED_YEAR_KEY, fromYear);
     } catch {
       /* 무시 */
     }
@@ -120,7 +124,7 @@ export function TtiBoard({ today, tomorrow }: { today: TtiDay; tomorrow: TtiDay 
             className="field-input min-w-0 flex-1"
           />
           {yearTti && (
-            <button type="button" onClick={() => choose(yearTti.branch)} className="shrink-0 rounded-lg px-3 py-2 text-[13px] font-bold text-white" style={{ backgroundColor: "var(--color-accent)" }}>
+            <button type="button" onClick={() => choose(yearTti.branch, year)} className="shrink-0 rounded-lg px-3 py-2 text-[13px] font-bold text-white" style={{ backgroundColor: "var(--color-accent)" }}>
               {yearTti.animal}띠 보기
             </button>
           )}
@@ -164,6 +168,33 @@ export function TtiBoard({ today, tomorrow }: { today: TtiDay; tomorrow: TtiDay 
                 </div>
               ))}
             </dl>
+            {f.years.length > 0 && (
+              <div className="mt-5">
+                <p className="text-[13px] font-bold" style={{ color: GOLD }}>
+                  년생별 운세
+                </p>
+                <ul className="mt-2 space-y-2">
+                  {f.years.map((y) => {
+                    const me = yearNum === y.year;
+                    return (
+                      <li
+                        key={y.year}
+                        className="rounded-lg px-3 py-2.5 text-[14px] leading-relaxed"
+                        style={{ backgroundColor: me ? "var(--color-accent-soft)" : "var(--color-paper-soft)", border: me ? "1px solid var(--color-accent)" : "1px solid transparent" }}
+                      >
+                        <b className="text-[15px]" style={{ fontFamily: "var(--font-serif)" }}>
+                          {y.label}
+                        </b>
+                        <span className="ml-1.5 text-[12px]" style={{ color: "var(--color-ink-faint)" }}>
+                          {y.ganzhi}년{me ? " · 내 운세" : ""}
+                        </span>
+                        <span className="mt-0.5 block">{y.text}</span>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </div>
+            )}
             <p className="mt-4 rounded-lg px-3 py-2 text-[13px]" style={{ backgroundColor: "var(--color-paper-soft)" }}>
               행운의 색 <b>{f.luckyColor}</b> · 방향 <b>{f.luckyDirection}</b> · 숫자 <b>{f.luckyNumber}</b>
             </p>
@@ -184,7 +215,9 @@ export function TtiBoard({ today, tomorrow }: { today: TtiDay; tomorrow: TtiDay 
       </a>
 
       <p className="mt-6 text-center text-[11px]" style={{ color: "var(--color-ink-faint)" }}>
-        띠와 그날 일진의 합·충으로 본 참고용 운세예요.
+        띠와 그날 일진의 합·충, 태어난 해와 일진 천간의 관계로 본 참고용 운세예요.
+        <br />
+        년생별 운세는 만 40~75세 기준이에요.
       </p>
     </main>
   );

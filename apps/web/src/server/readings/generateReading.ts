@@ -60,6 +60,19 @@ const SYSTEM = `당신은 한국 전통 명리학(사주팔자)을 40년 넘게 
 - 명리 용어(정재, 편관 등)는 쓰되 바로 쉬운 말로 풀어 줍니다.
 - 반드시 지정된 JSON 형식으로만 답합니다. 마크다운·코드블록 없이 JSON만.`;
 
+/**
+ * 손님 이름은 AI로 보내지 않는다 (2026-10-09 수정안 14, 개인정보처리방침 "성명 전달 안 함"과 맞춤).
+ * AI에는 NAME_TOKEN 만 보내고, 돌아온 풀이에서 서버가 실제 이름으로 바꿔 넣는다.
+ */
+export const NAME_TOKEN = "{이름}";
+const NAME_TOKEN_RE = /[{｛]\s*이름\s*[}｝]/g;
+
+export function fillName(text: string, nickname: string): string {
+  return text.replace(NAME_TOKEN_RE, () => nickname); // 함수로 넘겨 이름 속 $ 기호가 특수 문자로 해석되지 않게
+}
+
+const NAME_RULE = `손님을 "${NAME_TOKEN}님"이라고 부르세요. "${NAME_TOKEN}"은 실제 이름 대신 쓰는 표시이니 중괄호까지 글자 그대로 쓰세요.`;
+
 function dataBlock(saju: SajuJson): string {
   const user = buildSajuPrompt(saju, "FREE_BASIC").user;
   const cut = user.indexOf("\n# 요청 상품:");
@@ -68,7 +81,7 @@ function dataBlock(saju: SajuJson): string {
 
 // ───────────────────────── 맛보기 ─────────────────────────
 
-export function buildTastePrompt(saju: SajuJson, nickname: string, keys: TopicKey[], focus: Focus | undefined, year: number): string {
+export function buildTastePrompt(saju: SajuJson, keys: TopicKey[], focus: Focus | undefined, year: number): string {
   const focusKeys = focus ? FOCUS_TOPICS[focus] : [];
   const lines = keys.map((k) => {
     const isFocus = focusKeys.includes(k);
@@ -78,9 +91,9 @@ export function buildTastePrompt(saju: SajuJson, nickname: string, keys: TopicKe
   });
   return `${dataBlock(saju)}
 
-# 요청: 맛보기 (손님 이름: ${nickname}${focus ? `, 가장 궁금한 것: ${focusLabel(focus)}` : ""})
+# 요청: 맛보기${focus ? ` (가장 궁금한 것: ${focusLabel(focus)})` : ""}
 
-아래 주제를 각각 짧게 풀이하세요. 손님을 "${nickname}님"이라고 부르세요. 맛보기이므로 핵심만 담되 뻔한 말은 피하세요.
+아래 주제를 각각 짧게 풀이하세요. ${NAME_RULE} 맛보기이므로 핵심만 담되 뻔한 말은 피하세요.
 ${lines.join("\n")}
 
 각 주제마다:
@@ -132,9 +145,10 @@ export async function generateTaste(
   provider: CompletionProvider = getReadingProvider()
 ): Promise<ReadingContent> {
   const groups = await Promise.all(
-    TASTE_GROUPS.map((keys) => completeWithRetry(provider, buildTastePrompt(saju, nickname, keys, focus, year), (raw) => parseTasteResponse(raw, keys)))
+    TASTE_GROUPS.map((keys) => completeWithRetry(provider, buildTastePrompt(saju, keys, focus, year), (raw) => parseTasteResponse(raw, keys)))
   );
-  return { sections: orderSections(groups.flat(), focus), model: provider.modelName };
+  const sections = groups.flat().map((s) => ({ ...s, body: fillName(s.body, nickname), deeper: fillName(s.deeper, nickname) }));
+  return { sections: orderSections(sections, focus), model: provider.modelName };
 }
 
 // ───────────────────────── 깊게 보기 ─────────────────────────
@@ -156,16 +170,16 @@ function topicExtraData(saju: SajuJson, topic: AnyTopicKey, year: number): strin
   return "";
 }
 
-export function buildDeepPrompt(saju: SajuJson, nickname: string, topic: AnyTopicKey, year: number): string {
+export function buildDeepPrompt(saju: SajuJson, topic: AnyTopicKey, year: number): string {
   const info = TOPICS[topic];
   const extra = topicExtraData(saju, topic, year);
   const lengthRule =
     topic === "monthly" ? "열두 달을 빠짐없이, 달마다 2~3문장 (전체 1,400~1,800자)" : "전체 1,200~1,600자";
   return `${dataBlock(saju)}
 ${extra ? `\n${extra}\n` : ""}
-# 요청: 깊게 보기 - ${info.title} (손님 이름: ${nickname}${topic === "year" || topic === "monthly" ? `, 기준 연도: ${year}년` : ""})
+# 요청: 깊게 보기 - ${info.title}${topic === "year" || topic === "monthly" ? ` (기준 연도: ${year}년)` : ""}
 
-손님을 "${nickname}님"이라고 부르세요. 아래 내용을 소제목 ${topic === "monthly" ? "(달마다 하나씩, 12개)" : "3~4개"}로 나눠 깊이 있게 풀이하세요.
+${NAME_RULE} 아래 내용을 소제목 ${topic === "monthly" ? "(달마다 하나씩, 12개)" : "3~4개"}로 나눠 깊이 있게 풀이하세요.
 ${info.deepPoints.map((p) => `- ${p}`).join("\n")}
 
 규칙:
@@ -194,8 +208,13 @@ export async function generateDeep(
   year: number,
   provider: CompletionProvider = getReadingProvider()
 ): Promise<DeepContent> {
-  const body = await completeWithRetry(provider, buildDeepPrompt(saju, nickname, topic, year), (raw) => parseDeepResponse(raw, topic));
-  return { ...body, model: provider.modelName };
+  const body = await completeWithRetry(provider, buildDeepPrompt(saju, topic, year), (raw) => parseDeepResponse(raw, topic));
+  return {
+    ...body,
+    summary: fillName(body.summary, nickname),
+    parts: body.parts.map((p) => ({ heading: fillName(p.heading, nickname), body: fillName(p.body, nickname) })),
+    model: provider.modelName,
+  };
 }
 
 // ───────────────────────── AI 제공자 ─────────────────────────
