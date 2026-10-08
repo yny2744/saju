@@ -16,10 +16,13 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className="min-h-screen">
         <AccessibilityInit />
         <RefCapture />
-        <SiteHeader />
-        {children}
-        {/* 전자상거래법상 사업자 고지는 결제 화면을 포함한 모든 화면에 상시 노출한다 */}
-        <Footer />
+        {/* 사이트 액자: PC에서는 가운데 한 장, 폰에서는 화면 전체 (양옆 금색 뇌문 띠 포함) */}
+        <div className="site-frame">
+          <SiteHeader />
+          {children}
+          {/* 전자상거래법상 사업자 고지는 결제 화면을 포함한 모든 화면에 상시 노출한다 */}
+          <Footer />
+        </div>
       </body>
     </html>
   );

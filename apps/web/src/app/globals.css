@@ -68,17 +68,38 @@ html[data-contrast="high"] {
   }
 
   body {
-    background-color: var(--color-paper);
+    /* 바탕은 액자(.site-frame)가 칠하고, 바깥은 html 색이 보이게 */
+    background-color: transparent;
     color: var(--color-ink);
     font-family: var(--font-sans);
     letter-spacing: -0.01em;
   }
 
-  /* 화면 양옆 금색 뇌문 띠 (장식, 클릭·읽기와 무관) */
-  body::before,
-  body::after {
+  /* PC에서 액자 바깥 공간 */
+  html {
+    background-color: #e3e6eb;
+  }
+
+  /*
+   * 사이트 액자 (2026-10-09): 머리줄·내용·하단을 가운데 한 장으로 묶고, 그 양옆에 금색 뇌문 띠.
+   * 폰에서는 화면 폭 그대로(띠가 화면 양 끝), PC에서는 가운데 칸 양옆에 붙어 액자처럼 보인다.
+   */
+  .site-frame {
+    position: relative;
+    max-width: 640px;
+    min-height: 100vh;
+    margin: 0 auto;
+    background-color: var(--color-paper);
+  }
+  @media (min-width: 641px) {
+    .site-frame {
+      box-shadow: 0 0 0 1px rgba(22, 41, 74, 0.08), 0 10px 40px rgba(22, 41, 74, 0.16);
+    }
+  }
+  .site-frame::before,
+  .site-frame::after {
     content: "";
-    position: fixed;
+    position: absolute;
     top: 0;
     bottom: 0;
     width: 10px;
@@ -89,17 +110,17 @@ html[data-contrast="high"] {
     background-size: 10px auto;
     background-repeat: repeat-y;
   }
-  body::before {
+  .site-frame::before {
     left: 0;
     box-shadow: inset -1px 0 0 var(--color-gold-line);
   }
-  body::after {
+  .site-frame::after {
     right: 0;
     box-shadow: inset 1px 0 0 var(--color-gold-line);
   }
   @media print {
-    body::before,
-    body::after {
+    .site-frame::before,
+    .site-frame::after {
       display: none;
     }
   }
