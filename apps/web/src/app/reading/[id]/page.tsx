@@ -50,7 +50,7 @@ function ReadingBody({ id }: { id: string }) {
 
   return (
     <main className="mx-auto min-h-screen max-w-xl px-5 pb-20 pt-12 sm:pt-16">
-      <PersonHeader header={header} kicker={`류결사주 · 맛보기 ${formatNyang(PRICE.TASTE)}`} title="12가지 운 맛보기" sub={focus && isFocus(focus) ? `관심 분야 ${focusLabel(focus)}` : undefined} />
+      <PersonHeader header={header} kicker={`류결사주 · 맛보기 ${formatNyang(PRICE.TASTE)}`} title="12가지 운세 맛보기" sub={focus && isFocus(focus) ? `관심 분야 ${focusLabel(focus)}` : undefined} />
 
       <div className="space-y-5">
         {content.sections.map((s) => {
@@ -77,7 +77,7 @@ function ReadingBody({ id }: { id: string }) {
                   style={{ backgroundColor: "var(--color-paper-soft)" }}
                 >
                   <span className="text-[13px] leading-snug" style={{ color: "var(--color-ink-soft)" }}>
-                    {s.deeper || "이 운을 더 깊게 풀어 드립니다."}
+                    {s.deeper || "이 운세를 더 깊게 풀어 드립니다."}
                   </span>
                   <span className="shrink-0 rounded-full px-3 py-1.5 text-[12px] font-bold text-white" style={{ backgroundColor: "var(--color-accent)" }}>
                     깊게 보기 {formatNyang(PRICE.DEEP)}
@@ -93,7 +93,7 @@ function ReadingBody({ id }: { id: string }) {
         <section className="mt-8 grid grid-cols-1 gap-3 sm:grid-cols-2">
           <a href={`/person/${personId}?buy=bundle3`} className="rounded-2xl p-5 text-center" style={{ border: "1px solid var(--color-gold-line)", backgroundColor: "var(--color-card)" }}>
             <p className="text-[17px] font-bold" style={{ fontFamily: "var(--font-serif)" }}>
-              3가지 몰아보기
+              3가지 운세 몰아보기
             </p>
             <p className="mt-1 text-[13px]" style={{ color: "var(--color-ink-soft)" }}>
               가장 궁금한 세 가지를 깊게
@@ -104,10 +104,10 @@ function ReadingBody({ id }: { id: string }) {
           </a>
           <a href={`/person/${personId}?buy=bundle12`} className="rounded-2xl p-5 text-center" style={{ border: "1px solid var(--color-gold-line)", backgroundColor: "var(--color-card)" }}>
             <p className="text-[17px] font-bold" style={{ fontFamily: "var(--font-serif)" }}>
-              12가지 전부 보기
+              12가지 운세 전부 보기
             </p>
             <p className="mt-1 text-[13px]" style={{ color: "var(--color-ink-soft)" }}>
-              12가지 운 + 월별 운세 · 개운법
+              12가지 운세 + 월별 운세 · 개운법
             </p>
             <p className="mt-2 text-[18px] font-bold" style={{ color: GOLD }}>
               {formatNyang(PRICE.BUNDLE12)}

@@ -37,8 +37,8 @@ export function YeopjeonPanel() {
             {formatNyang(data.balance)}
           </p>
         </div>
-        <a href="/start" className="rounded-xl px-4 py-2.5 text-[14px] font-bold text-white" style={{ backgroundColor: "var(--color-accent)" }}>
-          맛보기 {formatNyang(PRICE.TASTE)}
+        <a href="/#fortunes" className="btn-band rounded-xl px-4 py-2.5 text-[14px] font-bold">
+          운세 보기 {formatNyang(PRICE.BASIC)}
         </a>
       </section>
 
@@ -47,7 +47,7 @@ export function YeopjeonPanel() {
         <h2 className="section-label mb-3">내 사주풀이</h2>
         {data.persons.length === 0 ? (
           <p className="rounded-xl px-4 py-3 text-sm" style={{ backgroundColor: "var(--color-paper-soft)", color: "var(--color-ink-faint)" }}>
-            아직 본 사주풀이가 없어요. 무료 만세력을 본 뒤 &quot;이어서 보기&quot;를 눌러 보세요.
+            아직 본 운세가 없어요. 대문에서 12가지 운세 중 하나를 골라 보세요.
           </p>
         ) : (
           <ul className="overflow-hidden rounded-xl" style={{ border: "1px solid var(--color-line)" }}>
@@ -61,8 +61,8 @@ export function YeopjeonPanel() {
                     </span>
                   </span>
                   <span className="shrink-0 text-[12px]" style={{ color: "var(--color-ink-soft)" }}>
-                    {p.hasTaste ? "맛보기 · " : ""}
-                    열린 운 {p.unlockedCount}/{TOPIC_KEYS.length} ›
+                    {p.basicCount > 0 ? `운세 ${p.basicCount} · ` : ""}
+                    깊게 {p.unlockedCount}/{TOPIC_KEYS.length} ›
                   </span>
                 </a>
               </li>

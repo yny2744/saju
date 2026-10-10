@@ -194,7 +194,7 @@ function ResultBody() {
         )}
       </section>
 
-      {/* 이어서 보기 - 12가지 운 맛보기 990냥 (가입 선물 엽전으로 첫 맛보기 무료) */}
+      {/* 이어서 보기 - 12가지 운세 중 하나 990냥 (가입 선물 엽전으로 첫 운세 무료) */}
       {id && <ReadingCta resultId={id} nickname={nickname} focus={focus} />}
 
       {/* 공유용 결과 카드 - 생년월일/출생시간/출생도시는 포함하지 않는다 */}

@@ -17,15 +17,24 @@ export const CURRENCY_UNIT = "냥";
 
 /** 가격 (냥) */
 export const PRICE = {
-  /** 맛보기 - 12가지 운을 짧게 한 번씩 */
+  /** 운세 보기 - 12가지 중 고른 운세 하나 (2026-10-09 수정안 20) */
+  BASIC: 990,
+  /** (예전 상품, 더 이상 팔지 않음) 맛보기 - 12가지를 짧게 한 번씩. 이미 산 풀이를 다시 보는 데만 쓰인다 */
   TASTE: 990,
-  /** 한 가지 운 깊게 보기 */
+  /** 한 가지 운세 깊게 보기 */
   DEEP: 4900,
-  /** 3가지 운 몰아보기 */
+  /** 3가지 운세 몰아보기 */
   BUNDLE3: 9900,
-  /** 12가지 운 전부 보기 (+ 월별 운세·개운법) */
+  /** 12가지 운세 전부 보기 (+ 월별 운세·개운법) */
   BUNDLE12: 29500,
 } as const;
+
+/** 묶음의 정가(깊게 보기 따로 산 값)·할인액·할인율 - 화면 표시용 */
+export function bundleDiscount(count: number, price: number): { list: number; off: number; percent: number } {
+  const list = PRICE.DEEP * count;
+  const off = Math.max(0, list - price);
+  return { list, off, percent: list > 0 ? Math.round((off / list) * 100) : 0 };
+}
 
 /** 가입 선물 */
 export const WELCOME_GIFT = 990;

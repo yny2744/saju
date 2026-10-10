@@ -3,6 +3,7 @@ import "./globals.css";
 import { AccessibilityInit } from "@/components/AccessibilityInit";
 import { Footer } from "@/components/Footer";
 import { SiteHeader } from "@/components/SiteHeader";
+import { FloatingScrollTop } from "@/components/ScrollTop";
 import { RefCapture } from "@/components/yeopjeon/RefCapture";
 
 export const metadata: Metadata = {
@@ -23,6 +24,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           {/* 전자상거래법상 사업자 고지는 결제 화면을 포함한 모든 화면에 상시 노출한다 */}
           <Footer />
         </div>
+        {/* 화면을 내리면 오른쪽 아래에 "위로" 버튼 (수정안 25) */}
+        <FloatingScrollTop />
       </body>
     </html>
   );

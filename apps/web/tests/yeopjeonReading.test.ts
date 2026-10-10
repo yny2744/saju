@@ -1,11 +1,14 @@
 import { calculateSaju } from "saju-engine";
-import { INVITE_CUMULATIVE, PRICE, displayLedgerLabel, formatNyang, inviteProgress, inviteRewardFor } from "@/lib/yeopjeon";
+import { INVITE_CUMULATIVE, PRICE, bundleDiscount, displayLedgerLabel, formatNyang, inviteProgress, inviteRewardFor } from "@/lib/yeopjeon";
+import { intentDestination, intentLabel, intentQuery, parseIntent } from "@/lib/intent";
 import { isAuthEnabled, isLoginRequired } from "@/lib/launchMode";
 import { TOPIC_KEYS, EXTRA_KEYS, isTopicKey } from "@/lib/topics";
 import { monthPillarsOfYear } from "@/lib/monthPillars";
 import {
   buildDeepPrompt,
   buildTastePrompt,
+  buildBasicPrompt,
+  generateBasic,
   generateDeep,
   generateTaste,
   fillName,
@@ -23,7 +26,7 @@ const saju = calculateSaju({ calendarType: "solar", date: "1967-04-03", time: "0
 
 describe("엽전 금액 (2026-10-08 유샘 확정)", () => {
   it("가격", () => {
-    expect(PRICE).toEqual({ TASTE: 990, DEEP: 4900, BUNDLE3: 9900, BUNDLE12: 29500 });
+    expect(PRICE).toEqual({ BASIC: 990, TASTE: 990, DEEP: 4900, BUNDLE3: 9900, BUNDLE12: 29500 });
     expect(formatNyang(29500)).toBe("29,500냥");
   });
 
@@ -77,6 +80,64 @@ describe("12가지 운", () => {
     expect(EXTRA_KEYS).toEqual(["monthly", "gaeun"]);
     expect(isTopicKey("money")).toBe(true);
     expect(isTopicKey("monthly")).toBe(false);
+  });
+});
+
+describe("운세 보기 990 · 할인 표시 · 들어온 길 (수정안 20~24)", () => {
+  it("운세 보기: 12가지 중 하나만, 990냥 / 깊게 보기가 이미 열렸으면 거절 / 전부 보기 전용은 못 고름", () => {
+    expect(planPurchase("basic", ["money"], [])).toEqual({ topics: ["money"], price: 990 });
+    expect(() => planPurchase("basic", ["money"], ["money"])).toThrow(PurchaseError);
+    expect(() => planPurchase("basic", ["money", "health"], [])).toThrow(PurchaseError);
+    expect(() => planPurchase("basic", ["monthly"], [])).toThrow(PurchaseError);
+    expect(() => planPurchase("basic", [], [])).toThrow(PurchaseError);
+  });
+
+  it("묶음 정가·할인: 3가지 14,700 → 9,900 (4,800 · 33%), 12가지 58,800 → 29,500 (29,300 · 50%)", () => {
+    expect(bundleDiscount(3, PRICE.BUNDLE3)).toEqual({ list: 14700, off: 4800, percent: 33 });
+    expect(bundleDiscount(12, PRICE.BUNDLE12)).toEqual({ list: 58800, off: 29300, percent: 50 });
+  });
+
+  it("들어온 길(intent): 허용된 값만 읽고, 사람이 정해지면 알맞은 화면으로", () => {
+    const t = parseIntent(new URLSearchParams("topic=money"));
+    expect(t).toEqual({ kind: "topic", topic: "money" });
+    expect(intentLabel(t!)).toBe("재물 운세");
+    expect(intentDestination("p1", t!)).toBe("/person/p1/money");
+    const b = parseIntent(new URLSearchParams("bundle=0"))!;
+    expect(intentLabel(b)).toBe("타고난 나 몰아보기");
+    expect(intentDestination("p1", b)).toBe("/person/p1?buy=bundle3&pick=nature,relationship,daeun");
+    const a = parseIntent(new URLSearchParams("all=1"))!;
+    expect(intentDestination("p1", a)).toBe("/person/p1?buy=bundle12");
+    expect(intentQuery(a)).toBe("all=1");
+    // 엉뚱한 값은 무시 (임의 주소로 못 보냄)
+    expect(parseIntent(new URLSearchParams("topic=monthly"))).toBeNull();
+    expect(parseIntent(new URLSearchParams("topic=//evil.com"))).toBeNull();
+    expect(parseIntent(new URLSearchParams("bundle=9"))).toBeNull();
+    expect(parseIntent(new URLSearchParams("bundle=-1"))).toBeNull();
+    expect(parseIntent(new URLSearchParams("all=2"))).toBeNull();
+    expect(parseIntent(new URLSearchParams(""))).toBeNull();
+  });
+
+  it("운세 보기 요청문: 고른 운세 하나만, 이름은 보내지 않음 / 풀이에는 이름이 채워진다", async () => {
+    const p = buildBasicPrompt(saju, "money", 2026);
+    expect(p).toContain('"money"');
+    expect(p).not.toContain('"love"');
+    expect(p).toContain(`${NAME_TOKEN}님`);
+    expect(p).toContain(saju.pillars.day.ganzhi);
+    const echo = {
+      providerName: "echo",
+      modelName: "echo",
+      async complete(_s: string, user: string) {
+        expect(user).not.toContain("유남영");
+        return JSON.stringify({ sections: [{ key: "money", body: "{이름}님은 " + "가".repeat(40), deeper: "{이름}님께 더" }] });
+      },
+    };
+    const b = await generateBasic(saju, "유남영", "money", 2026, echo);
+    expect(b).toMatchObject({ topic: "money", title: "재물", deeper: "유남영님께 더", model: "echo" });
+    expect(b.body.startsWith("유남영님은")).toBe(true);
+    // 개발용 생성기로도 만들어진다
+    const dev = await generateBasic(saju, "유남영", "health", 2026);
+    expect(dev.topic).toBe("health");
+    expect(dev.body.length).toBeGreaterThan(10);
   });
 });
 

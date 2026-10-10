@@ -6,13 +6,14 @@ import { InsufficientYeopjeonError } from "@/server/yeopjeon/ledger";
 import { PRICE } from "@/lib/yeopjeon";
 import { isFocus, type Focus } from "@/lib/focus";
 import { EXTRA_KEYS, TOPICS, TOPIC_KEYS, isAnyTopicKey, isTopicKey, type AnyTopicKey, type TopicKey } from "@/lib/topics";
-import type { DeepContent, ReadingContent } from "./generateReading";
+import type { BasicContent, DeepContent, ReadingContent } from "./generateReading";
 
 /**
  * 유료 풀이 저장소 (2026-10-06 맛보기, 2026-10-08 12가지 운 구조로 확장).
  *
  *  - persons: 풀이를 산 사람(나·가족). 사주 계산 결과를 보관 → 주제를 누를 때마다 다시 꺼내 쓴다.
- *  - readings: 맛보기(990냥). 같은 사람·같은 관심 분야는 다시 차감되지 않는다(source_key).
+ *  - readings: (예전) 맛보기. 2026-10-09부터 팔지 않고, 이미 산 것을 다시 보는 데만 쓴다.
+ *  - topic_basics: 운세 보기(990냥) - 고른 운세 하나. 처음 열 때 풀이를 쓰고 저장.
  *  - topic_unlocks: 깊게 보기(4,900)·몰아보기(9,900)·전부 보기(29,500)로 연 주제.
  *  - topic_readings: 주제별 깊은 풀이 (처음 누를 때 쓰고 저장).
  *
@@ -44,12 +45,15 @@ export interface PersonSummary {
   nickname: string;
   header: ReadingHeader;
   focus: Focus | null;
+  /** 깊게 보기가 열린 운세 (깊게 보기·몰아보기·전부 보기) */
   unlocked: AnyTopicKey[];
+  /** 운세 보기(990)로 본 운세 */
+  basics: TopicKey[];
   tasteReadingId: string | null;
   createdAt: string;
 }
 
-export type PurchaseMode = "deep" | "bundle3" | "bundle12";
+export type PurchaseMode = "basic" | "deep" | "bundle3" | "bundle12";
 
 export class PurchaseError extends Error {
   constructor(readonly code: "INVALID_TOPICS" | "ALREADY_OWNED" | "NOT_FOUND", message: string) {
@@ -145,8 +149,9 @@ export async function getPersonSummary(userId: string, personId: string): Promis
   const row = await getPersonRow(userId, personId);
   if (!row) return null;
   const pool = await db();
-  const [unlocks, taste] = await Promise.all([
+  const [unlocks, basics, taste] = await Promise.all([
     pool.query<{ topic: string }>(`SELECT topic FROM topic_unlocks WHERE person_id = $1`, [personId]),
+    pool.query<{ topic: string }>(`SELECT topic FROM topic_basics WHERE person_id = $1`, [personId]),
     pool.query<{ id: string }>(`SELECT id FROM readings WHERE person_id = $1 ORDER BY created_at DESC LIMIT 1`, [personId]),
   ]);
   return {
@@ -155,16 +160,20 @@ export async function getPersonSummary(userId: string, personId: string): Promis
     header: row.header,
     focus: isFocus(row.focus) ? row.focus : null,
     unlocked: unlocks.rows.map((u) => u.topic).filter(isAnyTopicKey),
+    basics: basics.rows.map((u) => u.topic).filter(isTopicKey),
     tasteReadingId: taste.rows[0]?.id ?? null,
     createdAt: row.created_at.toISOString(),
   };
 }
 
-export async function listPersons(userId: string): Promise<Array<{ id: string; nickname: string; birth: string; unlockedCount: number; hasTaste: boolean; createdAt: string }>> {
+export async function listPersons(
+  userId: string
+): Promise<Array<{ id: string; nickname: string; birth: string; unlockedCount: number; basicCount: number; hasTaste: boolean; createdAt: string }>> {
   const pool = await db();
-  const r = await pool.query<{ id: string; nickname: string; header: ReadingHeader; unlocked: string; tastes: string; created_at: Date }>(
+  const r = await pool.query<{ id: string; nickname: string; header: ReadingHeader; unlocked: string; basics: string; tastes: string; created_at: Date }>(
     `SELECT p.id, p.nickname, p.header, p.created_at,
             (SELECT COUNT(*) FROM topic_unlocks u WHERE u.person_id = p.id AND u.topic = ANY($2)) AS unlocked,
+            (SELECT COUNT(*) FROM topic_basics b WHERE b.person_id = p.id) AS basics,
             (SELECT COUNT(*) FROM readings r WHERE r.person_id = p.id) AS tastes
        FROM persons p WHERE p.user_id = $1 ORDER BY p.created_at DESC LIMIT 100`,
     [userId, TOPIC_KEYS as unknown as string[]]
@@ -174,6 +183,7 @@ export async function listPersons(userId: string): Promise<Array<{ id: string; n
     nickname: x.nickname,
     birth: x.header.birth,
     unlockedCount: Number(x.unlocked),
+    basicCount: Number(x.basics),
     hasTaste: Number(x.tastes) > 0,
     createdAt: x.created_at.toISOString(),
   }));
@@ -286,6 +296,7 @@ export async function getReading(userId: string, id: string): Promise<StoredRead
 
 /**
  * 구매하려는 주제를 검사하고 열 주제 목록·가격을 정한다 (순수 함수 - 시험 가능).
+ *  - basic: 운세 보기(990) - 12가지 중 하나, 아직 깊게 보기가 안 열린 것 (이미 본 운세인지는 저장소에서 따로 확인)
  *  - deep: 아직 안 연 주제 1개
  *  - bundle3: 아직 안 연 서로 다른 주제 3개
  *  - bundle12: 12가지 + 월별 운세·개운법 중 아직 안 연 것 전부 (이미 연 것이 있어도 가격은 같음 - 화면에서 안내)
@@ -295,21 +306,25 @@ export function planPurchase(mode: PurchaseMode, requested: unknown, owned: AnyT
   if (mode === "bundle12") {
     const all: AnyTopicKey[] = [...TOPIC_KEYS, ...EXTRA_KEYS];
     const topics = all.filter((t) => !ownedSet.has(t));
-    if (topics.length === 0) throw new PurchaseError("ALREADY_OWNED", "이미 모든 운이 열려 있어요.");
+    if (topics.length === 0) throw new PurchaseError("ALREADY_OWNED", "이미 모든 운세가 열려 있어요.");
     return { topics, price: PRICE.BUNDLE12 };
   }
   const list = Array.isArray(requested) ? requested : [];
-  const need = mode === "deep" ? 1 : 3;
+  const need = mode === "bundle3" ? 3 : 1;
   const uniq = [...new Set(list)];
   if (uniq.length !== need || !uniq.every(isTopicKey)) {
-    throw new PurchaseError("INVALID_TOPICS", mode === "deep" ? "볼 운을 하나 골라 주세요." : "서로 다른 운 3가지를 골라 주세요.");
+    throw new PurchaseError("INVALID_TOPICS", need === 1 ? "볼 운세를 하나 골라 주세요." : "서로 다른 운세 3가지를 골라 주세요.");
   }
   const topics = uniq as TopicKey[];
-  if (topics.some((t) => ownedSet.has(t))) throw new PurchaseError("ALREADY_OWNED", "이미 열린 운이 들어 있어요. 다른 운을 골라 주세요.");
+  if (mode === "basic") {
+    if (ownedSet.has(topics[0])) throw new PurchaseError("ALREADY_OWNED", "이미 깊게 보기가 열린 운세예요.");
+    return { topics, price: PRICE.BASIC };
+  }
+  if (topics.some((t) => ownedSet.has(t))) throw new PurchaseError("ALREADY_OWNED", "이미 열린 운세가 들어 있어요. 다른 운세를 골라 주세요.");
   return { topics, price: mode === "deep" ? PRICE.DEEP : PRICE.BUNDLE3 };
 }
 
-const MODE_LABEL: Record<PurchaseMode, string> = { deep: "깊게 보기", bundle3: "몰아보기", bundle12: "전부 보기" };
+const MODE_LABEL: Record<PurchaseMode, string> = { basic: "운세 보기", deep: "깊게 보기", bundle3: "몰아보기", bundle12: "전부 보기" };
 
 export async function purchaseTopics(args: { userId: string; personId: string; mode: PurchaseMode; topics: unknown }): Promise<AnyTopicKey[]> {
   if (!UUID_RE.test(args.personId)) throw new PurchaseError("NOT_FOUND", "풀이 대상을 찾을 수 없어요.");
@@ -322,9 +337,17 @@ export async function purchaseTopics(args: { userId: string; personId: string; m
     if (!person.rows[0]) throw new PurchaseError("NOT_FOUND", "풀이 대상을 찾을 수 없어요.");
     const owned = await client.query<{ topic: string }>(`SELECT topic FROM topic_unlocks WHERE person_id = $1`, [args.personId]);
     const plan = planPurchase(args.mode, args.topics, owned.rows.map((r) => r.topic).filter(isAnyTopicKey));
+    if (args.mode === "basic") {
+      const seen = await client.query(`SELECT 1 FROM topic_basics WHERE person_id = $1 AND topic = $2`, [args.personId, plan.topics[0]]);
+      if ((seen.rowCount ?? 0) > 0) throw new PurchaseError("ALREADY_OWNED", "이미 본 운세예요. 다시 열어도 엽전은 빠지지 않아요.");
+    }
     if (balance < plan.price) throw new InsufficientYeopjeonError(balance);
     for (const t of plan.topics) {
-      await client.query(`INSERT INTO topic_unlocks (person_id, topic, via) VALUES ($1, $2, $3) ON CONFLICT DO NOTHING`, [args.personId, t, args.mode]);
+      if (args.mode === "basic") {
+        await client.query(`INSERT INTO topic_basics (person_id, topic) VALUES ($1, $2)`, [args.personId, t]);
+      } else {
+        await client.query(`INSERT INTO topic_unlocks (person_id, topic, via) VALUES ($1, $2, $3) ON CONFLICT DO NOTHING`, [args.personId, t, args.mode]);
+      }
     }
     const names = args.mode === "bundle12" ? "" : ` · ${plan.topics.map((t) => TOPICS[t].title).join(", ")}`;
     const ref = `${args.mode}:${args.personId}:${[...plan.topics].sort().join(",")}`;
@@ -358,4 +381,26 @@ export async function saveTopicReading(personId: string, topic: AnyTopicKey, con
     [personId, topic, JSON.stringify(content), content.model]
   );
   return (await getTopicReading(personId, topic)) ?? content;
+}
+
+// ───────────────────────── 운세 보기 (990) ─────────────────────────
+
+/** 운세 보기를 샀는지 + 저장된 풀이 (아직 안 썼으면 content null) */
+export async function getTopicBasic(personId: string, topic: TopicKey): Promise<{ owned: boolean; content: BasicContent | null }> {
+  const pool = await db();
+  const r = await pool.query<{ content: BasicContent | null }>(`SELECT content FROM topic_basics WHERE person_id = $1 AND topic = $2`, [personId, topic]);
+  if (!r.rows[0]) return { owned: false, content: null };
+  return { owned: true, content: r.rows[0].content };
+}
+
+/** 풀이 채우기 (먼저 채워진 것이 있으면 그것을 돌려준다) */
+export async function saveTopicBasic(personId: string, topic: TopicKey, content: BasicContent): Promise<BasicContent> {
+  const pool = await db();
+  await pool.query(`UPDATE topic_basics SET content = $3, model = $4 WHERE person_id = $1 AND topic = $2 AND content IS NULL`, [
+    personId,
+    topic,
+    JSON.stringify(content),
+    content.model,
+  ]);
+  return (await getTopicBasic(personId, topic)).content ?? content;
 }

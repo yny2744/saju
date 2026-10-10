@@ -7,6 +7,7 @@ export interface PersonListItem {
   nickname: string;
   birth: string;
   unlockedCount: number;
+  basicCount: number;
   hasTaste: boolean;
   createdAt: string;
 }
@@ -40,6 +41,16 @@ export function useYeopjeon(enabled = true): { data: YeopjeonSummary | null; loa
   return { data, loading, reload: () => setTick((t) => t + 1) };
 }
 
+/** 엽전이 바뀌었음을 알린다 (머리줄 잔액이 바로 새로 고쳐지게) */
+export const YEOPJEON_CHANGED = "yeopjeon:changed";
+export function notifyYeopjeonChanged(): void {
+  try {
+    window.dispatchEvent(new Event(YEOPJEON_CHANGED));
+  } catch {
+    /* 무시 */
+  }
+}
+
 export function inviteUrl(refCode: string): string {
   return `${window.location.origin}/?ref=${refCode}`;
 }
@@ -47,7 +58,7 @@ export function inviteUrl(refCode: string): string {
 /** 휴대폰이면 공유창(카카오톡 등), 아니면 링크 복사 */
 export async function shareInvite(refCode: string): Promise<"shared" | "copied" | "failed"> {
   const url = inviteUrl(refCode);
-  const text = "류결사주에서 내 사주 여덟 글자를 무료로 봤어요. 가입하면 엽전 선물로 맛보기도 무료예요!";
+  const text = "류결사주에서 내 사주 여덟 글자를 무료로 봤어요. 가입하면 엽전 선물로 12가지 운세 중 하나를 무료로 볼 수 있어요!";
   try {
     if (navigator.share) {
       await navigator.share({ title: "류결사주", text, url });

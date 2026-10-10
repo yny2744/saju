@@ -9,6 +9,7 @@ import { HanjaPicker } from "@/components/HanjaPicker";
 import { SajuLoading, randomLoadingMs } from "@/components/SajuLoading";
 import { profileSummary, type SavedProfile } from "@/lib/profileView";
 import { FOCUS_OPTIONS, type Focus } from "@/lib/focus";
+import { CONTINUE_PATH, intentLabel, parseIntent, savePendingIntent, type Intent } from "@/lib/intent";
 
 type CalendarType = "solar" | "lunar";
 type Gender = "male" | "female";
@@ -63,6 +64,8 @@ const pad = (n: number | string) => String(n).padStart(2, "0");
  *  - 태어난 시간: 몰라요·알아요 → 오전·오후 → 시 버튼 → 분 버튼(10분 단위, 선택 안 하면 정각)
  *  - 가장 궁금한 것(선택): 무료 결과에서 그 분야를 먼저 보여주고, 결과에 함께 저장해 990원 풀이에서 쓴다
  *  - 제출하면 10~15초 랜덤 로딩 연출(여덟 글자가 하나씩 세워짐) 뒤 결과로 이동
+ *  - 대문에서 운세·묶음·전부 보기를 골라 들어온 경우(?topic= / ?bundle= / ?all=1, 2026-10-09 수정안 20·24):
+ *    "궁금한 것" 질문을 빼고, 무료 결과를 거치지 않고 /continue(로그인 → 그 운세 구매 창)로 간다.
  *
  * 지시서 10조: 출생정보를 URL에 넣지 않는다 - fetch body로만 보내고, 서버가 발급한 id로만 이동한다.
  */
@@ -80,6 +83,11 @@ function StartForm({ member }: { member: MemberInfo | null }) {
   const [saveToAccount, setSaveToAccount] = useState(true);
   const [pickerOpen, setPickerOpen] = useState(false);
   const [loading, setLoading] = useState<{ durationMs: number; saju: SajuJson | null; target: string | null } | null>(null);
+  const [intent, setIntent] = useState<Intent | null>(null);
+
+  useEffect(() => {
+    setIntent(parseIntent(new URLSearchParams(window.location.search)));
+  }, []);
 
   useEffect(() => {
     if (!member) return;
@@ -185,7 +193,7 @@ function StartForm({ member }: { member: MemberInfo | null }) {
           birthCity: form.birthCity || undefined,
           applySolarTimeCorrection: form.applySolarTimeCorrection,
           ziHourMethod: form.ziHourMethod,
-          focus: form.focus ?? undefined,
+          focus: intent ? undefined : (form.focus ?? undefined),
         }),
       });
       const data = await res.json();
@@ -208,8 +216,13 @@ function StartForm({ member }: { member: MemberInfo | null }) {
       // 메인 화면 "오늘의 운세"에서 들어온 경우(?next=fortune)는 만세력을 거치지 않고 바로 운세로 보낸다.
       // 허용값은 fortune 하나뿐이라 임의 주소로 이동시킬 수 없다.
       const next = new URLSearchParams(window.location.search).get("next");
-      const target =
+      let target =
         next === "fortune" ? `/fortune?resultId=${encodeURIComponent(data.id)}` : `/result?id=${encodeURIComponent(data.id)}`;
+      // 운세·묶음을 골라 들어온 경우: 무료 결과를 거치지 않고 로그인 → 구매 창으로
+      if (intent) {
+        savePendingIntent(data.id, intent);
+        target = CONTINUE_PATH;
+      }
 
       // 로딩 화면에 보여줄 여덟 글자
       const saju = await fetch(`/api/saju/result/${encodeURIComponent(data.id)}`)
@@ -252,6 +265,15 @@ function StartForm({ member }: { member: MemberInfo | null }) {
         <p className="mb-2.5 text-sm font-semibold" style={{ fontFamily: "var(--font-serif)", color: "var(--color-accent)" }}>
           류결사주
         </p>
+        {intent ? (
+          <>
+            <h1 className="text-[26px] font-bold leading-snug">{intentLabel(intent)}</h1>
+            <p className="mt-2 text-sm leading-relaxed" style={{ color: "var(--color-ink-soft)" }}>
+              생년월일을 알려 주시면 바로 풀어 드려요. 정확할수록 풀이가 정확해요.
+            </p>
+          </>
+        ) : (
+          <>
         <div className="mb-3 flex flex-wrap gap-1.5">
           {(isLoginRequired() ? ["무료", "약 1분 소요"] : ["무료", "회원가입 불필요", "약 1분 소요"]).map((badge) => (
             <span
@@ -271,6 +293,8 @@ function StartForm({ member }: { member: MemberInfo | null }) {
         <p className="mt-2 text-sm leading-relaxed" style={{ color: "var(--color-ink-soft)" }}>
           정확한 생년월일시를 입력할수록 풀이가 정확해요.
         </p>
+          </>
+        )}
       </header>
 
       <form onSubmit={handleSubmit} className="space-y-8" noValidate>
@@ -485,7 +509,8 @@ function StartForm({ member }: { member: MemberInfo | null }) {
           </div>
         </fieldset>
 
-        {/* ③ 무엇이 궁금하신가요? (선택) */}
+        {/* ③ 무엇이 궁금하신가요? (선택) - 운세를 골라 들어왔으면 묻지 않는다 */}
+        {!intent && (
         <fieldset className="space-y-2">
           <legend className="section-label mb-1">③ 무엇이 가장 궁금하신가요? (선택)</legend>
           {FOCUS_OPTIONS.map((o) => (
@@ -506,6 +531,7 @@ function StartForm({ member }: { member: MemberInfo | null }) {
             고르시면 결과에서 그 부분을 먼저 보여 드려요.
           </p>
         </fieldset>
+        )}
 
         <details className="rounded-xl px-4 py-3" style={{ backgroundColor: "var(--color-paper-soft)" }}>
           <summary className="cursor-pointer text-sm font-medium" style={{ color: "var(--color-ink-soft)" }}>
@@ -568,7 +594,7 @@ function StartForm({ member }: { member: MemberInfo | null }) {
         )}
 
         <button type="submit" disabled={submitting} className="btn-primary">
-          무료로 내 만세력 보기
+          {intent ? `${intentLabel(intent)} 보러 가기` : "무료로 내 만세력 보기"}
         </button>
       </form>
 

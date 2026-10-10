@@ -20,7 +20,7 @@ export function InviteCard({ refCode, invited }: { refCode: string; invited: num
         친구 초대하고 {CURRENCY_NAME} 받기
       </p>
       <ul className="mt-2 space-y-1 text-[14px]" style={{ color: "var(--color-ink-soft)" }}>
-        <li>· 친구 1명 {formatNyang(INVITE_CUMULATIVE[0])} (맛보기 1회)</li>
+        <li>· 친구 1명 {formatNyang(INVITE_CUMULATIVE[0])} (운세 보기 1회)</li>
         <li>· 3명이 모이면 모두 {formatNyang(INVITE_CUMULATIVE[2])} (깊게 보기 1회)</li>
         <li>· 10명이 모이면 모두 {formatNyang(INVITE_CUMULATIVE[9])} (전부 보기 1회)</li>
         <li>· 10명이 넘으면 처음부터 다시 쌓여요 · 친구도 가입 선물을 받아요</li>

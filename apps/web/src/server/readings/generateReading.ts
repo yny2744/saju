@@ -8,7 +8,8 @@ import { neededEnergy, ENERGY_GUIDE } from "@/lib/neededEnergy";
 /**
  * AI 풀이 생성 (2026-10-08 12가지 운 구조).
  *
- *  - 맛보기(990냥): 12가지 운을 짧게 한 번씩. 4묶음 × 3주제로 나눠 AI를 동시에 부른다(Vercel 60초 제한).
+ *  - 운세 보기(990냥, 2026-10-09~): 고른 운세 하나를 한 번 호출로 풀이. 끝에 "깊게 보기에서 더 볼 거리" 한 줄.
+ *  - (예전) 맛보기: 12가지 운을 짧게 한 번씩. 더 이상 팔지 않지만 코드는 시험용으로 남겨 둔다. 4묶음 × 3주제로 나눠 AI를 동시에 부른다(Vercel 60초 제한).
  *    관심 분야 주제는 가장 길게. 주제마다 "깊게 보기에서 더 볼 거리"를 한 줄 남긴다.
  *  - 깊게 보기(주제 하나): 손님이 주제를 누를 때 그 주제만 쓴다(한 번 호출, 소제목 3~4개).
  *
@@ -26,6 +27,15 @@ export interface ReadingSection {
 
 export interface ReadingContent {
   sections: ReadingSection[];
+  model: string;
+}
+
+export interface BasicContent {
+  topic: TopicKey;
+  title: string;
+  body: string;
+  /** 깊게 보기에서 더 다룰 내용 한 줄 */
+  deeper: string;
   model: string;
 }
 
@@ -151,6 +161,42 @@ export async function generateTaste(
   return { sections: orderSections(sections, focus), model: provider.modelName };
 }
 
+// ───────────────────────── 운세 보기 (990) ─────────────────────────
+
+export function buildBasicPrompt(saju: SajuJson, topic: TopicKey, year: number): string {
+  const info = TOPICS[topic];
+  const extra = topic === "year" ? ` (${year}년 세운 기준)` : "";
+  return `${dataBlock(saju)}
+
+# 요청: 운세 보기 - ${info.title}${extra}
+
+아래 운세 하나를 풀이하세요. ${NAME_RULE}
+- "${topic}": ${info.title}${extra} — 600~800자, 단락 2~3개
+
+- body: 근거가 되는 사주 요소를 짚고, 타고난 흐름·지금의 흐름·생활 속 조언을 구체적으로. 뻔한 말은 피하세요.
+- deeper: 깊게 보기(더 자세한 풀이)에서 이어서 풀어 드릴 내용 한 문장 (예: "재물이 크게 움직이는 나이와 그때의 처신은 깊게 보기에서 자세히 풀어 드립니다.")
+
+JSON 형식:
+{"sections":[{"key":"${topic}","body":"...","deeper":"..."}]}`;
+}
+
+export async function generateBasic(
+  saju: SajuJson,
+  nickname: string,
+  topic: TopicKey,
+  year: number,
+  provider: CompletionProvider = getReadingProvider()
+): Promise<BasicContent> {
+  const [section] = await completeWithRetry(provider, buildBasicPrompt(saju, topic, year), (raw) => parseTasteResponse(raw, [topic]));
+  return {
+    topic,
+    title: TOPICS[topic].title,
+    body: fillName(section.body, nickname),
+    deeper: fillName(section.deeper, nickname),
+    model: provider.modelName,
+  };
+}
+
 // ───────────────────────── 깊게 보기 ─────────────────────────
 
 /** 주제별로 덧붙일 확정 데이터 (월건·필요한 기운 등 - 계산값이라 AI에게 맡기지 않는다) */
@@ -248,7 +294,7 @@ function devReadingProvider(): CompletionProvider {
       return JSON.stringify({
         sections: keys.map((key) => ({
           key,
-          body: `${NOTE} ${TOPICS[key as TopicKey]?.title ?? key} 맛보기 풀이 자리입니다.`,
+          body: `${NOTE} ${TOPICS[key as TopicKey]?.title ?? key} 풀이 자리입니다. 실제 배포에서는 AI가 씁니다.`,
           deeper: "더 깊은 내용은 깊게 보기에서 풀어 드립니다.",
         })),
       });

@@ -72,7 +72,7 @@ function LoginPageBody() {
       <h1 className={`${isAuthEnabled() ? "mb-2" : "mb-7"} text-[24px] font-bold`}>{mode === "login" ? "로그인" : "회원가입"}</h1>
       {isAuthEnabled() && (
         <p className="mb-7 text-sm leading-relaxed" style={{ color: "var(--color-ink-soft)" }}>
-          카카오로 가입하면 <b>{CURRENCY_NAME} {formatNyang(WELCOME_GIFT)}</b>을 선물로 드려요. 첫 맛보기는 무료로 보실 수 있어요.
+          카카오로 가입하면 <b>{CURRENCY_NAME} {formatNyang(WELCOME_GIFT)}</b>을 선물로 드려요. 12가지 운세 중 하나를 무료로 보실 수 있어요.
         </p>
       )}
 

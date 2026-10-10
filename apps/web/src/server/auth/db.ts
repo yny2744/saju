@@ -153,6 +153,17 @@ async function ensureSchema(): Promise<void> {
       PRIMARY KEY (person_id, topic)
     );
   `);
+  // 운세 보기(990냥, 2026-10-09 수정안 20) - 고른 운세 하나. 사는 순간 줄이 생기고(content 없음), 처음 열 때 풀이를 채운다.
+  await db.query(`
+    CREATE TABLE IF NOT EXISTS topic_basics (
+      person_id UUID NOT NULL REFERENCES persons(id) ON DELETE CASCADE,
+      topic TEXT NOT NULL,
+      content JSONB,
+      model TEXT,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+      PRIMARY KEY (person_id, topic)
+    );
+  `);
   // 주제별 깊은 풀이 - 손님이 주제를 처음 누를 때 쓰고 저장(다시 볼 때 AI 재호출 없음)
   await db.query(`
     CREATE TABLE IF NOT EXISTS topic_readings (
