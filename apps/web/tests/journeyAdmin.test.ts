@@ -80,3 +80,20 @@ describe("수정안 31 - 모자란 만큼만 결제", () => {
     expect(ORDER_ID_RE.test("ryg_lx2k3_0123456789abcdef")).toBe(true);
   });
 });
+
+describe("정식 주소 고정 (카카오 KOE006)", () => {
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  const { shouldRedirectHost, canonicalHost } = require("@/lib/canonicalHost");
+  it("운영 배포에서 보조 vercel 주소만 정식 주소로", () => {
+    const prod = { vercelEnv: "production" };
+    expect(shouldRedirectHost("saju-web-git-main-yny2744.vercel.app", prod)).toBe(true);
+    expect(shouldRedirectHost("saju-web-abc123-yny2744.vercel.app", prod)).toBe(true);
+    expect(shouldRedirectHost("saju-web-khaki.vercel.app", prod)).toBe(false);
+    expect(shouldRedirectHost("localhost:3000", prod)).toBe(false);
+    expect(shouldRedirectHost("saju-web-git-main-yny2744.vercel.app", { vercelEnv: "preview" })).toBe(false);
+  });
+  it("도메인을 사면 SITE_URL로", () => {
+    expect(canonicalHost("https://ryugyeol.com")).toBe("ryugyeol.com");
+    expect(shouldRedirectHost("saju-web-khaki.vercel.app", { vercelEnv: "production", siteUrl: "https://ryugyeol.com" })).toBe(true);
+  });
+});

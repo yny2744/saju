@@ -7,15 +7,15 @@ import { bgm } from "./bgm";
 export function BgmStarter() {
   useEffect(() => {
     const c = bgm();
+    // 브라우저가 "손님이 직접 누름"으로 인정하는 이벤트만 (폰 터치는 손가락을 뗄 때 = touchend/click)
+    const EVENTS = ["click", "touchend", "keydown"] as const;
     const onFirst = () => {
       c.start();
-      if (c.playing || c.off) {
-        window.removeEventListener("pointerdown", onFirst);
-        window.removeEventListener("keydown", onFirst);
-      }
+      setTimeout(() => {
+        if (c.playing || c.off) EVENTS.forEach((ev) => window.removeEventListener(ev, onFirst, true));
+      }, 1000);
     };
-    window.addEventListener("pointerdown", onFirst);
-    window.addEventListener("keydown", onFirst);
+    EVENTS.forEach((ev) => window.addEventListener(ev, onFirst, true));
     const onVis = () => c.pauseForHidden(document.hidden);
     document.addEventListener("visibilitychange", onVis);
     const onLeave = () => c.savePosition();
@@ -25,8 +25,7 @@ export function BgmStarter() {
     return () => {
       clearTimeout(t);
       window.removeEventListener("pagehide", onLeave);
-      window.removeEventListener("pointerdown", onFirst);
-      window.removeEventListener("keydown", onFirst);
+      EVENTS.forEach((ev) => window.removeEventListener(ev, onFirst, true));
       document.removeEventListener("visibilitychange", onVis);
     };
   }, []);
@@ -53,7 +52,6 @@ export function BgmToggle() {
         if (!c.off && !c.playing) c.start();
         else c.toggle();
       }}
-      onPointerDown={(e) => e.stopPropagation()}
       aria-label={on ? "배경음악 끄기" : "배경음악 켜기"}
       aria-pressed={on}
       title={on ? "배경음악 끄기" : "배경음악 켜기"}
