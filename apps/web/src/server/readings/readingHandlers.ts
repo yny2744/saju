@@ -5,6 +5,8 @@ import { ensureRefCode, getBalance, grant, inviteStats, listLedger, Insufficient
 import { CURRENCY_NAME, PRICE, WELCOME_GIFT } from "@/lib/yeopjeon";
 import { isAnyTopicKey, isTopicKey } from "@/lib/topics";
 import { notifyError } from "@/server/alert";
+import { recommendFromSaju, type Journey } from "@/lib/journey";
+import type { SajuJson } from "saju-engine";
 import { generateBasic, generateDeep, generateTaste } from "./generateReading";
 import {
   PurchaseError,
@@ -128,13 +130,28 @@ export async function handleCreatePerson(token: string | undefined, rawBody: unk
   return { status: 200, body: { id } };
 }
 
+/** 수정안 27: 이 사람이 본 것 + 사주로 고른 다음 운세 */
+async function journeyOf(userId: string, personId: string, saju: SajuJson, current?: string): Promise<Journey> {
+  const s = await getPersonSummary(userId, personId);
+  const unlocked = s?.unlocked ?? [];
+  const exclude = current && isAnyTopicKey(current) ? [...unlocked, current] : unlocked;
+  let recommend: Journey["recommend"] = [];
+  try {
+    recommend = recommendFromSaju(saju, { focus: s?.focus ?? null, exclude });
+  } catch (e) {
+    notifyError("추천 운세 계산 실패", e);
+  }
+  return { unlocked, basics: s?.basics ?? [], recommend };
+}
+
 export async function handleGetPerson(token: string | undefined, personId: string): Promise<Result<unknown>> {
   const m = await member(token);
   if ("error" in m) return m.error!;
   const person = await getPersonSummary(m.user.id, personId);
   if (!person) return err(404, "NOT_FOUND", "풀이 대상을 찾을 수 없어요.");
-  const balance = await getBalance(m.user.id);
-  return { status: 200, body: { person, balance } };
+  const [balance, row] = await Promise.all([getBalance(m.user.id), getPersonRow(m.user.id, personId)]);
+  const journey = row ? await journeyOf(m.user.id, personId, row.saju) : undefined;
+  return { status: 200, body: { person, balance, journey } };
 }
 
 /** 운세 보기(990) · 깊게 보기(4,900) · 몰아보기(9,900) · 전부 보기(29,500) - 열람권만 사고, 풀이는 열 때 쓴다 */
@@ -168,13 +185,13 @@ export async function handleTopic(token: string | undefined, personId: string, t
 
   if (await isUnlocked(personId, topic)) {
     const stored = await getTopicReading(personId, topic);
-    if (stored) return { status: 200, body: { status: "ready", level: "deep", content: stored, header: person.header } };
+    if (stored) return { status: 200, body: { status: "ready", level: "deep", content: stored, header: person.header, journey: await journeyOf(m.user.id, personId, person.saju, topic) } };
     if (!generate) return { status: 200, body: { status: "pending", level: "deep", header: person.header } };
     try {
       const content = await generateDeep(person.saju, person.nickname, topic, year);
       if (topic === "year" || topic === "monthly") content.title = `${content.title} (${year}년)`;
       const saved = await saveTopicReading(personId, topic, content);
-      return { status: 200, body: { status: "ready", level: "deep", content: saved, header: person.header } };
+      return { status: 200, body: { status: "ready", level: "deep", content: saved, header: person.header, journey: await journeyOf(m.user.id, personId, person.saju, topic) } };
     } catch (e) {
       notifyError(`깊은 풀이 생성 실패 (${topic})`, e);
       return err(502, "READING_FAILED", "풀이를 쓰는 중 문제가 생겼어요. 이미 연 운세라 다시 눌러도 엽전은 빠지지 않아요.");

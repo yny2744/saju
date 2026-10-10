@@ -2,16 +2,18 @@ import { CasualLanding } from "@/components/CasualLanding";
 import { OhaengEmblem } from "@/components/landing/OhaengEmblem";
 import { ProductIcon, type Kind } from "@/components/landing/ProductIcon";
 import { BUSINESS_INFO } from "@/lib/businessInfo";
-import { BUNDLE_SUGGESTIONS, EXTRA_KEYS, TOPICS, TOPIC_KEYS } from "@/lib/topics";
-import { CURRENCY_NAME, INVITE_CUMULATIVE, PRICE, WELCOME_GIFT, bundleDiscount, formatNyang } from "@/lib/yeopjeon";
+import { TOPICS, TOPIC_KEYS } from "@/lib/topics";
+import { CURRENCY_NAME, INVITE_CUMULATIVE, PRICE, WELCOME_GIFT, formatNyang } from "@/lib/yeopjeon";
 import { ScrollTopButton } from "@/components/ScrollTop";
 
 /**
  * 류결사주 대문 (2026-10-08 수정안 13번 재구성, 유샘 확정 순서).
  *
- *   (머리줄은 모든 화면 공통 SiteHeader) → 문양 + 한 줄 소개 → 왜 류결사주인가(一~五)
- *   → 무료로 시작하기 + 가입 선물 엽전 → 엽전으로 보는 12가지 운세 (하나 골라 990 → 깊게 보기 4,900)
- *   → 3가지 운세 몰아보기 9,900 (추천 4묶음) → 12가지 운세 전부 보기 29,500 → 친구 초대 → 맨 위로
+ *   2026-10-10 수정안 28·29 (현재 순서):
+ *   (머리줄은 모든 화면 공통 SiteHeader) → 문양(고리에 "류결의 명견만리") + 대표 슬로건
+ *   → 무료로 시작하기 + 가입 선물 엽전 → 엽전으로 보는 12가지 운세 (운세 보기 990만 표시)
+ *   → 왜 류결사주인가(3줄 + 一~五) → 친구 초대 → 맨 위로
+ *   대문에는 큰 금액(깊게 보기 4,900·몰아보기·전부 보기)을 두지 않는다 - 깊게 본 손님에게 운세 화면에서 보여 준다.
  *   2026-10-09 수정안 20~25: 운세 하나 990, 가입 배너 가운데, 묶음 정가·할인 표시, 누르면 구매로(/go), 맨 위로.
  *   2026-10-09: 섹션 번호(①~⑤) 삭제(수정안 17), 감청 금장 배색(18), 추천 4묶음(16).
  *
@@ -66,28 +68,7 @@ const CARD = {
   boxShadow: "inset 0 0 0 3px var(--color-card), inset 0 0 0 4px var(--color-gold-soft)",
 } as const;
 
-/** 묶음 정가 → 할인가 + 할인 배지 (수정안 22·23) */
-function PriceTag({ count, price }: { count: number; price: number }) {
-  const d = bundleDiscount(count, price);
-  return (
-    <div className="mt-2">
-      <p className="text-[15px]">
-        <s style={{ color: "var(--color-ink-faint)" }}>{formatNyang(d.list)}</s>
-        <span className="mx-1.5" style={{ color: GOLD }}>
-          →
-        </span>
-        <b className="text-[22px]" style={{ fontFamily: "var(--font-serif)", color: "var(--color-accent)" }}>
-          {formatNyang(price)}
-        </b>
-      </p>
-      <span className="mt-1.5 inline-block rounded-full px-3 py-1 text-[13px] font-bold" style={{ border: "1px solid var(--color-gold-line)", backgroundColor: "var(--color-gold-soft)", color: "var(--color-ink)" }}>
-        {formatNyang(d.off)} 할인 · {d.percent}%
-      </span>
-    </div>
-  );
-}
-
-function SectionTitle({ title, sub, price }: { title: string; sub?: string; price?: React.ReactNode }) {
+function SectionTitle({ title, sub }: { title: string; sub?: string }) {
   return (
     <div className="mb-5 text-center">
       <div className="gold-ornament" aria-hidden>
@@ -96,7 +77,6 @@ function SectionTitle({ title, sub, price }: { title: string; sub?: string; pric
       <h2 className="mt-2 text-[23px] font-bold leading-snug" style={{ fontFamily: "var(--font-serif)" }}>
         {title}
       </h2>
-      {price}
       {sub && (
         <p className="mt-2 text-[14px] leading-relaxed" style={{ color: "var(--color-ink-soft)" }}>
           {sub}
@@ -114,68 +94,25 @@ export default function LandingPage() {
   return (
     <main className="min-h-screen pb-10">
       <div className="mx-auto max-w-xl px-5">
-        {/* 문양 + 한 줄 소개 */}
-        <section className="pb-10 pt-10 text-center">
-          <div className="mx-auto h-[200px] w-[200px]">
-            <OhaengEmblem />
+        {/* 문양(로고 자리) + 대표 슬로건 (수정안 28) */}
+        <section className="pb-8 pt-7 text-center">
+          <div className="mx-auto h-[200px] w-[200px] sm:h-[230px] sm:w-[230px]">
+            <OhaengEmblem caption="류결의 명견만리" subCaption="四柱八字" />
           </div>
-          <p className="mt-8 text-[13px] tracking-[0.2em]" style={{ color: GOLD }}>
-            류결의 명견만리
-          </p>
-          <h1 className="mt-2 text-[28px] font-bold leading-snug" style={{ fontFamily: "var(--font-serif)" }}>
-            타고난 여덟 글자,
+          <h1 className="mt-6 text-[25px] font-bold leading-[1.45] sm:text-[28px]" style={{ fontFamily: "var(--font-serif)", wordBreak: "keep-all" }}>
+            숨막혔던 나의 운명,
             <br />
-            제대로 읽어 드립니다
+            <span className="foil-text">숨을 쉬다</span>
           </h1>
-          <p className="mt-4 text-[15px] leading-relaxed" style={{ color: "var(--color-ink-soft)" }}>
-            절기로 세우고 한자 이름까지 살피는
-            <br />
-            정통 명리 사주, 류결사주입니다.
+          <p className="mt-3 flex items-center justify-center gap-2 text-[15px] font-bold tracking-[0.3em]" style={{ color: GOLD, fontFamily: "var(--font-serif)" }}>
+            <span aria-hidden className="h-px w-8" style={{ backgroundColor: "var(--color-gold-line)" }} />
+            류결사주
+            <span aria-hidden className="h-px w-8" style={{ backgroundColor: "var(--color-gold-line)" }} />
           </p>
-          <a
-            href="/start"
-            className="btn-band mx-auto mt-8 block max-w-xs rounded-2xl py-4 text-[18px] font-bold"
-            style={{ fontFamily: "var(--font-serif)" }}
-          >
-            무료 만세력 보기
-          </a>
         </section>
 
-        {/* 왜 류결사주인가 */}
+        {/* 무료로 시작하기 - 첫 화면에 바로 보이게 */}
         <section className="pb-12">
-          <div className="rounded-2xl px-5 py-8" style={{ ...CARD, boxShadow: `${CARD.boxShadow}, 0 4px 18px rgba(22,41,74,0.07)` }}>
-            <h2 className="text-center text-[24px] font-bold" style={{ fontFamily: "var(--font-serif)", color: "var(--color-accent)" }}>
-              왜 류결사주인가
-            </h2>
-            <p className="mt-3 text-center text-[14px] leading-relaxed" style={{ color: "var(--color-ink-soft)" }}>
-              사주는 태어난 순간의 하늘과 땅의 기록입니다.
-              <br />
-              점(占)이 아니라 풀이입니다.
-            </p>
-            <div className="mt-8 space-y-6">
-              {WHY.map((w) => (
-                <div key={w.num} className="flex gap-3">
-                  <span className="foil-text w-6 shrink-0 text-[19px] font-bold" style={{ fontFamily: "var(--font-serif)" }}>
-                    {w.num}
-                  </span>
-                  <div>
-                    <h3 className="text-[16px] font-bold" style={{ fontFamily: "var(--font-serif)", color: "var(--color-accent)" }}>
-                      {w.title}
-                    </h3>
-                    <p className="mt-1.5 text-[14px] leading-relaxed" style={{ color: "var(--color-ink-soft)" }}>
-                      {w.body}
-                    </p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        <div className="hairline" />
-
-        {/* ① 무료로 시작하기 */}
-        <section className="py-12">
           <SectionTitle title="무료로 시작하기" sub="로그인 없이 바로 볼 수 있어요" />
           <div className="space-y-3">
             {FREE.map((p) => (
@@ -187,7 +124,7 @@ export default function LandingPage() {
                   <span className="block text-[17px] font-bold" style={{ fontFamily: "var(--font-serif)" }}>
                     {p.name}
                   </span>
-                  <span className="mt-0.5 block text-[13px]" style={{ color: "var(--color-ink-soft)" }}>
+                  <span className="mt-0.5 block text-[13px]" style={{ color: "var(--color-ink-soft)", wordBreak: "keep-all" }}>
                     {p.desc}
                   </span>
                 </span>
@@ -198,7 +135,7 @@ export default function LandingPage() {
             ))}
           </div>
 
-          {/* 가입 선물 (2026-10-09 수정안 21: 가운데 정렬) */}
+          {/* 가입 선물 */}
           <a href="/login" className="mt-5 block rounded-2xl px-5 py-5 text-center" style={{ backgroundColor: "#fee500", color: "#191600" }}>
             <span className="mx-auto flex h-11 w-11 items-center justify-center rounded-full text-[16px] font-bold" style={{ backgroundColor: "#fff6b3", fontFamily: "var(--font-serif)" }}>
               錢
@@ -212,16 +149,12 @@ export default function LandingPage() {
 
         <div className="hairline" />
 
-        {/* 엽전으로 보는 12가지 운세 (수정안 20: 하나 골라 990냥 → 깊게 보기 4,900냥) */}
+        {/* 엽전으로 보는 12가지 운세 (수정안 29: 깊게 보기 4,900 표시 없음) */}
         <section id="fortunes" className="scroll-mt-4 py-12">
-          <SectionTitle title={`${CURRENCY_NAME}으로 보는 12가지 운세`} sub="궁금한 운세를 하나 골라 보세요. 더 알고 싶으면 깊게 풀어 드려요" />
-          <div className="mb-5 flex flex-wrap items-center justify-center gap-1.5 whitespace-nowrap text-[12.5px]">
-            <span className="rounded-full px-3 py-1.5 font-semibold" style={{ backgroundColor: "var(--color-accent-soft)", color: "var(--color-accent)" }}>
-              운세 보기 {formatNyang(PRICE.BASIC)}
-            </span>
-            <span style={{ color: GOLD }}>→</span>
-            <span className="rounded-full px-3 py-1.5 font-semibold" style={{ backgroundColor: "var(--color-accent-soft)", color: "var(--color-accent)" }}>
-              깊게 보기 {formatNyang(PRICE.DEEP)}
+          <SectionTitle title={`${CURRENCY_NAME}으로 보는 12가지 운세`} sub="궁금한 운세를 하나 골라 보세요" />
+          <div className="mb-5 flex justify-center">
+            <span className="rounded-full px-3 py-1.5 text-[12.5px] font-semibold" style={{ backgroundColor: "var(--color-accent-soft)", color: "var(--color-accent)" }}>
+              운세 하나 {formatNyang(PRICE.BASIC)}
             </span>
           </div>
           <ul className="grid grid-cols-3 gap-2">
@@ -243,51 +176,37 @@ export default function LandingPage() {
 
         <div className="hairline" />
 
-        {/* 3가지 운세 몰아보기 (수정안 22: 정가·할인 / 24: 누르면 구매로) */}
+        {/* 왜 류결사주인가 (수정안 28: 3줄 글) */}
         <section className="py-12">
-          <SectionTitle title="3가지 운세 몰아보기" sub="가장 궁금한 세 가지를 깊게 보세요" price={<PriceTag count={3} price={PRICE.BUNDLE3} />} />
-          <div className="space-y-2.5">
-            {BUNDLE_SUGGESTIONS.map((b, i) => (
-              <a key={b.title} href={`/go?bundle=${i}`} className="flex items-center justify-between gap-3 rounded-2xl px-4 py-4 transition-transform active:scale-[0.98]" style={CARD}>
-                <span className="min-w-0">
-                  <span className="block text-[15px] font-bold" style={{ fontFamily: "var(--font-serif)" }}>
-                    {b.title}
-                  </span>
-                  <span className="mt-0.5 block text-[13px]" style={{ color: "var(--color-ink-soft)" }}>
-                    {b.topics.map((t) => TOPICS[t].title).join(", ")}
-                  </span>
-                </span>
-                <span className="shrink-0 text-[13px] font-bold" style={{ color: "var(--color-accent)" }}>
-                  {formatNyang(PRICE.BUNDLE3)} ›
-                </span>
-              </a>
-            ))}
-          </div>
-          <p className="mt-4 text-center text-[14px]">
-            네 묶음을 다 보면 <s style={{ color: "var(--color-ink-faint)" }}>{formatNyang(PRICE.BUNDLE3 * BUNDLE_SUGGESTIONS.length)}</s> →{" "}
-            <b style={{ color: "var(--color-accent)" }}>전부 보기 {formatNyang(PRICE.BUNDLE12)}</b>
-          </p>
-          <p className="mt-1.5 text-center text-[13px]" style={{ color: "var(--color-ink-faint)" }}>
-            묶음 말고도 12가지 중 어떤 세 가지든 고를 수 있어요
-          </p>
-        </section>
-
-        <div className="hairline" />
-
-        {/* 12가지 운세 전부 보기 (수정안 23: 정가·할인 / 24: 버튼) */}
-        <section className="py-12">
-          <SectionTitle title="12가지 운세 전부 보기" sub="한 사람의 평생을 한 번에" price={<PriceTag count={TOPIC_KEYS.length} price={PRICE.BUNDLE12} />} />
-          <div className="rounded-2xl p-5" style={CARD}>
-            <p className="text-center text-[14px] leading-relaxed">
-              {TOPIC_KEYS.map((k) => TOPICS[k].title).join(", ")}
+          <div className="rounded-2xl px-5 py-8" style={{ ...CARD, boxShadow: `${CARD.boxShadow}, 0 4px 18px rgba(22,41,74,0.07)` }}>
+            <h2 className="text-center text-[24px] font-bold" style={{ fontFamily: "var(--font-serif)", color: "var(--color-accent)" }}>
+              왜 류결사주인가
+            </h2>
+            <p className="mt-4 text-center text-[15px] leading-[1.9]" style={{ color: "var(--color-ink-soft)", fontFamily: "var(--font-serif)", wordBreak: "keep-all" }}>
+              태어난 그 순간,
+              <br />
+              하늘은 당신에게 여덟 글자의 편지를 보냅니다.
+              <br />
+              <b style={{ color: "var(--color-ink)" }}>류결사주는 그 운명을 읽어 드립니다.</b>
             </p>
-            <p className="mt-3 text-center text-[14px] font-bold" style={{ color: GOLD }}>
-              + 전부 보기에만 있는 {EXTRA_KEYS.map((k) => TOPICS[k].title).join(", ")}
-            </p>
+            <div className="mt-8 space-y-6">
+              {WHY.map((w) => (
+                <div key={w.num} className="flex gap-3">
+                  <span className="foil-text w-6 shrink-0 text-[19px] font-bold" style={{ fontFamily: "var(--font-serif)" }}>
+                    {w.num}
+                  </span>
+                  <div>
+                    <h3 className="text-[16px] font-bold" style={{ fontFamily: "var(--font-serif)", color: "var(--color-accent)" }}>
+                      {w.title}
+                    </h3>
+                    <p className="mt-1.5 text-[14px] leading-relaxed" style={{ color: "var(--color-ink-soft)" }}>
+                      {w.body}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
-          <a href="/go?all=1" className="btn-band mt-5 block rounded-2xl py-4 text-center text-[17px] font-bold" style={{ fontFamily: "var(--font-serif)" }}>
-            12가지 운세 전부 보기 · {formatNyang(PRICE.BUNDLE12)}
-          </a>
         </section>
 
         <div className="hairline" />

@@ -175,6 +175,44 @@ async function ensureSchema(): Promise<void> {
       PRIMARY KEY (person_id, topic)
     );
   `);
+  // 2026-10-10 수정안 26: 방문 집계 (무작위 방문 번호만 - 이름·생년월일과 연결하지 않음)
+  await db.query(`
+    CREATE TABLE IF NOT EXISTS visitors (
+      vid TEXT PRIMARY KEY,
+      first_day DATE NOT NULL,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+    );
+  `);
+  await db.query(`
+    CREATE TABLE IF NOT EXISTS site_visits (
+      day DATE NOT NULL,
+      vid TEXT NOT NULL,
+      PRIMARY KEY (day, vid)
+    );
+  `);
+  // 수정안 26: 최근 오류 (관리자 화면에서 보기 - 손님 정보는 담지 않는다)
+  await db.query(`
+    CREATE TABLE IF NOT EXISTS error_log (
+      id BIGSERIAL PRIMARY KEY,
+      place TEXT NOT NULL,
+      message TEXT NOT NULL,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+    );
+  `);
+  // 2026-10-10 계좌 입금 충전 신청 - 관리자가 입금을 확인하고 승인하면 엽전이 들어간다
+  await db.query(`
+    CREATE TABLE IF NOT EXISTS charge_requests (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      amount INTEGER NOT NULL,
+      depositor TEXT NOT NULL,
+      status TEXT NOT NULL DEFAULT 'pending',
+      created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+      decided_at TIMESTAMPTZ
+    );
+  `);
+  await db.query(`CREATE INDEX IF NOT EXISTS charge_requests_status_idx ON charge_requests(status, created_at DESC);`);
+  await db.query(`CREATE INDEX IF NOT EXISTS charge_requests_user_idx ON charge_requests(user_id, created_at DESC);`);
   schemaReady = true;
 }
 

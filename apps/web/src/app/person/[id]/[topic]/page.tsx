@@ -5,10 +5,12 @@ import { isAuthEnabled } from "@/lib/launchMode";
 import { ComingSoon } from "@/components/ComingSoon";
 import { LoadingState, ErrorState } from "@/components/StatusScreens";
 import { TOPICS, isAnyTopicKey, isTopicKey } from "@/lib/topics";
-import { CURRENCY_NAME, PRICE, formatNyang } from "@/lib/yeopjeon";
+import { CHARGE_PATH, CURRENCY_NAME, PRICE, formatNyang } from "@/lib/yeopjeon";
 import { PersonHeader } from "@/components/yeopjeon/PersonHeader";
 import { WritingOverlay } from "@/components/yeopjeon/WritingOverlay";
 import { InviteCard } from "@/components/yeopjeon/InviteCard";
+import { NextSteps } from "@/components/yeopjeon/NextSteps";
+import type { Journey } from "@/lib/journey";
 import { notifyYeopjeonChanged, reportClientError, useYeopjeon } from "@/components/yeopjeon/useYeopjeon";
 import type { ReadingHeader } from "@/server/readings/readings";
 import type { BasicContent, DeepContent } from "@/server/readings/generateReading";
@@ -30,7 +32,7 @@ type State =
   | { status: "loading" }
   | { status: "writing"; level: Level }
   | { status: "basic"; content: BasicContent; header: ReadingHeader }
-  | { status: "deep"; content: DeepContent; header: ReadingHeader }
+  | { status: "deep"; content: DeepContent; header: ReadingHeader; journey: Journey | null }
   | { status: "locked"; header: ReadingHeader | null }
   | { status: "error"; message: string; level: Level | null };
 
@@ -47,8 +49,8 @@ function TopicBody({ id, topic }: { id: string; topic: string }) {
   const title = isAnyTopicKey(topic) ? TOPICS[topic].title : "운세";
   const canBasic = isTopicKey(topic);
 
-  const show = useCallback((body: { status: string; level: Level; content: unknown; header: ReadingHeader }) => {
-    if (body.level === "deep") setState({ status: "deep", content: body.content as DeepContent, header: body.header });
+  const show = useCallback((body: { status: string; level: Level; content: unknown; header: ReadingHeader; journey?: Journey }) => {
+    if (body.level === "deep") setState({ status: "deep", content: body.content as DeepContent, header: body.header, journey: body.journey ?? null });
     else setState({ status: "basic", content: body.content as BasicContent, header: body.header });
   }, []);
 
@@ -114,7 +116,7 @@ function TopicBody({ id, topic }: { id: string; topic: string }) {
         return;
       }
       if (body?.error?.code === "INSUFFICIENT_YEOPJEON") {
-        setNotice({ kind: "short", text: `${CURRENCY_NAME}이 부족해요. 결제는 곧 열려요. 친구를 초대하면 ${CURRENCY_NAME}을 받을 수 있어요.` });
+        setNotice({ kind: "short", text: `${CURRENCY_NAME}이 부족해요. 계좌 입금으로 충전하거나, 친구를 초대하면 ${CURRENCY_NAME}을 받을 수 있어요.` });
       } else {
         setNotice({ kind: "error", text: body?.error?.message ?? "잠시 후 다시 시도해 주세요." });
       }
@@ -159,6 +161,11 @@ function TopicBody({ id, topic }: { id: string; topic: string }) {
       <p className="rounded-xl px-4 py-3 text-center text-[14px]" style={{ backgroundColor: "var(--color-danger-soft)", color: "var(--color-danger)" }}>
         {notice.text}
       </p>
+      {short && (
+        <a href={`${CHARGE_PATH}?next=${encodeURIComponent(`/person/${id}/${topic}`)}`} className="btn-band mt-3 block rounded-xl py-3.5 text-center text-[16px] font-bold">
+          {CURRENCY_NAME} 충전하기 · 계좌 입금
+        </a>
+      )}
       {short && wallet && (
         <div className="mt-3">
           <InviteCard refCode={wallet.refCode} invited={wallet.invited} />
@@ -293,7 +300,7 @@ function TopicBody({ id, topic }: { id: string; topic: string }) {
   }
 
   // ── 깊게 보기 ──
-  const { content, header } = state;
+  const { content, header, journey } = state;
   return (
     <main className="mx-auto min-h-screen max-w-xl px-5 pb-20 pt-12 sm:pt-16">
       <PersonHeader header={header} kicker="류결사주 · 깊게 보기" title={content.title} />
@@ -318,6 +325,9 @@ function TopicBody({ id, topic }: { id: string; topic: string }) {
           </section>
         ))}
       </div>
+
+      {/* 수정안 27·29: 깊게 본 뒤에만 - 내 사주로 고른 다음 운세 → 그 3가지 몰아보기 → 전부 보기 */}
+      {journey && <NextSteps personId={id} nickname={header.nickname} journey={journey} />}
 
       <div className="mt-8 space-y-2.5">
         <a href={`/person/${id}`} className="btn-primary block text-center">

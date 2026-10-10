@@ -1,6 +1,6 @@
 "use client";
 
-import { CURRENCY_NAME, PRICE, formatNyang } from "@/lib/yeopjeon";
+import { CHARGE_PATH, CURRENCY_NAME, PRICE, formatNyang } from "@/lib/yeopjeon";
 import { TOPIC_KEYS } from "@/lib/topics";
 import { InviteCard } from "./InviteCard";
 import { useYeopjeon } from "./useYeopjeon";
@@ -37,9 +37,14 @@ export function YeopjeonPanel() {
             {formatNyang(data.balance)}
           </p>
         </div>
-        <a href="/#fortunes" className="btn-band rounded-xl px-4 py-2.5 text-[14px] font-bold">
-          운세 보기 {formatNyang(PRICE.BASIC)}
-        </a>
+        <span className="flex flex-col items-end gap-1.5">
+          <a href="/#fortunes" className="btn-band rounded-xl px-4 py-2.5 text-[14px] font-bold">
+            운세 보기 {formatNyang(PRICE.BASIC)}
+          </a>
+          <a href={CHARGE_PATH} className="text-[13px] underline underline-offset-4" style={{ color: "var(--color-ink-soft)" }}>
+            {CURRENCY_NAME} 충전하기
+          </a>
+        </span>
       </section>
 
       {/* 내 사주풀이 (사람별) */}

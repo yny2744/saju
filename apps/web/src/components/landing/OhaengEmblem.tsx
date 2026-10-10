@@ -26,9 +26,47 @@ const ELEMENTS = [
 
 const GOLD = "#b08d57";
 
-export function OhaengEmblem() {
+/**
+ * caption: 문양 바깥 금색 고리 위쪽에 둥글게 새기는 글 (2026-10-10 수정안 28: "류결의 명견만리"를 로고 안으로).
+ * subCaption: 아래쪽 고리 글.
+ */
+export function OhaengEmblem({ caption, subCaption }: { caption?: string; subCaption?: string } = {}) {
+  const ring = Boolean(caption || subCaption);
   return (
-    <svg viewBox="0 0 240 240" width="100%" height="100%" role="img" aria-label="팔괘와 오행을 담은 류결사주 문양">
+    <svg
+      viewBox={ring ? "-22 -22 284 284" : "0 0 240 240"}
+      width="100%"
+      height="100%"
+      role="img"
+      aria-label={caption ? `${caption} - 팔괘와 오행을 담은 류결사주 문양` : "팔괘와 오행을 담은 류결사주 문양"}
+    >
+      {ring && (
+        <g>
+          <defs>
+            <path id="emblem-top-arc" d="M -2 120 A 122 122 0 0 1 242 120" fill="none" />
+            <path id="emblem-bottom-arc" d="M -11 120 A 131 131 0 0 0 251 120" fill="none" />
+          </defs>
+          <circle cx="120" cy="120" r="139" fill="var(--color-paper)" stroke={GOLD} strokeWidth="1.5" />
+          <circle cx="120" cy="120" r="136" fill="none" stroke={GOLD} strokeWidth="0.5" />
+          {caption && (
+            <text fontSize="17" fontWeight="700" letterSpacing="5" fill="var(--color-accent)" style={{ fontFamily: "var(--font-serif)" }}>
+              <textPath href="#emblem-top-arc" startOffset="50%" textAnchor="middle">
+                {caption}
+              </textPath>
+            </text>
+          )}
+          {subCaption && (
+            <text fontSize="12" letterSpacing="7" fill={GOLD} style={{ fontFamily: "var(--font-serif)" }}>
+              <textPath href="#emblem-bottom-arc" startOffset="50%" textAnchor="middle">
+                {subCaption}
+              </textPath>
+            </text>
+          )}
+          {/* 좌우 금색 마름모 */}
+          <rect x="-20.5" y="116.5" width="7" height="7" transform="rotate(45 -17 120)" fill={GOLD} />
+          <rect x="253.5" y="116.5" width="7" height="7" transform="rotate(45 257 120)" fill={GOLD} />
+        </g>
+      )}
       <circle cx="120" cy="120" r="114" fill="none" stroke={GOLD} strokeWidth="1.5" />
       <circle cx="120" cy="120" r="108" fill="none" stroke={GOLD} strokeWidth="0.6" strokeDasharray="2 4" />
 

@@ -1,3 +1,4 @@
+import { logErrorToDb } from "@/server/admin/errorLog";
 /**
  * 오류 알림 (2026-10-08 수정안 9번).
  *
@@ -19,6 +20,19 @@ export function notifyError(where: string, error: unknown): void {
   const text = formatAlert(where, error);
   // eslint-disable-next-line no-console
   console.error(text);
+  logErrorToDb(where, error instanceof Error ? `${error.name}: ${error.message}` : String(error));
+  sendWebhook(text);
+}
+
+/** 관리자 알림 (오류가 아닌 일 - 예: 충전 신청). 손님 이름·생년월일은 넣지 않는다. */
+export function notifyAdmin(message: string): void {
+  const text = `[류결사주 알림] ${message}`.slice(0, MAX_LEN);
+  // eslint-disable-next-line no-console
+  console.log(text);
+  sendWebhook(text);
+}
+
+function sendWebhook(text: string): void {
   const url = process.env.ERROR_ALERT_WEBHOOK_URL;
   if (!url || !/^https:\/\//.test(url)) return;
   // 디스코드는 content, 슬랙은 text를 읽는다 - 둘 다 담아 보낸다

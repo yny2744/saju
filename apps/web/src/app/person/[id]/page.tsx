@@ -6,11 +6,12 @@ import { isAuthEnabled } from "@/lib/launchMode";
 import { ComingSoon } from "@/components/ComingSoon";
 import { LoadingState, ErrorState } from "@/components/StatusScreens";
 import { BUNDLE_SUGGESTIONS, EXTRA_KEYS, TOPICS, TOPIC_KEYS, isTopicKey, type AnyTopicKey, type TopicKey } from "@/lib/topics";
-import { CURRENCY_NAME, PRICE, bundleDiscount, formatNyang } from "@/lib/yeopjeon";
+import { CHARGE_PATH, CURRENCY_NAME, PRICE, bundleDiscount, formatNyang } from "@/lib/yeopjeon";
 import { PersonHeader } from "@/components/yeopjeon/PersonHeader";
 import { InviteCard } from "@/components/yeopjeon/InviteCard";
 import { notifyYeopjeonChanged, reportClientError, useYeopjeon } from "@/components/yeopjeon/useYeopjeon";
 import type { PersonSummary } from "@/server/readings/readings";
+import type { Journey } from "@/lib/journey";
 
 /**
  * 풀이 대상 한 사람의 "12가지 운세" 화면 (2026-10-08, 2026-10-09 수정안 20·24).
@@ -31,7 +32,7 @@ interface Confirm {
 function PersonBody({ id }: { id: string }) {
   const router = useRouter();
   const search = useSearchParams();
-  const [data, setData] = useState<{ person: PersonSummary; balance: number } | null>(null);
+  const [data, setData] = useState<{ person: PersonSummary; balance: number; journey?: Journey } | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [picking, setPicking] = useState<TopicKey[] | null>(null); // 몰아보기 고르는 중
   const [confirm, setConfirm] = useState<Confirm | null>(null);
@@ -87,6 +88,8 @@ function PersonBody({ id }: { id: string }) {
   if (!data) return <LoadingState message="불러오고 있어요..." />;
 
   const { person, balance } = data;
+  // 수정안 27: 내 사주로 고른 운세에 작은 표시 (광고 문구 없이)
+  const recommended = new Set<TopicKey>((data.journey?.recommend ?? []).map((r) => r.topic));
   const owned = new Set<AnyTopicKey>(person.unlocked);
   const seen = new Set<TopicKey>(person.basics ?? []);
   const lockedTopics = TOPIC_KEYS.filter((t) => !owned.has(t));
@@ -120,9 +123,9 @@ function PersonBody({ id }: { id: string }) {
           return;
         }
         await load();
-        setNotice({ kind: "done", text: "운이 열렸어요. 아래에서 하나씩 눌러 보세요." });
+        setNotice({ kind: "done", text: "운세가 열렸어요. 아래에서 하나씩 눌러 보세요." });
       } else if (body?.error?.code === "INSUFFICIENT_YEOPJEON") {
-        setNotice({ kind: "short", text: `${CURRENCY_NAME}이 부족해요. 결제는 곧 열려요. 친구를 초대하면 ${CURRENCY_NAME}을 받을 수 있어요.` });
+        setNotice({ kind: "short", text: `${CURRENCY_NAME}이 부족해요. 계좌 입금으로 충전하거나, 친구를 초대하면 ${CURRENCY_NAME}을 받을 수 있어요.` });
       } else {
         setNotice({ kind: "error", text: body?.error?.message ?? "잠시 후 다시 시도해 주세요." });
       }
@@ -156,6 +159,11 @@ function PersonBody({ id }: { id: string }) {
           >
             {notice.text}
           </p>
+          {notice.kind === "short" && (
+            <a href={`${CHARGE_PATH}?next=${encodeURIComponent(`/person/${id}`)}`} className="btn-band mt-3 block rounded-xl py-3.5 text-center text-[16px] font-bold">
+              {CURRENCY_NAME} 충전하기 · 계좌 입금
+            </a>
+          )}
           {notice.kind === "short" && wallet && (
             <div className="mt-3">
               <InviteCard refCode={wallet.refCode} invited={wallet.invited} />
@@ -215,6 +223,11 @@ function PersonBody({ id }: { id: string }) {
                   {info.hanja}
                 </span>
                 <span className="text-[15px] font-bold">{info.title}</span>
+                {!open && !picking && recommended.has(t) && (
+                  <span className="ml-auto shrink-0 rounded-full px-1.5 py-0.5 text-[10.5px] font-bold" style={{ color: "var(--color-accent)", backgroundColor: "var(--color-gold-soft)" }}>
+                    내 사주 추천
+                  </span>
+                )}
               </span>
               <span className="mt-1 block text-[12px]" style={{ color: "var(--color-ink-faint)" }}>
                 {open
