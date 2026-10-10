@@ -90,15 +90,3 @@ export function formatNyang(n: number): string {
 export function displayLedgerLabel(label: string): string {
   return label.replace(/복채/g, CURRENCY_NAME);
 }
-
-/**
- * 계좌 입금 충전 (2026-10-10). 1냥 = 1원. 상품 값에 맞춘 금액만 고를 수 있다.
- * 990냥은 계좌 입금으로 받지 않는다 (2026-10-06 유샘: 계좌이체는 고가 상품 보조용).
- */
-export const CHARGE_OPTIONS = [4900, 9900, 29500, 50000] as const;
-export function isChargeOption(v: unknown): v is (typeof CHARGE_OPTIONS)[number] {
-  return typeof v === "number" && (CHARGE_OPTIONS as readonly number[]).includes(v);
-}
-/** 아직 확인 안 된 충전 신청은 한 사람당 이만큼까지 */
-export const MAX_PENDING_CHARGES = 3;
-export const CHARGE_PATH = "/charge";

@@ -1,10 +1,13 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useBgmScene } from "@/components/bgm/bgm";
 
-/** AI가 풀이를 쓰는 동안 덮는 화면 (30초~1분) */
-export function WritingOverlay({ title, steps }: { title: string; steps: string[] }) {
+/** AI가 풀이를 쓰는 동안 덮는 화면 (30초~1분). grand = 12가지 운세 전부 보기를 산 손님 */
+export function WritingOverlay({ title, steps, grand = false }: { title: string; steps: string[]; grand?: boolean }) {
   const [step, setStep] = useState(0);
+  // 풀이를 기다리는 동안의 음악 (전부 보기 손님은 따로)
+  useBgmScene(grand ? "all" : "waiting");
   useEffect(() => {
     const t = setInterval(() => setStep((s) => Math.min(steps.length - 1, s + 1)), 8000);
     return () => clearInterval(t);

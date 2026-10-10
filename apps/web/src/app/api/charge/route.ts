@@ -1,15 +1,8 @@
-import { NextRequest } from "next/server";
-import { memberRoute } from "@/server/routeHelpers";
-import { handleChargeInfo, handleCreateCharge } from "@/server/admin/chargeHandlers";
+import { NextResponse } from "next/server";
 
-export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-export async function GET(request: NextRequest) {
-  return memberRoute(request, "충전 화면", (token) => handleChargeInfo(token));
-}
-
-export async function POST(request: NextRequest) {
-  const body = await request.json().catch(() => null);
-  return memberRoute(request, "충전 신청", (token) => handleCreateCharge(token, body));
-}
+/** 2026-10-10: 선불 충전은 하지 않기로 함 (수정안 31) - 운세를 살 때 모자란 만큼만 결제한다 */
+const gone = () => NextResponse.json({ error: { code: "GONE", message: "충전 없이, 운세를 살 때 모자란 만큼만 결제해요." } }, { status: 410 });
+export const GET = gone;
+export const POST = gone;

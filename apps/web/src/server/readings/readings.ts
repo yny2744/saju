@@ -328,38 +328,61 @@ const MODE_LABEL: Record<PurchaseMode, string> = { basic: "운세 보기", deep:
 
 export async function purchaseTopics(args: { userId: string; personId: string; mode: PurchaseMode; topics: unknown }): Promise<AnyTopicKey[]> {
   if (!UUID_RE.test(args.personId)) throw new PurchaseError("NOT_FOUND", "풀이 대상을 찾을 수 없어요.");
-  return inTransaction(async (client) => {
-    const balance = await lockAndBalance(client, args.userId);
-    const person = await client.query<{ nickname: string }>(`SELECT nickname FROM persons WHERE id = $1 AND user_id = $2`, [
-      args.personId,
-      args.userId,
-    ]);
-    if (!person.rows[0]) throw new PurchaseError("NOT_FOUND", "풀이 대상을 찾을 수 없어요.");
-    const owned = await client.query<{ topic: string }>(`SELECT topic FROM topic_unlocks WHERE person_id = $1`, [args.personId]);
-    const plan = planPurchase(args.mode, args.topics, owned.rows.map((r) => r.topic).filter(isAnyTopicKey));
-    if (args.mode === "basic") {
-      const seen = await client.query(`SELECT 1 FROM topic_basics WHERE person_id = $1 AND topic = $2`, [args.personId, plan.topics[0]]);
-      if ((seen.rowCount ?? 0) > 0) throw new PurchaseError("ALREADY_OWNED", "이미 본 운세예요. 다시 열어도 엽전은 빠지지 않아요.");
-    }
-    if (balance < plan.price) throw new InsufficientYeopjeonError(balance);
-    for (const t of plan.topics) {
-      if (args.mode === "basic") {
-        await client.query(`INSERT INTO topic_basics (person_id, topic) VALUES ($1, $2)`, [args.personId, t]);
-      } else {
-        await client.query(`INSERT INTO topic_unlocks (person_id, topic, via) VALUES ($1, $2, $3) ON CONFLICT DO NOTHING`, [args.personId, t, args.mode]);
-      }
-    }
-    const names = args.mode === "bundle12" ? "" : ` · ${plan.topics.map((t) => TOPICS[t].title).join(", ")}`;
-    const ref = `${args.mode}:${args.personId}:${[...plan.topics].sort().join(",")}`;
-    await client.query(`INSERT INTO bokchae_ledger (user_id, amount, kind, label, ref) VALUES ($1, $2, 'spend', $3, $4)`, [
-      args.userId,
-      -plan.price,
-      `[${MODE_LABEL[args.mode]}] ${person.rows[0].nickname}${names}`,
-      ref,
-    ]);
-    return plan.topics;
-  });
+  return inTransaction((client) => purchaseWithClient(client, args));
 }
+
+/** 구매 한 건 (이미 열린 트랜잭션 안에서). 카드 결제 승인 직후에도 같은 트랜잭션에서 이걸 부른다. */
+export async function purchaseWithClient(
+  client: PoolClient,
+  args: { userId: string; personId: string; mode: PurchaseMode; topics: unknown }
+): Promise<AnyTopicKey[]> {
+  const balance = await lockAndBalance(client, args.userId);
+  const plan = await planForPerson(client, args);
+  if (balance < plan.price) throw new InsufficientYeopjeonError(balance);
+  for (const t of plan.topics) {
+    if (args.mode === "basic") {
+      await client.query(`INSERT INTO topic_basics (person_id, topic) VALUES ($1, $2)`, [args.personId, t]);
+    } else {
+      await client.query(`INSERT INTO topic_unlocks (person_id, topic, via) VALUES ($1, $2, $3) ON CONFLICT DO NOTHING`, [args.personId, t, args.mode]);
+    }
+  }
+  const names = args.mode === "bundle12" ? "" : ` · ${plan.topics.map((t) => TOPICS[t].title).join(", ")}`;
+  const ref = `${args.mode}:${args.personId}:${[...plan.topics].sort().join(",")}`;
+  await client.query(`INSERT INTO bokchae_ledger (user_id, amount, kind, label, ref) VALUES ($1, $2, 'spend', $3, $4)`, [
+    args.userId,
+    -plan.price,
+    `[${MODE_LABEL[args.mode]}] ${plan.nickname}${names}`,
+    ref,
+  ]);
+  return plan.topics;
+}
+
+/** 이 사람에게 이 상품을 팔 수 있는지 확인하고 열 주제·가격을 정한다 (차감은 하지 않음) */
+export async function planForPerson(
+  q: Pick<PoolClient, "query">,
+  args: { userId: string; personId: string; mode: PurchaseMode; topics: unknown }
+): Promise<{ topics: AnyTopicKey[]; price: number; nickname: string }> {
+  if (!UUID_RE.test(args.personId)) throw new PurchaseError("NOT_FOUND", "풀이 대상을 찾을 수 없어요.");
+  const person = await q.query<{ nickname: string }>(`SELECT nickname FROM persons WHERE id = $1 AND user_id = $2`, [args.personId, args.userId]);
+  if (!person.rows[0]) throw new PurchaseError("NOT_FOUND", "풀이 대상을 찾을 수 없어요.");
+  const owned = await q.query<{ topic: string }>(`SELECT topic FROM topic_unlocks WHERE person_id = $1`, [args.personId]);
+  const plan = planPurchase(args.mode, args.topics, owned.rows.map((r) => r.topic).filter(isAnyTopicKey));
+  if (args.mode === "basic") {
+    const seen = await q.query(`SELECT 1 FROM topic_basics WHERE person_id = $1 AND topic = $2`, [args.personId, plan.topics[0]]);
+    if ((seen.rowCount ?? 0) > 0) throw new PurchaseError("ALREADY_OWNED", "이미 본 운세예요. 다시 열어도 엽전은 빠지지 않아요.");
+  }
+  return { ...plan, nickname: person.rows[0].nickname };
+}
+
+/** 결제 창에 쓰는 상품 이름: "재물 운세 보기" / "재물 깊게 보기" / "3가지 운세 몰아보기" / "12가지 운세 전부 보기" */
+export function productName(mode: PurchaseMode, topics: AnyTopicKey[]): string {
+  if (mode === "basic") return `${TOPICS[topics[0]].title} 운세 보기`;
+  if (mode === "deep") return `${TOPICS[topics[0]].title} 깊게 보기`;
+  if (mode === "bundle3") return "3가지 운세 몰아보기";
+  return "12가지 운세 전부 보기";
+}
+
+export { inTransaction };
 
 export async function isUnlocked(personId: string, topic: AnyTopicKey): Promise<boolean> {
   const pool = await db();
@@ -403,4 +426,14 @@ export async function saveTopicBasic(personId: string, topic: TopicKey, content:
     content.model,
   ]);
   return (await getTopicBasic(personId, topic)).content ?? content;
+}
+
+/** 12가지 + 전부 보기 전용 풀이까지 모두 열렸는지 (= 전부 보기 손님) - 배경음 장면용 */
+export async function isAllUnlocked(personId: string): Promise<boolean> {
+  const pool = await db();
+  const r = await pool.query<{ n: string }>(`SELECT COUNT(*) AS n FROM topic_unlocks WHERE person_id = $1 AND topic = ANY($2)`, [
+    personId,
+    [...TOPIC_KEYS, ...EXTRA_KEYS] as unknown as string[],
+  ]);
+  return Number(r.rows[0]?.n ?? 0) >= TOPIC_KEYS.length + EXTRA_KEYS.length;
 }

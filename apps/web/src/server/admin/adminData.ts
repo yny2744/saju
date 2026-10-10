@@ -7,7 +7,6 @@ export interface AdminStats {
   today: PeriodStats;
   week: PeriodStats;
   total: { members: number; visitors: number };
-  pendingCharges: number;
 }
 export interface PeriodStats {
   visitors: number;
@@ -16,6 +15,7 @@ export interface PeriodStats {
   signups: number;
   purchases: number;
   spent: number;
+  /** 카드·간편결제로 실제 받은 돈 */
   charged: number;
 }
 
@@ -31,7 +31,7 @@ async function period(fromDay: string): Promise<PeriodStats> {
       `SELECT COUNT(*) AS n, SUM(-amount) AS s FROM bokchae_ledger WHERE kind = 'spend' AND created_at >= $1`,
       [since]
     ),
-    pool.query<{ s: string | null }>(`SELECT SUM(amount) AS s FROM bokchae_ledger WHERE kind = 'charge' AND created_at >= $1`, [since]),
+    pool.query<{ s: string | null }>(`SELECT SUM(amount) AS s FROM bokchae_ledger WHERE kind = 'pay' AND created_at >= $1`, [since]),
   ]);
   const visitors = Number(v.rows[0]?.n ?? 0);
   const newVisitors = Number(nv.rows[0]?.n ?? 0);
@@ -50,18 +50,16 @@ export async function adminStats(now = new Date()): Promise<AdminStats> {
   const today = kstDay(now);
   const weekStart = kstDay(new Date(now.getTime() - 6 * 86400 * 1000));
   const pool = await db();
-  const [t, w, m, vis, pc] = await Promise.all([
+  const [t, w, m, vis] = await Promise.all([
     period(today),
     period(weekStart),
     pool.query<{ n: string }>(`SELECT COUNT(*) AS n FROM users`),
     pool.query<{ n: string }>(`SELECT COUNT(*) AS n FROM visitors`),
-    pool.query<{ n: string }>(`SELECT COUNT(*) AS n FROM charge_requests WHERE status = 'pending'`),
   ]);
   return {
     today: t,
     week: w,
     total: { members: Number(m.rows[0]?.n ?? 0), visitors: Number(vis.rows[0]?.n ?? 0) },
-    pendingCharges: Number(pc.rows[0]?.n ?? 0),
   };
 }
 

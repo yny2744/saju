@@ -1,6 +1,6 @@
 import { requireAdmin } from "./admin";
 import { adminGrant, adminStats, listMembers, memberLedger, recentErrors } from "./adminData";
-import { ChargeError, decideCharge, listCharges } from "./charges";
+import { recentPayOrders, payMode } from "@/server/pay/payOrders";
 
 type Out = { status: number; body: unknown };
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -11,8 +11,8 @@ export async function handleAdminOverview(token: string | undefined): Promise<Ou
   const a = await requireAdmin(token);
   // 관리자 아님: 오류(403) 대신 200 + denied 로 돌려준다 (화면이 "등록 방법"을 보여 줄 상태라서)
   if (!a.ok) return a.status === 403 ? { status: 200, body: { denied: true, ...(a.body as object) } } : a;
-  const [stats, charges, errors] = await Promise.all([adminStats(), listCharges("all"), recentErrors()]);
-  return { status: 200, body: { me: { id: a.user.id, nickname: a.user.nickname }, stats, charges, errors, bankAccountSet: Boolean(process.env.BANK_ACCOUNT) } };
+  const [stats, orders, errors] = await Promise.all([adminStats(), recentPayOrders(), recentErrors()]);
+  return { status: 200, body: { me: { id: a.user.id, nickname: a.user.nickname }, stats, orders, errors, payMode: payMode() } };
 }
 
 export async function handleAdminMembers(token: string | undefined, q: string): Promise<Out> {
@@ -36,18 +36,4 @@ export async function handleAdminGrant(token: string | undefined, raw: unknown):
   const ok = await adminGrant(b.userId, b.amount, b.reason);
   if (!ok) return bad("금액(0이 아닌 정수, 100만 냥 이하)이나 회원을 확인해 주세요.");
   return { status: 200, body: { ok: true } };
-}
-
-export async function handleAdminDecideCharge(token: string | undefined, id: string, raw: unknown): Promise<Out> {
-  const a = await requireAdmin(token);
-  if (!a.ok) return a;
-  if (!UUID_RE.test(id)) return bad("신청 번호가 올바르지 않아요.");
-  const action = (raw as { action?: unknown } | null)?.action;
-  if (action !== "approve" && action !== "reject") return bad("승인 또는 거절을 골라 주세요.");
-  try {
-    return { status: 200, body: { status: await decideCharge(id, action) } };
-  } catch (e) {
-    if (e instanceof ChargeError) return { status: e.code === "NOT_FOUND" ? 404 : 409, body: { error: { code: e.code, message: e.message } } };
-    throw e;
-  }
 }

@@ -61,6 +61,14 @@ export function Footer() {
         <p className="mx-auto mt-5 max-w-[22rem] text-[11px]" style={{ color: "var(--color-ink-faint)" }}>
           모든 운세·사주·관상 콘텐츠는 전통 문화·오락 목적의 참고 정보이며, 성격·재물·건강·연애 등 미래를 과학적으로 확정하지 않습니다.
         </p>
+        {/* 배경음악 출처 (수정안 19, 공유마당 자유이용 기증 저작물) */}
+        <p className="mx-auto mt-3 max-w-[24rem] text-[10.5px] leading-relaxed" style={{ color: "var(--color-ink-faint)" }}>
+          배경음악: 서예지 「Tong tong(통통) 가야금」 「How are you 가야금」 「빛의 세상으로(희망가) 가야금 버전」 ·{" "}
+          <a href="https://gongu.copyright.or.kr/gongu/main/main.do" target="_blank" rel="noopener noreferrer" className="underline underline-offset-2">
+            공유마당(한국저작권위원회)
+          </a>{" "}
+          자유이용 기증 저작물
+        </p>
       </div>
     </footer>
   );

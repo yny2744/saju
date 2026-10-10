@@ -17,6 +17,7 @@ import {
   getReading,
   getTopicBasic,
   getTopicReading,
+  isAllUnlocked,
   isUnlocked,
   listPersons,
   purchaseTaste,
@@ -186,7 +187,7 @@ export async function handleTopic(token: string | undefined, personId: string, t
   if (await isUnlocked(personId, topic)) {
     const stored = await getTopicReading(personId, topic);
     if (stored) return { status: 200, body: { status: "ready", level: "deep", content: stored, header: person.header, journey: await journeyOf(m.user.id, personId, person.saju, topic) } };
-    if (!generate) return { status: 200, body: { status: "pending", level: "deep", header: person.header } };
+    if (!generate) return { status: 200, body: { status: "pending", level: "deep", header: person.header, grand: await isAllUnlocked(personId) } };
     try {
       const content = await generateDeep(person.saju, person.nickname, topic, year);
       if (topic === "year" || topic === "monthly") content.title = `${content.title} (${year}년)`;

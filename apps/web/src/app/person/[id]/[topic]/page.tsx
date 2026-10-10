@@ -5,7 +5,8 @@ import { isAuthEnabled } from "@/lib/launchMode";
 import { ComingSoon } from "@/components/ComingSoon";
 import { LoadingState, ErrorState } from "@/components/StatusScreens";
 import { TOPICS, isAnyTopicKey, isTopicKey } from "@/lib/topics";
-import { CHARGE_PATH, CURRENCY_NAME, PRICE, formatNyang } from "@/lib/yeopjeon";
+import { CURRENCY_NAME, PRICE, formatNyang } from "@/lib/yeopjeon";
+import { PayDialog } from "@/components/yeopjeon/PayDialog";
 import { PersonHeader } from "@/components/yeopjeon/PersonHeader";
 import { WritingOverlay } from "@/components/yeopjeon/WritingOverlay";
 import { InviteCard } from "@/components/yeopjeon/InviteCard";
@@ -30,7 +31,7 @@ const GOLD = "var(--color-gold)";
 type Level = "basic" | "deep";
 type State =
   | { status: "loading" }
-  | { status: "writing"; level: Level }
+  | { status: "writing"; level: Level; grand?: boolean }
   | { status: "basic"; content: BasicContent; header: ReadingHeader }
   | { status: "deep"; content: DeepContent; header: ReadingHeader; journey: Journey | null }
   | { status: "locked"; header: ReadingHeader | null }
@@ -40,6 +41,7 @@ function TopicBody({ id, topic }: { id: string; topic: string }) {
   const [state, setState] = useState<State>({ status: "loading" });
   const [buying, setBuying] = useState<"basic" | "deep" | null>(null);
   const [notice, setNotice] = useState<{ kind: "short" | "error"; text: string } | null>(null);
+  const [payFor, setPayFor] = useState<"basic" | "deep" | null>(null); // 엽전이 모자라 결제 창을 띄운 상품
   const [confirmDeep, setConfirmDeep] = useState(false);
   const started = useRef(false);
   const url = `/api/persons/${encodeURIComponent(id)}/topics/${encodeURIComponent(topic)}`;
@@ -55,8 +57,8 @@ function TopicBody({ id, topic }: { id: string; topic: string }) {
   }, []);
 
   const write = useCallback(
-    async (level: Level) => {
-      setState({ status: "writing", level });
+    async (level: Level, grand = false) => {
+      setState({ status: "writing", level, grand });
       try {
         const r = await fetch(url, { method: "POST" });
         const body = await r.json().catch(() => ({}));
@@ -86,7 +88,7 @@ function TopicBody({ id, topic }: { id: string; topic: string }) {
         if (!r.ok) return setState({ status: "error", message: body?.error?.message ?? "불러오지 못했어요.", level: null });
         if (body.status === "locked") return setState({ status: "locked", header: body.header ?? null });
         if (body.status === "ready") show(body);
-        else write(body.level === "deep" ? "deep" : "basic");
+        else write(body.level === "deep" ? "deep" : "basic", Boolean(body.grand));
       })
       .catch(() => setState({ status: "error", message: "연결이 끊겼어요.", level: null }));
   }, [url, id, topic, show, write]);
@@ -116,7 +118,8 @@ function TopicBody({ id, topic }: { id: string; topic: string }) {
         return;
       }
       if (body?.error?.code === "INSUFFICIENT_YEOPJEON") {
-        setNotice({ kind: "short", text: `${CURRENCY_NAME}이 부족해요. 계좌 입금으로 충전하거나, 친구를 초대하면 ${CURRENCY_NAME}을 받을 수 있어요.` });
+        // 수정안 31: 가진 엽전을 먼저 쓰고 모자란 만큼만 결제
+        setPayFor(mode);
       } else {
         setNotice({ kind: "error", text: body?.error?.message ?? "잠시 후 다시 시도해 주세요." });
       }
@@ -131,6 +134,7 @@ function TopicBody({ id, topic }: { id: string; topic: string }) {
   if (state.status === "writing") {
     return (
       <WritingOverlay
+        grand={state.grand}
         title={state.level === "deep" ? `${title} 운세를 깊게 쓰고 있어요` : `${title} 운세를 풀고 있어요`}
         steps={["사주 여덟 글자를 다시 살피고 있어요", `${title}의 근거를 찾고 있어요`, "흐름과 조언을 정리하고 있어요", "마지막으로 다듬고 있어요"]}
       />
@@ -161,17 +165,27 @@ function TopicBody({ id, topic }: { id: string; topic: string }) {
       <p className="rounded-xl px-4 py-3 text-center text-[14px]" style={{ backgroundColor: "var(--color-danger-soft)", color: "var(--color-danger)" }}>
         {notice.text}
       </p>
-      {short && (
-        <a href={`${CHARGE_PATH}?next=${encodeURIComponent(`/person/${id}/${topic}`)}`} className="btn-band mt-3 block rounded-xl py-3.5 text-center text-[16px] font-bold">
-          {CURRENCY_NAME} 충전하기 · 계좌 입금
-        </a>
-      )}
       {short && wallet && (
         <div className="mt-3">
           <InviteCard refCode={wallet.refCode} invited={wallet.invited} />
         </div>
       )}
     </div>
+  );
+
+  const payDialog = payFor && (
+    <PayDialog
+      personId={id}
+      mode={payFor}
+      topics={[topic]}
+      backTo={`/person/${id}/${topic}`}
+      onEnough={() => {
+        const m = payFor;
+        setPayFor(null);
+        buy(m);
+      }}
+      onClose={() => setPayFor(null)}
+    />
   );
 
   const deepConfirm = confirmDeep && (
@@ -250,6 +264,7 @@ function TopicBody({ id, topic }: { id: string; topic: string }) {
           </a>
         </div>
         {deepConfirm}
+        {payDialog}
       </main>
     );
   }
@@ -295,6 +310,7 @@ function TopicBody({ id, topic }: { id: string; topic: string }) {
           전통 명리학을 바탕으로 한 참고용 풀이이며, 중요한 결정의 근거로 삼지 마십시오.
         </p>
         {deepConfirm}
+        {payDialog}
       </main>
     );
   }

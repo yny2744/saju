@@ -1,4 +1,5 @@
 import { HeaderAuth } from "@/components/landing/HeaderAuth";
+import { BgmToggle } from "@/components/bgm/BgmPlayer";
 
 /**
  * 모든 화면 맨 위 머리줄 (2026-10-09 수정안 18).
@@ -11,7 +12,10 @@ export function SiteHeader() {
         <a href="/" className="foil-text text-[21px] font-black tracking-wide" style={{ fontFamily: "var(--font-serif)" }}>
           류결사주
         </a>
-        <HeaderAuth />
+        <span className="flex items-center gap-3">
+          <BgmToggle />
+          <HeaderAuth />
+        </span>
       </div>
       <div aria-hidden className="absolute inset-x-0 bottom-0 h-[4px]" style={{ borderTop: "1px solid var(--color-gold-line)", borderBottom: "1px solid var(--color-gold-line)" }} />
     </header>

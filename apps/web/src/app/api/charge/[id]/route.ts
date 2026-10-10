@@ -1,11 +1,6 @@
-import { NextRequest } from "next/server";
-import { memberRoute } from "@/server/routeHelpers";
-import { handleCancelCharge } from "@/server/admin/chargeHandlers";
+import { NextResponse } from "next/server";
 
-export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-/** 확인 전 충전 신청 취소 */
-export async function DELETE(request: NextRequest, { params }: { params: { id: string } }) {
-  return memberRoute(request, "충전 신청 취소", (token) => handleCancelCharge(token, params.id));
-}
+/** 2026-10-10: 선불 충전 없음 (수정안 31) */
+export const DELETE = () => NextResponse.json({ error: { code: "GONE", message: "충전 기능은 없어요." } }, { status: 410 });

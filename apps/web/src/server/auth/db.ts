@@ -199,20 +199,25 @@ async function ensureSchema(): Promise<void> {
       created_at TIMESTAMPTZ NOT NULL DEFAULT now()
     );
   `);
-  // 2026-10-10 계좌 입금 충전 신청 - 관리자가 입금을 확인하고 승인하면 엽전이 들어간다
+  // 2026-10-10 수정안 31: 카드·간편결제 주문 - 엽전으로 모자란 만큼만 결제, 승인 즉시 운세가 열린다 (선불 충전 없음)
   await db.query(`
-    CREATE TABLE IF NOT EXISTS charge_requests (
-      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    CREATE TABLE IF NOT EXISTS pay_orders (
+      id TEXT PRIMARY KEY,
       user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      person_id UUID NOT NULL,
+      mode TEXT NOT NULL,
+      topics JSONB NOT NULL,
+      price INTEGER NOT NULL,
+      use_yeopjeon INTEGER NOT NULL,
       amount INTEGER NOT NULL,
-      depositor TEXT NOT NULL,
+      order_name TEXT NOT NULL,
       status TEXT NOT NULL DEFAULT 'pending',
+      payment_key TEXT,
       created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-      decided_at TIMESTAMPTZ
+      paid_at TIMESTAMPTZ
     );
   `);
-  await db.query(`CREATE INDEX IF NOT EXISTS charge_requests_status_idx ON charge_requests(status, created_at DESC);`);
-  await db.query(`CREATE INDEX IF NOT EXISTS charge_requests_user_idx ON charge_requests(user_id, created_at DESC);`);
+  await db.query(`CREATE INDEX IF NOT EXISTS pay_orders_user_idx ON pay_orders(user_id, created_at DESC);`);
   schemaReady = true;
 }
 

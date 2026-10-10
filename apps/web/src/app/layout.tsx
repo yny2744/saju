@@ -6,6 +6,7 @@ import { SiteHeader } from "@/components/SiteHeader";
 import { FloatingScrollTop } from "@/components/ScrollTop";
 import { RefCapture } from "@/components/yeopjeon/RefCapture";
 import { VisitBeacon } from "@/components/VisitBeacon";
+import { BgmStarter } from "@/components/bgm/BgmPlayer";
 
 export const metadata: Metadata = {
   title: "류결사주",
@@ -19,6 +20,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <AccessibilityInit />
         <RefCapture />
         <VisitBeacon />
+        <BgmStarter />
         {/* 사이트 액자: PC에서는 가운데 한 장, 폰에서는 화면 전체 (양옆 금색 뇌문 띠 포함) */}
         <div className="site-frame">
           <div aria-hidden className="frame-edge" />

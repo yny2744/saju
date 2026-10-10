@@ -6,7 +6,7 @@ import { ComingSoon } from "@/components/ComingSoon";
 import { LoadingState } from "@/components/StatusScreens";
 import { formatNyang } from "@/lib/yeopjeon";
 import type { AdminMember, AdminStats, PeriodStats } from "@/server/admin/adminData";
-import type { AdminCharge } from "@/server/admin/charges";
+import type { AdminPayOrder, PayMode } from "@/server/pay/payOrders";
 
 /**
  * 관리자 화면 (2026-10-10 수정안 26). Vercel 환경변수 ADMIN_USER_IDS 에 등록된 회원만 열린다.
@@ -16,9 +16,9 @@ import type { AdminCharge } from "@/server/admin/charges";
 type Overview = {
   me: { id: string; nickname: string };
   stats: AdminStats;
-  charges: AdminCharge[];
+  orders: AdminPayOrder[];
   errors: Array<{ place: string; message: string; createdAt: string }>;
-  bankAccountSet: boolean;
+  payMode: PayMode;
 };
 
 type Denied = { kind: "login" } | { kind: "notAdmin"; myId?: string; configured?: boolean } | { kind: "error"; message: string };
@@ -26,7 +26,7 @@ type Denied = { kind: "login" } | { kind: "notAdmin"; myId?: string; configured?
 const fmtTime = (iso: string) =>
   new Date(iso).toLocaleString("ko-KR", { timeZone: "Asia/Seoul", month: "numeric", day: "numeric", hour: "2-digit", minute: "2-digit" });
 
-const STATUS_LABEL: Record<AdminCharge["status"], string> = { pending: "확인 대기", approved: "승인", rejected: "거절", cancelled: "손님 취소" };
+const STATUS_LABEL: Record<string, string> = { pending: "결제창 열림(미결제)", paid: "결제 완료", paid_credit: "결제됨·구매 실패(엽전으로 남음)", failed: "승인 실패" };
 
 function StatGrid({ title, s }: { title: string; s: PeriodStats }) {
   const items: Array<[string, string]> = [
@@ -36,7 +36,7 @@ function StatGrid({ title, s }: { title: string; s: PeriodStats }) {
     ["가입", `${s.signups}`],
     ["운세 구매", `${s.purchases}건`],
     ["엽전 사용", formatNyang(s.spent)],
-    ["충전(입금)", formatNyang(s.charged)],
+    ["결제 매출", `${s.charged.toLocaleString("ko-KR")}원`],
   ];
   return (
     <section className="gold-card rounded-2xl p-4">
@@ -65,7 +65,6 @@ function AdminBody() {
   const [grant, setGrant] = useState({ amount: "", reason: "" });
   const [msg, setMsg] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
-  const [showAllCharges, setShowAllCharges] = useState(false);
 
   const load = useCallback(async () => {
     const r = await fetch("/api/admin").catch(() => null);
@@ -125,24 +124,6 @@ function AdminBody() {
     search(q);
   }
 
-  async function decide(c: AdminCharge, action: "approve" | "reject") {
-    const text = action === "approve" ? `${c.depositor} 님 입금 ${formatNyang(c.amount)}을 확인했나요? 승인하면 엽전이 들어가요.` : `이 신청을 거절할까요? (엽전 지급 없음)`;
-    if (!window.confirm(text)) return;
-    setBusy(true);
-    const r = await fetch(`/api/admin/charges/${c.id}`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ action }),
-    }).catch(() => null);
-    setBusy(false);
-    if (!r?.ok) {
-      const body = r ? await r.json().catch(() => ({})) : {};
-      window.alert(body?.error?.message ?? "처리하지 못했어요.");
-    }
-    load();
-    search(q);
-  }
-
   if (denied?.kind === "login") {
     return (
       <main className="mx-auto max-w-xl px-5 py-16 text-center">
@@ -173,8 +154,11 @@ function AdminBody() {
   if (denied?.kind === "error") return <main className="mx-auto max-w-xl px-5 py-16 text-center">{denied.message}</main>;
   if (!data) return <LoadingState message="불러오고 있어요..." />;
 
-  const pending = data.charges.filter((c) => c.status === "pending");
-  const shownCharges = showAllCharges ? data.charges : pending;
+  const PAY_MODE_LABEL: Record<PayMode, string> = {
+    toss: "카드·간편결제 켜짐 (토스페이먼츠)",
+    mock: "시험 결제 모드 - 실제 돈이 오가지 않아요",
+    off: "결제 꺼짐 - Vercel에 TOSS_CLIENT_KEY·PAYMENT_SECRET_KEY 를 넣으면 켜져요",
+  };
 
   return (
     <main className="mx-auto min-h-screen max-w-xl space-y-6 px-5 pb-24 pt-8">
@@ -191,49 +175,34 @@ function AdminBody() {
         전체 회원 {data.stats.total.members}명 · 집계 시작 뒤 전체 방문자 {data.stats.total.visitors}명
       </p>
 
-      {/* 충전 신청 */}
+      {/* 결제 (수정안 31) */}
       <section className="gold-card rounded-2xl p-4">
-        <div className="flex items-baseline justify-between">
-          <h2 className="text-[16px] font-bold">계좌 입금 충전 신청 {pending.length > 0 && <span style={{ color: "var(--color-danger)" }}>· 확인 대기 {pending.length}</span>}</h2>
-          <button type="button" onClick={() => setShowAllCharges((v) => !v)} className="text-[12px] underline underline-offset-4" style={{ color: "var(--color-ink-soft)" }}>
-            {showAllCharges ? "대기만 보기" : "전체 보기"}
-          </button>
-        </div>
-        {!data.bankAccountSet && (
-          <p className="mt-2 rounded-lg px-3 py-2 text-[13px]" style={{ backgroundColor: "var(--color-danger-soft)", color: "var(--color-danger)" }}>
-            입금 계좌가 아직 없어요. Vercel 환경변수 BANK_ACCOUNT 에 &quot;은행 계좌번호 예금주&quot;를 넣어야 손님이 충전을 신청할 수 있어요.
-          </p>
-        )}
-        {shownCharges.length === 0 ? (
+        <h2 className="text-[16px] font-bold">카드·간편결제</h2>
+        <p
+          className="mt-2 rounded-lg px-3 py-2 text-[13px]"
+          style={{ backgroundColor: data.payMode === "toss" ? "#eef5ef" : "var(--color-danger-soft)", color: data.payMode === "toss" ? "var(--color-element-wood)" : "var(--color-danger)" }}
+        >
+          {PAY_MODE_LABEL[data.payMode]}
+        </p>
+        {data.orders.length === 0 ? (
           <p className="mt-3 text-[14px]" style={{ color: "var(--color-ink-faint)" }}>
-            {showAllCharges ? "신청이 없어요." : "확인할 신청이 없어요."}
+            결제 내역이 없어요.
           </p>
         ) : (
           <ul className="mt-3 space-y-2">
-            {shownCharges.map((c) => (
-              <li key={c.id} className="rounded-xl px-3 py-3" style={{ border: "1px solid var(--color-line)" }}>
+            {data.orders.map((o) => (
+              <li key={o.id} className="rounded-xl px-3 py-2.5" style={{ border: "1px solid var(--color-line)" }}>
                 <div className="flex items-baseline justify-between gap-2">
-                  <span className="text-[15px] font-bold">
-                    입금자 {c.depositor} · {formatNyang(c.amount)}
+                  <span className="text-[14px] font-bold">
+                    {o.nickname} · {o.orderName}
                   </span>
-                  <span className="shrink-0 text-[12px]" style={{ color: c.status === "pending" ? "var(--color-danger)" : "var(--color-ink-faint)" }}>
-                    {STATUS_LABEL[c.status]}
+                  <span className="shrink-0 text-[12px]" style={{ color: o.status === "paid" ? "var(--color-element-wood)" : o.status === "paid_credit" ? "var(--color-danger)" : "var(--color-ink-faint)" }}>
+                    {STATUS_LABEL[o.status] ?? o.status}
                   </span>
                 </div>
                 <p className="mt-0.5 text-[12px]" style={{ color: "var(--color-ink-faint)" }}>
-                  회원 {c.nickname} · 신청 {fmtTime(c.createdAt)}
-                  {c.decidedAt ? ` · 처리 ${fmtTime(c.decidedAt)}` : ""}
+                  {formatNyang(o.price)} = 엽전 {formatNyang(o.useYeopjeon)} + 결제 {o.amount.toLocaleString("ko-KR")}원 · {fmtTime(o.paidAt ?? o.createdAt)}
                 </p>
-                {c.status === "pending" && (
-                  <div className="mt-2 flex gap-2">
-                    <button type="button" disabled={busy} onClick={() => decide(c, "approve")} className="btn-band flex-[2] rounded-lg py-2 text-[14px] font-bold">
-                      입금 확인 · 승인
-                    </button>
-                    <button type="button" disabled={busy} onClick={() => decide(c, "reject")} className="btn-secondary flex-1 py-2 text-[14px]">
-                      거절
-                    </button>
-                  </div>
-                )}
               </li>
             ))}
           </ul>

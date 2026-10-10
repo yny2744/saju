@@ -6,12 +6,14 @@ import { isAuthEnabled } from "@/lib/launchMode";
 import { ComingSoon } from "@/components/ComingSoon";
 import { LoadingState, ErrorState } from "@/components/StatusScreens";
 import { BUNDLE_SUGGESTIONS, EXTRA_KEYS, TOPICS, TOPIC_KEYS, isTopicKey, type AnyTopicKey, type TopicKey } from "@/lib/topics";
-import { CHARGE_PATH, CURRENCY_NAME, PRICE, bundleDiscount, formatNyang } from "@/lib/yeopjeon";
+import { CURRENCY_NAME, PRICE, bundleDiscount, formatNyang } from "@/lib/yeopjeon";
 import { PersonHeader } from "@/components/yeopjeon/PersonHeader";
 import { InviteCard } from "@/components/yeopjeon/InviteCard";
+import { PayDialog } from "@/components/yeopjeon/PayDialog";
 import { notifyYeopjeonChanged, reportClientError, useYeopjeon } from "@/components/yeopjeon/useYeopjeon";
 import type { PersonSummary } from "@/server/readings/readings";
 import type { Journey } from "@/lib/journey";
+import { useBgmScene } from "@/components/bgm/bgm";
 
 /**
  * 풀이 대상 한 사람의 "12가지 운세" 화면 (2026-10-08, 2026-10-09 수정안 20·24).
@@ -36,9 +38,13 @@ function PersonBody({ id }: { id: string }) {
   const [error, setError] = useState<string | null>(null);
   const [picking, setPicking] = useState<TopicKey[] | null>(null); // 몰아보기 고르는 중
   const [confirm, setConfirm] = useState<Confirm | null>(null);
+  const [payFor, setPayFor] = useState<Confirm | null>(null); // 수정안 31: 엽전이 모자라 결제 창을 띄운 상품
   const [buying, setBuying] = useState(false);
   const [notice, setNotice] = useState<{ kind: "short" | "error" | "done"; text: string } | null>(null);
   const { data: wallet, reload: reloadWallet } = useYeopjeon(data !== null);
+  // 12가지 운세 전부 보기 손님의 화면에서는 따로 고른 음악 (수정안 19)
+  const allOpen = Boolean(data && [...TOPIC_KEYS, ...EXTRA_KEYS].every((t) => data.person.unlocked.includes(t)));
+  useBgmScene("all", allOpen);
 
   const load = useCallback(() => {
     return fetch(`/api/persons/${encodeURIComponent(id)}`)
@@ -65,6 +71,7 @@ function PersonBody({ id }: { id: string }) {
   useEffect(() => {
     load().then((d) => {
       if (!d) return;
+      if (search.get("paid") === "1") setNotice({ kind: "done", text: "결제가 끝나 운세가 열렸어요. 아래에서 하나씩 눌러 보세요." });
       const buy = search.get("buy");
       const topic = search.get("topic");
       const owned = new Set(d.person.unlocked);
@@ -125,7 +132,7 @@ function PersonBody({ id }: { id: string }) {
         await load();
         setNotice({ kind: "done", text: "운세가 열렸어요. 아래에서 하나씩 눌러 보세요." });
       } else if (body?.error?.code === "INSUFFICIENT_YEOPJEON") {
-        setNotice({ kind: "short", text: `${CURRENCY_NAME}이 부족해요. 계좌 입금으로 충전하거나, 친구를 초대하면 ${CURRENCY_NAME}을 받을 수 있어요.` });
+        setPayFor(c);
       } else {
         setNotice({ kind: "error", text: body?.error?.message ?? "잠시 후 다시 시도해 주세요." });
       }
@@ -159,11 +166,6 @@ function PersonBody({ id }: { id: string }) {
           >
             {notice.text}
           </p>
-          {notice.kind === "short" && (
-            <a href={`${CHARGE_PATH}?next=${encodeURIComponent(`/person/${id}`)}`} className="btn-band mt-3 block rounded-xl py-3.5 text-center text-[16px] font-bold">
-              {CURRENCY_NAME} 충전하기 · 계좌 입금
-            </a>
-          )}
           {notice.kind === "short" && wallet && (
             <div className="mt-3">
               <InviteCard refCode={wallet.refCode} invited={wallet.invited} />
@@ -372,22 +374,37 @@ function PersonBody({ id }: { id: string }) {
               </p>
             )}
             <p className="mt-4 text-center text-[15px]">
-              {CURRENCY_NAME} <b style={{ color: GOLD }}>{formatNyang(priceOf(confirm.mode))}</b>을 쓸까요?
+              <b style={{ color: GOLD }}>{formatNyang(priceOf(confirm.mode))}</b>
+              {balance >= priceOf(confirm.mode) ? `을 ${CURRENCY_NAME}으로 쓸까요?` : ""}
             </p>
             <p className="mt-1 text-center text-[13px]" style={{ color: "var(--color-ink-faint)" }}>
-              남은 {CURRENCY_NAME} {formatNyang(balance)}
-              {balance < priceOf(confirm.mode) && " · 부족해요"}
+              내 {CURRENCY_NAME} {formatNyang(balance)}
+              {balance < priceOf(confirm.mode) && " · 모자란 만큼만 카드·간편결제"}
             </p>
             <div className="mt-5 grid grid-cols-2 gap-2">
               <button type="button" onClick={() => setConfirm(null)} className="btn-secondary">
                 취소
               </button>
               <button type="button" disabled={buying} onClick={() => buy(confirm)} className="btn-primary disabled:opacity-50">
-                {buying ? "여는 중..." : `${CURRENCY_NAME}으로 열기`}
+                {buying ? "여는 중..." : balance >= priceOf(confirm.mode) ? `${CURRENCY_NAME}으로 열기` : "결제하고 열기"}
               </button>
             </div>
           </div>
         </div>
+      )}
+      {payFor && (
+        <PayDialog
+          personId={id}
+          mode={payFor.mode}
+          topics={payFor.topics}
+          backTo={`/person/${id}`}
+          onEnough={() => {
+            const c = payFor;
+            setPayFor(null);
+            buy(c);
+          }}
+          onClose={() => setPayFor(null)}
+        />
       )}
     </main>
   );

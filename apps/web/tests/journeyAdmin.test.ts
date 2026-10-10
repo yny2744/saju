@@ -3,9 +3,10 @@ import { buildTenGodDistribution } from "@/lib/tenGodDistribution";
 import { groupShares, recommendFromSaju, recommendTopics } from "@/lib/journey";
 import { TOPIC_KEYS } from "@/lib/topics";
 import { adminIds, isAdminUser } from "@/server/admin/admin";
-import { cleanDepositor } from "@/server/admin/charges";
 import { kstDay, VID_RE } from "@/server/admin/visits";
-import { CHARGE_OPTIONS, isChargeOption } from "@/lib/yeopjeon";
+import { MIN_CARD_AMOUNT, ORDER_ID_RE, splitPayment } from "@/lib/pay";
+import { payMode } from "@/server/pay/payOrders";
+import { productName } from "@/server/readings/readings";
 
 const shares = (o: Partial<Record<"비겁" | "식상" | "재성" | "관성" | "인성", number>>) =>
   (["비겁", "식상", "재성", "관성", "인성"] as const).map((group) => ({ group, percent: o[group] ?? 0 })).sort((a, b) => b.percent - a.percent);
@@ -56,18 +57,26 @@ describe("수정안 26 - 관리자", () => {
   });
 });
 
-describe("계좌 입금 충전", () => {
-  it("정해진 금액만", () => {
-    for (const o of CHARGE_OPTIONS) expect(isChargeOption(o)).toBe(true);
-    expect(isChargeOption(990)).toBe(false);
-    expect(isChargeOption("9900")).toBe(false);
-    expect(isChargeOption(-4900)).toBe(false);
+describe("수정안 31 - 모자란 만큼만 결제", () => {
+  it("가진 엽전을 먼저 쓰고 나머지만 결제", () => {
+    expect(splitPayment(29500, 5000)).toEqual({ useYeopjeon: 5000, cash: 24500 });
+    expect(splitPayment(990, 0)).toEqual({ useYeopjeon: 0, cash: 990 });
+    expect(splitPayment(4900, 990)).toEqual({ useYeopjeon: 990, cash: 3910 });
+    expect(splitPayment(4900, 9000)).toEqual({ useYeopjeon: 4900, cash: 0 });
   });
-  it("입금자 이름 정리", () => {
-    expect(cleanDepositor("  홍  길동 ")).toBe("홍 길동");
-    expect(cleanDepositor("김")).toBeNull();
-    expect(cleanDepositor("유남영(엔와이)")).toBe("유남영(엔와이)");
-    expect(cleanDepositor("<b>x</b>")).toBeNull();
-    expect(cleanDepositor(123)).toBeNull();
+  it("너무 작게 모자라면 엽전을 덜 쓰고 최소 금액 결제", () => {
+    expect(splitPayment(990, 950)).toEqual({ useYeopjeon: 990 - MIN_CARD_AMOUNT, cash: MIN_CARD_AMOUNT });
+  });
+  it("결제 켜짐 조건 - 시험 결제는 운영 배포에서 별도 허락이 있어야", () => {
+    expect(payMode({ NODE_ENV: "production" } as NodeJS.ProcessEnv)).toBe("off");
+    expect(payMode({ NODE_ENV: "production", TOSS_CLIENT_KEY: "ck", PAYMENT_SECRET_KEY: "sk" } as NodeJS.ProcessEnv)).toBe("toss");
+    expect(payMode({ NODE_ENV: "production", PAYMENT_MOCK: "true" } as NodeJS.ProcessEnv)).toBe("off");
+    expect(payMode({ NODE_ENV: "production", PAYMENT_MOCK: "true", ALLOW_MOCK_IN_PRODUCTION: "true" } as NodeJS.ProcessEnv)).toBe("mock");
+  });
+  it("주문 이름·주문 번호", () => {
+    expect(productName("basic", ["money"])).toBe("재물 운세 보기");
+    expect(productName("deep", ["love"])).toBe("연애 깊게 보기");
+    expect(productName("bundle12", [])).toBe("12가지 운세 전부 보기");
+    expect(ORDER_ID_RE.test("ryg_lx2k3_0123456789abcdef")).toBe(true);
   });
 });
