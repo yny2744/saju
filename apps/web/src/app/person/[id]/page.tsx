@@ -10,6 +10,8 @@ import { CURRENCY_NAME, PRICE, bundleDiscount, formatNyang } from "@/lib/yeopjeo
 import { PersonHeader } from "@/components/yeopjeon/PersonHeader";
 import { InviteCard } from "@/components/yeopjeon/InviteCard";
 import { PayDialog } from "@/components/yeopjeon/PayDialog";
+import { WriteProgress } from "@/components/yeopjeon/WriteProgress";
+import { missingTopics, writeTopics } from "@/lib/writeTopics";
 import { PdfButton } from "@/components/yeopjeon/PdfButton";
 import { notifyYeopjeonChanged, reportClientError, useYeopjeon } from "@/components/yeopjeon/useYeopjeon";
 import type { PersonSummary } from "@/server/readings/readings";
@@ -42,6 +44,7 @@ function PersonBody({ id }: { id: string }) {
   const [payFor, setPayFor] = useState<Confirm | null>(null); // 수정안 31: 엽전이 모자라 결제 창을 띄운 상품
   const [buying, setBuying] = useState(false);
   const [notice, setNotice] = useState<{ kind: "short" | "error" | "done"; text: string } | null>(null);
+  const [writing, setWriting] = useState<{ topics: AnyTopicKey[]; done: AnyTopicKey[]; failed: AnyTopicKey[] } | null>(null);
   const { data: wallet, reload: reloadWallet } = useYeopjeon(data !== null);
   // 12가지 운세 전부 보기 손님의 화면에서는 따로 고른 음악 (수정안 19)
   const allOpen = Boolean(data && [...TOPIC_KEYS, ...EXTRA_KEYS].every((t) => data.person.unlocked.includes(t)));
@@ -68,11 +71,40 @@ function PersonBody({ id }: { id: string }) {
       });
   }, [id]);
 
+  /**
+   * 수정안 43: 몰아보기·전부 보기를 사면 산 운세를 그 자리에서 한꺼번에 써 둔다 (29,500냥 = 14가지).
+   * 손님은 열 때마다 기다리지 않고, 책자 PDF도 묶기만 하면 된다. 못 쓴 운세는 열 때·책자 받을 때 마저 쓴다.
+   */
+  const writeAll = useCallback(async () => {
+    const topics = await missingTopics(id).catch(() => [] as AnyTopicKey[]);
+    if (topics.length === 0) return;
+    const done: AnyTopicKey[] = [];
+    const failed: AnyTopicKey[] = [];
+    setWriting({ topics, done: [], failed: [] });
+    await writeTopics(id, topics, (t, ok) => {
+      (ok ? done : failed).push(t);
+      setWriting({ topics, done: [...done], failed: [...failed] });
+    });
+    setWriting(null);
+    await load();
+    setNotice({
+      kind: "done",
+      text:
+        failed.length === 0
+          ? `${topics.length}가지 운세를 모두 써 두었어요. 아래에서 하나씩 눌러 보시고, 사주 책자 PDF로도 받아 보세요.`
+          : `${topics.length - failed.length}가지 운세를 써 두었어요. ${failed.map((t) => TOPICS[t].title).join(", ")}은(는) 누르면 마저 써 드려요.`,
+    });
+  }, [id, load]);
+
   // 처음 열 때: 불러오고, 주소에 담긴 구매 창을 연다
   useEffect(() => {
     load().then((d) => {
       if (!d) return;
-      if (search.get("paid") === "1") setNotice({ kind: "done", text: "결제가 끝나 운세가 열렸어요. 아래에서 하나씩 눌러 보세요." });
+      if (search.get("paid") === "1") {
+        setNotice({ kind: "done", text: "결제가 끝나 운세가 열렸어요. 아래에서 하나씩 눌러 보세요." });
+        writeAll();
+        return;
+      }
       const buy = search.get("buy");
       const topic = search.get("topic");
       const owned = new Set(d.person.unlocked);
@@ -142,6 +174,9 @@ function PersonBody({ id }: { id: string }) {
         }
         await load();
         setNotice({ kind: "done", text: "운세가 열렸어요. 아래에서 하나씩 눌러 보세요." });
+        setBuying(false);
+        await writeAll();
+        return;
       } else if (body?.error?.code === "INSUFFICIENT_YEOPJEON") {
         setPayFor(c);
       } else {
@@ -412,6 +447,15 @@ function PersonBody({ id }: { id: string }) {
             </div>
           </div>
         </div>
+      )}
+      {writing && (
+        <WriteProgress
+          title={writing.topics.length >= 12 ? `${writing.topics.length}가지 운세를 쓰고 있어요` : "고르신 운세를 쓰고 있어요"}
+          topics={writing.topics}
+          done={writing.done}
+          failed={writing.failed}
+          note="모두 써 두면 열 때 기다리지 않고, 사주 책자 PDF로도 바로 받을 수 있어요. 1분 남짓 걸려요. 화면을 닫아도 엽전은 그대로예요."
+        />
       )}
       {payFor && (
         <PayDialog

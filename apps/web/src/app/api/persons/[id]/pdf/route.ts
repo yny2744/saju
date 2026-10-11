@@ -13,7 +13,7 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
   const blocked = blockIfAuthOff();
   if (blocked) return blocked;
   try {
-    const r = await handlePdf(request.cookies.get(SESSION_COOKIE_NAME)?.value, params.id);
+    const r = await handlePdf(request.cookies.get(SESSION_COOKIE_NAME)?.value, params.id, request.nextUrl.searchParams.get("partial") === "1");
     if (!r.pdf) return NextResponse.json(r.json, { status: r.status });
     return new NextResponse(new Uint8Array(r.pdf), {
       status: 200,
@@ -21,6 +21,7 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
         "Content-Type": "application/pdf",
         "Content-Disposition": `attachment; filename="saju.pdf"; filename*=UTF-8''${encodeURIComponent(r.filename ?? "saju.pdf")}`,
         "Cache-Control": "private, no-store",
+        "X-Missing-Topics": (r.missing ?? []).join(","),
       },
     });
   } catch (e) {

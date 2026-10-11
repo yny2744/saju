@@ -143,13 +143,43 @@ export function orderSections(sections: ReadingSection[], focus: Focus | undefin
   return order.map((k) => sections.find((s) => s.key === k)).filter((s): s is ReadingSection => Boolean(s));
 }
 
-/** 한 번 실패하면 한 번만 다시 시도 (60초 제한 안에서) */
-async function completeWithRetry<T>(provider: CompletionProvider, prompt: string, parse: (raw: string) => T): Promise<T> {
-  try {
-    return parse(await provider.complete(SYSTEM, prompt));
-  } catch {
-    return parse(await provider.complete(SYSTEM, prompt));
+/**
+ * 자동 다시 시도 (2026-10-12 수정안 42).
+ * Gemini가 붐빔(503)·한도(429)·일시 오류를 주거나, 풀이 검사(소제목 부족·없는 대운)에 걸리면 1초 → 3초 → 6초 쉬고 다시 쓴다.
+ * Vercel 60초 제한 안에서만 - 남은 시간에 한 번 더 쓸 여유가 없으면 멈추고 오류를 돌려준다(화면이 다시 부른다).
+ */
+const TRANSIENT_RE = /status (408|429|500|502|503|504)|네트워크 오류|fetch failed|ECONNRESET|ETIMEDOUT/i;
+export const RETRY = { delays: [1000, 3000, 6000], budgetMs: 55_000 };
+
+export function isTransientAiError(e: unknown): boolean {
+  return TRANSIENT_RE.test(e instanceof Error ? e.message : String(e));
+}
+
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
+export async function completeWithRetry<T>(
+  provider: CompletionProvider,
+  prompt: string,
+  parse: (raw: string) => T,
+  expectedMs = 25_000
+): Promise<T> {
+  const start = Date.now();
+  let last: unknown;
+  for (let i = 0; ; i++) {
+    const t0 = Date.now();
+    try {
+      return parse(await provider.complete(SYSTEM, prompt));
+    } catch (e) {
+      last = e;
+      const delay = RETRY.delays[i];
+      if (delay === undefined) break;
+      // 붐빔 오류는 금방 돌아오므로 다음 시도는 "보통 걸리는 시간", 검사 탈락은 "방금 걸린 시간"만큼 필요하다고 본다
+      const need = delay + (isTransientAiError(e) ? expectedMs : Math.max(Date.now() - t0, 1000));
+      if (Date.now() - start + need > RETRY.budgetMs) break;
+      await sleep(delay);
+    }
   }
+  throw last;
 }
 
 export async function generateTaste(
@@ -160,7 +190,7 @@ export async function generateTaste(
   provider: CompletionProvider = getReadingProvider()
 ): Promise<ReadingContent> {
   const groups = await Promise.all(
-    TASTE_GROUPS.map((keys) => completeWithRetry(provider, buildTastePrompt(saju, keys, focus, year), (raw) => parseTasteResponse(raw, keys)))
+    TASTE_GROUPS.map((keys) => completeWithRetry(provider, buildTastePrompt(saju, keys, focus, year), (raw) => parseTasteResponse(raw, keys), 10_000))
   );
   const sections = groups.flat().map((s) => ({ ...s, body: fillName(s.body, nickname), deeper: fillName(s.deeper, nickname) }));
   return { sections: orderSections(sections, focus), model: provider.modelName };
@@ -192,7 +222,7 @@ export async function generateBasic(
   year: number,
   provider: CompletionProvider = getReadingProvider()
 ): Promise<BasicContent> {
-  const [section] = await completeWithRetry(provider, buildBasicPrompt(saju, topic, year), (raw) => parseTasteResponse(raw, [topic]));
+  const [section] = await completeWithRetry(provider, buildBasicPrompt(saju, topic, year), (raw) => parseTasteResponse(raw, [topic]), 10_000);
   return {
     topic,
     title: TOPICS[topic].title,
@@ -223,7 +253,7 @@ function topicExtraData(saju: SajuJson, topic: AnyTopicKey, year: number): strin
 
 /**
  * 깊게 보기 (2026-10-10 수정안 30): 판정은 엔진이 끝낸 "확정 사실 목록"만 근거로 쓰게 묶는다.
- * 가벼운 모델(flash-lite)이 표를 잘못 읽어 근거를 지어내던 문제를 막고, 분량을 4,000~5,000자로 늘린다.
+ * 가벼운 모델(flash-lite)이 표를 잘못 읽어 근거를 지어내던 문제를 막고, 분량을 5,000~6,000자로 늘린다(수정안 44, 책자 10만 자).
  * 마지막 소제목은 늘 "꼭 채워야 할 하나" (부족한 기운 → 채우는 것) - 류결사주 핵심 수익화 원칙.
  */
 export function buildDeepPrompt(saju: SajuJson, topic: AnyTopicKey, year: number, today?: string): string {
@@ -234,8 +264,8 @@ export function buildDeepPrompt(saju: SajuJson, topic: AnyTopicKey, year: number
   const fl = FILL[need];
   const monthly = topic === "monthly";
   const lengthRule = monthly
-    ? "열두 달을 빠짐없이 달마다 하나의 소제목(12개), 달마다 4~6문장, 전체 3,500~4,500자. 마지막에 13번째 소제목으로 \"꼭 채워야 할 하나\"를 덧붙이세요"
-    : "소제목 5개, 소제목마다 800~1,000자, 전체 4,000~5,000자";
+    ? "열두 달을 빠짐없이 달마다 하나의 소제목(12개), 달마다 5~7문장, 전체 4,500~5,500자. 마지막에 13번째 소제목으로 \"꼭 채워야 할 하나\"를 덧붙이세요"
+    : "소제목 5개, 소제목마다 1,000~1,200자, 전체 5,000~6,000자";
   return `# 확정 사실 (계산 엔진이 판정까지 끝낸 값 - 근거는 이 목록에서만 가져오세요)
 ${factsForPrompt(f)}
 - 부족한 기운을 채우는 것(${need}): 색 ${fl.colors} / 방위 ${fl.direction} / 숫자 ${fl.numbers} / 동물 ${fl.animal} / 식물 ${fl.plant} / 물건 ${fl.object} / 생활 ${fl.habit}
@@ -283,7 +313,7 @@ export async function generateDeep(
   nickname: string,
   topic: AnyTopicKey,
   year: number,
-  provider: CompletionProvider = getReadingProvider(9000)
+  provider: CompletionProvider = getReadingProvider(12000)
 ): Promise<DeepContent> {
   const allowed = sajuFacts(saju).daeunList.map((d) => d.ganzhi);
   const body = await completeWithRetry(provider, buildDeepPrompt(saju, topic, year), (raw) => parseDeepResponse(raw, topic, allowed));

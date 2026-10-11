@@ -1,48 +1,29 @@
 "use client";
 
 import { useState } from "react";
-import { useBgmScene } from "@/components/bgm/bgm";
-import { TOPICS, isAnyTopicKey } from "@/lib/topics";
+import { TOPICS, isAnyTopicKey, type AnyTopicKey } from "@/lib/topics";
+import { writeTopics } from "@/lib/writeTopics";
 import { reportClientError } from "./useYeopjeon";
+import { WriteProgress } from "./WriteProgress";
 
 /**
  * 사주 책자 PDF 받기 (2026-10-12 수정안 38).
- * 깊게 보기가 열린 운세를 모두 담는다. 아직 안 열어 본(안 써진) 운세는 받기 전에 하나씩 마저 쓴다 - 유샘: "열어 보지 않은 것도 다 보내 줘야지".
+ * 깊게 보기가 열린 운세를 모두 담는다. 아직 안 열어 본(안 써진) 운세는 받기 전에 한꺼번에 마저 쓴다 - 유샘: "열어 보지 않은 것도 다 보내 줘야지".
+ * 수정안 42: 하나가 실패해도 멈추지 않고, 끝까지 못 쓴 것이 있으면 쓴 것까지로 책자를 먼저 내려 준다.
  */
-function Progress({ done, total, current }: { done: number; total: number; current: string }) {
-  useBgmScene("all");
-  const pct = total ? Math.round((done / total) * 100) : 0;
-  return (
-    <div className="fixed inset-0 z-50 flex flex-col items-center justify-center px-8" style={{ backgroundColor: "var(--color-paper)" }}>
-      <p className="text-[18px] font-bold" style={{ fontFamily: "var(--font-serif)" }}>
-        사주 책자를 만들고 있어요
-      </p>
-      <p className="mt-2 text-center text-[14px]" style={{ color: "var(--color-ink-soft)" }}>
-        {current}
-      </p>
-      <div className="mt-6 h-3 w-full max-w-xs overflow-hidden rounded-full" style={{ backgroundColor: "var(--color-line)" }}>
-        <div className="h-full rounded-full transition-all" style={{ width: `${Math.max(4, pct)}%`, backgroundColor: "var(--color-gold)" }} />
-      </div>
-      <p className="mt-2 text-[13px] tabular-nums" style={{ color: "var(--color-ink-faint)" }}>
-        {done} / {total}
-      </p>
-      <p className="mt-6 text-center text-[12px]" style={{ color: "var(--color-ink-faint)" }}>
-        아직 열어 보지 않은 운세도 모두 써서 담고 있어요. 화면을 닫지 말아 주세요.
-      </p>
-    </div>
-  );
-}
-
 export function PdfButton({ personId, className = "" }: { personId: string; className?: string }) {
-  const [state, setState] = useState<{ done: number; total: number; current: string } | null>(null);
+  const [writing, setWriting] = useState<{ topics: AnyTopicKey[]; done: AnyTopicKey[]; failed: AnyTopicKey[] } | null>(null);
+  const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [info, setInfo] = useState<string | null>(null);
   const base = `/api/persons/${encodeURIComponent(personId)}`;
 
-  async function download(): Promise<boolean | string[]> {
-    const r = await fetch(`${base}/pdf`);
+  /** 책자를 받는다. 안 써진 운세가 있으면 그 목록을 돌려준다 (partial이면 쓴 것까지로 묶어 받는다) */
+  async function download(partial: boolean): Promise<{ missing: AnyTopicKey[]; got: boolean }> {
+    const r = await fetch(`${base}/pdf${partial ? "?partial=1" : ""}`);
     if (r.status === 409) {
       const body = await r.json().catch(() => ({}));
-      return Array.isArray(body.missing) ? (body.missing as string[]) : [];
+      return { missing: Array.isArray(body.missing) ? (body.missing as string[]).filter(isAnyTopicKey) : [], got: false };
     }
     if (!r.ok) {
       const body = await r.json().catch(() => ({}));
@@ -60,33 +41,39 @@ export function PdfButton({ personId, className = "" }: { personId: string; clas
     a.click();
     a.remove();
     setTimeout(() => URL.revokeObjectURL(url), 60_000);
-    return true;
+    const left = (r.headers.get("X-Missing-Topics") ?? "").split(",").filter(isAnyTopicKey);
+    return { missing: left, got: true };
   }
 
   async function onClick() {
     setError(null);
-    setState({ done: 0, total: 1, current: "책자를 준비하고 있어요" });
+    setInfo(null);
+    setBusy(true);
     try {
-      let res = await download();
-      if (Array.isArray(res)) {
-        const missing = res.filter(isAnyTopicKey);
-        const total = missing.length + 1;
-        for (let i = 0; i < missing.length; i++) {
-          const t = missing[i];
-          setState({ done: i, total, current: `${TOPICS[t].title} 운세를 쓰고 있어요` });
-          const w = await fetch(`${base}/topics/${t}`, { method: "POST" });
-          if (!w.ok) throw new Error(`${TOPICS[t].title} 운세를 쓰지 못했어요. 다시 눌러 주세요. 이미 쓴 운세는 그대로 남아요.`);
-        }
-        setState({ done: missing.length, total, current: "책으로 묶고 있어요" });
-        res = await download();
-        if (Array.isArray(res)) throw new Error("아직 쓰지 못한 운세가 있어요. 다시 눌러 주세요.");
+      let res = await download(false);
+      if (!res.got) {
+        // 수정안 42·43: 안 써진 운세를 한꺼번에 쓴다 - 하나가 실패해도 멈추지 않는다
+        const topics = res.missing;
+        const done: AnyTopicKey[] = [];
+        const failed: AnyTopicKey[] = [];
+        setWriting({ topics, done: [], failed: [] });
+        await writeTopics(personId, topics, (t, ok) => {
+          (ok ? done : failed).push(t);
+          setWriting({ topics, done: [...done], failed: [...failed] });
+        });
+        setWriting(null);
+        res = await download(true);
+        if (!res.got) throw new Error("운세를 쓰는 곳이 붐벼요. 1~2분 뒤 다시 눌러 주세요. 엽전은 빠지지 않아요.");
       }
-      setState(null);
+      if (res.missing.length > 0) {
+        setInfo(`${res.missing.map((t) => TOPICS[t].title).join(", ")} 운세는 아직 담지 못했어요. 잠시 뒤 다시 받기를 누르면 함께 담겨요.`);
+      }
     } catch (e) {
       reportClientError("PDF 받기", String(e));
-      setState(null);
       setError(e instanceof Error ? e.message : "책자를 만들지 못했어요.");
     }
+    setWriting(null);
+    setBusy(false);
   }
 
   return (
@@ -94,11 +81,11 @@ export function PdfButton({ personId, className = "" }: { personId: string; clas
       <button
         type="button"
         onClick={onClick}
-        disabled={state !== null}
+        disabled={busy}
         className={`block w-full rounded-xl py-3.5 text-[16px] font-bold disabled:opacity-60 ${className}`}
         style={{ border: "1px solid var(--color-gold-line)", backgroundColor: "var(--color-gold-soft)", fontFamily: "var(--font-serif)" }}
       >
-        사주 책자 PDF로 받기
+        {busy && !writing ? "책으로 묶고 있어요..." : "사주 책자 PDF로 받기"}
       </button>
       <p className="mt-1 text-center text-[12px]" style={{ color: "var(--color-ink-faint)" }}>
         표지·원국·깊게 본 운세·나를 채우는 기운까지 한 권으로 · 가족에게 보내거나 출력해 두세요
@@ -108,7 +95,20 @@ export function PdfButton({ personId, className = "" }: { personId: string; clas
           {error}
         </p>
       )}
-      {state && <Progress {...state} />}
+      {info && (
+        <p className="mt-2 rounded-lg px-3 py-2 text-center text-[13px]" style={{ backgroundColor: "var(--color-gold-soft)", color: "var(--color-ink)" }}>
+          {info}
+        </p>
+      )}
+      {writing && (
+        <WriteProgress
+          title="사주 책자를 만들고 있어요"
+          topics={writing.topics}
+          done={writing.done}
+          failed={writing.failed}
+          note="아직 열어 보지 않은 운세도 모두 써서 담고 있어요. 화면을 닫지 말아 주세요."
+        />
+      )}
     </>
   );
 }

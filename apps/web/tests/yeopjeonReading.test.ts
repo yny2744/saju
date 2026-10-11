@@ -302,7 +302,7 @@ describe("수정안 30 - 깊게 보기는 확정 사실만", () => {
     const p = buildDeepPrompt(s, "love", 2026, "2026-10-10");
     expect(p).toContain("# 확정 사실");
     expect(p).toContain("지금 지나는 대운: 정유(丁酉) 대운");
-    expect(p).toContain("4,000~5,000자");
+    expect(p).toContain("5,000~6,000자");
     expect(p).toContain("꼭 채워야 할 하나");
     expect(p).toContain("부족한 기운: 토(土)");
   });
