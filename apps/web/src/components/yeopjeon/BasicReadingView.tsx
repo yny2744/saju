@@ -1,7 +1,7 @@
 import { ELEMENT_TOKEN, type ElementKo } from "@/lib/pillarView";
 import { ENERGY_GUIDE } from "@/lib/neededEnergy";
 import { TOPICS } from "@/lib/topics";
-import type { BasicReadingV2 } from "@/lib/basic/compose";
+import type { BasicReadingV2, FillCard } from "@/lib/basic/compose";
 
 /**
  * 990냥 운세 보기 화면 (2026-10-10 수정안 34) - 글만 있으면 성의 없어 보이니 엔진 값으로 그림을 함께.
@@ -12,7 +12,7 @@ import type { BasicReadingV2 } from "@/lib/basic/compose";
 const GOLD = "var(--color-gold)";
 const el = (e: ElementKo | null) => (e ? `var(--color-element-${ELEMENT_TOKEN[e]})` : "var(--color-line)");
 
-function Seal({ ch }: { ch: string }) {
+export function Seal({ ch }: { ch: string }) {
   return (
     <span
       aria-hidden
@@ -26,10 +26,7 @@ function Seal({ ch }: { ch: string }) {
 
 export function BasicReadingView({ content }: { content: BasicReadingV2 }) {
   const seal = TOPICS[content.topic]?.hanja ?? "運";
-  const hl = new Set((content.chart as unknown as { hlKeys?: string[] }).hlKeys ?? []);
-  const keyOf: Record<string, string> = { 시주: "hour", 일주: "day", 월주: "month", 년주: "year" };
   const need = content.lack.fill;
-  const guide = ENERGY_GUIDE[need.element];
 
   return (
     <div className="space-y-6">
@@ -47,10 +44,72 @@ export function BasicReadingView({ content }: { content: BasicReadingV2 }) {
         </div>
       </section>
 
-      {/* 내 원국 - 이 운세의 자리 */}
+      <PillarChart chart={content.chart} />
+
+      {/* 소제목 4개 */}
+      {content.sections.map((s, i) => (
+        <section key={i} className="rounded-2xl p-5" style={{ border: "1px solid var(--color-line)", backgroundColor: "var(--color-card)" }}>
+          <h2 className="flex items-center gap-2 text-[17px] font-bold" style={{ fontFamily: "var(--font-serif)", color: "var(--color-accent)" }}>
+            <Seal ch={seal} />
+            {s.heading}
+          </h2>
+          <p className="mt-3 text-[15.5px] leading-[1.9]">{s.body}</p>
+
+          {i === 2 && <DaeunBar daeun={content.chart.daeun} />}
+        </section>
+      ))}
+
+      {/* 결론: 꼭 채워야 할 하나 */}
+      <section className="gold-card rounded-2xl p-5">
+        <div className="flex items-center gap-3">
+          <span
+            className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full text-[28px] font-bold text-white"
+            style={{ fontFamily: "var(--font-serif)", backgroundColor: el(need.element), boxShadow: "0 0 0 3px var(--color-gold-soft)" }}
+          >
+            {need.hanja}
+          </span>
+          <h2 className="text-[19px] font-bold leading-snug" style={{ fontFamily: "var(--font-serif)", color: "var(--color-accent)" }}>
+            {content.lack.heading}
+          </h2>
+        </div>
+
+        <ElementBars elements={content.chart.elements} />
+
+        <p className="mt-4 text-[15.5px] leading-[1.9]">{content.lack.body}</p>
+
+        <LuckCard fill={need} person={content.lack.person} />
+      </section>
+
+      {/* 깊게 보기에서 열리는 것 */}
+      {content.deeper.length > 0 && (
+        <section className="rounded-2xl px-5 py-4" style={{ border: "1px dashed var(--color-gold-line)" }}>
+          <p className="text-[13px] font-bold" style={{ color: GOLD }}>
+            깊게 보기에서 열리는 것
+          </p>
+          <ul className="mt-2 space-y-1.5">
+            {content.deeper.map((d) => (
+              <li key={d} className="flex items-center gap-2 text-[14px]">
+                <span aria-hidden style={{ color: GOLD }}>◆</span>
+                <span style={{ filter: "blur(0.6px)", color: "var(--color-ink-soft)" }}>{d}</span>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+    </div>
+  );
+}
+
+type Chart = BasicReadingV2["chart"];
+
+/** 내 원국 여덟 글자 - 오행 색, 이 운세의 자리는 금색 */
+export function PillarChart({ chart }: { chart: Chart }) {
+  const hl = new Set((chart as unknown as { hlKeys?: string[] }).hlKeys ?? []);
+  const keyOf: Record<string, string> = { 시주: "hour", 일주: "day", 월주: "month", 년주: "year" };
+  return (
       <section className="rounded-2xl px-4 py-4" style={{ border: "1px solid var(--color-line)", backgroundColor: "var(--color-card)" }}>
         <div className="grid grid-cols-4 gap-2 text-center">
-          {content.chart.pillars.map((p) => {
+          {chart.pillars.map((p) => {
             const k = keyOf[p.label];
             const cell = (ch: string, e: ElementKo | null, on: boolean) => (
               <span
@@ -76,27 +135,27 @@ export function BasicReadingView({ content }: { content: BasicReadingV2 }) {
             );
           })}
         </div>
-        {content.chart.highlightNote && (
+        {chart.highlightNote && (
           <p className="mt-3 text-center text-[13px] font-semibold" style={{ color: GOLD }}>
-            {content.chart.highlightNote}
+            {chart.highlightNote}
           </p>
         )}
       </section>
+  );
+}
 
-      {/* 소제목 4개 */}
-      {content.sections.map((s, i) => (
-        <section key={i} className="rounded-2xl p-5" style={{ border: "1px solid var(--color-line)", backgroundColor: "var(--color-card)" }}>
-          <h2 className="flex items-center gap-2 text-[17px] font-bold" style={{ fontFamily: "var(--font-serif)", color: "var(--color-accent)" }}>
-            <Seal ch={seal} />
-            {s.heading}
-          </h2>
-          <p className="mt-3 text-[15.5px] leading-[1.9]">{s.body}</p>
+/** 인생 흐름 막대 (대운) */
+export function DaeunBar({ daeun: all }: { daeun: Chart["daeun"] }) {
+  if (all.length === 0) return null;
+  // 폰 화면에 "지금"이 보이도록 지금 대운 앞 두 칸부터 보여 준다
+  const cur = all.findIndex((d) => d.current);
+  const daeun = cur > 2 ? all.slice(cur - 2) : all;
+  return (
+          
 
-          {/* 흐름 소제목 아래에 인생 흐름 막대 */}
-          {i === 2 && content.chart.daeun.length > 0 && (
             <div className="mt-4">
               <div className="flex gap-1 overflow-x-auto pb-1">
-                {content.chart.daeun.map((d) => (
+                {daeun.map((d) => (
                   <div key={d.age} className="w-[52px] shrink-0 text-center">
                     <p className="h-4 text-[11px] font-bold" style={{ color: "var(--color-danger)" }}>
                       {d.current ? "▼ 지금" : ""}
@@ -117,33 +176,22 @@ export function BasicReadingView({ content }: { content: BasicReadingV2 }) {
                   </div>
                 ))}
               </div>
-              {content.chart.daeun.some((d) => d.power) && (
+              {daeun.some((d) => d.power) && (
                 <p className="mt-1 text-[12px]" style={{ color: "var(--color-ink-faint)" }}>
                   금색 칸은 이 운세에 힘이 실리는 대운이에요
                 </p>
               )}
             </div>
-          )}
-        </section>
-      ))}
+          
+  );
+}
 
-      {/* 결론: 꼭 채워야 할 하나 */}
-      <section className="gold-card rounded-2xl p-5">
-        <div className="flex items-center gap-3">
-          <span
-            className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full text-[28px] font-bold text-white"
-            style={{ fontFamily: "var(--font-serif)", backgroundColor: el(need.element), boxShadow: "0 0 0 3px var(--color-gold-soft)" }}
-          >
-            {need.hanja}
-          </span>
-          <h2 className="text-[19px] font-bold leading-snug" style={{ fontFamily: "var(--font-serif)", color: "var(--color-accent)" }}>
-            {content.lack.heading}
-          </h2>
-        </div>
-
-        {/* 오행 막대 - 부족한 기운이 한눈에 */}
+/** 오행 막대 - 부족한 기운이 한눈에 */
+export function ElementBars({ elements }: { elements: Chart["elements"] }) {
+  return (
+        
         <div className="mt-4 space-y-1.5">
-          {content.chart.elements.map((e) => (
+          {elements.map((e) => (
             <div key={e.element} className="flex items-center gap-2 text-[13px]">
               <span className="w-5 font-bold" style={{ color: e.needed ? "var(--color-danger)" : "var(--color-ink-soft)" }}>
                 {e.element}
@@ -157,10 +205,14 @@ export function BasicReadingView({ content }: { content: BasicReadingV2 }) {
             </div>
           ))}
         </div>
+  );
+}
 
-        <p className="mt-4 text-[15.5px] leading-[1.9]">{content.lack.body}</p>
-
-        {/* 행운 카드 */}
+/** 행운 카드 - 부족한 기운을 채우는 색·방위·숫자·동물·식물·물건·생활·사람 */
+export function LuckCard({ fill: need, person }: { fill: FillCard; person: string }) {
+  const guide = ENERGY_GUIDE[need.element];
+  return (
+        
         <div className="mt-5 rounded-2xl p-4" style={{ background: "linear-gradient(160deg, #1b2f52, #16294a)", color: "#f6ecd2", boxShadow: "inset 0 0 0 1px var(--color-gold-line)" }}>
           <p className="text-center text-[12px] tracking-[0.3em]" style={{ color: "var(--color-gold-light)" }}>
             나를 채우는 {need.element}({need.hanja})의 기운
@@ -195,27 +247,8 @@ export function BasicReadingView({ content }: { content: BasicReadingV2 }) {
               곁에 두면 좋은 사람
             </span>
             <br />
-            <b>{content.lack.person}</b>
+            <b>{person}</b>
           </p>
         </div>
-      </section>
-
-      {/* 깊게 보기에서 열리는 것 */}
-      {content.deeper.length > 0 && (
-        <section className="rounded-2xl px-5 py-4" style={{ border: "1px dashed var(--color-gold-line)" }}>
-          <p className="text-[13px] font-bold" style={{ color: GOLD }}>
-            깊게 보기에서 열리는 것
-          </p>
-          <ul className="mt-2 space-y-1.5">
-            {content.deeper.map((d) => (
-              <li key={d} className="flex items-center gap-2 text-[14px]">
-                <span aria-hidden style={{ color: GOLD }}>◆</span>
-                <span style={{ filter: "blur(0.6px)", color: "var(--color-ink-soft)" }}>{d}</span>
-              </li>
-            ))}
-          </ul>
-        </section>
-      )}
-    </div>
   );
 }

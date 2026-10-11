@@ -15,7 +15,8 @@ import type { Journey } from "@/lib/journey";
 import { notifyYeopjeonChanged, reportClientError, useYeopjeon } from "@/components/yeopjeon/useYeopjeon";
 import type { ReadingHeader } from "@/server/readings/readings";
 import type { BasicContent, DeepContent } from "@/server/readings/generateReading";
-import type { BasicReadingV2 } from "@/lib/basic/compose";
+import type { BasicReadingV2, DeepVisual } from "@/lib/basic/compose";
+import { DeepReadingView } from "@/components/yeopjeon/DeepReadingView";
 import { BasicReadingView } from "@/components/yeopjeon/BasicReadingView";
 
 /**
@@ -35,7 +36,7 @@ type State =
   | { status: "loading" }
   | { status: "writing"; level: Level; grand?: boolean; minMs: number }
   | { status: "basic"; content: BasicContent | BasicReadingV2; header: ReadingHeader }
-  | { status: "deep"; content: DeepContent; header: ReadingHeader; journey: Journey | null }
+  | { status: "deep"; content: DeepContent; header: ReadingHeader; journey: Journey | null; visual: DeepVisual | null }
   | { status: "locked"; header: ReadingHeader | null }
   | { status: "error"; message: string; level: Level | null };
 
@@ -53,8 +54,8 @@ function TopicBody({ id, topic }: { id: string; topic: string }) {
   const title = isAnyTopicKey(topic) ? TOPICS[topic].title : "운세";
   const canBasic = isTopicKey(topic);
 
-  const show = useCallback((body: { status: string; level: Level; content: unknown; header: ReadingHeader; journey?: Journey }) => {
-    if (body.level === "deep") setState({ status: "deep", content: body.content as DeepContent, header: body.header, journey: body.journey ?? null });
+  const show = useCallback((body: { status: string; level: Level; content: unknown; header: ReadingHeader; journey?: Journey; visual?: DeepVisual | null }) => {
+    if (body.level === "deep") setState({ status: "deep", content: body.content as DeepContent, header: body.header, journey: body.journey ?? null, visual: body.visual ?? null });
     else setState({ status: "basic", content: body.content as BasicContent | BasicReadingV2, header: body.header });
   }, []);
 
@@ -338,31 +339,13 @@ function TopicBody({ id, topic }: { id: string; topic: string }) {
   }
 
   // ── 깊게 보기 ──
-  const { content, header, journey } = state;
+  const { content, header, journey, visual } = state;
   return (
     <main className="mx-auto min-h-screen max-w-xl px-5 pb-20 pt-12 sm:pt-16">
       <PersonHeader header={header} kicker="류결사주 · 깊게 보기" title={content.title} />
 
-      {content.summary && (
-        <p className="mb-6 rounded-2xl px-5 py-4 text-[16px] leading-relaxed" style={{ backgroundColor: "var(--color-paper-soft)", fontFamily: "var(--font-serif)" }}>
-          {content.summary}
-        </p>
-      )}
-
-      <div className="space-y-5">
-        {content.parts.map((p, i) => (
-          <section key={i} className="rounded-2xl p-5" style={{ border: "1px solid var(--color-line)", backgroundColor: "var(--color-card)" }}>
-            <h2 className="text-[18px] font-bold" style={{ fontFamily: "var(--font-serif)", color: GOLD }}>
-              {p.heading}
-            </h2>
-            <div className="mt-3 space-y-3 text-[15.5px] leading-[1.85]">
-              {p.body.split(/\n+/).map((para, j) => (
-                <p key={j}>{para}</p>
-              ))}
-            </div>
-          </section>
-        ))}
-      </div>
+      {/* 수정안 37: 990냥처럼 그림을 함께 */}
+      <DeepReadingView content={content} visual={visual} />
 
       {/* 수정안 27·29: 깊게 본 뒤에만 - 내 사주로 고른 다음 운세 → 그 3가지 몰아보기 → 전부 보기 */}
       {journey && <NextSteps personId={id} nickname={header.nickname} journey={journey} />}

@@ -1,9 +1,10 @@
 import type { SajuJson } from "saju-engine";
-import { buildPillarColumns, type ElementKo } from "@/lib/pillarView";
+import { BRANCH_HANJA, STEM_HANJA, buildPillarColumns, type ElementKo } from "@/lib/pillarView";
 import { ELEMENT_HANJA, ELEMENT_NATURE } from "@/lib/manseView";
 import { sajuFacts, TEN_GOD_GROUP, type SajuFacts } from "@/lib/sajuFacts";
 import { STEM_ELEMENT } from "saju-engine/dist/src/rules/fiveElementTables";
-import { TOPICS, type TopicKey } from "@/lib/topics";
+import { TOPICS, isTopicKey, type AnyTopicKey, type TopicKey } from "@/lib/topics";
+import { monthPillarsOfYear } from "@/lib/monthPillars";
 import type { TenGodGroup } from "@/lib/journey";
 import { DAY_MASTER, FILL, GROUP_LABEL, LACK_CORE, PERSON_FILL, POS_MEANING, SEUN_LINE } from "./common";
 import { SECOND_GROUP_LINE, STAGE_LINE, TOPIC_POWER_GROUP, TOPIC_WORD, headings } from "./extra";
@@ -257,5 +258,58 @@ export function composeBasic(saju: SajuJson, nickname: string, topic: TopicKey, 
     chart,
     deeper: TOPICS[topic].deepPoints,
     body,
+  };
+}
+
+/**
+ * 깊게 보기 화면 그림 (2026-10-11 수정안 37) - 990냥과 같은 그림(원국 자리·대운 막대·오행 막대·행운 카드)을
+ * 깊게 보기에도 붙인다. 엔진 값만 쓰고 저장하지 않는다(열 때마다 계산 - 예전에 쓴 깊은 풀이에도 붙는다).
+ * 월별 운세는 올해 열두 달의 월건과 "부족한 기운이 들어오는 달"을 함께 보여 준다.
+ */
+export interface DeepVisual {
+  chart: BasicReadingV2["chart"];
+  fill: FillCard;
+  person: string;
+  needReason: "lacking" | "weakest";
+  months: Array<{ label: string; hanja: string; element: ElementKo; fills: boolean }> | null;
+}
+
+export function topicVisual(saju: SajuJson, nickname: string, topic: AnyTopicKey, year: number, today?: string): DeepVisual {
+  const f = sajuFacts(saju, today);
+  const key = (isTopicKey(topic) ? topic : "nature") as TopicKey;
+  const cols = buildPillarColumns(saju);
+  const hl = highlightFor(key, cols);
+  const power = isTopicKey(topic) ? TOPIC_POWER_GROUP[topic] : undefined;
+  const needEl = f.needed.elements[0];
+  const chart: BasicReadingV2["chart"] = {
+    pillars: cols.map((c) => ({
+      label: c.label,
+      stem: c.stem?.hanja ?? "",
+      branch: c.branch?.hanja ?? "",
+      stemEl: c.stem?.element ?? null,
+      branchEl: c.branch?.element ?? null,
+      highlight: hl.keys.has(`${c.key}:stem`) || hl.keys.has(`${c.key}:branch`),
+      empty: c.empty,
+    })),
+    highlightNote: hl.note ? fill(hl.note, nickname) : null,
+    daeun: f.daeunList.map((d) => ({ age: d.startAge, hanja: d.hanja, group: d.group, current: d === f.currentDaeun, power: power !== undefined && d.group === power })),
+    elements: f.elementPercents.map((e) => ({ ...e, needed: f.needed.elements.includes(e.element) })),
+  };
+  (chart as unknown as { hlKeys: string[] }).hlKeys = [...hl.keys];
+  const months =
+    topic === "monthly"
+      ? monthPillarsOfYear(year).map((m) => {
+          const stem = m.ganzhi.charAt(0);
+          const branch = m.ganzhi.charAt(1);
+          const element = STEM_ELEMENT[stem] as ElementKo;
+          return { label: m.label, hanja: `${STEM_HANJA[stem] ?? stem}${BRANCH_HANJA[branch] ?? branch}`, element, fills: f.needed.elements.includes(element) };
+        })
+      : null;
+  return {
+    chart,
+    fill: { element: needEl, hanja: ELEMENT_HANJA[needEl], ...FILL[needEl] },
+    person: PERSON_FILL[f.weakestGroup],
+    needReason: f.needed.reason,
+    months,
   };
 }

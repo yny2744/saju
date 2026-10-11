@@ -8,7 +8,7 @@ import { notifyError } from "@/server/alert";
 import { recommendFromSaju, type Journey } from "@/lib/journey";
 import type { SajuJson } from "saju-engine";
 import { generateDeep, generateTaste } from "./generateReading";
-import { composeBasic } from "@/lib/basic/compose";
+import { composeBasic, topicVisual, type DeepVisual } from "@/lib/basic/compose";
 import {
   PurchaseError,
   createPerson,
@@ -132,6 +132,16 @@ export async function handleCreatePerson(token: string | undefined, rawBody: unk
   return { status: 200, body: { id } };
 }
 
+/** 수정안 37: 깊게 보기 그림 (실패해도 글은 보여 준다) */
+function visualOf(saju: SajuJson, nickname: string, topic: string, year: number): DeepVisual | null {
+  try {
+    return isAnyTopicKey(topic) ? topicVisual(saju, nickname, topic, year) : null;
+  } catch (e) {
+    notifyError("깊게 보기 그림 계산 실패", e);
+    return null;
+  }
+}
+
 /** 수정안 27: 이 사람이 본 것 + 사주로 고른 다음 운세 */
 async function journeyOf(userId: string, personId: string, saju: SajuJson, current?: string): Promise<Journey> {
   const s = await getPersonSummary(userId, personId);
@@ -187,13 +197,13 @@ export async function handleTopic(token: string | undefined, personId: string, t
 
   if (await isUnlocked(personId, topic)) {
     const stored = await getTopicReading(personId, topic);
-    if (stored) return { status: 200, body: { status: "ready", level: "deep", content: stored, header: person.header, journey: await journeyOf(m.user.id, personId, person.saju, topic) } };
+    if (stored) return { status: 200, body: { status: "ready", level: "deep", content: stored, header: person.header, journey: await journeyOf(m.user.id, personId, person.saju, topic), visual: visualOf(person.saju, person.nickname, topic, year) } };
     if (!generate) return { status: 200, body: { status: "pending", level: "deep", header: person.header, grand: await isAllUnlocked(personId) } };
     try {
       const content = await generateDeep(person.saju, person.nickname, topic, year);
       if (topic === "year" || topic === "monthly") content.title = `${content.title} (${year}년)`;
       const saved = await saveTopicReading(personId, topic, content);
-      return { status: 200, body: { status: "ready", level: "deep", content: saved, header: person.header, journey: await journeyOf(m.user.id, personId, person.saju, topic) } };
+      return { status: 200, body: { status: "ready", level: "deep", content: saved, header: person.header, journey: await journeyOf(m.user.id, personId, person.saju, topic), visual: visualOf(person.saju, person.nickname, topic, year) } };
     } catch (e) {
       notifyError(`깊은 풀이 생성 실패 (${topic})`, e);
       return err(502, "READING_FAILED", "풀이를 쓰는 중 문제가 생겼어요. 이미 연 운세라 다시 눌러도 엽전은 빠지지 않아요.");
