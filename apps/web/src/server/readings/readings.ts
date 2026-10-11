@@ -7,6 +7,10 @@ import { PRICE } from "@/lib/yeopjeon";
 import { isFocus, type Focus } from "@/lib/focus";
 import { EXTRA_KEYS, TOPICS, TOPIC_KEYS, isAnyTopicKey, isTopicKey, type AnyTopicKey, type TopicKey } from "@/lib/topics";
 import type { BasicContent, DeepContent, ReadingContent } from "./generateReading";
+import type { BasicReadingV2 } from "@/lib/basic/compose";
+
+/** 운세 보기 저장 내용: 2026-10-10부터 엔진 풀이(v2), 그 전에 산 것은 AI 풀이(BasicContent) */
+export type StoredBasic = BasicContent | BasicReadingV2;
 
 /**
  * 유료 풀이 저장소 (2026-10-06 맛보기, 2026-10-08 12가지 운 구조로 확장).
@@ -409,15 +413,15 @@ export async function saveTopicReading(personId: string, topic: AnyTopicKey, con
 // ───────────────────────── 운세 보기 (990) ─────────────────────────
 
 /** 운세 보기를 샀는지 + 저장된 풀이 (아직 안 썼으면 content null) */
-export async function getTopicBasic(personId: string, topic: TopicKey): Promise<{ owned: boolean; content: BasicContent | null }> {
+export async function getTopicBasic(personId: string, topic: TopicKey): Promise<{ owned: boolean; content: StoredBasic | null }> {
   const pool = await db();
-  const r = await pool.query<{ content: BasicContent | null }>(`SELECT content FROM topic_basics WHERE person_id = $1 AND topic = $2`, [personId, topic]);
+  const r = await pool.query<{ content: StoredBasic | null }>(`SELECT content FROM topic_basics WHERE person_id = $1 AND topic = $2`, [personId, topic]);
   if (!r.rows[0]) return { owned: false, content: null };
   return { owned: true, content: r.rows[0].content };
 }
 
 /** 풀이 채우기 (먼저 채워진 것이 있으면 그것을 돌려준다) */
-export async function saveTopicBasic(personId: string, topic: TopicKey, content: BasicContent): Promise<BasicContent> {
+export async function saveTopicBasic(personId: string, topic: TopicKey, content: StoredBasic): Promise<StoredBasic> {
   const pool = await db();
   await pool.query(`UPDATE topic_basics SET content = $3, model = $4 WHERE person_id = $1 AND topic = $2 AND content IS NULL`, [
     personId,

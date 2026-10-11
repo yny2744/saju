@@ -15,6 +15,8 @@ import type { Journey } from "@/lib/journey";
 import { notifyYeopjeonChanged, reportClientError, useYeopjeon } from "@/components/yeopjeon/useYeopjeon";
 import type { ReadingHeader } from "@/server/readings/readings";
 import type { BasicContent, DeepContent } from "@/server/readings/generateReading";
+import type { BasicReadingV2 } from "@/lib/basic/compose";
+import { BasicReadingView } from "@/components/yeopjeon/BasicReadingView";
 
 /**
  * 운세 한 가지 화면 (2026-10-09 수정안 20).
@@ -31,8 +33,8 @@ const GOLD = "var(--color-gold)";
 type Level = "basic" | "deep";
 type State =
   | { status: "loading" }
-  | { status: "writing"; level: Level; grand?: boolean }
-  | { status: "basic"; content: BasicContent; header: ReadingHeader }
+  | { status: "writing"; level: Level; grand?: boolean; minMs: number }
+  | { status: "basic"; content: BasicContent | BasicReadingV2; header: ReadingHeader }
   | { status: "deep"; content: DeepContent; header: ReadingHeader; journey: Journey | null }
   | { status: "locked"; header: ReadingHeader | null }
   | { status: "error"; message: string; level: Level | null };
@@ -53,15 +55,20 @@ function TopicBody({ id, topic }: { id: string; topic: string }) {
 
   const show = useCallback((body: { status: string; level: Level; content: unknown; header: ReadingHeader; journey?: Journey }) => {
     if (body.level === "deep") setState({ status: "deep", content: body.content as DeepContent, header: body.header, journey: body.journey ?? null });
-    else setState({ status: "basic", content: body.content as BasicContent, header: body.header });
+    else setState({ status: "basic", content: body.content as BasicContent | BasicReadingV2, header: body.header });
   }, []);
 
   const write = useCallback(
     async (level: Level, grand = false) => {
-      setState({ status: "writing", level, grand });
+      // 수정안 32: 처음 열 때는 최소 대기 연출 (990 15~20초, 깊게 보기·전부 보기 25~30초). 다시 볼 때는 바로.
+      const minMs = level === "basic" ? 15000 + Math.floor(Math.random() * 5001) : 25000 + Math.floor(Math.random() * 5001);
+      const started = Date.now();
+      setState({ status: "writing", level, grand, minMs });
       try {
         const r = await fetch(url, { method: "POST" });
         const body = await r.json().catch(() => ({}));
+        const wait = minMs - (Date.now() - started);
+        if (r.ok && body.status === "ready" && wait > 0) await new Promise((res) => setTimeout(res, wait));
         if (r.ok && body.status === "ready") show(body);
         else setState({ status: "error", message: body?.error?.message ?? "풀이를 쓰지 못했어요.", level });
       } catch (e) {
@@ -135,8 +142,13 @@ function TopicBody({ id, topic }: { id: string; topic: string }) {
     return (
       <WritingOverlay
         grand={state.grand}
-        title={state.level === "deep" ? `${title} 운세를 깊게 쓰고 있어요` : `${title} 운세를 풀고 있어요`}
-        steps={["사주 여덟 글자를 다시 살피고 있어요", `${title}의 근거를 찾고 있어요`, "흐름과 조언을 정리하고 있어요", "마지막으로 다듬고 있어요"]}
+        durationMs={state.minMs}
+        title={state.level === "deep" ? `${title} 운세를 깊게 풀고 있어요` : `${title} 운세를 풀고 있어요`}
+        steps={
+          state.level === "deep"
+            ? ["여덟 글자를 다시 세우고 있어요", "일간과 격을 살피고 있어요", `${title}의 근거를 찾고 있어요`, "대운과 세운의 흐름을 읽고 있어요", "시기와 처신을 정리하고 있어요", "꼭 채워야 할 하나를 찾고 있어요", "마지막으로 다듬고 있어요"]
+            : ["여덟 글자를 다시 세우고 있어요", `${title}의 근거를 찾고 있어요`, "지금의 흐름을 읽고 있어요", "꼭 채워야 할 하나를 찾고 있어요", "마지막으로 다듬고 있어요"]
+        }
       />
     );
   }
@@ -275,25 +287,35 @@ function TopicBody({ id, topic }: { id: string; topic: string }) {
     return (
       <main className="mx-auto min-h-screen max-w-xl px-5 pb-20 pt-12 sm:pt-16">
         <PersonHeader header={header} kicker={`류결사주 · 운세 보기`} title={`${content.title} 운세`} />
-        <section className="gold-card rounded-2xl p-5">
-          <div className="space-y-3 text-[15.5px] leading-[1.85]">
-            {content.body.split(/\n+/).map((para, j) => (
-              <p key={j}>{para}</p>
-            ))}
-          </div>
-        </section>
+        {"v" in content && content.v === 2 ? (
+          // 수정안 33·34: 엔진 풀이 + 그림
+          <BasicReadingView content={content} />
+        ) : (
+          <section className="gold-card rounded-2xl p-5">
+            <div className="space-y-3 text-[15.5px] leading-[1.85]">
+              {content.body.split(/\n+/).map((para, j) => (
+                <p key={j}>{para}</p>
+              ))}
+            </div>
+          </section>
+        )}
 
         <section className="mt-6 rounded-2xl px-5 py-6 text-center" style={{ backgroundColor: "var(--color-accent-soft)" }}>
-          {content.deeper && (
+          {typeof content.deeper === "string" && content.deeper && (
             <p className="text-[15px] leading-relaxed" style={{ fontFamily: "var(--font-serif)" }}>
               {content.deeper}
+            </p>
+          )}
+          {"v" in content && (
+            <p className="text-[15px] leading-relaxed" style={{ fontFamily: "var(--font-serif)" }}>
+              언제, 어떻게 움직이면 좋을지 시기와 처신까지 깊게 풀어 드려요
             </p>
           )}
           <button type="button" disabled={buying !== null} onClick={() => setConfirmDeep(true)} className="btn-band mt-4 block w-full rounded-xl py-4 text-[17px] font-bold" style={{ fontFamily: "var(--font-serif)" }}>
             {content.title} 깊게 보기 · {formatNyang(PRICE.DEEP)}
           </button>
           <p className="mt-2 text-[12px]" style={{ color: "var(--color-ink-faint)" }}>
-            소제목 3~4개로 시기와 처신까지 자세히 풀어 드려요
+            소제목 5개 · 4,000자 넘게 · 꼭 채워야 할 하나까지
           </p>
         </section>
         {noticeBox}

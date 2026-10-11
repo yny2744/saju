@@ -19,6 +19,7 @@ type Overview = {
   orders: AdminPayOrder[];
   errors: Array<{ place: string; message: string; createdAt: string }>;
   payMode: PayMode;
+  needed: { total: number; rows: Array<{ element: string; count: number; percent: number }> };
 };
 
 type Denied = { kind: "login" } | { kind: "notAdmin"; myId?: string; configured?: boolean } | { kind: "error"; message: string };
@@ -174,6 +175,30 @@ function AdminBody() {
       <p className="text-center text-[13px]" style={{ color: "var(--color-ink-faint)" }}>
         전체 회원 {data.stats.total.members}명 · 집계 시작 뒤 전체 방문자 {data.stats.total.visitors}명
       </p>
+
+      {/* 회원들의 부족한 기운 (수정안 35) - 굿즈 제작 근거 */}
+      <section className="gold-card rounded-2xl p-4">
+        <h2 className="text-[16px] font-bold">회원들의 부족한 기운</h2>
+        <p className="mt-1 text-[12px]" style={{ color: "var(--color-ink-faint)" }}>
+          풀이를 본 사람 {data.needed.total}명 기준 · 어느 기운의 굿즈를 많이 만들지 정할 때 참고
+        </p>
+        <div className="mt-3 space-y-2">
+          {data.needed.rows.map((r) => (
+            <div key={r.element} className="flex items-center gap-2 text-[14px]">
+              <span className="w-6 font-bold">{r.element}</span>
+              <div className="h-3 flex-1 overflow-hidden rounded-full" style={{ backgroundColor: "var(--color-line)" }}>
+                <div
+                  className="h-full rounded-full"
+                  style={{ width: `${Math.max(2, r.percent)}%`, backgroundColor: `var(--color-element-${({ 목: "wood", 화: "fire", 토: "earth", 금: "metal", 수: "water" } as Record<string, string>)[r.element]})` }}
+                />
+              </div>
+              <span className="w-20 text-right tabular-nums">
+                {r.count}명 · {r.percent}%
+              </span>
+            </div>
+          ))}
+        </div>
+      </section>
 
       {/* 결제 (수정안 31) */}
       <section className="gold-card rounded-2xl p-4">

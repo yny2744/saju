@@ -4,6 +4,8 @@ import { focusLabel, type Focus } from "@/lib/focus";
 import { FOCUS_TOPICS, TOPICS, TOPIC_KEYS, type AnyTopicKey, type TopicKey } from "@/lib/topics";
 import { monthPillarsOfYear } from "@/lib/monthPillars";
 import { neededEnergy, ENERGY_GUIDE } from "@/lib/neededEnergy";
+import { factsForPrompt, sajuFacts } from "@/lib/sajuFacts";
+import { FILL } from "@/lib/basic/common";
 
 /**
  * AI 풀이 생성 (2026-10-08 12가지 운 구조).
@@ -62,12 +64,15 @@ const SYSTEM = `당신은 한국 전통 명리학(사주팔자)을 40년 넘게 
 - [사주 계산 데이터]의 여덟 글자·오행·십신·지장간·합충형파해·12운성·대운·세운·월건은 계산 엔진이 확정한 값입니다.
   다시 계산하거나 다른 값으로 바꾸지 말고, 근거로 인용만 하세요.
 - 출생 시간이 없으면 시주 관련 내용은 추측하지 마세요.
-- "지금 몇 번째 대운"인지 단정하지 마세요(주어진 대운 목록과 시작 나이로 흐름만 설명).
+- [확정 사실]이 주어지면 그 목록이 최우선입니다. 합·충·12운성·대운·세운은 목록에 있는 것만 말하고, 목록에 없는 합·충이나 다른 대운 이름을 새로 만들지 마세요.
+- "지금 지나는 대운"은 [확정 사실]에 적힌 것만 말하세요. 없으면 단정하지 마세요.
 
 # 표현 원칙
 - 의학적 진단, 사망·사고·이혼 단정, 투자 종목 추천은 하지 않습니다. 건강은 "기운이 약한 곳·생활 습관" 수준으로.
 - 겁주는 말 대신, 조심할 점은 "이렇게 하면 좋습니다"로 바꿔 말합니다.
 - 명리 용어(정재, 편관 등)는 쓰되 바로 쉬운 말로 풀어 줍니다.
+- 첫 문장은 인사·이름 확인("존함이 ~시군요")·나이대 언급("4070 세대") 없이 바로 풀이로 시작합니다.
+- 말투는 "참 좋은 사주인데, 딱 하나 이것이 아쉬워요. 이것만은 꼭 채워 주세요"처럼 칭찬 뒤에 살며시 짚습니다.
 - 반드시 지정된 JSON 형식으로만 답합니다. 마크다운·코드블록 없이 JSON만.`;
 
 /**
@@ -216,34 +221,60 @@ function topicExtraData(saju: SajuJson, topic: AnyTopicKey, year: number): strin
   return "";
 }
 
-export function buildDeepPrompt(saju: SajuJson, topic: AnyTopicKey, year: number): string {
+/**
+ * 깊게 보기 (2026-10-10 수정안 30): 판정은 엔진이 끝낸 "확정 사실 목록"만 근거로 쓰게 묶는다.
+ * 가벼운 모델(flash-lite)이 표를 잘못 읽어 근거를 지어내던 문제를 막고, 분량을 4,000~5,000자로 늘린다.
+ * 마지막 소제목은 늘 "꼭 채워야 할 하나" (부족한 기운 → 채우는 것) - 류결사주 핵심 수익화 원칙.
+ */
+export function buildDeepPrompt(saju: SajuJson, topic: AnyTopicKey, year: number, today?: string): string {
   const info = TOPICS[topic];
   const extra = topicExtraData(saju, topic, year);
-  const lengthRule =
-    topic === "monthly" ? "열두 달을 빠짐없이, 달마다 2~3문장 (전체 1,400~1,800자)" : "전체 1,200~1,600자";
-  return `${dataBlock(saju)}
+  const f = sajuFacts(saju, today);
+  const need = f.needed.elements[0];
+  const fl = FILL[need];
+  const monthly = topic === "monthly";
+  const lengthRule = monthly
+    ? "열두 달을 빠짐없이 달마다 하나의 소제목(12개), 달마다 4~6문장, 전체 3,500~4,500자. 마지막에 13번째 소제목으로 \"꼭 채워야 할 하나\"를 덧붙이세요"
+    : "소제목 5개, 소제목마다 800~1,000자, 전체 4,000~5,000자";
+  return `# 확정 사실 (계산 엔진이 판정까지 끝낸 값 - 근거는 이 목록에서만 가져오세요)
+${factsForPrompt(f)}
+- 부족한 기운을 채우는 것(${need}): 색 ${fl.colors} / 방위 ${fl.direction} / 숫자 ${fl.numbers} / 동물 ${fl.animal} / 식물 ${fl.plant} / 물건 ${fl.object} / 생활 ${fl.habit}
 ${extra ? `\n${extra}\n` : ""}
-# 요청: 깊게 보기 - ${info.title}${topic === "year" || topic === "monthly" ? ` (기준 연도: ${year}년)` : ""}
+# 요청: 깊게 보기 - ${info.title}${topic === "year" || monthly ? ` (기준 연도: ${year}년)` : ""}
 
-${NAME_RULE} 아래 내용을 소제목 ${topic === "monthly" ? "(달마다 하나씩, 12개)" : "3~4개"}로 나눠 깊이 있게 풀이하세요.
+${NAME_RULE} 아래 내용을 깊이 있게 풀이하세요.
 ${info.deepPoints.map((p) => `- ${p}`).join("\n")}
+- (마지막 소제목, 반드시) "꼭 채워야 할 하나": 칭찬으로 시작해 "딱 하나 아쉬운 것"으로 부족한 기운(${f.needed.elements.join("·")})을 살며시 짚고, 그것이 ${info.title}에서 어떤 아쉬움으로 나타나는지, 위 "채우는 것" 목록으로 어떻게 채우는지, 곁에 두면 좋은 사람까지. 겁주지 말 것.
 
 규칙:
-- 소제목마다 근거가 되는 사주 요소를 짚고, 구체적인 시기·상황·실천 조언을 넣으세요.
 - ${lengthRule}.
-- summary: 맨 위에 놓을 한두 문장 요약.
+- 소제목마다 위 [확정 사실] 중 근거를 하나 이상 짚으세요. 목록에 없는 합·충·대운 이름은 쓰지 마세요.
+- 시기를 말할 때는 대운 흐름의 나이와 ${year}년 같은 연도를 구체적으로 쓰세요.
+- summary: 맨 위에 놓을 두 문장 요약 (첫 문장은 칭찬, 둘째 문장은 "딱 하나" 아쉬운 점).
 
 JSON 형식:
 {"summary":"...","parts":[{"heading":"...","body":"..."},...]}`;
 }
 
-export function parseDeepResponse(raw: string, topic: AnyTopicKey): Omit<DeepContent, "model"> {
+/** 확정 사실에 없는 대운 이름을 지어냈는지 (예: "무술 대운" - 목록에 있는 대운만 허용) */
+export function inventedDaeun(text: string, allowed: string[]): string | null {
+  for (const m of text.matchAll(/([갑을병정무기경신임계][자축인묘진사오미신유술해])\s*대운/g)) {
+    if (!allowed.includes(m[1])) return m[1];
+  }
+  return null;
+}
+
+export function parseDeepResponse(raw: string, topic: AnyTopicKey, allowedDaeun?: string[]): Omit<DeepContent, "model"> {
   const parsed = extractJson(raw) as { summary?: string; parts?: Array<{ heading?: string; body?: string }> };
   const parts = (parsed.parts ?? [])
     .filter((p) => typeof p.heading === "string" && typeof p.body === "string" && p.body.trim().length >= 20)
     .map((p) => ({ heading: p.heading!.trim(), body: p.body!.trim() }));
-  const min = topic === "monthly" ? 10 : 2;
+  const min = topic === "monthly" ? 10 : 3;
   if (parts.length < min) throw new Error(`AI 응답의 "${topic}" 깊은 풀이가 너무 짧습니다.`);
+  if (allowedDaeun) {
+    const bad = inventedDaeun(parts.map((p) => p.body).join("\n"), allowedDaeun);
+    if (bad) throw new Error(`AI가 확정 사실에 없는 대운(${bad})을 썼습니다.`);
+  }
   return { topic, title: TOPICS[topic].title, summary: typeof parsed.summary === "string" ? parsed.summary.trim() : "", parts };
 }
 
@@ -252,9 +283,10 @@ export async function generateDeep(
   nickname: string,
   topic: AnyTopicKey,
   year: number,
-  provider: CompletionProvider = getReadingProvider()
+  provider: CompletionProvider = getReadingProvider(9000)
 ): Promise<DeepContent> {
-  const body = await completeWithRetry(provider, buildDeepPrompt(saju, topic, year), (raw) => parseDeepResponse(raw, topic));
+  const allowed = sajuFacts(saju).daeunList.map((d) => d.ganzhi);
+  const body = await completeWithRetry(provider, buildDeepPrompt(saju, topic, year), (raw) => parseDeepResponse(raw, topic, allowed));
   return {
     ...body,
     summary: fillName(body.summary, nickname),
@@ -265,11 +297,11 @@ export async function generateDeep(
 
 // ───────────────────────── AI 제공자 ─────────────────────────
 
-export function getReadingProvider(): CompletionProvider {
+export function getReadingProvider(maxTokens = 3500): CompletionProvider {
   if (process.env.ANTHROPIC_API_KEY) {
-    return new AnthropicCompletionProvider({ model: process.env.SAJU_READING_MODEL || undefined, maxTokens: 3500 });
+    return new AnthropicCompletionProvider({ model: process.env.SAJU_READING_MODEL || undefined, maxTokens });
   }
-  if (process.env.GEMINI_API_KEY) return new GeminiCompletionProvider({ maxOutputTokens: 3500 });
+  if (process.env.GEMINI_API_KEY) return new GeminiCompletionProvider({ maxOutputTokens: maxTokens });
   if (process.env.NODE_ENV === "production" && process.env.ALLOW_MOCK_IN_PRODUCTION !== "true") {
     throw new Error("ANTHROPIC_API_KEY가 설정되지 않아 유료 풀이를 만들 수 없습니다.");
   }
@@ -284,7 +316,7 @@ function devReadingProvider(): CompletionProvider {
     modelName: "dev-fallback-no-llm",
     async complete(_system: string, user: string): Promise<string> {
       if (user.includes("# 요청: 깊게 보기")) {
-        const n = user.includes("열두 달") ? 12 : 3;
+        const n = user.includes("열두 달") ? 13 : 5;
         return JSON.stringify({
           summary: `${NOTE} 요약 자리입니다.`,
           parts: Array.from({ length: n }, (_, i) => ({ heading: `소제목 ${i + 1}`, body: `${NOTE} 깊은 풀이 단락 자리입니다. 실제 배포에서는 AI가 씁니다.` })),

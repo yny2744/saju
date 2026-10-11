@@ -126,7 +126,7 @@ export function daeunCells(saju: SajuJson, todayKst: string): DaeunCell[] {
 }
 
 /** 양력 생일일 때만 정확한 만 나이(소수)를 낸다. 음력이면 연도 차로 근사. */
-function ageOn(birth: string, today: string, calendarType: string): number | null {
+export function ageOn(birth: string, today: string, calendarType: string): number | null {
   const [by, bm, bd] = birth.split("-").map(Number);
   const [ty, tm, td] = today.split("-").map(Number);
   if (!by || !ty) return null;

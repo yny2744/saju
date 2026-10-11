@@ -212,7 +212,7 @@ describe("AI 요청문·응답 처리", () => {
       async complete(_s: string, user: string) {
         expect(user).not.toContain("유남영");
         if (user.includes("# 요청: 깊게 보기")) {
-          return JSON.stringify({ summary: "{이름}님 요약", parts: [1, 2].map((i) => ({ heading: `{이름}님 ${i}`, body: "{이름}님은 " + "가".repeat(30) })) });
+          return JSON.stringify({ summary: "{이름}님 요약", parts: [1, 2, 3].map((i) => ({ heading: `{이름}님 ${i}`, body: "{이름}님은 " + "가".repeat(30) })) });
         }
         const keys = [...user.matchAll(/^- "(\w+)":/gm)].map((m) => m[1]);
         return JSON.stringify({ sections: keys.map((key) => ({ key, body: "{이름}님은 " + "나".repeat(30), deeper: "{이름}님께 더" })) });
@@ -234,8 +234,12 @@ describe("AI 요청문·응답 처리", () => {
 
   it("깊은 풀이가 너무 짧으면 실패 (반쪽 풀이를 팔지 않음)", () => {
     expect(() => parseDeepResponse('{"summary":"s","parts":[{"heading":"a","body":"' + "가".repeat(30) + '"}]}', "money")).toThrow();
-    const ok = parseDeepResponse('{"summary":"s","parts":[{"heading":"a","body":"' + "가".repeat(30) + '"},{"heading":"b","body":"' + "나".repeat(30) + '"}]}', "money");
-    expect(ok.parts).toHaveLength(2);
+    expect(() => parseDeepResponse('{"summary":"s","parts":[{"heading":"a","body":"' + "가".repeat(30) + '"},{"heading":"b","body":"' + "나".repeat(30) + '"}]}', "money")).toThrow();
+    const ok = parseDeepResponse(
+      '{"summary":"s","parts":[{"heading":"a","body":"' + "가".repeat(30) + '"},{"heading":"b","body":"' + "나".repeat(30) + '"},{"heading":"c","body":"' + "다".repeat(30) + '"}]}',
+      "money"
+    );
+    expect(ok.parts).toHaveLength(3);
   });
 
   it("관심 분야 주제를 맨 앞으로", () => {
@@ -249,7 +253,7 @@ describe("AI 요청문·응답 처리", () => {
     expect(taste.sections).toHaveLength(12);
     expect(taste.sections[0].key).toBe("health");
     const monthly = await generateDeep(saju, "유남영", "monthly", 2026);
-    expect(monthly.parts).toHaveLength(12);
+    expect(monthly.parts).toHaveLength(13); // 열두 달 + 꼭 채워야 할 하나
   });
 });
 
@@ -280,5 +284,27 @@ describe("오류 알림 문구", () => {
     const t = formatAlert("맛보기", new Error("x".repeat(2000)));
     expect(t.startsWith("[류결사주 오류] 맛보기")).toBe(true);
     expect(t.length).toBeLessThanOrEqual(900);
+  });
+});
+
+describe("수정안 30 - 깊게 보기는 확정 사실만", () => {
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  const { buildDeepPrompt, inventedDaeun, parseDeepResponse: parse } = require("@/server/readings/generateReading");
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  const { calculateSaju: calc } = require("saju-engine");
+  const s = calc({ calendarType: "solar", date: "1967-04-03", time: "04:50", gender: "male" }, 2026);
+  it("요청문에 확정 사실 목록·분량·꼭 채워야 할 하나", () => {
+    const p = buildDeepPrompt(s, "love", 2026, "2026-10-10");
+    expect(p).toContain("# 확정 사실");
+    expect(p).toContain("지금 지나는 대운: 정유(丁酉) 대운");
+    expect(p).toContain("4,000~5,000자");
+    expect(p).toContain("꼭 채워야 할 하나");
+    expect(p).toContain("부족한 기운: 토(土)");
+  });
+  it("목록에 없는 대운 이름을 지어내면 거절", () => {
+    expect(inventedDaeun("무술 대운에는 …", ["정유", "병신"])).toBe("무술");
+    expect(inventedDaeun("정유 대운에는 …", ["정유", "병신"])).toBeNull();
+    const body = (t: string) => `{"heading":"h","body":"${t}${"가".repeat(30)}"}`;
+    expect(() => parse(`{"summary":"s","parts":[${body("무술 대운")},${body("")},${body("")}]}`, "love", ["정유"])).toThrow();
   });
 });

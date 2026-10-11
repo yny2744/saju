@@ -7,7 +7,8 @@ import { isAnyTopicKey, isTopicKey } from "@/lib/topics";
 import { notifyError } from "@/server/alert";
 import { recommendFromSaju, type Journey } from "@/lib/journey";
 import type { SajuJson } from "saju-engine";
-import { generateBasic, generateDeep, generateTaste } from "./generateReading";
+import { generateDeep, generateTaste } from "./generateReading";
+import { composeBasic } from "@/lib/basic/compose";
 import {
   PurchaseError,
   createPerson,
@@ -205,8 +206,8 @@ export async function handleTopic(token: string | undefined, personId: string, t
       if (basic.content) return { status: 200, body: { status: "ready", level: "basic", content: basic.content, header: person.header } };
       if (!generate) return { status: 200, body: { status: "pending", level: "basic", header: person.header } };
       try {
-        const content = await generateBasic(person.saju, person.nickname, topic, year);
-        if (topic === "year") content.title = `${content.title} (${year}년)`;
+        // 수정안 33: 990냥은 AI 없이 엔진 값으로 문장 창고에서 엮는다 (비용 0, 근거 정확)
+        const content = composeBasic(person.saju, person.nickname, topic);
         const saved = await saveTopicBasic(personId, topic, content);
         return { status: 200, body: { status: "ready", level: "basic", content: saved, header: person.header } };
       } catch (e) {

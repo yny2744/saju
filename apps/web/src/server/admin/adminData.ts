@@ -1,6 +1,7 @@
 import { randomUUID } from "crypto";
 import { db } from "@/server/auth/db";
 import { kstDay } from "./visits";
+import { neededEnergy } from "@/lib/neededEnergy";
 
 /** 관리자 화면 숫자 (2026-10-10 수정안 26). 날짜는 한국 시간 기준. */
 export interface AdminStats {
@@ -123,4 +124,30 @@ export async function recentErrors(): Promise<Array<{ place: string; message: st
   const pool = await db();
   const r = await pool.query<{ place: string; message: string; created_at: Date }>(`SELECT place, message, created_at FROM error_log ORDER BY id DESC LIMIT 50`);
   return r.rows.map((x) => ({ place: x.place, message: x.message, createdAt: x.created_at.toISOString() }));
+}
+
+/**
+ * 회원들의 부족한 기운 분포 (2026-10-10 수정안 35) - 굿즈를 어느 오행으로 얼마나 만들지 정하는 근거.
+ * 회원이 저장한 풀이 대상(persons)의 사주로 무료 만세력과 같은 규칙(neededEnergy)을 적용한다. 개인은 드러나지 않고 숫자만.
+ */
+export async function neededDistribution(): Promise<{ total: number; rows: Array<{ element: string; count: number; percent: number }> }> {
+  const pool = await db();
+  const r = await pool.query<{ saju: import("saju-engine").SajuJson }>(`SELECT saju FROM persons ORDER BY created_at DESC LIMIT 5000`);
+  const counts: Record<string, number> = { 목: 0, 화: 0, 토: 0, 금: 0, 수: 0 };
+  let total = 0;
+  for (const row of r.rows) {
+    try {
+      const el = neededEnergy(row.saju).elements[0];
+      if (el in counts) {
+        counts[el] += 1;
+        total += 1;
+      }
+    } catch {
+      /* 예전 형식 데이터는 건너뜀 */
+    }
+  }
+  const rows = Object.entries(counts)
+    .map(([element, count]) => ({ element, count, percent: total ? Math.round((count / total) * 100) : 0 }))
+    .sort((a, b) => b.count - a.count);
+  return { total, rows };
 }
