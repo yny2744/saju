@@ -7,6 +7,7 @@ import type { FortuneResultResponse, ApiErrorResponse, AnalyzeResultResponse } f
 import { LoadingState, ErrorState } from "@/components/StatusScreens";
 import { WeatherIcon } from "@/components/WeatherIcon";
 import { buildFortuneView, WEATHER_LABEL, type FortuneView } from "@/lib/fortuneView";
+import { fillTodayLine } from "@/lib/fortuneExtra";
 import { kstDateString } from "@/lib/manseView";
 import { ELEMENT_TOKEN, type ElementKo } from "@/lib/pillarView";
 import { STEM_ELEMENT, BRANCH_ELEMENT } from "saju-engine/dist/src/rules/fiveElementTables";
@@ -171,46 +172,93 @@ function FortuneContent({ nickname, view, dayWord }: { nickname: string; view: F
           </div>
           <WeatherIcon weather={view.overall.weather} size={52} />
         </div>
-        <p className="mt-2 text-[15px] font-semibold leading-relaxed">{view.overall.text}</p>
-        {view.overall.phase && (
-          <p className="mt-1 text-[13px]" style={{ color: "var(--color-ink-soft)" }}>
-            {dayWord}의 기운: {view.overall.phase}
-          </p>
-        )}
+        <p className="mt-2 text-[16px] font-semibold leading-relaxed">{view.overall.text}</p>
+        {/* 수정안 39: 종합운 풀이 보강 */}
+        <p className="mt-2 text-[15px] leading-[1.85]" style={{ color: "var(--color-ink-soft)" }}>
+          {view.overallDetail}
+        </p>
       </section>
 
-      {/* 영역별 */}
-      <section className="mb-6">
-        <h2 className="mb-2.5 text-[15px] font-semibold">영역별 운세</h2>
-        <div className="overflow-hidden rounded-xl" style={{ border: "1px solid var(--color-line)", backgroundColor: "var(--color-paper-soft)" }}>
-          {view.areas.map((a, i) => (
-            <details key={a.key} className="group" style={i > 0 ? { borderTop: "1px solid var(--color-line)" } : undefined}>
-              <summary className="flex cursor-pointer list-none items-center gap-3 px-3.5 py-3 [&::-webkit-details-marker]:hidden">
-                <WeatherIcon weather={a.weather} />
-                <span className="flex-1 text-[14px] font-semibold">{a.label}</span>
-                <span className="text-[13px] tabular-nums" style={{ color: "var(--color-ink-soft)" }}>
-                  <b style={{ color: "var(--color-ink)" }}>{a.score}</b>/10
+      {/* 영역별 - 수정안 39: 펼친 채로, 영역마다 3문장 + 근거 */}
+      <section className="mb-6 space-y-2.5">
+        <h2 className="text-[16px] font-bold" style={{ fontFamily: "var(--font-serif)" }}>
+          영역별 운세
+        </h2>
+        {view.areas.map((a) => (
+          <div key={a.key} className="rounded-xl px-4 py-3.5" style={{ border: "1px solid var(--color-line)", backgroundColor: "var(--color-card)" }}>
+            <div className="flex items-center gap-3">
+              <WeatherIcon weather={a.weather} />
+              <span className="flex-1 text-[15px] font-bold">
+                <span className="mr-1" style={{ fontFamily: "var(--font-serif)", color: "var(--color-gold)" }}>
+                  {a.hanja}
                 </span>
-                <span aria-hidden className="text-xs transition-transform group-open:rotate-180" style={{ color: "var(--color-ink-faint)" }}>
-                  ▾
-                </span>
-              </summary>
-              <div className="px-3.5 pb-3">
-                <p className="text-[13px] leading-relaxed" style={{ color: "var(--color-ink-soft)" }}>
-                  {a.text}
-                </p>
-                {a.evidence.map((e, j) => (
-                  <p key={j} className="mt-1.5 text-[12px] leading-relaxed" style={{ color: e.tone === "good" ? "var(--color-element-wood)" : "var(--color-danger)" }}>
-                    · {e.text}
-                  </p>
-                ))}
-              </div>
-            </details>
-          ))}
+                {a.label}
+              </span>
+              <span className="text-[13px] tabular-nums" style={{ color: "var(--color-ink-soft)" }}>
+                <b style={{ color: "var(--color-ink)" }}>{a.score}</b>/10
+              </span>
+            </div>
+            <p className="mt-2 text-[14.5px] leading-[1.8]">{a.text}</p>
+            <p className="mt-1 text-[14.5px] leading-[1.8]" style={{ color: "var(--color-ink-soft)" }}>
+              {a.detail}
+            </p>
+            {a.evidence.map((e, j) => (
+              <p key={j} className="mt-1.5 text-[12px] leading-relaxed" style={{ color: e.tone === "good" ? "var(--color-element-wood)" : "var(--color-danger)" }}>
+                · {e.text}
+              </p>
+            ))}
+          </div>
+        ))}
+      </section>
+
+      {/* 행운의 시간 (수정안 39) */}
+      {view.luckyTime && (
+        <section className="mb-6 flex items-center gap-4 rounded-xl px-4 py-4" style={{ backgroundColor: "var(--color-accent-soft)" }}>
+          <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full text-[22px] font-bold text-white" style={{ fontFamily: "var(--font-serif)", backgroundColor: "var(--color-accent)" }}>
+            {view.luckyTime.hanja}
+          </span>
+          <div>
+            <p className="text-[13px] font-semibold" style={{ color: "var(--color-accent)" }}>
+              {dayWord}의 행운의 시간
+            </p>
+            <p className="text-[17px] font-bold">{view.luckyTime.range}</p>
+            <p className="text-[12px]" style={{ color: "var(--color-ink-faint)" }}>
+              {dayWord}의 일진과 합(合)이 드는 {view.luckyTime.branch}시 — 중요한 연락이나 약속을 두기 좋아요
+            </p>
+          </div>
+        </section>
+      )}
+
+      {/* 오늘 채우면 좋은 기운 (수정안 39 · 핵심: 부족한 하나) */}
+      <section className="gold-card mb-6 rounded-2xl p-4">
+        <div className="flex items-center gap-3">
+          <span
+            className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full text-[24px] font-bold text-white"
+            style={{ fontFamily: "var(--font-serif)", backgroundColor: elColor(view.fill.element) }}
+          >
+            {({ 목: "木", 화: "火", 토: "土", 금: "金", 수: "水" } as Record<string, string>)[view.fill.element]}
+          </span>
+          <h2 className="text-[16px] font-bold" style={{ fontFamily: "var(--font-serif)", color: "var(--color-accent)" }}>
+            {dayWord} 채우면 좋은 기운
+          </h2>
         </div>
-        <p className="mt-1.5 text-[11px]" style={{ color: "var(--color-ink-faint)" }}>
-          항목을 누르면 풀이와 근거가 펼쳐져요.
-        </p>
+        <p className="mt-3 text-[14.5px] leading-[1.8]">{fillTodayLine(view.fill.element, view.fill.todayElements, dayWord)}</p>
+        <dl className="mt-3 grid grid-cols-2 gap-x-3 gap-y-2 text-[13px]">
+          {[
+            ["색", view.fill.colors],
+            ["방위", view.fill.direction],
+            ["숫자", view.fill.numbers],
+            ["동물", view.fill.animal],
+            ["곁에 둘 물건", view.fill.object],
+          ].map(([k, v]) => (
+            <div key={k}>
+              <dt className="text-[11px]" style={{ color: "var(--color-gold)" }}>
+                {k}
+              </dt>
+              <dd className="font-semibold">{v}</dd>
+            </div>
+          ))}
+        </dl>
       </section>
 
       <section className="mb-6">
@@ -227,10 +275,10 @@ function FortuneContent({ nickname, view, dayWord }: { nickname: string; view: F
       </section>
 
       <section className="rounded-xl px-4 py-4" style={{ backgroundColor: "var(--color-ink)", color: "var(--color-paper)" }}>
-        <h2 className="mb-1.5 text-sm font-medium" style={{ color: "var(--color-paper-soft)" }}>
+        <h2 className="mb-1.5 text-[15px] font-bold" style={{ color: "var(--color-paper-soft)" }}>
           {dayWord}의 조언
         </h2>
-        <p className="text-sm leading-relaxed">{view.advice}</p>
+        <p className="text-[15px] leading-[1.8]">{view.advice}</p>
       </section>
 
       <p className="mt-3 text-[11px] leading-relaxed" style={{ color: "var(--color-ink-faint)" }}>

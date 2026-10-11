@@ -3,7 +3,7 @@ import { OhaengEmblem } from "@/components/landing/OhaengEmblem";
 import { ProductIcon, type Kind } from "@/components/landing/ProductIcon";
 import { BUSINESS_INFO } from "@/lib/businessInfo";
 import { TOPICS, TOPIC_KEYS } from "@/lib/topics";
-import { CURRENCY_NAME, INVITE_CUMULATIVE, PRICE, WELCOME_GIFT, formatNyang } from "@/lib/yeopjeon";
+import { CURRENCY_NAME, INVITE_CUMULATIVE, INVITE_MILESTONES, PRICE, WELCOME_GIFT, formatNyang } from "@/lib/yeopjeon";
 import { ScrollTopButton } from "@/components/ScrollTop";
 
 /**
@@ -214,12 +214,8 @@ export default function LandingPage() {
         {/* 친구 초대 */}
         <section className="py-12">
           <SectionTitle title={`친구 초대하고 ${CURRENCY_NAME} 받기`} sub="친구도 가입 선물을 받아요" />
-          <div className="grid grid-cols-3 gap-2 text-center">
-            {[
-              { n: 1, label: "운세 보기 1회" },
-              { n: 3, label: "깊게 보기 1회" },
-              { n: 10, label: "전부 보기 1회" },
-            ].map((x) => (
+          <div className="grid grid-cols-2 gap-2 text-center sm:grid-cols-4">
+            {INVITE_MILESTONES.map((x) => (
               <div key={x.n} className="rounded-2xl px-2 py-4" style={CARD}>
                 <p className="text-[13px]" style={{ color: "var(--color-ink-soft)" }}>
                   친구 {x.n}명

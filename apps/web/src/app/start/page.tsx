@@ -84,9 +84,13 @@ function StartForm({ member }: { member: MemberInfo | null }) {
   const [pickerOpen, setPickerOpen] = useState(false);
   const [loading, setLoading] = useState<{ durationMs: number; saju: SajuJson | null; target: string | null } | null>(null);
   const [intent, setIntent] = useState<Intent | null>(null);
+  // 대문 "오늘·내일의 운세"로 들어왔는지 (수정안 39: 버튼·제목을 운세에 맞게)
+  const [forFortune, setForFortune] = useState(false);
 
   useEffect(() => {
-    setIntent(parseIntent(new URLSearchParams(window.location.search)));
+    const q = new URLSearchParams(window.location.search);
+    setIntent(parseIntent(q));
+    setForFortune(q.get("next") === "fortune");
   }, []);
 
   useEffect(() => {
@@ -288,7 +292,7 @@ function StartForm({ member }: { member: MemberInfo | null }) {
         <h1 className="text-[26px] font-bold leading-snug">
           생년월일로 보는
           <br />
-          나의 사주풀이
+          {forFortune ? "오늘·내일의 운세" : "나의 사주풀이"}
         </h1>
         <p className="mt-2 text-sm leading-relaxed" style={{ color: "var(--color-ink-soft)" }}>
           정확한 생년월일시를 입력할수록 풀이가 정확해요.
@@ -594,7 +598,7 @@ function StartForm({ member }: { member: MemberInfo | null }) {
         )}
 
         <button type="submit" disabled={submitting} className="btn-primary">
-          {intent ? `${intentLabel(intent)} 보러 가기` : "무료로 내 만세력 보기"}
+          {intent ? `${intentLabel(intent)} 보러 가기` : forFortune ? "무료로 오늘·내일 운세 보기" : "무료로 내 만세력 보기"}
         </button>
       </form>
 

@@ -25,6 +25,7 @@ import {
   purchaseTopics,
   readingSourceKey,
   saveTopicBasic,
+  upgradeTopicBasic,
   saveTopicReading,
   type PurchaseMode,
 } from "./readings";
@@ -213,7 +214,18 @@ export async function handleTopic(token: string | undefined, personId: string, t
   if (isTopicKey(topic)) {
     const basic = await getTopicBasic(personId, topic);
     if (basic.owned) {
-      if (basic.content) return { status: 200, body: { status: "ready", level: "basic", content: basic.content, header: person.header } };
+      if (basic.content) {
+        // 수정안 36: 예전 AI 풀이(짧고 근거가 틀리기도 함)는 새 엔진 풀이로 한 번 바꿔 준다 - 엽전·AI 비용 없음
+        if (!("v" in basic.content)) {
+          try {
+            const upgraded = await upgradeTopicBasic(personId, topic, composeBasic(person.saju, person.nickname, topic));
+            return { status: 200, body: { status: "ready", level: "basic", content: upgraded, header: person.header } };
+          } catch (e) {
+            notifyError(`운세 보기 새 풀이로 바꾸기 실패 (${topic})`, e);
+          }
+        }
+        return { status: 200, body: { status: "ready", level: "basic", content: basic.content, header: person.header } };
+      }
       if (!generate) return { status: 200, body: { status: "pending", level: "basic", header: person.header } };
       try {
         // 수정안 33: 990냥은 AI 없이 엔진 값으로 문장 창고에서 엮는다 (비용 0, 근거 정확)

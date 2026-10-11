@@ -441,3 +441,20 @@ export async function isAllUnlocked(personId: string): Promise<boolean> {
   ]);
   return Number(r.rows[0]?.n ?? 0) >= TOPIC_KEYS.length + EXTRA_KEYS.length;
 }
+
+/** 수정안 36: 예전 AI로 쓴 운세 보기(990)를 새 엔진 풀이로 한 번 바꿔 끼운다 (v2가 아닐 때만) */
+export async function upgradeTopicBasic(personId: string, topic: TopicKey, content: StoredBasic): Promise<StoredBasic> {
+  const pool = await db();
+  await pool.query(
+    `UPDATE topic_basics SET content = $3, model = $4 WHERE person_id = $1 AND topic = $2 AND (content IS NULL OR NOT (content ? 'v'))`,
+    [personId, topic, JSON.stringify(content), content.model]
+  );
+  return (await getTopicBasic(personId, topic)).content ?? content;
+}
+
+/** 깊은 풀이가 실제로 써진 주제들 (PDF 만들기 전 확인용, 수정안 38) */
+export async function listWrittenTopics(personId: string): Promise<Array<{ topic: AnyTopicKey; content: DeepContent }>> {
+  const pool = await db();
+  const r = await pool.query<{ topic: string; content: DeepContent }>(`SELECT topic, content FROM topic_readings WHERE person_id = $1`, [personId]);
+  return r.rows.filter((x) => isAnyTopicKey(x.topic)).map((x) => ({ topic: x.topic as AnyTopicKey, content: x.content }));
+}

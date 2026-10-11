@@ -41,10 +41,19 @@ export const WELCOME_GIFT = 990;
 
 /**
  * 친구 초대 - 한 바퀴(10명) 안에서 n번째 친구까지의 "누적 총액" (유샘 확정).
- * 1명 990 · 2명 1,980 · 3명 4,900 · 4명부터 1명마다 +990 · 10명 30,000.
+ * 2026-10-11 수정안 40: 상품 가격에 맞춤 — 1명 990(운세 보기) · 3명 4,900(깊게 보기) · 5명 9,900(3가지 몰아보기) · 10명 29,500(전부 보기).
+ * 그 사이는 1명마다 +990.
  * 11명째부터는 새 바퀴로 처음부터 다시(11명째 = 1명째). 월 한도 없음.
  */
-export const INVITE_CUMULATIVE = [990, 1980, 4900, 5890, 6880, 7870, 8860, 9850, 10840, 30000] as const;
+export const INVITE_CUMULATIVE = [990, 1980, 4900, 5890, 9900, 10890, 11880, 12870, 13860, 29500] as const;
+
+/** 화면 안내용 단계 (친구 몇 명 = 무엇 1회) */
+export const INVITE_MILESTONES: ReadonlyArray<{ n: number; label: string }> = [
+  { n: 1, label: "운세 보기 1회" },
+  { n: 3, label: "깊게 보기 1회" },
+  { n: 5, label: "3가지 몰아보기 1회" },
+  { n: 10, label: "전부 보기 1회" },
+];
 export const INVITE_CYCLE = INVITE_CUMULATIVE.length;
 
 /** n번째(1부터) 친구가 가입했을 때 받는 엽전 */
@@ -66,8 +75,8 @@ export function inviteProgress(invited: number): {
   const round = Math.floor(n / INVITE_CYCLE) + 1;
   const inRound = n % INVITE_CYCLE;
   const earnedThisRound = inRound === 0 ? 0 : INVITE_CUMULATIVE[inRound - 1];
-  // 다음 "큰 보상" 지점: 3명(4,900), 10명(30,000)
-  const marks = [3, 10];
+  // 다음 "큰 보상" 지점: 1명(990)·3명(4,900)·5명(9,900)·10명(29,500)
+  const marks = [1, 3, 5, 10];
   const mark = marks.find((m) => m > inRound);
   const next = mark ? { atCount: mark, total: INVITE_CUMULATIVE[mark - 1], remaining: mark - inRound } : null;
   return { round, inRound, earnedThisRound, next };

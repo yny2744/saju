@@ -30,30 +30,35 @@ describe("엽전 금액 (2026-10-08 유샘 확정)", () => {
     expect(formatNyang(29500)).toBe("29,500냥");
   });
 
-  it("친구 초대 누적 총액: 1명 990 · 2명 1,980 · 3명 4,900 · 4명부터 +990 · 10명 30,000", () => {
+  it("친구 초대 누적 총액 (수정안 40): 1명 990 · 3명 4,900 · 5명 9,900 · 10명 29,500", () => {
     let sum = 0;
     const totals: number[] = [];
     for (let n = 1; n <= 10; n++) {
       sum += inviteRewardFor(n);
       totals.push(sum);
     }
-    expect(totals).toEqual([990, 1980, 4900, 5890, 6880, 7870, 8860, 9850, 10840, 30000]);
+    expect(totals).toEqual([990, 1980, 4900, 5890, 9900, 10890, 11880, 12870, 13860, 29500]);
+    expect(totals[0]).toBe(PRICE.BASIC);
+    expect(totals[2]).toBe(PRICE.DEEP);
+    expect(totals[4]).toBe(PRICE.BUNDLE3);
+    expect(totals[9]).toBe(PRICE.BUNDLE12);
     expect(totals).toEqual([...INVITE_CUMULATIVE]);
   });
 
-  it("11명째부터 새 바퀴 (11명째 = 1명째, 20명째에 다시 30,000)", () => {
+  it("11명째부터 새 바퀴 (11명째 = 1명째, 20명째에 다시 29,500)", () => {
     expect(inviteRewardFor(11)).toBe(990);
     expect(inviteRewardFor(13)).toBe(inviteRewardFor(3));
     let sum = 0;
     for (let n = 11; n <= 20; n++) sum += inviteRewardFor(n);
-    expect(sum).toBe(30000);
+    expect(sum).toBe(29500);
     expect(inviteRewardFor(0)).toBe(0);
   });
 
   it("진행 상황", () => {
-    expect(inviteProgress(0)).toMatchObject({ round: 1, inRound: 0, next: { atCount: 3, total: 4900, remaining: 3 } });
-    expect(inviteProgress(3)).toMatchObject({ inRound: 3, earnedThisRound: 4900, next: { atCount: 10, remaining: 7 } });
-    expect(inviteProgress(10)).toMatchObject({ round: 2, inRound: 0, next: { atCount: 3 } });
+    expect(inviteProgress(0)).toMatchObject({ round: 1, inRound: 0, next: { atCount: 1, total: 990, remaining: 1 } });
+    expect(inviteProgress(3)).toMatchObject({ inRound: 3, earnedThisRound: 4900, next: { atCount: 5, total: 9900, remaining: 2 } });
+    expect(inviteProgress(6)).toMatchObject({ next: { atCount: 10, total: 29500, remaining: 4 } });
+    expect(inviteProgress(10)).toMatchObject({ round: 2, inRound: 0, next: { atCount: 1 } });
   });
 
   it("예전 장부 기록의 '복채'는 '엽전'으로 보인다", () => {

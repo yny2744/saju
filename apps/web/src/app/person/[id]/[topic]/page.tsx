@@ -17,6 +17,7 @@ import type { ReadingHeader } from "@/server/readings/readings";
 import type { BasicContent, DeepContent } from "@/server/readings/generateReading";
 import type { BasicReadingV2, DeepVisual } from "@/lib/basic/compose";
 import { DeepReadingView } from "@/components/yeopjeon/DeepReadingView";
+import { PdfButton } from "@/components/yeopjeon/PdfButton";
 import { BasicReadingView } from "@/components/yeopjeon/BasicReadingView";
 
 /**
@@ -348,6 +349,11 @@ function TopicBody({ id, topic }: { id: string; topic: string }) {
       <DeepReadingView content={content} visual={visual} />
 
       {/* 수정안 27·29: 깊게 본 뒤에만 - 내 사주로 고른 다음 운세 → 그 3가지 몰아보기 → 전부 보기 */}
+      {/* 수정안 38: 사주 책자 PDF */}
+      <div className="mt-8">
+        <PdfButton personId={id} />
+      </div>
+
       {journey && <NextSteps personId={id} nickname={header.nickname} journey={journey} />}
 
       <div className="mt-8 space-y-2.5">

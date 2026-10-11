@@ -10,6 +10,7 @@ import { CURRENCY_NAME, PRICE, bundleDiscount, formatNyang } from "@/lib/yeopjeo
 import { PersonHeader } from "@/components/yeopjeon/PersonHeader";
 import { InviteCard } from "@/components/yeopjeon/InviteCard";
 import { PayDialog } from "@/components/yeopjeon/PayDialog";
+import { PdfButton } from "@/components/yeopjeon/PdfButton";
 import { notifyYeopjeonChanged, reportClientError, useYeopjeon } from "@/components/yeopjeon/useYeopjeon";
 import type { PersonSummary } from "@/server/readings/readings";
 import type { Journey } from "@/lib/journey";
@@ -77,6 +78,16 @@ function PersonBody({ id }: { id: string }) {
       const owned = new Set(d.person.unlocked);
       if (buy === "deep" && isTopicKey(topic)) {
         router.replace(`/person/${id}/${topic}`);
+        return;
+      }
+      const lockedCount = TOPIC_KEYS.filter((t) => !owned.has(t)).length;
+      if ((buy === "bundle3" || buy === "bundle12") && lockedCount === 0) {
+        // 수정안 41: 다 연 사람에게 고르기 화면을 띄우지 않는다
+        setNotice({ kind: "done", text: "12가지 운세가 모두 열려 있어요. 아래에서 하나씩 눌러 보세요." });
+        return;
+      }
+      if (buy === "bundle3" && lockedCount < 3) {
+        setNotice({ kind: "done", text: `남은 운세가 ${lockedCount}가지라 몰아보기 대신 하나씩 깊게 보기로 열 수 있어요. 아래에서 눌러 보세요.` });
         return;
       }
       if (buy === "bundle3") {
@@ -295,6 +306,13 @@ function PersonBody({ id }: { id: string }) {
         )}
       </div>
 
+      {/* 수정안 38: 깊게 보기를 연 운세가 있으면 책자 PDF */}
+      {owned.size > 0 && !picking && (
+        <div className="mt-6">
+          <PdfButton personId={id} />
+        </div>
+      )}
+
       {/* 묶음 상품 */}
       {lockedTopics.length > 0 && !picking && (
         <section className="mt-8 grid grid-cols-1 gap-3">
@@ -317,6 +335,8 @@ function PersonBody({ id }: { id: string }) {
               </span>
             </button>
           )}
+          {/* 남은 운세를 하나씩 사는 값이 전부 보기보다 쌀 때는 전부 보기를 권하지 않는다 (수정안 41) */}
+          {lockedTopics.length * PRICE.DEEP > PRICE.BUNDLE12 && (
           <button type="button" onClick={() => setConfirm({ mode: "bundle12", topics: [] })} className="rounded-2xl p-5 text-left" style={{ border: "1px solid var(--color-gold-line)", backgroundColor: "var(--color-card)" }}>
             <span className="flex items-baseline justify-between">
               <span className="text-[17px] font-bold" style={{ fontFamily: "var(--font-serif)" }}>
@@ -327,10 +347,11 @@ function PersonBody({ id }: { id: string }) {
               </span>
             </span>
             <span className="mt-1 block text-[13px]" style={{ color: "var(--color-ink-soft)" }}>
-              <s style={{ color: "var(--color-ink-faint)" }}>{formatNyang(bundleDiscount(TOPIC_KEYS.length, PRICE.BUNDLE12).list)}</s> ·{" "}
-              <b style={{ color: "var(--color-accent)" }}>{formatNyang(bundleDiscount(TOPIC_KEYS.length, PRICE.BUNDLE12).off)} 할인</b> · 월별 운세·개운법 포함
+              <s style={{ color: "var(--color-ink-faint)" }}>{formatNyang(bundleDiscount(lockedTopics.length, PRICE.BUNDLE12).list)}</s> ·{" "}
+              <b style={{ color: "var(--color-accent)" }}>{formatNyang(bundleDiscount(lockedTopics.length, PRICE.BUNDLE12).off)} 할인</b> · 월별 운세·개운법 포함
             </span>
           </button>
+          )}
         </section>
       )}
 

@@ -1,5 +1,11 @@
 import type { FortuneJson, FortuneResultJson, SajuJson } from "saju-engine";
-import { STEM_HANJA, BRANCH_HANJA } from "@/lib/pillarView";
+import { STEM_HANJA, BRANCH_HANJA, type ElementKo } from "@/lib/pillarView";
+import { STEM_ELEMENT, BRANCH_ELEMENT } from "saju-engine/dist/src/rules/fiveElementTables";
+import { AREA_GROUP, DAY_TEN_GOD, GROUP_TIP, HOUR_RANGE, SCORE_LINE, SIX_HARMONY } from "@/lib/fortuneExtra";
+import { TEN_GOD_GROUP } from "@/lib/sajuFacts";
+import { neededEnergy } from "@/lib/neededEnergy";
+import { FILL } from "@/lib/basic/common";
+import type { TenGodName } from "saju-engine/dist/src/rules/tenGodTables";
 
 /**
  * 오늘/내일의 운세 화면용 점수·근거 정리 (규칙 기반, AI 미사용).
@@ -73,6 +79,8 @@ export interface AreaView {
   score: number;
   weather: Weather;
   text: string;
+  /** 수정안 39: 영역별 풀이 보강 (오늘 들어오는 기운 × 영역 + 점수대) */
+  detail: string;
   evidence: Evidence[];
 }
 
@@ -85,6 +93,10 @@ export interface FortuneView {
   chips: Array<{ text: string; tone: "good" | "bad" }>;
   keywords: string[];
   advice: string;
+  /** 수정안 39 */
+  overallDetail: string;
+  luckyTime: { branch: string; hanja: string; range: string } | null;
+  fill: { element: ElementKo; todayElements: ElementKo[]; colors: string; direction: string; numbers: string; animal: string; object: string };
 }
 
 const REL_TEXT = {
@@ -140,9 +152,12 @@ export function buildFortuneView(saju: SajuJson, fortune: FortuneJson, result: F
     }
   }
 
+  const group = TEN_GOD_GROUP[tenGodOfDay as TenGodName];
   const areas: AreaView[] = AREAS.map(({ key, label, hanja }) => {
     const score = Math.max(1, Math.min(10, scores[key]));
-    return { key, label, hanja, score, weather: weatherOf(score), text: result.categories[key], evidence: evidence.filter((e) => e.area === key) };
+    const band = score >= 7 ? "good" : score >= 5 ? "normal" : "care";
+    const detail = [group ? AREA_GROUP[key][group] : "", SCORE_LINE[key][band]].filter(Boolean).join(" ");
+    return { key, label, hanja, score, weather: weatherOf(score), text: result.categories[key], detail, evidence: evidence.filter((e) => e.area === key) };
   });
 
   const avg = areas.reduce((s, a) => s + a.score, 0) / areas.length;
@@ -152,7 +167,24 @@ export function buildFortuneView(saju: SajuJson, fortune: FortuneJson, result: F
   const repeated = Object.values(result.categories).includes(result.advice);
   const advice = repeated ? SAFE_ADVICE[twelveStageOfDay] ?? "평소의 페이스를 유지하면서 차분하게 하루를 보내세요." : result.advice;
 
+  const goods = evidence.filter((e) => e.tone === "good").length;
+  const bads = evidence.filter((e) => e.tone === "bad").length;
+  const relLine =
+    goods + bads === 0
+      ? "내 사주와 오늘 일진 사이에 크게 부딪치거나 묶이는 글자가 없어, 흐름이 잔잔한 하루예요."
+      : bads > goods
+        ? "내 사주와 오늘 일진 사이에 부딪치는 글자가 있어, 예상 밖의 변수에 한 번 더 살피면 좋아요."
+        : "내 사주와 오늘 일진이 서로 손을 잡는 자리가 있어, 도움과 화합이 따르기 쉬워요.";
+  const overallDetail = [DAY_TEN_GOD[tenGodOfDay] ?? "", stage.phase ? `하루의 흐름은 ${stage.phase}이에요.` : "", relLine].filter(Boolean).join(" ");
+  const harmony = SIX_HARMONY[dayBranch];
+  const need = neededEnergy(saju).elements[0];
+  const F = FILL[need];
+  const todayElements = [STEM_ELEMENT[dayStem], BRANCH_ELEMENT[dayBranch]] as ElementKo[];
+
   return {
+    overallDetail,
+    luckyTime: harmony ? { branch: harmony, hanja: BRANCH_HANJA[harmony], range: HOUR_RANGE[harmony] } : null,
+    fill: { element: need, todayElements, colors: F.colors, direction: F.direction, numbers: F.numbers, animal: F.animal, object: F.object },
     dateLabel: dateLabel(fortune.date),
     day: { stem: dayStem, branch: dayBranch, hanja: `${STEM_HANJA[dayStem]}${BRANCH_HANJA[dayBranch]}` },
     me: {
@@ -164,7 +196,7 @@ export function buildFortuneView(saju: SajuJson, fortune: FortuneJson, result: F
     areas,
     chips,
     keywords: result.keywords,
-    advice,
+    advice: group ? `${advice} ${GROUP_TIP[group]}` : advice,
   };
 }
 
