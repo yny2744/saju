@@ -9,6 +9,8 @@ import { HanjaPicker } from "@/components/HanjaPicker";
 import { PersonHeader } from "@/components/yeopjeon/PersonHeader";
 import { PayDialog } from "@/components/yeopjeon/PayDialog";
 import { WritingOverlay } from "@/components/yeopjeon/WritingOverlay";
+import { ReviewBox } from "@/components/reviews/ReviewBox";
+import { ReviewStrip } from "@/components/reviews/ReviewStrip";
 import { notifyYeopjeonChanged, reportClientError, useYeopjeon } from "@/components/yeopjeon/useYeopjeon";
 import { CURRENCY_NAME, formatNyang } from "@/lib/yeopjeon";
 import { ELEMENT_TOKEN, type ElementKo } from "@/lib/pillarView";
@@ -288,6 +290,8 @@ function NameBody({ id }: { id: string }) {
         </section>
       )}
 
+      {state.status === "locked" && <ReviewStrip naming variant="mini" title="작명·개명을 받은 분들의 한마디" />}
+
       {state.status === "ready" && (
         <Report
           report={state.report}
@@ -299,6 +303,8 @@ function NameBody({ id }: { id: string }) {
           }}
         />
       )}
+
+      {state.status === "ready" && <ReviewBox personId={id} product={kind} />}
 
       <div className="mt-8 space-y-2.5">
         <a href={`/person/${id}`} className="btn-secondary block text-center">

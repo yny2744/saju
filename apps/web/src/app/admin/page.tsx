@@ -7,6 +7,7 @@ import { LoadingState } from "@/components/StatusScreens";
 import { formatNyang } from "@/lib/yeopjeon";
 import type { AdminMember, AdminStats, PeriodStats } from "@/server/admin/adminData";
 import type { AdminPayOrder, PayMode } from "@/server/pay/payOrders";
+import type { AdminReview } from "@/server/reviews/reviews";
 
 /**
  * 관리자 화면 (2026-10-10 수정안 26). Vercel 환경변수 ADMIN_USER_IDS 에 등록된 회원만 열린다.
@@ -20,6 +21,7 @@ type Overview = {
   errors: Array<{ place: string; message: string; createdAt: string }>;
   payMode: PayMode;
   needed: { total: number; rows: Array<{ element: string; count: number; percent: number }> };
+  reviews: { list: AdminReview[]; angel: AdminReview | null; total: number };
 };
 
 type Denied = { kind: "login" } | { kind: "notAdmin"; myId?: string; configured?: boolean } | { kind: "error"; message: string };
@@ -103,6 +105,13 @@ function AdminBody() {
     const r = await fetch(`/api/admin/members/${id}`).catch(() => null);
     const body = r ? await r.json().catch(() => ({})) : {};
     setLedger(body.ledger ?? []);
+  }
+
+  async function setReview(id: string, patch: { featured?: boolean; hidden?: boolean }) {
+    setBusy(true);
+    await fetch(`/api/admin/reviews/${id}`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(patch) }).catch(() => null);
+    await load();
+    setBusy(false);
   }
 
   async function doGrant(userId: string) {
@@ -311,7 +320,47 @@ function AdminBody() {
         )}
       </section>
 
-      {/* 후기 관리: 후기 기능이 생기면 여기에 */}
+      {/* 수정안 47: 1004 천사의 한마디 - 대문에 올리기·숨기기 */}
+      <section className="gold-card rounded-2xl p-4">
+        <h2 className="text-[16px] font-bold">1004 천사의 한마디 · 들어온 후기 {data.reviews.total}개</h2>
+        {data.reviews.angel && (
+          <p className="mt-2 rounded-lg px-3 py-2 text-[13px]" style={{ backgroundColor: "var(--color-gold-soft)" }}>
+            🎉 1,004번째 천사: <b>{data.reviews.angel.name}</b> ({data.reviews.angel.productLabel}) · 엽전 29,500냥 자동 지급됨 · 굿즈를 보내 주세요 · 회원 번호 {data.reviews.angel.userId}
+          </p>
+        )}
+        {data.reviews.list.length === 0 ? (
+          <p className="mt-3 text-[14px]" style={{ color: "var(--color-ink-faint)" }}>
+            아직 들어온 후기가 없어요.
+          </p>
+        ) : (
+          <ul className="mt-3 space-y-2 text-[13px]">
+            {data.reviews.list.map((r) => (
+              <li key={r.id} className="rounded-lg px-3 py-2" style={{ backgroundColor: "var(--color-paper-soft)", opacity: r.hidden ? 0.5 : 1 }}>
+                <p>
+                  <span style={{ color: "var(--color-ink-faint)" }}>
+                    #{r.seq} · {fmtTime(r.createdAt)}
+                  </span>{" "}
+                  <b>{r.name}</b> · {r.productLabel} · <span style={{ color: "var(--color-gold)" }}>{"★".repeat(r.rating)}</span>
+                  {r.gifted && " · 990냥 지급"}
+                  {r.featured && <b style={{ color: "var(--color-element-wood)" }}> · 대문에 올림</b>}
+                  {r.hidden && " · 숨김"}
+                </p>
+                <p className="mt-1" style={{ color: "var(--color-ink-soft)" }}>
+                  {r.body}
+                </p>
+                <div className="mt-2 flex gap-2">
+                  <button type="button" disabled={busy} onClick={() => setReview(r.id, { featured: !r.featured })} className="rounded-lg px-3 py-1.5 text-[12px] font-semibold" style={{ border: "1px solid var(--color-gold-line)" }}>
+                    {r.featured ? "대문에서 내리기" : "대문에 올리기"}
+                  </button>
+                  <button type="button" disabled={busy} onClick={() => setReview(r.id, { hidden: !r.hidden })} className="rounded-lg px-3 py-1.5 text-[12px]" style={{ border: "1px solid var(--color-line)" }}>
+                    {r.hidden ? "다시 보이기" : "숨기기"}
+                  </button>
+                </div>
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
 
       {/* 최근 오류 */}
       <section className="gold-card rounded-2xl p-4">

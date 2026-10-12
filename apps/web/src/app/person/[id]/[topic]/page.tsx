@@ -18,6 +18,8 @@ import type { BasicContent, DeepContent } from "@/server/readings/generateReadin
 import type { BasicReadingV2, DeepVisual } from "@/lib/basic/compose";
 import { DeepReadingView } from "@/components/yeopjeon/DeepReadingView";
 import { PdfButton } from "@/components/yeopjeon/PdfButton";
+import { ReviewBox } from "@/components/reviews/ReviewBox";
+import { ReviewStrip } from "@/components/reviews/ReviewStrip";
 import { BasicReadingView } from "@/components/yeopjeon/BasicReadingView";
 
 /**
@@ -272,6 +274,8 @@ function TopicBody({ id, topic }: { id: string; topic: string }) {
           )}
         </section>
         {noticeBox}
+        {/* 수정안 47: 이 운세를 본 분들의 한마디 (관리자가 올린 것만, 없으면 안 보임) */}
+        {isAnyTopicKey(topic) && <ReviewStrip topic={topic} variant="mini" title={`${title} 운세를 본 분들의 한마디`} />}
         <div className="mt-8 space-y-2.5">
           <a href={`/person/${id}`} className="btn-secondary block text-center">
             12가지 운세 모두 보기
@@ -317,10 +321,13 @@ function TopicBody({ id, topic }: { id: string; topic: string }) {
             {content.title} 깊게 보기 · {formatNyang(PRICE.DEEP)}
           </button>
           <p className="mt-2 text-[12px]" style={{ color: "var(--color-ink-faint)" }}>
-            소제목 5개 · 4,000자 넘게 · 꼭 채워야 할 하나까지
+            소제목 5개 · 5,000자 넘게 · 꼭 채워야 할 하나까지
           </p>
         </section>
         {noticeBox}
+
+        {/* 수정안 47: 1004 천사의 한마디 남기기 */}
+        <ReviewBox personId={id} product={`basic:${topic}`} />
 
         <div className="mt-8 space-y-2.5">
           <a href={`/person/${id}`} className="btn-secondary block text-center">
@@ -355,6 +362,9 @@ function TopicBody({ id, topic }: { id: string; topic: string }) {
       </div>
 
       {journey && <NextSteps personId={id} nickname={header.nickname} journey={journey} />}
+
+      {/* 수정안 47: 1004 천사의 한마디 남기기 */}
+      <ReviewBox personId={id} product={`deep:${topic}`} />
 
       <div className="mt-8 space-y-2.5">
         <a href={`/person/${id}`} className="btn-primary block text-center">

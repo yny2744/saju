@@ -229,6 +229,26 @@ async function ensureSchema(): Promise<void> {
       PRIMARY KEY (person_id, kind)
     );
   `);
+  // 2026-10-12 수정안 47: 1004 천사의 한마디(후기). seq = 들어온 순서(1,004번째 천사 이벤트). 상품마다 한 번.
+  await db.query(`
+    CREATE TABLE IF NOT EXISTS reviews (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      seq BIGSERIAL UNIQUE,
+      user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      person_id UUID NOT NULL REFERENCES persons(id) ON DELETE CASCADE,
+      product TEXT NOT NULL,
+      rating INTEGER NOT NULL,
+      body TEXT NOT NULL,
+      display_name TEXT NOT NULL,
+      gifted BOOLEAN NOT NULL DEFAULT false,
+      angel BOOLEAN NOT NULL DEFAULT false,
+      featured BOOLEAN NOT NULL DEFAULT false,
+      hidden BOOLEAN NOT NULL DEFAULT false,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+      UNIQUE (user_id, person_id, product)
+    );
+  `);
+  await db.query(`CREATE INDEX IF NOT EXISTS reviews_featured_idx ON reviews(featured, hidden, created_at DESC);`);
   await db.query(`CREATE INDEX IF NOT EXISTS pay_orders_user_idx ON pay_orders(user_id, created_at DESC);`);
   schemaReady = true;
 }

@@ -1,4 +1,5 @@
 import { CasualLanding } from "@/components/CasualLanding";
+import { ReviewStrip } from "@/components/reviews/ReviewStrip";
 import { OhaengEmblem } from "@/components/landing/OhaengEmblem";
 import { ProductIcon, type Kind } from "@/components/landing/ProductIcon";
 import { BUSINESS_INFO } from "@/lib/businessInfo";
@@ -175,6 +176,9 @@ export default function LandingPage() {
         </section>
 
         <div className="hairline" />
+
+        {/* 1004 천사의 한마디 (수정안 47: 관리자가 올린 후기만, 없으면 안 보임) */}
+        <ReviewStrip />
 
         {/* 왜 류결사주인가 (수정안 28: 3줄 글) */}
         <section className="py-12">

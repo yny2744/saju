@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { CURRENCY_NAME, PRICE, formatNyang } from "@/lib/yeopjeon";
+import { ReviewStrip } from "@/components/reviews/ReviewStrip";
 
 export const metadata: Metadata = {
   title: "이름 풀이 · 작명 · 류결사주",
@@ -89,6 +90,7 @@ export default function NamePage() {
           </section>
         ))}
       </div>
+      <ReviewStrip naming variant="mini" title="작명·개명을 받은 분들의 한마디" />
       <p className="mt-6 text-center text-[12px] leading-relaxed" style={{ color: "var(--color-ink-faint)" }}>
         전해 오는 작명 이론(수리·자원오행·소리오행)에 따른 참고용이에요. 학파마다 획수와 기준이 조금씩 다를 수 있어요.
         <br />
