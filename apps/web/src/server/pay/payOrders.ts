@@ -103,6 +103,7 @@ interface OrderRow {
 }
 
 function destination(o: Pick<OrderRow, "person_id" | "mode" | "topics">): string {
+  if (o.mode === "face") return `/face/paid/${o.person_id}?paid=1`;
   const base = `/person/${o.person_id}`;
   if (o.mode === "naming" || o.mode === "rename") return `${base}/name?kind=${o.mode}&paid=1`;
   return o.mode === "basic" || o.mode === "deep" ? `${base}/${o.topics[0]}` : `${base}?paid=1`;

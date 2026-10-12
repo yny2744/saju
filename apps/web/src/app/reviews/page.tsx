@@ -11,6 +11,7 @@ const TABS = [
   { key: "basic", label: "운세 보기", test: (r: PublicReview) => r.product.startsWith("basic:") },
   { key: "deep", label: "깊게 보기", test: (r: PublicReview) => r.product.startsWith("deep:") },
   { key: "name", label: "작명·개명", test: (r: PublicReview) => r.product === "naming" || r.product === "rename" },
+  { key: "face", label: "관상", test: (r: PublicReview) => r.product === "face" },
 ] as const;
 
 export default function ReviewsPage() {
@@ -37,13 +38,13 @@ export default function ReviewsPage() {
           풀이를 받아 보신 분들이 남겨 주신 한마디예요.
         </p>
       </header>
-      <div className="mb-5 grid grid-cols-4 gap-1.5">
+      <div className="mb-5 grid grid-cols-5 gap-1.5">
         {TABS.map((x) => (
           <button
             key={x.key}
             type="button"
             onClick={() => setTab(x.key)}
-            className="rounded-xl py-2 text-[13px] font-semibold"
+            className="rounded-xl px-1 py-2 text-[12px] font-semibold"
             style={{ border: tab === x.key ? "2px solid var(--color-accent)" : "1px solid var(--color-line)", backgroundColor: tab === x.key ? "var(--color-accent-soft)" : "var(--color-card)" }}
           >
             {x.label}

@@ -249,6 +249,27 @@ async function ensureSchema(): Promise<void> {
     );
   `);
   await db.query(`CREATE INDEX IF NOT EXISTS reviews_featured_idx ON reviews(featured, hidden, created_at DESC);`);
+  // 2026-10-12 수정안 53: 관상 심층 풀이(4,900냥). 무료 관상 결과(30분 임시 토큰)를 회원 것으로 옮겨 두고, 산 뒤 AI 풀이를 저장한다.
+  //   사진은 저장하지 않는다 - 풀이를 쓰는 요청 하나 안에서만 쓰고 버린다 (photo_used: 사진을 봤는지 여부만).
+  await db.query(`
+    CREATE TABLE IF NOT EXISTS face_readings (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      source_key TEXT NOT NULL,
+      nickname TEXT NOT NULL,
+      buckets JSONB NOT NULL,
+      rule_result JSONB NOT NULL,
+      preference TEXT,
+      paid_at TIMESTAMPTZ,
+      content JSONB,
+      photo_used BOOLEAN NOT NULL DEFAULT false,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+      UNIQUE (user_id, source_key)
+    );
+  `);
+  await db.query(`CREATE INDEX IF NOT EXISTS face_readings_user_idx ON face_readings(user_id, created_at DESC);`);
+  // 후기의 person_id 는 이제 "풀이 번호" - 사주 사람(persons) 또는 관상 풀이(face_readings). 회원 탈퇴 시 user_id 로 함께 지워진다.
+  await db.query(`ALTER TABLE reviews DROP CONSTRAINT IF EXISTS reviews_person_id_fkey;`);
   await db.query(`CREATE INDEX IF NOT EXISTS pay_orders_user_idx ON pay_orders(user_id, created_at DESC);`);
   schemaReady = true;
 }

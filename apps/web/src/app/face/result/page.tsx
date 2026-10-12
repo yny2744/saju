@@ -7,6 +7,9 @@ import type { FaceResultResponse, FaceApiErrorResponse } from "@/server/face/typ
 import { LoadingState, ErrorState } from "@/components/StatusScreens";
 import { FaceFeatureTable } from "@/components/FaceFeatureTable";
 import { faceTypeName } from "@/lib/faceType";
+import { isAuthEnabled } from "@/lib/launchMode";
+import { CURRENCY_NAME, PRICE, formatNyang } from "@/lib/yeopjeon";
+import { ReviewStrip } from "@/components/reviews/ReviewStrip";
 
 type LoadState = { status: "loading" } | { status: "error"; message: string } | { status: "done"; data: FaceResultResponse };
 
@@ -130,10 +133,14 @@ function FaceResultBody() {
       </section>
 
       <div className="space-y-2.5">
-        {/* 2026-10-06: 유료 관상(4,900원)은 결제사 승인 후 새 가격 구조로 다시 연다 - 그 전엔 숨김 */}
-        <p className="rounded-xl px-4 py-3 text-center text-sm" style={{ backgroundColor: "var(--color-paper-soft)", color: "var(--color-ink-faint)" }}>
-          관상 심층 풀이 · 곧 열려요
-        </p>
+        {/* 2026-10-12 수정안 53: 관상 심층 풀이 4,900냥 (엽전 · 모자라면 카드) - 회원 기능이 꺼져 있으면 "곧 열려요" */}
+        {isAuthEnabled() ? (
+          <FaceDeepCta resultId={id!} />
+        ) : (
+          <p className="rounded-xl px-4 py-3 text-center text-sm" style={{ backgroundColor: "var(--color-paper-soft)", color: "var(--color-ink-faint)" }}>
+            관상 심층 풀이 · 곧 열려요
+          </p>
+        )}
         <a href="/start" className="btn-primary block text-center">
           무료 만세력도 보기
         </a>
@@ -146,6 +153,75 @@ function FaceResultBody() {
         {result.disclaimer}
       </p>
     </main>
+  );
+}
+
+/** 관상 심층 풀이 안내 + 열기 (수정안 53). 무료 결과를 내 관상 풀이로 옮긴 뒤 /face/paid/{id} 에서 산다 */
+function FaceDeepCta({ resultId }: { resultId: string }) {
+  const [busy, setBusy] = useState(false);
+  const [msg, setMsg] = useState<string | null>(null);
+
+  async function go() {
+    setBusy(true);
+    setMsg(null);
+    try {
+      const r = await fetch("/api/face/readings", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ resultId }),
+      });
+      if (r.status === 401) {
+        window.location.href = `/login?next=${encodeURIComponent(`/face/result?id=${resultId}`)}`;
+        return;
+      }
+      const body = await r.json().catch(() => ({}));
+      if (!r.ok) {
+        setMsg(body?.error?.message ?? "잠시 후 다시 시도해 주세요.");
+        setBusy(false);
+        return;
+      }
+      // 사진 축소본은 이 탭 안에서만 다음 화면으로 넘긴다 (서버로 보내는 건 손님이 동의하고 "풀이 받기"를 누를 때뿐)
+      try {
+        const photo = sessionStorage.getItem(`face_photo_${resultId}`);
+        if (photo) sessionStorage.setItem(`face_photo_paid_${body.id}`, photo);
+      } catch {
+        /* 무시 */
+      }
+      window.location.href = `/face/paid/${body.id}`;
+    } catch {
+      setMsg("연결이 끊겼어요. 잠시 후 다시 시도해 주세요.");
+      setBusy(false);
+    }
+  }
+
+  return (
+    <section className="gold-card rounded-2xl px-5 py-5">
+      <p className="text-center text-[12px] font-semibold" style={{ color: "var(--color-gold)" }}>
+        관상 심층 풀이 · 인연 궁합
+      </p>
+      <h2 className="mt-1 text-center text-[19px] font-bold leading-snug" style={{ fontFamily: "var(--font-serif)" }}>
+        비율 너머, 얼굴을 직접 보고 풀어 드려요
+      </h2>
+      <ul className="mt-3 space-y-1.5 text-[14px] leading-relaxed" style={{ color: "var(--color-ink-soft)" }}>
+        <li>◆ AI가 사진을 직접 보고 쓰는 부위별 깊은 풀이 (동의하실 때만 · 사진은 저장하지 않아요)</li>
+        <li>◆ 삼정과 얼굴 전체의 복 · 아쉬운 점과 채우는 법</li>
+        <li>◆ 연애 경향과 잘 어울리는 인연의 관상</li>
+        <li>◆ 함께할 때 살필 점{"·"}적어 주신 선호에 대한 한마디</li>
+        <li>◆ 내 복주머니에 보관 · 언제든 다시 보기</li>
+      </ul>
+      <button type="button" disabled={busy} onClick={go} className="btn-band mt-4 block w-full rounded-xl py-3.5 text-[16px] font-bold disabled:opacity-60" style={{ fontFamily: "var(--font-serif)" }}>
+        {busy ? "준비하는 중..." : `심층 풀이 받기 · ${CURRENCY_NAME} ${formatNyang(PRICE.FACE)}`}
+      </button>
+      <p className="mt-2 text-center text-[12px]" style={{ color: "var(--color-ink-faint)" }}>
+        로그인 후 이용 · 엽전이 모자라면 모자란 만큼만 카드·간편결제
+      </p>
+      {msg && (
+        <p className="mt-3 rounded-xl px-4 py-2.5 text-center text-[13px]" style={{ backgroundColor: "var(--color-danger-soft)", color: "var(--color-danger)" }}>
+          {msg}
+        </p>
+      )}
+      <ReviewStrip face variant="mini" title="관상 심층 풀이를 받은 분들의 한마디" />
+    </section>
   );
 }
 

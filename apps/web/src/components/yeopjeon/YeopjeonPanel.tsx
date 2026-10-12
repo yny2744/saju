@@ -73,6 +73,30 @@ export function YeopjeonPanel() {
         )}
       </section>
 
+      {/* 내 관상 풀이 (수정안 53) - 연 것이 있을 때만 */}
+      {(data.faces?.length ?? 0) > 0 && (
+        <section className="mb-7">
+          <h2 className="section-label mb-3">내 관상 풀이</h2>
+          <ul className="overflow-hidden rounded-xl" style={{ border: "1px solid var(--color-line)" }}>
+            {data.faces!.map((f, i) => (
+              <li key={f.id} style={i > 0 ? { borderTop: "1px solid var(--color-line)" } : undefined}>
+                <a href={`/face/paid/${f.id}`} className="flex items-center justify-between gap-2 px-4 py-3">
+                  <span className="min-w-0">
+                    <span className="block text-[15px] font-semibold">{f.nickname}</span>
+                    <span className="block text-[12px]" style={{ color: "var(--color-ink-faint)" }}>
+                      관상 심층 풀이 · 인연 궁합 · {fmtDate(f.createdAt).slice(0, 8)}
+                    </span>
+                  </span>
+                  <span className="shrink-0 text-[12px]" style={{ color: "var(--color-ink-soft)" }}>
+                    {f.written ? "다시 보기 ›" : "풀이 받기 ›"}
+                  </span>
+                </a>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+
       {/* 친구 초대 */}
       <section className="mb-7">
         <InviteCard refCode={data.refCode} invited={data.invited} />

@@ -13,11 +13,13 @@ import { ReviewCard } from "./ReviewCard";
 export function ReviewStrip({
   topic,
   naming,
+  face,
   variant = "strip",
   title,
 }: {
   topic?: string;
   naming?: boolean;
+  face?: boolean;
   variant?: "strip" | "mini";
   title?: string;
 }) {
@@ -26,11 +28,12 @@ export function ReviewStrip({
     const q = new URLSearchParams({ limit: variant === "mini" ? "2" : "8" });
     if (topic) q.set("topic", topic);
     if (naming) q.set("naming", "1");
+    if (face) q.set("face", "1");
     fetch(`/api/reviews?${q}`, { cache: "no-store" })
       .then((r) => (r.ok ? r.json() : { reviews: [] }))
       .then((d: { reviews?: PublicReview[] }) => setList(d.reviews ?? []))
       .catch(() => setList([]));
-  }, [topic, naming, variant]);
+  }, [topic, naming, face, variant]);
 
   if (list.length === 0) return null;
 

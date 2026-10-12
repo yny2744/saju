@@ -30,9 +30,9 @@ export interface PublicReview {
 
 const pool = db;
 
-/** 상품 키: basic:<운세> · deep:<운세> · naming · rename */
-export function parseProduct(v: unknown): { kind: "basic" | "deep"; topic: string } | { kind: "naming" | "rename" } | null {
-  if (v === "naming" || v === "rename") return { kind: v };
+/** 상품 키: basic:<운세> · deep:<운세> · naming · rename · face (face 는 personId 자리에 관상 풀이 번호) */
+export function parseProduct(v: unknown): { kind: "basic" | "deep"; topic: string } | { kind: "naming" | "rename" | "face" } | null {
+  if (v === "naming" || v === "rename" || v === "face") return { kind: v };
   if (typeof v !== "string") return null;
   const [k, t] = v.split(":");
   if (k === "basic" && isTopicKey(t)) return { kind: "basic", topic: t };
@@ -47,6 +47,7 @@ async function usedProduct(q: { query: (s: string, a: unknown[]) => Promise<{ ro
   let r;
   if (p.kind === "basic") r = await q.query(`SELECT 1 FROM topic_basics WHERE person_id = $1 AND topic = $2 AND content IS NOT NULL`, [personId, p.topic]);
   else if (p.kind === "deep") r = await q.query(`SELECT 1 FROM topic_readings WHERE person_id = $1 AND topic = $2`, [personId, p.topic]);
+  else if (p.kind === "face") r = await q.query(`SELECT 1 FROM face_readings WHERE id = $1 AND content IS NOT NULL`, [personId]);
   else r = await q.query(`SELECT 1 FROM name_reports WHERE person_id = $1 AND kind = $2`, [personId, p.kind]);
   return (r.rowCount ?? 0) > 0;
 }
@@ -95,7 +96,10 @@ export async function handleCreateReview(token: string | undefined, raw: unknown
   if ([...body].length > 500 || /<[a-z/!]/i.test(body)) return err(400, "INVALID_BODY", "500자 이하로, 글자로만 적어 주세요.");
 
   return inTransaction(async (client) => {
-    const owner = await client.query(`SELECT 1 FROM persons WHERE id = $1 AND user_id = $2`, [personId, user.id]);
+    const owner = await client.query(
+      product === "face" ? `SELECT 1 FROM face_readings WHERE id = $1 AND user_id = $2` : `SELECT 1 FROM persons WHERE id = $1 AND user_id = $2`,
+      [personId, user.id]
+    );
     if ((owner.rowCount ?? 0) === 0) return err(404, "NOT_FOUND", "풀이 대상을 찾을 수 없어요.");
     if (!(await usedProduct(client, personId, product))) return err(403, "NOT_USED", "풀이를 받아 본 뒤에 남길 수 있어요.");
     // 같은 계정의 후기가 동시에 들어와 선물이 두 번 나가지 않게 계정 단위로 잠근다
@@ -130,7 +134,7 @@ export async function handleCreateReview(token: string | undefined, raw: unknown
 }
 
 /** 손님에게 보이는 후기 - 관리자가 올린 것만 */
-export async function publicReviews(opts: { topic?: string | null; naming?: boolean; limit?: number } = {}): Promise<PublicReview[]> {
+export async function publicReviews(opts: { topic?: string | null; naming?: boolean; face?: boolean; limit?: number } = {}): Promise<PublicReview[]> {
   const p = await pool();
   const limit = Math.min(Math.max(opts.limit ?? 30, 1), 100);
   const where = ["featured", "NOT hidden"];
@@ -139,6 +143,7 @@ export async function publicReviews(opts: { topic?: string | null; naming?: bool
     args.push(`basic:${opts.topic}`, `deep:${opts.topic}`);
     where.push(`product IN ($${args.length - 1}, $${args.length})`);
   } else if (opts.naming) where.push(`product IN ('naming', 'rename')`);
+  else if (opts.face) where.push(`product = 'face'`);
   args.push(limit);
   const r = await p.query(
     `SELECT id, display_name, product, rating, body, gifted, created_at FROM reviews WHERE ${where.join(" AND ")} ORDER BY created_at DESC LIMIT $${args.length}`,

@@ -45,6 +45,14 @@ export default function PrivacyPage() {
               ② 관상 분석 이용 시: 닉네임, 연애·관계 선호(선택 입력 텍스트). <b>얼굴 사진 원본은 수집하지
               않습니다</b> — 촬영한 사진은 이용자의 기기(브라우저) 안에서만 분석되며, 서버로는 분석에 쓰인
               얼굴 비율 수치(6개)와 인식 신뢰도 값만 전달됩니다.
+              {auth && (
+                <>
+                  {" "}
+                  다만 유료 <b>관상 심층 풀이</b>에서 이용자가 별도로 동의한 경우에 한해, 축소한 얼굴 사진 1장을 풀이 생성을
+                  위해 AI(Google Gemini API)에 한 번 전달합니다. 회사는 이 사진을 <b>저장하지 않으며</b>, 풀이 글만 회원 탈퇴
+                  시까지 보관합니다.
+                </>
+              )}
               <br />
               ③ 유료 결제 이용 시: 주문 상품명, 결제 금액. <b>카드번호 등 결제 수단 정보는 회사가 직접
               수집·보관하지 않으며</b>, 전자지급결제대행업체(토스페이먼츠(주))가 직접 수집·처리합니다.
@@ -156,7 +164,10 @@ export default function PrivacyPage() {
                   )}
                   <tr style={{ borderTop: "1px solid var(--color-line)" }}>
                     <td className="p-2">Google LLC (미국)</td>
-                    <td className="p-2">사주 해석 생성(Gemini API) — 계산된 생년월일 기반 수치(오행·십신 등)가 전달되며, 성명·연락처는 전달되지 않음</td>
+                    <td className="p-2">
+                      사주 해석 생성(Gemini API) — 계산된 생년월일 기반 수치(오행·십신 등)가 전달되며, 성명·연락처는 전달되지 않음
+                      {auth && " · 관상 심층 풀이: 이용자가 동의한 경우 축소한 얼굴 사진 1장"}
+                    </td>
                     <td className="p-2">API 호출 즉시 처리, 별도 보관 안 함</td>
                   </tr>
                   <tr style={{ borderTop: "1px solid var(--color-line)" }}>
@@ -175,7 +186,7 @@ export default function PrivacyPage() {
             <p className="mt-2">
               Google LLC·Anthropic PBC·Vercel Inc.로의 정보 이전은 「개인정보 보호법」상 국외 이전에
               해당합니다. 위탁 업무에는 이용자의 성명·연락처 등 식별정보가 아닌, 이미 계산된 사주 수치(간지,
-              오행, 십신 등) 또는 얼굴 비율 수치만 전달됩니다.
+              오행, 십신 등) 또는 얼굴 비율 수치만 전달됩니다{auth ? " (관상 심층 풀이에서 이용자가 동의한 얼굴 사진은 예외이며, 풀이 생성에만 쓰이고 회사는 저장하지 않습니다)" : ""}.
             </p>
           </section>
 

@@ -42,7 +42,7 @@ export function FaceCapture({
       // 브라우저 sessionStorage에만 잠깐 보관하고(결과 화면 이동 시 state가 날아가므로),
       // 이 탭을 닫으면 사라진다. 원본 이미지 자체는 여기서 만든 작은 복사본일 뿐,
       // 원본 File/objectUrl은 아래 finally에서 그대로 해제한다.
-      const thumbnail = createThumbnail(image, 360);
+      const thumbnail = createThumbnail(image, 512); // 수정안 53: 심층 풀이(동의 시 AI가 사진을 봄)에도 쓰여 360 → 512
       onFeaturesExtracted(features, thumbnail, faceMap);
     } catch (err) {
       setStatus("error");

@@ -40,14 +40,17 @@ export function PayDialog({
   mode,
   topics,
   backTo,
+  checkoutUrl,
   onEnough,
   onClose,
 }: {
   personId: string;
-  mode: "basic" | "deep" | "bundle3" | "bundle12" | "naming" | "rename";
+  mode: "basic" | "deep" | "bundle3" | "bundle12" | "naming" | "rename" | "face";
   topics: string[];
   /** 결제를 그만두면 돌아올 주소 */
   backTo: string;
+  /** 주문 만들 주소 (기본: 사주 사람 /api/persons/{id}/checkout, 관상은 /api/face/readings/{id}/checkout) */
+  checkoutUrl?: string;
   /** 그 사이 엽전이 충분해졌으면 (예: 다른 창에서 받음) 그냥 엽전으로 산다 */
   onEnough: () => void;
   onClose: () => void;
@@ -58,7 +61,7 @@ export function PayDialog({
 
   useEffect(() => {
     let cancelled = false;
-    fetch(`/api/persons/${encodeURIComponent(personId)}/checkout`, {
+    fetch(checkoutUrl ?? `/api/persons/${encodeURIComponent(personId)}/checkout`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ mode, topics }),

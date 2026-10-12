@@ -18,6 +18,8 @@ export interface YeopjeonSummary {
   refCode: string;
   invited: number;
   persons: PersonListItem[];
+  /** 연 관상 심층 풀이 (수정안 53) */
+  faces?: Array<{ id: string; nickname: string; written: boolean; createdAt: string }>;
 }
 
 /** 로그인한 회원의 엽전 요약. 로그인 안 했으면 null. */
