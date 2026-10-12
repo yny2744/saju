@@ -56,7 +56,7 @@ const FREE: Array<{ icon: Kind; name: string; desc: string; href: string }> = [
   { icon: "manse", name: "만세력", desc: "여덟 글자 · 오행 · 신강신약 · 대운", href: "/start" },
   { icon: "today", name: "오늘·내일의 운세", desc: "내 사주와 그날 기운의 만남", href: "/start?next=fortune" },
   { icon: "tti", name: "띠별 운세", desc: "생년월일 없이 띠만 골라 오늘·내일", href: "/tti" },
-  { icon: "name", name: "이름 풀이", desc: "내 이름의 획수·소리·오행이 사주와 맞는지", href: "/start" },
+  { icon: "name", name: "이름 풀이 · 작명", desc: "내 이름 풀이는 무료 · 아이 작명 · 개명 추천", href: "/name" },
   { icon: "face", name: "관상", desc: "얼굴 사진으로 보는 타고난 기질", href: "/face" },
 ];
 

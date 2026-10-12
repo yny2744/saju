@@ -45,6 +45,8 @@ function ResultBody() {
   const searchParams = useSearchParams();
   const queryId = searchParams.get("id");
   const resume = searchParams.get("resume") === "1";
+  // 수정안 45: 대문 "이름 풀이"로 들어오면 이름 풀이를 맨 위에
+  const nameView = searchParams.get("view") === "name";
   // undefined = 아직 확인 중. 카카오 가입 후 "/result?resume=1"로 돌아오면 브라우저에 기억해 둔 결과를 다시 연다.
   const [id, setId] = useState<string | null | undefined>(queryId ?? undefined);
   const [state, setState] = useState<LoadState>({ status: "loading" });
@@ -111,11 +113,11 @@ function ResultBody() {
   return (
     <main className="mx-auto min-h-screen max-w-xl px-5 pb-20 pt-12 sm:pt-16">
       <header className="mb-8">
-        <p className="section-label mb-1.5">무료 만세력</p>
+        <p className="section-label mb-1.5">{nameView ? "무료 이름 풀이" : "무료 만세력"}</p>
         <h1 className="text-[26px] font-bold leading-snug">
           {nickname}
           {hanjaName && <span className="font-normal" style={{ color: "var(--color-ink-faint)" }}>({hanjaName})</span>}
-          님의 만세력
+          님의 {nameView ? "이름 풀이" : "만세력"}
         </h1>
         <p className="mt-1.5 text-[13px]" style={{ color: "var(--color-ink-soft)" }}>
           {birthLine(saju)}
@@ -130,6 +132,14 @@ function ResultBody() {
           </a>
         )}
       </header>
+
+      {nameView && (
+        <>
+          <NameReadingSection nickname={nickname} hanjaName={hanjaName} saju={saju} />
+          <NamingCta />
+          <p className="section-label mb-3">이름 풀이의 바탕이 된 내 만세력</p>
+        </>
+      )}
 
       {/* 사주 원국 - 4기둥을 표 형태로 명확히 구분 */}
       <section className="mb-8">
@@ -149,9 +159,11 @@ function ResultBody() {
       </div>
 
       {/* 무료 이름 풀이 (수정안 11번) */}
-      <div id="name-reading" className="scroll-mt-6">
-        <NameReadingSection nickname={nickname} hanjaName={hanjaName} saju={saju} />
-      </div>
+      {!nameView && (
+        <div id="name-reading" className="scroll-mt-6">
+          <NameReadingSection nickname={nickname} hanjaName={hanjaName} saju={saju} />
+        </div>
+      )}
 
       {/* 십신 분포 - 문장형 제목 + 막대그래프 (엔진 십신에 지장간 가중치를 더한 값) */}
       <section className="mb-8">
@@ -232,5 +244,27 @@ export default function ResultPage() {
     <Suspense fallback={<LoadingState message="불러오는 중..." />}>
       <ResultBody />
     </Suspense>
+  );
+}
+
+/** 이름 풀이 다음 - 개명 추천·아이 작명으로 (수정안 45·46, 티 나지 않게 안내만) */
+function NamingCta() {
+  return (
+    <section className="mb-10 rounded-2xl p-5" style={{ border: "1px solid var(--color-gold-line)", backgroundColor: "var(--color-card)" }}>
+      <p className="text-[15px] font-bold" style={{ fontFamily: "var(--font-serif)" }}>
+        이름은 평생 불리는 기운이에요
+      </p>
+      <p className="mt-1.5 text-[13.5px] leading-relaxed" style={{ color: "var(--color-ink-soft)" }}>
+        사주에 아쉬운 기운을 채워 주는 이름이 궁금하시면, 내 이름을 다시 짓거나 아이 이름을 지을 때 도와드려요.
+      </p>
+      <div className="mt-4 grid grid-cols-2 gap-2">
+        <a href="/go?name=rename" className="btn-secondary block text-center">
+          개명 추천
+        </a>
+        <a href="/start?name=naming" className="btn-secondary block text-center">
+          아이 작명
+        </a>
+      </div>
+    </section>
   );
 }

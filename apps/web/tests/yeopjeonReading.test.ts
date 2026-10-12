@@ -26,7 +26,7 @@ const saju = calculateSaju({ calendarType: "solar", date: "1967-04-03", time: "0
 
 describe("엽전 금액 (2026-10-08 유샘 확정)", () => {
   it("가격", () => {
-    expect(PRICE).toEqual({ BASIC: 990, TASTE: 990, DEEP: 4900, BUNDLE3: 9900, BUNDLE12: 29500 });
+    expect(PRICE).toEqual({ BASIC: 990, TASTE: 990, DEEP: 4900, BUNDLE3: 9900, BUNDLE12: 29500, RENAME: 29500, NAMING: 49000 });
     expect(formatNyang(29500)).toBe("29,500냥");
   });
 

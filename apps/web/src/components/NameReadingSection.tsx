@@ -171,14 +171,15 @@ export function NameReadingSection({ nickname, hanjaName, saju }: { nickname: st
           </div>
         )}
 
-        <div className="mt-5 flex items-center justify-between gap-3 rounded-xl px-4 py-3" style={{ backgroundColor: "var(--color-paper-soft)" }}>
+        {/* 수정안 46: 작명·개명이 열렸다 */}
+        <a href="/name" className="mt-5 flex items-center justify-between gap-3 rounded-xl px-4 py-3" style={{ backgroundColor: "var(--color-paper-soft)" }}>
           <span className="text-[13px]" style={{ color: "var(--color-ink-soft)" }}>
             사주에 맞춘 아이 작명 · 개명 추천
           </span>
-          <span className="shrink-0 rounded-full px-2.5 py-1 text-[12px]" style={{ border: "1px solid var(--color-line)", color: "var(--color-ink-faint)" }}>
-            곧 열려요
+          <span className="shrink-0 rounded-full px-2.5 py-1 text-[12px] font-semibold" style={{ border: "1px solid var(--color-gold-line)", color: "var(--color-gold)" }}>
+            보러 가기 →
           </span>
-        </div>
+        </a>
       </div>
       <p className="mt-2 text-[11px] leading-relaxed" style={{ color: "var(--color-ink-faint)" }}>
         획수는 강희자전 기준 원획, 81수리 길흉은 전해 오는 분류를 따랐어요. 작명 학파에 따라 획수와 기준이 조금 다를 수 있어요.

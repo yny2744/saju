@@ -10,6 +10,9 @@ const nextConfig = {
     // PDF용 한글 글꼴(assets/fonts)을 서버 함수에 함께 싣는다
     outputFileTracingIncludes: {
       "/api/persons/[id]/pdf": ["./assets/fonts/**"],
+      // 2026-10-12 수정안 46 작명: 인명용 한자 자료(public/hanja)와 작명서 글꼴
+      "/api/persons/[id]/naming": ["./public/hanja/**"],
+      "/api/persons/[id]/naming/pdf": ["./assets/fonts/**", "./public/hanja/**"],
     },
   },
 };

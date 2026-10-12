@@ -1,5 +1,5 @@
 import { getUserBySessionToken } from "@/server/auth/session";
-import { PurchaseError } from "@/server/readings/readings";
+import { PurchaseError, isPurchaseMode } from "@/server/readings/readings";
 import { PayError, checkout, confirmOrder } from "./payOrders";
 
 type Out = { status: number; body: unknown };
@@ -18,7 +18,7 @@ export async function handleCheckout(token: string | undefined, personId: string
   if ("error" in m) return m.error!;
   const b = (typeof raw === "object" && raw !== null ? raw : {}) as Record<string, unknown>;
   const mode = b.mode;
-  if (mode !== "basic" && mode !== "deep" && mode !== "bundle3" && mode !== "bundle12") return err(400, "INVALID_INPUT", "상품 종류가 올바르지 않아요.");
+  if (!isPurchaseMode(mode)) return err(400, "INVALID_INPUT", "상품 종류가 올바르지 않아요.");
   try {
     return { status: 200, body: await checkout(m.user.id, personId, mode, b.topics) };
   } catch (e) {

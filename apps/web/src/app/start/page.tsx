@@ -86,12 +86,19 @@ function StartForm({ member }: { member: MemberInfo | null }) {
   const [intent, setIntent] = useState<Intent | null>(null);
   // 대문 "오늘·내일의 운세"로 들어왔는지 (수정안 39: 버튼·제목을 운세에 맞게)
   const [forFortune, setForFortune] = useState(false);
+  // 대문 "이름 풀이"로 들어왔는지 (수정안 45: 이름 풀이 전용 화면)
+  const [forName, setForName] = useState(false);
 
   useEffect(() => {
     const q = new URLSearchParams(window.location.search);
     setIntent(parseIntent(q));
     setForFortune(q.get("next") === "fortune");
+    setForName(q.get("next") === "name");
   }, []);
+
+  // 수정안 46: 아이 작명은 아기 이름이 아직 없으니 성(姓)만 받는다. 개명·이름 풀이는 한자 이름이 꼭 있어야 한다.
+  const baby = intent?.kind === "name" && intent.mode === "naming";
+  const hanjaRequired = forName || (intent?.kind === "name" && intent.mode === "rename");
 
   useEffect(() => {
     if (!member) return;
@@ -138,7 +145,12 @@ function StartForm({ member }: { member: MemberInfo | null }) {
     const y = Number(form.year);
     const m = Number(form.month);
     const d = Number(form.day);
-    if (!form.nickname.trim()) errs.push("이름을 입력해 주세요.");
+    if (baby) {
+      if (!/^[가-힣]{1,2}$/.test(form.nickname.trim())) errs.push("아기의 성(姓)을 한글 한두 글자로 입력해 주세요. (예: 김, 남궁)");
+    } else if (!form.nickname.trim()) errs.push("이름을 입력해 주세요.");
+    if (hanjaRequired && (!form.hanjaName || [...form.hanjaName].some((c) => !/\p{Script=Han}/u.test(c)) || [...form.hanjaName].length !== [...form.nickname.trim()].length)) {
+      errs.push("이름 풀이에는 한자 이름이 꼭 필요해요. 글자마다 한자를 골라 주세요.");
+    }
     if (!form.gender) errs.push("성별을 선택해 주세요.");
     if (!/^\d{4}$/.test(form.year) || y < 1900 || y > 2100) errs.push("태어난 해를 4자리로 입력해 주세요. (예: 1968)");
     if (!(m >= 1 && m <= 12)) errs.push("태어난 월을 1~12 사이로 입력해 주세요.");
@@ -152,7 +164,7 @@ function StartForm({ member }: { member: MemberInfo | null }) {
   }
 
   async function saveProfileIfWanted(date: string, time: string | undefined) {
-    if (!member || !saveToAccount) return;
+    if (!member || !saveToAccount || baby) return;
     await fetch("/api/profiles", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -187,7 +199,7 @@ function StartForm({ member }: { member: MemberInfo | null }) {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          nickname: form.nickname,
+          nickname: baby ? `${form.nickname.trim()}○○` : form.nickname,
           hanjaName: form.hanjaName || undefined,
           gender: form.gender,
           calendarType: form.calendarType,
@@ -197,7 +209,7 @@ function StartForm({ member }: { member: MemberInfo | null }) {
           birthCity: form.birthCity || undefined,
           applySolarTimeCorrection: form.applySolarTimeCorrection,
           ziHourMethod: form.ziHourMethod,
-          focus: intent ? undefined : (form.focus ?? undefined),
+          focus: intent || forName ? undefined : (form.focus ?? undefined),
         }),
       });
       const data = await res.json();
@@ -221,7 +233,11 @@ function StartForm({ member }: { member: MemberInfo | null }) {
       // 허용값은 fortune 하나뿐이라 임의 주소로 이동시킬 수 없다.
       const next = new URLSearchParams(window.location.search).get("next");
       let target =
-        next === "fortune" ? `/fortune?resultId=${encodeURIComponent(data.id)}` : `/result?id=${encodeURIComponent(data.id)}`;
+        next === "fortune"
+          ? `/fortune?resultId=${encodeURIComponent(data.id)}`
+          : next === "name"
+            ? `/result?id=${encodeURIComponent(data.id)}&view=name`
+            : `/result?id=${encodeURIComponent(data.id)}`;
       // 운세·묶음을 골라 들어온 경우: 무료 결과를 거치지 않고 로그인 → 구매 창으로
       if (intent) {
         savePendingIntent(data.id, intent);
@@ -273,7 +289,29 @@ function StartForm({ member }: { member: MemberInfo | null }) {
           <>
             <h1 className="text-[26px] font-bold leading-snug">{intentLabel(intent)}</h1>
             <p className="mt-2 text-sm leading-relaxed" style={{ color: "var(--color-ink-soft)" }}>
-              생년월일을 알려 주시면 바로 풀어 드려요. 정확할수록 풀이가 정확해요.
+              {baby
+                ? "아기의 성(姓)과 태어난 날·시간을 알려 주세요. 사주에 아쉬운 기운을 채우는 이름을 골라 드려요."
+                : intent.kind === "name"
+                  ? "지금 이름(한자 포함)과 생년월일을 알려 주세요. 지금 이름을 진단하고 사주에 맞는 새 이름을 골라 드려요."
+                  : "생년월일을 알려 주시면 바로 풀어 드려요. 정확할수록 풀이가 정확해요."}
+            </p>
+          </>
+        ) : forName ? (
+          <>
+            <div className="mb-3 flex flex-wrap gap-1.5">
+              {["무료", "약 1분 소요"].map((badge) => (
+                <span key={badge} className="rounded-full px-2.5 py-1 text-[11px] font-medium" style={{ backgroundColor: "var(--color-accent-soft)", color: "var(--color-accent)" }}>
+                  {badge}
+                </span>
+              ))}
+            </div>
+            <h1 className="text-[26px] font-bold leading-snug">
+              내 이름,
+              <br />
+              사주와 맞을까요?
+            </h1>
+            <p className="mt-2 text-sm leading-relaxed" style={{ color: "var(--color-ink-soft)" }}>
+              한자 이름의 획수(수리)·소리·오행이 내 사주의 아쉬운 기운을 채워 주는지 풀어 드려요.
             </p>
           </>
         ) : (
@@ -303,7 +341,7 @@ function StartForm({ member }: { member: MemberInfo | null }) {
 
       <form onSubmit={handleSubmit} className="space-y-8" noValidate>
         {/* 저장한 사람 불러오기 (로그인한 경우) */}
-        {member && profiles.length > 0 && (
+        {member && profiles.length > 0 && !baby && (
           <div className="rounded-xl p-4" style={{ backgroundColor: "var(--color-paper-soft)" }}>
             <label htmlFor="savedProfile" className="mb-1.5 block text-sm font-medium">
               저장한 사람 불러오기
@@ -326,22 +364,23 @@ function StartForm({ member }: { member: MemberInfo | null }) {
 
           <div>
             <label htmlFor="nickname" className="mb-1.5 block text-sm font-medium">
-              이름
+              {baby ? "아기의 성(姓)" : "이름"}
             </label>
             <input
               id="nickname"
               type="text"
-              maxLength={20}
+              maxLength={baby ? 2 : 20}
               value={form.nickname}
               onChange={(e) => update("nickname", e.target.value)}
               className="field-input"
-              placeholder="예: 홍길동"
+              placeholder={baby ? "예: 김" : "예: 홍길동"}
             />
           </div>
 
           <div>
             <span className="mb-1.5 block text-sm font-medium">
-              한자이름 <span style={{ color: "var(--color-ink-faint)" }}>(선택)</span>
+              {baby ? "성씨 한자" : "한자이름"}{" "}
+              <span style={{ color: hanjaRequired ? "var(--color-danger)" : "var(--color-ink-faint)" }}>{hanjaRequired ? "(꼭 골라 주세요)" : "(선택)"}</span>
             </span>
             <div className="flex gap-2">
               <button
@@ -350,7 +389,7 @@ function StartForm({ member }: { member: MemberInfo | null }) {
                 className="field-input flex-1 text-left"
                 style={{ fontFamily: form.hanjaName ? "var(--font-serif)" : undefined, color: form.hanjaName ? undefined : "var(--color-ink-faint)" }}
               >
-                {form.hanjaName || "눌러서 이름 한자를 골라 주세요"}
+                {form.hanjaName || (baby ? "눌러서 성씨 한자를 골라 주세요" : "눌러서 이름 한자를 골라 주세요")}
               </button>
               {form.hanjaName && (
                 <button
@@ -364,7 +403,11 @@ function StartForm({ member }: { member: MemberInfo | null }) {
               )}
             </div>
             <p className="mt-1.5 text-xs" style={{ color: "var(--color-ink-faint)" }}>
-              정확한 분석을 위해 한자 이름 입력을 권해 드려요. 사주 계산 자체에는 쓰이지 않아요.
+              {hanjaRequired
+                ? "이름 풀이는 한자의 획수와 뜻으로 봐요. 한자를 모르는 글자가 있으면 가족관계증명서·주민등록초본에서 확인할 수 있어요."
+                : baby
+                  ? "성씨 한자의 획수로 이름 수리를 맞춰요. 모르면 다음 화면에서 골라도 돼요."
+                  : "정확한 분석을 위해 한자 이름 입력을 권해 드려요. 사주 계산 자체에는 쓰이지 않아요."}
             </p>
           </div>
 
@@ -514,7 +557,7 @@ function StartForm({ member }: { member: MemberInfo | null }) {
         </fieldset>
 
         {/* ③ 무엇이 궁금하신가요? (선택) - 운세를 골라 들어왔으면 묻지 않는다 */}
-        {!intent && (
+        {!intent && !forName && (
         <fieldset className="space-y-2">
           <legend className="section-label mb-1">③ 무엇이 가장 궁금하신가요? (선택)</legend>
           {FOCUS_OPTIONS.map((o) => (
@@ -590,7 +633,7 @@ function StartForm({ member }: { member: MemberInfo | null }) {
           </ul>
         )}
 
-        {member && (
+        {member && !baby && (
           <label className="flex items-center gap-2 text-sm" style={{ color: "var(--color-ink-soft)" }}>
             <input type="checkbox" checked={saveToAccount} onChange={(e) => setSaveToAccount(e.target.checked)} className="h-4 w-4" />
             다음에 바로 불러오도록 저장하기
@@ -598,7 +641,15 @@ function StartForm({ member }: { member: MemberInfo | null }) {
         )}
 
         <button type="submit" disabled={submitting} className="btn-primary">
-          {intent ? `${intentLabel(intent)} 보러 가기` : forFortune ? "무료로 오늘·내일 운세 보기" : "무료로 내 만세력 보기"}
+          {intent?.kind === "name"
+            ? "사주에 맞는 이름 받으러 가기"
+            : intent
+              ? `${intentLabel(intent)} 보러 가기`
+              : forFortune
+                ? "무료로 오늘·내일 운세 보기"
+                : forName
+                  ? "무료로 내 이름 풀이 보기"
+                  : "무료로 내 만세력 보기"}
         </button>
       </form>
 

@@ -341,6 +341,17 @@ function PersonBody({ id }: { id: string }) {
         )}
       </div>
 
+      {/* 수정안 46: 이 사람으로 연 작명·개명 */}
+      {person.naming?.length > 0 && (
+        <div className="mt-6 space-y-2">
+          {person.naming.map((k) => (
+            <a key={k} href={`/person/${id}/name?kind=${k}`} className="btn-secondary block text-center">
+              {k === "naming" ? "아이 작명 결과 보기" : "개명 추천 결과 보기"}
+            </a>
+          ))}
+        </div>
+      )}
+
       {/* 수정안 38: 깊게 보기를 연 운세가 있으면 책자 PDF */}
       {owned.size > 0 && !picking && (
         <div className="mt-6">

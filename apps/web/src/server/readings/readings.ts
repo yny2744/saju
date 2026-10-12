@@ -54,10 +54,21 @@ export interface PersonSummary {
   /** 운세 보기(990)로 본 운세 */
   basics: TopicKey[];
   tasteReadingId: string | null;
+  /** 연 작명·개명 상품 (수정안 46) */
+  naming: NamingMode[];
   createdAt: string;
 }
 
-export type PurchaseMode = "basic" | "deep" | "bundle3" | "bundle12";
+export type PurchaseMode = "basic" | "deep" | "bundle3" | "bundle12" | NamingMode;
+/** 작명·개명 (수정안 46) - 주제가 아니라 사람 하나에 한 번 여는 상품. topic_unlocks에 topic = 상품 이름으로 남긴다 */
+export type NamingMode = "naming" | "rename";
+export const PURCHASE_MODES: PurchaseMode[] = ["basic", "deep", "bundle3", "bundle12", "naming", "rename"];
+export function isPurchaseMode(v: unknown): v is PurchaseMode {
+  return typeof v === "string" && (PURCHASE_MODES as string[]).includes(v);
+}
+export function isNamingMode(v: unknown): v is NamingMode {
+  return v === "naming" || v === "rename";
+}
 
 export class PurchaseError extends Error {
   constructor(readonly code: "INVALID_TOPICS" | "ALREADY_OWNED" | "NOT_FOUND", message: string) {
@@ -164,6 +175,7 @@ export async function getPersonSummary(userId: string, personId: string): Promis
     header: row.header,
     focus: isFocus(row.focus) ? row.focus : null,
     unlocked: unlocks.rows.map((u) => u.topic).filter(isAnyTopicKey),
+    naming: unlocks.rows.map((u) => u.topic).filter(isNamingMode),
     basics: basics.rows.map((u) => u.topic).filter(isTopicKey),
     tasteReadingId: taste.rows[0]?.id ?? null,
     createdAt: row.created_at.toISOString(),
@@ -306,6 +318,7 @@ export async function getReading(userId: string, id: string): Promise<StoredRead
  *  - bundle12: 12가지 + 월별 운세·개운법 중 아직 안 연 것 전부 (이미 연 것이 있어도 가격은 같음 - 화면에서 안내)
  */
 export function planPurchase(mode: PurchaseMode, requested: unknown, owned: AnyTopicKey[]): { topics: AnyTopicKey[]; price: number } {
+  if (isNamingMode(mode)) return { topics: [], price: mode === "naming" ? PRICE.NAMING : PRICE.RENAME };
   const ownedSet = new Set(owned);
   if (mode === "bundle12") {
     const all: AnyTopicKey[] = [...TOPIC_KEYS, ...EXTRA_KEYS];
@@ -328,7 +341,7 @@ export function planPurchase(mode: PurchaseMode, requested: unknown, owned: AnyT
   return { topics, price: mode === "deep" ? PRICE.DEEP : PRICE.BUNDLE3 };
 }
 
-const MODE_LABEL: Record<PurchaseMode, string> = { basic: "운세 보기", deep: "깊게 보기", bundle3: "몰아보기", bundle12: "전부 보기" };
+const MODE_LABEL: Record<PurchaseMode, string> = { basic: "운세 보기", deep: "깊게 보기", bundle3: "몰아보기", bundle12: "전부 보기", naming: "아이 작명", rename: "개명 추천" };
 
 export async function purchaseTopics(args: { userId: string; personId: string; mode: PurchaseMode; topics: unknown }): Promise<AnyTopicKey[]> {
   if (!UUID_RE.test(args.personId)) throw new PurchaseError("NOT_FOUND", "풀이 대상을 찾을 수 없어요.");
@@ -343,6 +356,9 @@ export async function purchaseWithClient(
   const balance = await lockAndBalance(client, args.userId);
   const plan = await planForPerson(client, args);
   if (balance < plan.price) throw new InsufficientYeopjeonError(balance);
+  if (isNamingMode(args.mode)) {
+    await client.query(`INSERT INTO topic_unlocks (person_id, topic, via) VALUES ($1, $2, $2)`, [args.personId, args.mode]);
+  }
   for (const t of plan.topics) {
     if (args.mode === "basic") {
       await client.query(`INSERT INTO topic_basics (person_id, topic) VALUES ($1, $2)`, [args.personId, t]);
@@ -350,8 +366,8 @@ export async function purchaseWithClient(
       await client.query(`INSERT INTO topic_unlocks (person_id, topic, via) VALUES ($1, $2, $3) ON CONFLICT DO NOTHING`, [args.personId, t, args.mode]);
     }
   }
-  const names = args.mode === "bundle12" ? "" : ` · ${plan.topics.map((t) => TOPICS[t].title).join(", ")}`;
-  const ref = `${args.mode}:${args.personId}:${[...plan.topics].sort().join(",")}`;
+  const names = args.mode === "bundle12" || isNamingMode(args.mode) ? "" : ` · ${plan.topics.map((t) => TOPICS[t].title).join(", ")}`;
+  const ref = `${args.mode}:${args.personId}:${isNamingMode(args.mode) ? args.mode : [...plan.topics].sort().join(",")}`;
   await client.query(`INSERT INTO bokchae_ledger (user_id, amount, kind, label, ref) VALUES ($1, $2, 'spend', $3, $4)`, [
     args.userId,
     -plan.price,
@@ -370,6 +386,9 @@ export async function planForPerson(
   const person = await q.query<{ nickname: string }>(`SELECT nickname FROM persons WHERE id = $1 AND user_id = $2`, [args.personId, args.userId]);
   if (!person.rows[0]) throw new PurchaseError("NOT_FOUND", "풀이 대상을 찾을 수 없어요.");
   const owned = await q.query<{ topic: string }>(`SELECT topic FROM topic_unlocks WHERE person_id = $1`, [args.personId]);
+  if (isNamingMode(args.mode) && owned.rows.some((r) => r.topic === args.mode)) {
+    throw new PurchaseError("ALREADY_OWNED", "이미 열려 있어요. 다시 열어도 엽전은 빠지지 않아요.");
+  }
   const plan = planPurchase(args.mode, args.topics, owned.rows.map((r) => r.topic).filter(isAnyTopicKey));
   if (args.mode === "basic") {
     const seen = await q.query(`SELECT 1 FROM topic_basics WHERE person_id = $1 AND topic = $2`, [args.personId, plan.topics[0]]);
@@ -383,6 +402,8 @@ export function productName(mode: PurchaseMode, topics: AnyTopicKey[]): string {
   if (mode === "basic") return `${TOPICS[topics[0]].title} 운세 보기`;
   if (mode === "deep") return `${TOPICS[topics[0]].title} 깊게 보기`;
   if (mode === "bundle3") return "3가지 운세 몰아보기";
+  if (mode === "naming") return "아이 작명";
+  if (mode === "rename") return "개명 추천";
   return "12가지 운세 전부 보기";
 }
 

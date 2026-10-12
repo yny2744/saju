@@ -217,6 +217,18 @@ async function ensureSchema(): Promise<void> {
       paid_at TIMESTAMPTZ
     );
   `);
+  // 2026-10-12 수정안 46: 작명·개명 결과 - 사람 하나에 상품 하나. redo_count: 7일 안 1회 다시 추천
+  await db.query(`
+    CREATE TABLE IF NOT EXISTS name_reports (
+      person_id UUID NOT NULL REFERENCES persons(id) ON DELETE CASCADE,
+      kind TEXT NOT NULL,
+      content JSONB NOT NULL,
+      redo_count INTEGER NOT NULL DEFAULT 0,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+      updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+      PRIMARY KEY (person_id, kind)
+    );
+  `);
   await db.query(`CREATE INDEX IF NOT EXISTS pay_orders_user_idx ON pay_orders(user_id, created_at DESC);`);
   schemaReady = true;
 }

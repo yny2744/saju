@@ -43,25 +43,25 @@ import type { ReadingHeader } from "@/server/readings/readings";
  * 글꼴: Noto Serif CJK KR(SIL OFL 1.1)에서 한글·한자만 추린 파일 (assets/fonts). 굵은 글씨는 획을 덧그려 만든다.
  */
 
-const W = 419.53;
-const H = 595.28;
-const M = 40;
-const BOTTOM = 52;
-const TW = W - 2 * M;
-const NAVY = "#16294a";
-const GOLD = "#a8843a";
-const GOLD_LIGHT = "#d4b265";
-const INK = "#1f2430";
-const SOFT = "#5b6170";
-const FAINT = "#8a8f9a";
-const CREAM = "#f3ead6";
-const RED = "#a3302a";
-const EL_HEX: Record<ElementKo, string> = { 목: "#3d6b4c", 화: "#b54a3f", 토: "#b08d57", 금: "#6e7075", 수: "#2f4a73" };
+export const W = 419.53;
+export const H = 595.28;
+export const M = 40;
+export const BOTTOM = 52;
+export const TW = W - 2 * M;
+export const NAVY = "#16294a";
+export const GOLD = "#a8843a";
+export const GOLD_LIGHT = "#d4b265";
+export const INK = "#1f2430";
+export const SOFT = "#5b6170";
+export const FAINT = "#8a8f9a";
+export const CREAM = "#f3ead6";
+export const RED = "#a3302a";
+export const EL_HEX: Record<ElementKo, string> = { 목: "#3d6b4c", 화: "#b54a3f", 토: "#b08d57", 금: "#6e7075", 수: "#2f4a73" };
 const NUM = ["一", "二", "三", "四", "五", "六", "七", "八", "九", "十", "十一", "十二", "十三", "十四", "十五"];
 const BODY = 11.5;
 const GAP = 7;
 
-const FONT_FILE = path.join(process.cwd(), "assets", "fonts", "NotoSerifKR-Regular-subset.otf");
+export const FONT_FILE = path.join(process.cwd(), "assets", "fonts", "NotoSerifKR-Regular-subset.otf");
 
 export interface PdfInput {
   nickname: string;
@@ -72,12 +72,12 @@ export interface PdfInput {
   issuedAt?: Date;
 }
 
-type Doc = PDFKit.PDFDocument;
-type Ctx = { doc: Doc; input: PdfInput; f: SajuFacts; name: (s: string) => string; navy: Set<number> };
+export type Doc = PDFKit.PDFDocument;
+export type Ctx = { doc: Doc; input: PdfInput; f: SajuFacts; name: (s: string) => string; navy: Set<number> };
 
 // ───────────────────────── 그리기 도구 ─────────────────────────
 
-function bold(doc: Doc, text: string, x: number | undefined, y: number | undefined, opts: PDFKit.Mixins.TextOptions = {}, color = INK) {
+export function bold(doc: Doc, text: string, x: number | undefined, y: number | undefined, opts: PDFKit.Mixins.TextOptions = {}, color = INK) {
   doc.save();
   doc.lineWidth(0.3).fillColor(color).strokeColor(color);
   if (x === undefined) doc.text(text, { ...opts, fill: true, stroke: true } as PDFKit.Mixins.TextOptions);
@@ -85,23 +85,23 @@ function bold(doc: Doc, text: string, x: number | undefined, y: number | undefin
   doc.restore();
 }
 
-function goldRule(doc: Doc, y: number, x1 = M, x2 = W - M) {
+export function goldRule(doc: Doc, y: number, x1 = M, x2 = W - M) {
   doc.save().strokeColor(GOLD).lineWidth(0.7).moveTo(x1, y).lineTo(x2, y).stroke();
   doc.lineWidth(0.35).moveTo(x1, y + 2.5).lineTo(x2, y + 2.5).stroke().restore();
 }
 
-function seal(doc: Doc, ch: string, x: number, y: number, size = 22) {
+export function seal(doc: Doc, ch: string, x: number, y: number, size = 22) {
   doc.save().roundedRect(x, y, size, size, 3).fill(RED);
   doc.fillColor("#ffffff").fontSize(size * (ch.length > 1 ? 0.42 : 0.6)).text(ch, x, y + size * (ch.length > 1 ? 0.26 : 0.14), { width: size, align: "center", lineBreak: false });
   doc.restore();
 }
 
-function ensureSpace(doc: Doc, need: number) {
+export function ensureSpace(doc: Doc, need: number) {
   if (doc.y + need > H - BOTTOM) doc.addPage();
 }
 
 /** 쪽 맨 위 제목 */
-function pageTitle(doc: Doc, text: string, sealCh?: string) {
+export function pageTitle(doc: Doc, text: string, sealCh?: string) {
   const y = M;
   if (sealCh) seal(doc, sealCh, M, y - 2);
   doc.fontSize(16);
@@ -125,14 +125,14 @@ function sectionTitle(doc: Doc, text: string) {
 }
 
 /** 본문 문단 (넘치면 다음 쪽으로 이어진다) */
-function para(doc: Doc, text: string, opts: { size?: number; color?: string; indent?: number } = {}) {
+export function para(doc: Doc, text: string, opts: { size?: number; color?: string; indent?: number } = {}) {
   const x = M + (opts.indent ?? 0);
   doc.fillColor(opts.color ?? INK).fontSize(opts.size ?? BODY).text(text, x, doc.y, { width: TW - (opts.indent ?? 0), lineGap: GAP, align: "justify" });
   doc.moveDown(0.55);
 }
 
 /** 작은 소제목 */
-function subhead(doc: Doc, text: string, color = GOLD) {
+export function subhead(doc: Doc, text: string, color = GOLD) {
   ensureSpace(doc, 70);
   doc.moveDown(0.3);
   doc.fontSize(12.5);
@@ -141,7 +141,7 @@ function subhead(doc: Doc, text: string, color = GOLD) {
 }
 
 /** 크림색 상자 안 글 */
-function noteBox(doc: Doc, text: string, size = 11) {
+export function noteBox(doc: Doc, text: string, size = 11) {
   const h = doc.fontSize(size).heightOfString(text, { width: TW - 24, lineGap: 5 }) + 22;
   ensureSpace(doc, h + 6);
   const top = doc.y;
@@ -230,7 +230,7 @@ function tocPage(ctx: Ctx, full: boolean) {
 
 // ───────────────────────── 제1부 나의 원국 ─────────────────────────
 
-function chartPage(ctx: Ctx) {
+export function chartPage(ctx: Ctx, noteTail = "이 하나를 채우는 법은 책 맨 뒤 '나를 채우는 기운'에 담았어요.") {
   const { doc, input, f } = ctx;
   doc.addPage();
   pageTitle(doc, "나의 원국 — 여덟 글자");
@@ -290,7 +290,7 @@ function chartPage(ctx: Ctx) {
   const need = f.needed.elements[0];
   noteBox(
     doc,
-    `참 좋은 바탕이에요. 그런데 딱 하나, ${need}(${ELEMENT_HANJA[need]})의 기운이 ${f.needed.reason === "lacking" ? "비어 있어요" : "가장 약해요"}. 이 하나를 채우는 법은 책 맨 뒤 '나를 채우는 기운'에 담았어요.`
+    `참 좋은 바탕이에요. 그런데 딱 하나, ${need}(${ELEMENT_HANJA[need]})의 기운이 ${f.needed.reason === "lacking" ? "비어 있어요" : "가장 약해요"}. ${noteTail}`
   );
 }
 
@@ -529,7 +529,7 @@ function fillDetailPages(ctx: Ctx) {
   }
 }
 
-async function endPage(ctx: Ctx) {
+export async function endPage(ctx: Ctx) {
   const { doc, input } = ctx;
   doc.addPage();
   const url = input.siteUrl || DEFAULT_SITE_URL;

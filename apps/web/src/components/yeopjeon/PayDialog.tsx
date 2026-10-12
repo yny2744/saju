@@ -44,7 +44,7 @@ export function PayDialog({
   onClose,
 }: {
   personId: string;
-  mode: "basic" | "deep" | "bundle3" | "bundle12";
+  mode: "basic" | "deep" | "bundle3" | "bundle12" | "naming" | "rename";
   topics: string[];
   /** 결제를 그만두면 돌아올 주소 */
   backTo: string;

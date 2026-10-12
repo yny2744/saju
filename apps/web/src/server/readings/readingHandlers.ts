@@ -27,7 +27,7 @@ import {
   saveTopicBasic,
   upgradeTopicBasic,
   saveTopicReading,
-  type PurchaseMode,
+  isPurchaseMode,
 } from "./readings";
 
 type ErrBody = { error: { code: string; message: string } };
@@ -173,9 +173,9 @@ export async function handlePurchase(token: string | undefined, personId: string
   if ("error" in m) return m.error!;
   const body = typeof rawBody === "object" && rawBody !== null ? (rawBody as Record<string, unknown>) : {};
   const mode = body.mode;
-  if (mode !== "basic" && mode !== "deep" && mode !== "bundle3" && mode !== "bundle12") return err(400, "INVALID_INPUT", "상품 종류가 올바르지 않아요.");
+  if (!isPurchaseMode(mode)) return err(400, "INVALID_INPUT", "상품 종류가 올바르지 않아요.");
   try {
-    const unlocked = await purchaseTopics({ userId: m.user.id, personId, mode: mode as PurchaseMode, topics: body.topics });
+    const unlocked = await purchaseTopics({ userId: m.user.id, personId, mode, topics: body.topics });
     return { status: 200, body: { unlocked } };
   } catch (e) {
     if (e instanceof InsufficientYeopjeonError) return SHORT();

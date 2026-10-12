@@ -66,7 +66,8 @@ export default function ContinuePage() {
   if (state.status === "error") return <ErrorState message={state.message} linkHref={state.retry} linkLabel="다시 하기" />;
 
   const label = intentLabel(state.intent);
-  const price = state.intent.kind === "topic" ? PRICE.BASIC : state.intent.kind === "bundle" ? PRICE.BUNDLE3 : PRICE.BUNDLE12;
+  const i = state.intent;
+  const price = i.kind === "topic" ? PRICE.BASIC : i.kind === "bundle" ? PRICE.BUNDLE3 : i.kind === "name" ? (i.mode === "naming" ? PRICE.NAMING : PRICE.RENAME) : PRICE.BUNDLE12;
   const next = encodeURIComponent(CONTINUE_PATH);
   return (
     <main className="mx-auto min-h-screen max-w-md px-5 pb-16 pt-14 text-center">
