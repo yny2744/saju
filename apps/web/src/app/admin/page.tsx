@@ -179,6 +179,16 @@ function AdminBody() {
         </button>
       </div>
 
+      {/* 수정안 48: 아직 대문에 올리지도 숨기지도 않은 후기 */}
+      {(() => {
+        const fresh = data.reviews.list.filter((r) => !r.featured && !r.hidden).length;
+        return fresh > 0 ? (
+          <a href="#reviews" className="block rounded-2xl px-4 py-3 text-[15px] font-bold" style={{ backgroundColor: "var(--color-gold-soft)", border: "1px solid var(--color-gold-line)" }}>
+            ✦ 새로 들어온 후기 {fresh}개 · 대문에 올릴지 골라 주세요 ↓
+          </a>
+        ) : null;
+      })()}
+
       <StatGrid title="오늘" s={data.stats.today} />
       <StatGrid title="최근 7일" s={data.stats.week} />
       <p className="text-center text-[13px]" style={{ color: "var(--color-ink-faint)" }}>
@@ -321,7 +331,7 @@ function AdminBody() {
       </section>
 
       {/* 수정안 47: 1004 천사의 한마디 - 대문에 올리기·숨기기 */}
-      <section className="gold-card rounded-2xl p-4">
+      <section id="reviews" className="gold-card scroll-mt-4 rounded-2xl p-4">
         <h2 className="text-[16px] font-bold">1004 천사의 한마디 · 들어온 후기 {data.reviews.total}개</h2>
         {data.reviews.angel && (
           <p className="mt-2 rounded-lg px-3 py-2 text-[13px]" style={{ backgroundColor: "var(--color-gold-soft)" }}>

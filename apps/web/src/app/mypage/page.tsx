@@ -17,7 +17,7 @@ import { YeopjeonPanel } from "@/components/yeopjeon/YeopjeonPanel";
  * 로그인 안 한 상태로 들어오면 /login으로 보낸다.
  */
 
-type User = { nickname: string; email: string | null; marketingAgreed?: boolean };
+type User = { nickname: string; email: string | null; marketingAgreed?: boolean; isAdmin?: boolean };
 
 
 function MyPageBody() {
@@ -95,6 +95,18 @@ function MyPageBody() {
     <>
       <main className="mx-auto min-h-screen max-w-sm px-5 pb-16 pt-12 sm:pt-16">
         <h1 className="mb-7 text-[24px] font-bold">내 복주머니</h1>
+
+        {/* 수정안 48: 관리자에게만 보이는 바로 가기 */}
+        {user.isAdmin && (
+          <a
+            href="/admin"
+            className="mb-7 flex items-center justify-between rounded-2xl px-4 py-4 text-[15px] font-bold"
+            style={{ backgroundColor: "var(--color-accent)", color: "#fff" }}
+          >
+            <span>관리자 화면 · 후기 올리기 · 엽전 지급</span>
+            <span aria-hidden>→</span>
+          </a>
+        )}
 
         {/* 프로필 */}
         <section className="mb-7 rounded-2xl p-4" style={{ backgroundColor: "var(--color-paper-soft)" }}>

@@ -10,6 +10,7 @@ import {
   type User,
 } from "./users";
 import { createSession, deleteSession, getUserBySessionToken } from "./session";
+import { isAdminUser } from "@/server/admin/admin";
 import { onNewMember } from "@/server/yeopjeon/ledger";
 
 /** 새 회원 선물·초대 보상. 실패해도 가입·동의 자체는 막지 않는다. */
@@ -34,11 +35,12 @@ interface AuthErrorBody {
 }
 
 interface AuthUserBody {
-  user: { nickname: string; email: string | null; termsAgreed: boolean; marketingAgreed: boolean };
+  user: { nickname: string; email: string | null; termsAgreed: boolean; marketingAgreed: boolean; isAdmin?: boolean };
 }
 
 function toPublicUser(user: User): AuthUserBody["user"] {
-  return { nickname: user.nickname, email: user.email, termsAgreed: user.termsAgreed, marketingAgreed: user.marketingAgreed };
+  // 수정안 48: 관리자에게만 내 복주머니에 [관리자 화면] 버튼
+  return { nickname: user.nickname, email: user.email, termsAgreed: user.termsAgreed, marketingAgreed: user.marketingAgreed, ...(isAdminUser(user) ? { isAdmin: true } : {}) };
 }
 
 /**
