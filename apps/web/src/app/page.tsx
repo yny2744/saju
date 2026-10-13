@@ -3,7 +3,7 @@ import { ReviewStrip } from "@/components/reviews/ReviewStrip";
 import { ProductIcon, type Kind } from "@/components/landing/ProductIcon";
 import { BUSINESS_INFO } from "@/lib/businessInfo";
 import { TOPICS, TOPIC_KEYS } from "@/lib/topics";
-import { CURRENCY_NAME, INVITE_CUMULATIVE, INVITE_MILESTONES, PRICE, WELCOME_GIFT, formatNyang } from "@/lib/yeopjeon";
+import { CURRENCY_NAME, INVITE_CUMULATIVE, INVITE_MILESTONES, PRICE, formatNyang } from "@/lib/yeopjeon";
 import { ScrollTopButton } from "@/components/ScrollTop";
 
 /**
@@ -28,9 +28,9 @@ import { ScrollTopButton } from "@/components/ScrollTop";
 const FREE: Array<{ icon: Kind; name: string; desc: string; href: string }> = [
   { icon: "manse", name: "만세력", desc: "여덟 글자 · 오행 · 신강신약 · 대운", href: "/start" },
   { icon: "today", name: "오늘·내일의 운세", desc: "내 사주와 그날 기운의 만남", href: "/start?next=fortune" },
-  { icon: "tti", name: "띠별 운세", desc: "생년월일 없이 띠만 골라 오늘·내일", href: "/tti" },
-  { icon: "name", name: "이름 풀이 · 작명", desc: "내 이름 풀이는 무료 · 아이 작명 · 개명 추천", href: "/name" },
-  { icon: "face", name: "관상", desc: "얼굴 사진으로 보는 타고난 기질", href: "/face" },
+  { icon: "tti", name: "띠별 운세", desc: "생년월일 없이 띠만 골라 보는 오늘·내일 운세", href: "/tti" },
+  { icon: "name", name: "이름 풀이 · 개명 · 작명", desc: "내 이름 풀이는 무료 · 개명 · 작명", href: "/name" },
+  { icon: "face", name: "관상 · 인연의 관상", desc: "내 얼굴의 타고난 기질, 그리고 나와 맞는 인연은 어떤 얼굴일까?", href: "/face" },
 ];
 
 const GOLD = "var(--color-gold)";
@@ -71,7 +71,7 @@ export default function LandingPage() {
         <section className="pb-8 pt-5">
           <h1 className="sr-only">나를 알고, 인연과 복을 잇다 · 류결사주</h1>
           <video
-            className="mx-auto block w-full max-w-[460px] rounded-lg motion-reduce:hidden"
+            className="block w-full rounded-2xl motion-reduce:hidden"
             style={{ aspectRatio: "3 / 4", boxShadow: "0 6px 24px rgba(14,22,40,0.25)" }}
             autoPlay
             muted
@@ -86,7 +86,7 @@ export default function LandingPage() {
           </video>
           {/* 움직임 줄이기를 켠 기기: 그림만 */}
           {/* eslint-disable-next-line @next/next/no-img-element -- 정적 그림 */}
-          <img src="/landing/hero-poster.jpg" alt="나를 알고, 인연과 복을 잇다 · 류결사주" className="mx-auto hidden w-full max-w-[460px] rounded-lg motion-reduce:block" />
+          <img src="/landing/hero-poster.jpg" alt="나를 알고, 인연과 복을 잇다 · 류결사주" className="hidden w-full rounded-2xl motion-reduce:block" />
         </section>
 
         {/* 무료로 시작하기 - 첫 화면에 바로 보이게 */}
@@ -113,16 +113,6 @@ export default function LandingPage() {
             ))}
           </div>
 
-          {/* 가입 선물 */}
-          <a href="/login" className="mt-5 block rounded-2xl px-5 py-5 text-center" style={{ backgroundColor: "#fee500", color: "#191600" }}>
-            <span className="mx-auto flex h-11 w-11 items-center justify-center rounded-full text-[16px] font-bold" style={{ backgroundColor: "#fff6b3", fontFamily: "var(--font-serif)" }}>
-              錢
-            </span>
-            <span className="mt-2 block text-[17px] font-bold">
-              카카오로 가입하면 {CURRENCY_NAME} {formatNyang(WELCOME_GIFT)} 선물
-            </span>
-            <span className="mt-0.5 block text-[14px]">12가지 운세 중 하나를 무료로 보세요</span>
-          </a>
         </section>
 
         <div className="hairline" />
@@ -150,6 +140,26 @@ export default function LandingPage() {
               </li>
             ))}
           </ul>
+
+          {/* 가입 선물 (2026-10-13: 12가지 운세 바로 아래, 감청·금빛으로 무게감 있게) */}
+          <a
+            href="/login"
+            className="mt-6 block rounded-2xl px-5 py-6 text-center"
+            style={{ backgroundColor: "#16213a", border: "1px solid var(--color-gold-line)", boxShadow: "inset 0 0 0 3px #16213a, inset 0 0 0 4px rgba(212,178,101,0.55)" }}
+          >
+            <span className="mx-auto flex h-12 w-12 items-center justify-center rounded-full text-[19px] font-bold" style={{ border: "1.5px solid #d4b265", color: "#d4b265", fontFamily: "var(--font-serif)" }}>
+              錢
+            </span>
+            <span className="mt-3 block text-[19px] font-bold" style={{ color: "#f3e7c6", fontFamily: "var(--font-serif)" }}>
+              가입하면 {CURRENCY_NAME} 선물
+            </span>
+            <span className="mt-1 block text-[14px]" style={{ color: "#c9cfda" }}>
+              위 운세 가운데 궁금한 하나를 선물로 먼저 열어 보세요
+            </span>
+            <span className="mx-auto mt-4 block max-w-[240px] rounded-xl py-3 text-[15px] font-bold" style={{ background: "linear-gradient(180deg,#e2c47e,#c9a55a)", color: "#16213a" }}>
+              카카오로 가입하기
+            </span>
+          </a>
         </section>
 
         <div className="hairline" />
@@ -180,7 +190,7 @@ export default function LandingPage() {
           <p className="mt-3 text-center text-[13px]" style={{ color: "var(--color-ink-faint)" }}>
             10명이 넘으면 처음부터 다시 쌓여요
           </p>
-          <a href="/mypage" className="mt-5 block rounded-2xl py-4 text-center text-[16px] font-bold" style={{ backgroundColor: "#fee500", color: "#191600" }}>
+          <a href="/mypage" className="mt-5 block rounded-2xl py-4 text-center text-[16px] font-bold" style={{ backgroundColor: "#16213a", color: "#f3e7c6", border: "1px solid var(--color-gold-line)", fontFamily: "var(--font-serif)" }}>
             내 초대 링크 받기
           </a>
         </section>

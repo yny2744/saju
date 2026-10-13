@@ -297,7 +297,9 @@ function StartForm({ member }: { member: MemberInfo | null }) {
             <p className="mt-2 text-sm leading-relaxed" style={{ color: "var(--color-ink-soft)" }}>
               {baby
                 ? "아기의 성(姓)과 태어난 날·시간을 알려 주세요. 사주에 아쉬운 기운을 채우는 이름을 골라 드려요."
-                : intent.kind === "name"
+                : intent.kind === "name" && intent.mode === "business"
+                  ? "가게·회사를 이끌 대표자의 이름과 생년월일을 알려 주세요. 대표자 사주와 업종에 맞는 상호를 골라 드려요."
+                  : intent.kind === "name"
                   ? "지금 이름(한자 포함)과 생년월일을 알려 주세요. 지금 이름을 진단하고 사주에 맞는 새 이름을 골라 드려요."
                   : "생년월일을 알려 주시면 바로 풀어 드려요. 정확할수록 풀이가 정확해요."}
             </p>
@@ -657,7 +659,9 @@ function StartForm({ member }: { member: MemberInfo | null }) {
           {forFace
             ? "이 사주로 관상 풀이 이어 가기"
             : intent?.kind === "name"
-            ? "사주에 맞는 이름 받으러 가기"
+            ? intent.mode === "business"
+              ? "대표자 사주로 상호 받으러 가기"
+              : "사주에 맞는 이름 받으러 가기"
             : intent
               ? `${intentLabel(intent)} 보러 가기`
               : forFortune

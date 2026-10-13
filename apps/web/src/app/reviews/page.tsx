@@ -10,7 +10,7 @@ const TABS = [
   { key: "all", label: "전체", test: () => true },
   { key: "basic", label: "운세 보기", test: (r: PublicReview) => r.product.startsWith("basic:") },
   { key: "deep", label: "깊게 보기", test: (r: PublicReview) => r.product.startsWith("deep:") },
-  { key: "name", label: "작명·개명", test: (r: PublicReview) => r.product === "naming" || r.product === "rename" },
+  { key: "name", label: "작명·개명", test: (r: PublicReview) => r.product === "naming" || r.product === "rename" || r.product === "business" },
   { key: "face", label: "관상", test: (r: PublicReview) => r.product === "face" },
 ] as const;
 

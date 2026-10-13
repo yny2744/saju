@@ -158,11 +158,29 @@ function ResultBody() {
         <NeededEnergySection need={neededEnergy(saju)} highlight={focus === "health"} />
       </div>
 
-      {/* 무료 이름 풀이 (수정안 11번) */}
-      {!nameView && (
-        <div id="name-reading" className="scroll-mt-6">
-          <NameReadingSection nickname={nickname} hanjaName={hanjaName} saju={saju} />
-        </div>
+      {/* 2026-10-13 수정안 64: 만세력에는 이름 풀이를 싣지 않고, 이름 풀이 화면(→ 개명·작명)으로 이어 준다 */}
+      {!nameView && id && (
+        <a
+          id="name-reading"
+          href={`/result?id=${encodeURIComponent(id)}&view=name`}
+          className="mb-8 flex scroll-mt-6 items-center gap-4 rounded-2xl px-5 py-4"
+          style={{ border: "1px solid var(--color-gold-line)", backgroundColor: "var(--color-card)" }}
+        >
+          <span aria-hidden className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg text-[22px] font-bold text-white" style={{ fontFamily: "var(--font-serif)", backgroundColor: "var(--color-danger)" }}>
+            名
+          </span>
+          <span className="min-w-0 flex-1">
+            <span className="block text-[16px] font-bold" style={{ fontFamily: "var(--font-serif)" }}>
+              내 이름은 이 사주와 맞을까?
+            </span>
+            <span className="mt-0.5 block text-[13px]" style={{ color: "var(--color-ink-soft)" }}>
+              이름 풀이 무료 · 개명 · 작명까지
+            </span>
+          </span>
+          <span className="shrink-0 text-[18px]" style={{ color: "var(--color-gold)" }}>
+            →
+          </span>
+        </a>
       )}
 
       {/* 십신 분포 - 문장형 제목 + 막대그래프 (엔진 십신에 지장간 가중치를 더한 값) */}

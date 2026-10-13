@@ -7,7 +7,7 @@ import { BUNDLE_SUGGESTIONS, TOPICS, isTopicKey, type TopicKey } from "@/lib/top
  *   ?all=1         → 12가지 운세 전부 보기 (29,500냥)
  * 이 값은 주소에 그대로 실려 다니므로 허용된 값만 읽는다(임의 주소로 보내지 못하게).
  */
-export type Intent = { kind: "topic"; topic: TopicKey } | { kind: "bundle"; index: number } | { kind: "all" } | { kind: "name"; mode: "naming" | "rename" };
+export type Intent = { kind: "topic"; topic: TopicKey } | { kind: "bundle"; index: number } | { kind: "all" } | { kind: "name"; mode: "naming" | "rename" | "business" };
 
 export function parseIntent(q: URLSearchParams): Intent | null {
   const topic = q.get("topic");
@@ -17,7 +17,8 @@ export function parseIntent(q: URLSearchParams): Intent | null {
   if (q.get("all") === "1") return { kind: "all" };
   // 2026-10-12 수정안 46: ?name=naming 아이 작명 / ?name=rename 개명 추천
   const n = q.get("name");
-  if (n === "naming" || n === "rename") return { kind: "name", mode: n };
+  // 2026-10-13 수정안 63: ?name=business 상호 작명 (대표자 사주)
+  if (n === "naming" || n === "rename" || n === "business") return { kind: "name", mode: n };
   return null;
 }
 
@@ -32,7 +33,7 @@ export function intentQuery(i: Intent): string {
 export function intentLabel(i: Intent): string {
   if (i.kind === "topic") return `${TOPICS[i.topic].title} 운세`;
   if (i.kind === "bundle") return `${BUNDLE_SUGGESTIONS[i.index].title} 몰아보기`;
-  if (i.kind === "name") return i.mode === "naming" ? "아이 작명" : "개명 추천";
+  if (i.kind === "name") return i.mode === "naming" ? "아이 작명" : i.mode === "rename" ? "개명 추천" : "상호 작명";
   return "12가지 운세 전부 보기";
 }
 
@@ -41,7 +42,7 @@ export function intentDestination(personId: string, i: Intent): string {
   const base = `/person/${encodeURIComponent(personId)}`;
   if (i.kind === "topic") return `${base}/${i.topic}`;
   if (i.kind === "bundle") return `${base}?buy=bundle3&pick=${BUNDLE_SUGGESTIONS[i.index].topics.join(",")}`;
-  if (i.kind === "name") return `${base}/name?kind=${i.mode}`;
+  if (i.kind === "name") return i.mode === "business" ? `${base}/business` : `${base}/name?kind=${i.mode}`;
   return `${base}?buy=bundle12`;
 }
 

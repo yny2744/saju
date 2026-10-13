@@ -22,6 +22,7 @@ export function maskName(name: string): string {
 export function reviewProductLabel(product: string): string {
   if (product === "naming") return "아이 작명";
   if (product === "rename") return "개명 추천";
+  if (product === "business") return "상호 작명";
   if (product === "face") return "관상 심층 풀이";
   const [k, t] = product.split(":");
   if (k === "basic" && isTopicKey(t)) return `${TOPICS[t].title} 운세 보기`;

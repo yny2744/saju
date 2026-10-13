@@ -352,6 +352,13 @@ function PersonBody({ id }: { id: string }) {
         </div>
       )}
 
+      {/* 수정안 63: 이 사람(대표자)으로 연 상호 작명 */}
+      {person.business && (
+        <a href={`/person/${id}/business`} className="btn-secondary mt-2 block text-center">
+          상호 작명 결과 보기
+        </a>
+      )}
+
       {/* 수정안 38: 깊게 보기를 연 운세가 있으면 책자 PDF */}
       {owned.size > 0 && !picking && (
         <div className="mt-6">
