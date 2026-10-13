@@ -16,6 +16,7 @@ import type { FaceFeatureBuckets, FaceRuleResult } from "@/server/face/types";
 import type { FaceDeepResult } from "@/server/face/faceVision";
 import type { FaceMapResult } from "@/lib/faceMap";
 import { SamJeongBar } from "@/components/face/SamJeongBar";
+import { PartnerPortrait, PartnerTeaser } from "@/components/face/PartnerPortrait";
 
 /**
  * 관상 심층 풀이 · 인연 궁합 (2026-10-12 수정안 53) - 4,900냥.
@@ -231,6 +232,10 @@ function FaceBody({ id }: { id: string }) {
             </p>
             <p className="text-[14px] leading-relaxed">{state.rule.idealPartnerPreview}</p>
           </section>
+          <section className="mb-6">
+            <p className="section-label mb-1">인연 관상도</p>
+            <PartnerTeaser />
+          </section>
           <section className="rounded-2xl p-5" style={CARD}>
             <h2 className="text-[18px] font-bold" style={{ fontFamily: "var(--font-serif)" }}>
               관상 심층 풀이 · 인연 궁합 · {CURRENCY_NAME} {formatNyang(state.price)}
@@ -293,7 +298,7 @@ function FaceBody({ id }: { id: string }) {
         </section>
       )}
 
-      {state.status === "ready" && <Report content={state.content} />}
+      {state.status === "ready" && <Report content={state.content} buckets={state.buckets} />}
       {state.status === "ready" && <ReviewBox personId={id} product="face" />}
 
       <div className="mt-8 space-y-2.5">
@@ -334,7 +339,7 @@ function Para({ title, body, gold = false }: { title: string; body: string; gold
   );
 }
 
-function Report({ content }: { content: FaceDeepResult }) {
+function Report({ content, buckets }: { content: FaceDeepResult; buckets: FaceFeatureBuckets }) {
   const r = content.relationshipInsight;
   return (
     <div>
@@ -352,6 +357,12 @@ function Report({ content }: { content: FaceDeepResult }) {
       ))}
 
       <p className="section-label mb-2 mt-6">인연 궁합</p>
+      <section className="mb-4 rounded-2xl px-4 py-4" style={{ border: "1px solid var(--color-gold-line)", backgroundColor: "var(--color-card)" }}>
+        <h3 className="mb-3 text-center text-[15px] font-bold" style={{ fontFamily: "var(--font-serif)", color: "var(--color-gold)" }}>
+          인연 관상도
+        </h3>
+        <PartnerPortrait me={buckets} />
+      </section>
       <Para title="연애에서 보이는 모습" body={r.traditionalLoveTendency} />
       <Para title="잘 어울리는 인연의 관상" body={r.idealPartnerTraits} gold />
       <Para title="그런 인연의 성품" body={r.partnerFeatureNotes} />

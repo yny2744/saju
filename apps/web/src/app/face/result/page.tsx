@@ -1,6 +1,7 @@
 "use client";
 import type { FaceMapResult } from "@/lib/faceMap";
 import { SamJeongBar } from "@/components/face/SamJeongBar";
+import { PartnerTeaser } from "@/components/face/PartnerPortrait";
 
 import { Suspense, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
@@ -132,6 +133,14 @@ function FaceResultBody() {
         </h2>
         <p className="text-sm leading-relaxed">{result.idealPartnerPreview}</p>
       </section>
+
+      {/* 수정안 58: 인연 관상도 - 무료에서는 흐린 미리보기 */}
+      {isAuthEnabled() && (
+        <section className="mb-8">
+          <p className="section-label mb-1">인연 관상도</p>
+          <PartnerTeaser />
+        </section>
+      )}
 
       <div className="space-y-2.5">
         {/* 2026-10-12 수정안 53: 관상 심층 풀이 4,900냥 (엽전 · 모자라면 카드) - 회원 기능이 꺼져 있으면 "곧 열려요" */}
