@@ -20,11 +20,14 @@ import { PartnerPortrait, PartnerTeaser } from "@/components/face/PartnerPortrai
 
 /**
  * 관상 심층 풀이 · 인연 궁합 (2026-10-12 수정안 53) - 4,900냥.
- *   잠김(소개·사기) → 풀이 받기(사진 동의 또는 비율만) → 풀이 보기 + 1004 천사의 한마디
+ *   잠김(누구의 사주로 볼지 + 사진 동의 한 번 + 사기) → 사면 바로 풀이 쓰기 → 풀이 보기 + 1004 천사의 한마디
+ *   (2026-10-13 수정안 59: 사주를 함께 풀고, 동의는 한 번만 - 결제하고 돌아와도 바로 이어서 쓴다)
  * 사진은 이 탭의 임시 저장소에만 있고, 손님이 동의하고 "풀이 받기"를 누를 때 한 번만 서버(→AI)로 간다. 저장하지 않는다.
  */
 
-type Base = { id: string; nickname: string; buckets: FaceFeatureBuckets; rule: FaceRuleResult; hasPreference: boolean; price: number };
+type FacePerson = { id: string; nickname: string; hanjaName: string | null; birth: string };
+type Base = { id: string; nickname: string; buckets: FaceFeatureBuckets; rule: FaceRuleResult; hasPreference: boolean; price: number; person: FacePerson | null };
+type SavedProfile = { id: string; name: string; hanjaName: string | null; date: string; gender: "male" | "female" };
 type State =
   | { status: "loading" }
   | { status: "error"; message: string }
@@ -81,7 +84,11 @@ function FaceBody({ id }: { id: string }) {
   const [photo, setPhoto] = useState<string | null>(null);
   const [consent, setConsent] = useState(false);
   const [faceMap, setFaceMap] = useState<FaceMapResult | null>(null);
+  const [profiles, setProfiles] = useState<SavedProfile[]>([]);
+  const [attaching, setAttaching] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
+  const autoRan = useRef(false);
+  const AUTO_KEY = `face_auto_${id}`;
 
   const load = useCallback(async () => {
     const r = await fetch(`/api/face/readings/${encodeURIComponent(id)}`).catch(() => null);
@@ -104,21 +111,81 @@ function FaceBody({ id }: { id: string }) {
     } catch {
       setPhoto(null);
     }
-    if (q.get("paid") === "1") setNotice("결제가 끝나 열렸어요. 아래에서 풀이를 받아 보세요.");
+    if (q.get("paid") === "1") setNotice("결제가 끝나 열렸어요.");
+    // 사주 새로 입력하고 돌아온 경우: 그 사주를 붙인다
+    const resultId = q.get("resultId");
+    if (resultId) {
+      window.history.replaceState(null, "", `/face/paid/${id}`);
+      attach({ resultId });
+    }
     // 처음 한 번만
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [load]);
+
+  // 저장한 사람 (드롭다운)
+  useEffect(() => {
+    if (state.status !== "locked") return;
+    fetch("/api/profiles")
+      .then((r) => (r.ok ? r.json() : { profiles: [] }))
+      .then((d: { profiles?: SavedProfile[] }) => setProfiles(d.profiles ?? []))
+      .catch(() => {});
+  }, [state.status]);
+
+  // 카드 결제하고 돌아왔으면 결제 전에 고른 대로 바로 풀이를 쓴다 (동의를 두 번 받지 않는다)
+  useEffect(() => {
+    if (state.status !== "write" || autoRan.current) return;
+    let mode: string | null = null;
+    try {
+      mode = sessionStorage.getItem(AUTO_KEY);
+      sessionStorage.removeItem(AUTO_KEY);
+    } catch {
+      /* 무시 */
+    }
+    if (mode === "photo" || mode === "plain") {
+      autoRan.current = true;
+      write(mode === "photo");
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [state.status]);
+
+  async function attach(body: { profileId?: string; resultId?: string }) {
+    setAttaching(true);
+    setNotice(null);
+    try {
+      const r = await fetch(`/api/face/readings/${encodeURIComponent(id)}/saju`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+      const b = await r.json().catch(() => ({}));
+      if (!r.ok) setNotice(b?.error?.message ?? "사주를 붙이지 못했어요. 다시 골라 주세요.");
+      await load();
+    } catch {
+      setNotice("연결이 끊겼어요. 다시 골라 주세요.");
+    }
+    setAttaching(false);
+  }
 
   async function buy() {
     setBusy(true);
     setNotice(null);
     try {
+      const usePhoto = !!photo && consent;
       const r = await fetch(`/api/face/readings/${encodeURIComponent(id)}/purchase`, { method: "POST" });
       const body = await r.json().catch(() => ({}));
       if (r.ok) {
         notifyYeopjeonChanged();
-        await load();
-      } else if (body?.error?.code === "INSUFFICIENT_YEOPJEON") setPayOpen(true);
+        setBusy(false);
+        await write(usePhoto); // 사자마자 바로 풀이
+        return;
+      } else if (body?.error?.code === "INSUFFICIENT_YEOPJEON") {
+        try {
+          sessionStorage.setItem(AUTO_KEY, usePhoto ? "photo" : "plain");
+        } catch {
+          /* 무시 */
+        }
+        setPayOpen(true);
+      }
       else if (body?.error?.code === "ALREADY_OWNED") await load();
       else setNotice(body?.error?.message ?? "잠시 후 다시 시도해 주세요.");
     } catch (e) {
@@ -129,7 +196,6 @@ function FaceBody({ id }: { id: string }) {
   }
 
   async function write(withPhoto: boolean) {
-    if (state.status !== "write") return;
     setNotice(null);
     setWriting(withPhoto ? "photo" : "plain");
     const minWait = new Promise((r) => setTimeout(r, 9000)); // 너무 뚝딱 나오지 않게 (수정안 32와 같은 뜻)
@@ -142,7 +208,7 @@ function FaceBody({ id }: { id: string }) {
       const body = await r.json().catch(() => ({}));
       await minWait;
       if (r.ok) {
-        setState({ ...(state as Base), status: "ready", content: body.content });
+        await load();
         window.scrollTo({ top: 0 });
       } else setNotice(body?.error?.message ?? "잠시 후 다시 눌러 주세요. 엽전은 다시 빠지지 않아요.");
     } catch (e) {
@@ -236,23 +302,88 @@ function FaceBody({ id }: { id: string }) {
             <p className="section-label mb-1">인연 관상도</p>
             <PartnerTeaser />
           </section>
+          {/* 수정안 59: 누구의 사주로 볼까요 */}
+          <section className="mb-5 rounded-2xl p-5" style={CARD}>
+            <h2 className="text-[16px] font-bold" style={{ fontFamily: "var(--font-serif)" }}>
+              ① 관상과 함께 볼 사주
+            </h2>
+            {state.person ? (
+              <p className="mt-2 rounded-xl px-4 py-3 text-[14px]" style={{ backgroundColor: "var(--color-gold-soft)" }}>
+                <b>
+                  {state.person.nickname}
+                  {state.person.hanjaName ? `(${state.person.hanjaName})` : ""}
+                </b>
+                <span className="block text-[12.5px]" style={{ color: "var(--color-ink-soft)" }}>
+                  {state.person.birth}
+                </span>
+              </p>
+            ) : (
+              <p className="mt-1.5 text-[13px]" style={{ color: "var(--color-ink-soft)" }}>
+                이름(한자)과 생년월일시로 사주를 함께 풀어 드려요.
+              </p>
+            )}
+            {profiles.length > 0 && (
+              <select
+                aria-label="저장한 사람"
+                value=""
+                disabled={attaching}
+                onChange={(e) => e.target.value && attach({ profileId: e.target.value })}
+                className="field-input mt-3"
+              >
+                <option value="">{state.person ? "다른 사람으로 바꾸기" : "저장한 사람에서 고르기"}</option>
+                {profiles.map((p) => (
+                  <option key={p.id} value={p.id}>
+                    {p.name}
+                    {p.hanjaName ? `(${p.hanjaName})` : ""} · {p.date} · {p.gender === "male" ? "남" : "여"}
+                  </option>
+                ))}
+              </select>
+            )}
+            <a href={`/start?face=${id}`} className="mt-2 block text-center text-[13px] underline underline-offset-4" style={{ color: "var(--color-ink-soft)" }}>
+              {attaching ? "사주를 붙이는 중..." : "생년월일 새로 입력하기"}
+            </a>
+          </section>
+
           <section className="rounded-2xl p-5" style={CARD}>
             <h2 className="text-[18px] font-bold" style={{ fontFamily: "var(--font-serif)" }}>
-              관상 심층 풀이 · 인연 궁합 · {CURRENCY_NAME} {formatNyang(state.price)}
+              ② 관상 심층 풀이 · 인연 궁합 · {CURRENCY_NAME} {formatNyang(state.price)}
             </h2>
             <ul className="mt-3 space-y-1.5 text-[14px] leading-relaxed" style={{ color: "var(--color-ink-soft)" }}>
+              <li>◆ 내 사주와 관상이 만나는 자리 · 아쉬운 기운을 채우는 법</li>
               <li>◆ AI가 사진을 직접 보고 쓰는 부위별 깊은 풀이 (동의하실 때만)</li>
               <li>◆ 사진에서 눈에 띈 특징 · 삼정과 얼굴 전체의 복</li>
               <li>◆ 연애 경향 · 잘 어울리는 인연의 관상과 성품</li>
               <li>◆ 함께할 때 살필 점{state.hasPreference ? " · 적어 주신 선호에 대한 한마디" : ""}</li>
               <li>◆ 내 복주머니에 보관 · 언제든 다시 보기</li>
             </ul>
+            {photo ? (
+              <label className="mt-4 flex items-start gap-2 rounded-xl px-3 py-3 text-[13px] leading-relaxed" style={{ backgroundColor: "var(--color-paper-soft)" }}>
+                <input type="checkbox" checked={consent} onChange={(e) => setConsent(e.target.checked)} className="mt-0.5 h-4 w-4 shrink-0" />
+                <span>
+                  찍은 사진을 AI 풀이에 쓰는 데 동의해요. 사진은 풀이를 쓰는 동안 AI(Google Gemini)에 한 번 보내지고, 류결사주는 사진을 <b>저장하지 않아요</b>. 체크하지 않으면 얼굴
+                  비율로만 풀어 드려요.
+                </span>
+              </label>
+            ) : (
+              <p className="mt-4 text-[13px]" style={{ color: "var(--color-ink-faint)" }}>
+                사진 없이 얼굴 비율로 풀어 드려요.{" "}
+                <button type="button" onClick={() => fileRef.current?.click()} className="underline underline-offset-4">
+                  사진 고르기
+                </button>
+              </p>
+            )}
             <p className="mt-3 text-[13px]" style={{ color: "var(--color-ink-faint)" }}>
               내 {CURRENCY_NAME} {formatNyang(state.balance)}
               {state.balance < state.price && " · 모자란 만큼만 카드·간편결제"}
             </p>
-            <button type="button" disabled={busy} onClick={buy} className="btn-primary mt-4 disabled:opacity-50">
-              {busy ? "여는 중..." : state.balance >= state.price ? `${CURRENCY_NAME}으로 열기` : "결제하고 열기"}
+            <button type="button" disabled={busy || attaching || !state.person} onClick={buy} className="btn-primary mt-4 disabled:opacity-50">
+              {!state.person
+                ? "① 사주를 먼저 골라 주세요"
+                : busy
+                  ? "여는 중..."
+                  : state.balance >= state.price
+                    ? `${CURRENCY_NAME}으로 열고 바로 풀이 받기`
+                    : "결제하고 바로 풀이 받기"}
             </button>
           </section>
           <ReviewStrip face variant="mini" title="관상 심층 풀이를 받은 분들의 한마디" />
@@ -280,7 +411,6 @@ function FaceBody({ id }: { id: string }) {
               정면 사진 고르기
             </button>
           )}
-          <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={(e) => pickPhoto(e.target.files?.[0])} />
           {photo && (
             <label className="flex items-start gap-2 rounded-xl px-3 py-3 text-[13px] leading-relaxed" style={{ backgroundColor: "var(--color-paper-soft)" }}>
               <input type="checkbox" checked={consent} onChange={(e) => setConsent(e.target.checked)} className="mt-0.5 h-4 w-4 shrink-0" />
@@ -298,6 +428,7 @@ function FaceBody({ id }: { id: string }) {
         </section>
       )}
 
+      <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={(e) => pickPhoto(e.target.files?.[0])} />
       {state.status === "ready" && <Report content={state.content} buckets={state.buckets} />}
       {state.status === "ready" && <ReviewBox personId={id} product="face" />}
 
@@ -349,6 +480,7 @@ function Report({ content, buckets }: { content: FaceDeepResult; buckets: FaceFe
 
       <p className="section-label mb-2">얼굴 전체</p>
       <Para title="종합 풀이" body={content.selfAnalysis.overallSummary} gold />
+      {content.sajuLink && <Para title="관상과 사주가 만나는 자리" body={content.sajuLink} gold />}
       {content.photoHighlights && <Para title="사진에서 눈에 띈 것" body={content.photoHighlights} />}
 
       <p className="section-label mb-2 mt-6">부위별 풀이</p>

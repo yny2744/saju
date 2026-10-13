@@ -88,12 +88,16 @@ function StartForm({ member }: { member: MemberInfo | null }) {
   const [forFortune, setForFortune] = useState(false);
   // 대문 "이름 풀이"로 들어왔는지 (수정안 45: 이름 풀이 전용 화면)
   const [forName, setForName] = useState(false);
+  // 관상 심층 풀이에서 "사주 새로 입력"으로 들어왔는지 (수정안 59) - 관상 풀이 번호
+  const [forFace, setForFace] = useState<string | null>(null);
 
   useEffect(() => {
     const q = new URLSearchParams(window.location.search);
     setIntent(parseIntent(q));
     setForFortune(q.get("next") === "fortune");
     setForName(q.get("next") === "name");
+    const f = q.get("face");
+    setForFace(f && /^[0-9a-f-]{36}$/i.test(f) ? f : null);
   }, []);
 
   // 수정안 46: 아이 작명은 아기 이름이 아직 없으니 성(姓)만 받는다. 개명·이름 풀이는 한자 이름이 꼭 있어야 한다.
@@ -209,7 +213,7 @@ function StartForm({ member }: { member: MemberInfo | null }) {
           birthCity: form.birthCity || undefined,
           applySolarTimeCorrection: form.applySolarTimeCorrection,
           ziHourMethod: form.ziHourMethod,
-          focus: intent || forName ? undefined : (form.focus ?? undefined),
+          focus: intent || forName || forFace ? undefined : (form.focus ?? undefined),
         }),
       });
       const data = await res.json();
@@ -238,8 +242,10 @@ function StartForm({ member }: { member: MemberInfo | null }) {
           : next === "name"
             ? `/result?id=${encodeURIComponent(data.id)}&view=name`
             : `/result?id=${encodeURIComponent(data.id)}`;
+      // 수정안 59: 관상 심층 풀이로 돌아가 이 사주를 붙인다
+      if (forFace) target = `/face/paid/${forFace}?resultId=${encodeURIComponent(data.id)}`;
       // 운세·묶음을 골라 들어온 경우: 무료 결과를 거치지 않고 로그인 → 구매 창으로
-      if (intent) {
+      else if (intent) {
         savePendingIntent(data.id, intent);
         target = CONTINUE_PATH;
       }
@@ -294,6 +300,13 @@ function StartForm({ member }: { member: MemberInfo | null }) {
                 : intent.kind === "name"
                   ? "지금 이름(한자 포함)과 생년월일을 알려 주세요. 지금 이름을 진단하고 사주에 맞는 새 이름을 골라 드려요."
                   : "생년월일을 알려 주시면 바로 풀어 드려요. 정확할수록 풀이가 정확해요."}
+            </p>
+          </>
+        ) : forFace ? (
+          <>
+            <h1 className="text-[26px] font-bold leading-snug">관상과 함께 볼 사주</h1>
+            <p className="mt-2 text-sm leading-relaxed" style={{ color: "var(--color-ink-soft)" }}>
+              관상 심층 풀이에 사주를 함께 담아 드려요. 이름(한자)과 생년월일시를 알려 주세요.
             </p>
           </>
         ) : forName ? (
@@ -557,7 +570,7 @@ function StartForm({ member }: { member: MemberInfo | null }) {
         </fieldset>
 
         {/* ③ 무엇이 궁금하신가요? (선택) - 운세를 골라 들어왔으면 묻지 않는다 */}
-        {!intent && !forName && (
+        {!intent && !forName && !forFace && (
         <fieldset className="space-y-2">
           <legend className="section-label mb-1">③ 무엇이 가장 궁금하신가요? (선택)</legend>
           {FOCUS_OPTIONS.map((o) => (
@@ -641,7 +654,9 @@ function StartForm({ member }: { member: MemberInfo | null }) {
         )}
 
         <button type="submit" disabled={submitting} className="btn-primary">
-          {intent?.kind === "name"
+          {forFace
+            ? "이 사주로 관상 풀이 이어 가기"
+            : intent?.kind === "name"
             ? "사주에 맞는 이름 받으러 가기"
             : intent
               ? `${intentLabel(intent)} 보러 가기`

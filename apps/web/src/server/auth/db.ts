@@ -268,6 +268,8 @@ async function ensureSchema(): Promise<void> {
     );
   `);
   await db.query(`CREATE INDEX IF NOT EXISTS face_readings_user_idx ON face_readings(user_id, created_at DESC);`);
+  // 2026-10-13 수정안 59: 관상 심층 풀이에 사주를 함께 - 누구의 사주인지 (persons)
+  await db.query(`ALTER TABLE face_readings ADD COLUMN IF NOT EXISTS person_id UUID REFERENCES persons(id) ON DELETE SET NULL;`);
   // 후기의 person_id 는 이제 "풀이 번호" - 사주 사람(persons) 또는 관상 풀이(face_readings). 회원 탈퇴 시 user_id 로 함께 지워진다.
   await db.query(`ALTER TABLE reviews DROP CONSTRAINT IF EXISTS reviews_person_id_fkey;`);
   await db.query(`CREATE INDEX IF NOT EXISTS pay_orders_user_idx ON pay_orders(user_id, created_at DESC);`);

@@ -400,12 +400,14 @@ export async function planForPerson(
 ): Promise<{ topics: AnyTopicKey[]; price: number; nickname: string }> {
   if (!UUID_RE.test(args.personId)) throw new PurchaseError("NOT_FOUND", "풀이 대상을 찾을 수 없어요.");
   if (args.mode === FACE_MODE) {
-    const f = await q.query<{ nickname: string; paid_at: Date | null }>(`SELECT nickname, paid_at FROM face_readings WHERE id = $1 AND user_id = $2`, [
+    const f = await q.query<{ nickname: string; paid_at: Date | null; person_id: string | null }>(`SELECT nickname, paid_at, person_id FROM face_readings WHERE id = $1 AND user_id = $2`, [
       args.personId,
       args.userId,
     ]);
     if (!f.rows[0]) throw new PurchaseError("NOT_FOUND", "관상 풀이를 찾을 수 없어요. 관상을 다시 찍어 주세요.");
     if (f.rows[0].paid_at) throw new PurchaseError("ALREADY_OWNED", "이미 열려 있어요. 다시 열어도 엽전은 빠지지 않아요.");
+    // 수정안 59: 관상에 사주를 함께 풀어 주므로 누구의 사주인지 먼저 정해야 한다
+    if (!f.rows[0].person_id) throw new PurchaseError("INVALID_TOPICS", "누구의 사주로 볼지 먼저 골라 주세요.");
     return { topics: [], price: PRICE.FACE, nickname: f.rows[0].nickname };
   }
   const person = await q.query<{ nickname: string }>(`SELECT nickname FROM persons WHERE id = $1 AND user_id = $2`, [args.personId, args.userId]);

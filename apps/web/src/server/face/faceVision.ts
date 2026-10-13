@@ -18,6 +18,8 @@ import { partnerBuckets, partnerSummary } from "@/lib/facePartner";
 export interface FaceDeepResult extends FaceAiResult {
   /** 사진에서 직접 본 특징 (눈썹 결·점·주름·인상 등). 사진 없이 쓴 풀이는 null */
   photoHighlights: string | null;
+  /** 관상과 사주가 만나는 자리 (수정안 59). 사주 없이 쓴 풀이는 null */
+  sajuLink?: string | null;
   /** 사진을 실제로 보고 썼는지 */
   photoUsed: boolean;
   model: string;
@@ -31,22 +33,27 @@ export const FACE_DEEP_SYSTEM = `당신은 한국 전통 관상학(觀相學) �
 1. [얼굴 비율 데이터]는 이미 측정된 값입니다. 다시 재거나 바꾸지 마세요.
 2. 사진이 함께 오면 사진에서 실제로 보이는 것(눈썹 결과 모양, 눈매, 콧방울, 입꼬리, 귀, 점, 이마 주름, 전체 인상)을 근거로 쓰세요.
    보이지 않는 것은 지어내지 마세요. 사진이 없으면 비율 데이터만 근거로 쓰고, 사진을 본 것처럼 쓰지 마세요.
-3. 나이·성별·인종·건강·질병·감정 상태를 추측하거나 언급하지 마세요. 실존 인물(연예인 등)과 닮았다는 말도 하지 마세요.
+3. 사진으로 나이·성별·인종·건강·질병·감정 상태를 추측하지 마세요(나이·성별은 [사주]에 적힌 것만 씁니다). 실존 인물(연예인 등)과 닮았다는 말도 하지 마세요.
 4. 운명·재산·궁합을 단정하지 마세요("반드시", "확실히" 금지). "~한 상으로 봅니다", "~라고 전해집니다"처럼 쓰세요.
 5. 단점도 숨기지 말되, 늘 "이렇게 채우면 좋다"는 방향으로 따뜻하게 마무리하세요.
 6. 인연(상대) 이야기는 실제 특정 인물이 아니라 "이런 상과 잘 어울린다고 전해진다"는 일반론입니다.
 7. 손님을 "손님"이라 부르고, 존댓말로 쉽게 쓰세요. 한자 용어는 괄호로 짧게 풀어 주세요.
+8. [사주]가 주어지면 관상과 사주를 함께 봅니다. 얼굴에 드러난 기운과 사주의 일간·오행·부족한 기운이 어떻게 맞물리는지,
+   얼굴이 사주의 아쉬운 기운을 채워 주는지 또는 더 드러내는지를 sajuLink에 풀어 주세요. [사주]의 사실만 근거로 쓰고 새 간지를 지어내지 마세요.
+   인연 항목에서도 사주에서 부족한 기운을 채워 줄 인연이라는 관점을 함께 담아 주세요.
 
 # 분량
 - 부위별(faceShape·forehead·eyes·nose·mouth·jaw): 각 3~4문장
 - overallSummary: 6~8문장 (삼정의 균형, 이 얼굴의 가장 큰 복, 아쉬운 점과 채우는 법)
 - photoHighlights: 사진이 있으면 사진에서 눈에 띈 특징 3~5가지를 4~6문장으로, 사진이 없으면 null
+- sajuLink: [사주]가 있으면 6~8문장 (관상과 사주가 만나는 자리 · 채우는 법), 없으면 null
 - 인연 항목 넷: 각 3~5문장
 
 # 출력 - 아래 JSON만 (다른 글 붙이지 말 것)
 {
   "selfAnalysis": { "faceShape": "", "forehead": "", "eyes": "", "nose": "", "mouth": "", "jaw": "", "overallSummary": "" },
   "photoHighlights": "" 또는 null,
+  "sajuLink": "" 또는 null,
   "relationshipInsight": {
     "traditionalLoveTendency": "연애·관계에서 보이는 이 얼굴의 전통적 경향",
     "idealPartnerTraits": "잘 어울리는 인연의 관상 (이마·눈·코·입·턱을 구체적으로)",
@@ -57,7 +64,15 @@ export const FACE_DEEP_SYSTEM = `당신은 한국 전통 관상학(觀相學) �
   "disclaimer": "이 풀이는 전통 관상학을 바탕으로 한 문화 콘텐츠이며 미래를 확정하지 않습니다."
 }`;
 
-export function buildFaceDeepPrompt(buckets: FaceFeatureBuckets, preference: string | null, hasPhoto: boolean): string {
+/** 관상 심층 풀이에 함께 넣는 사주 (수정안 59) - sajuFacts로 만든 확정 사실 목록 */
+export interface FaceSaju {
+  name: string;
+  hanjaName: string | null;
+  birth: string;
+  facts: string;
+}
+
+export function buildFaceDeepPrompt(buckets: FaceFeatureBuckets, preference: string | null, hasPhoto: boolean, saju: FaceSaju | null = null): string {
   const lines = [
     "[얼굴 비율 데이터 - 측정 완료]",
     `얼굴형(길이/너비): ${BUCKET_LABEL[buckets.faceShape]}`,
@@ -73,6 +88,11 @@ export function buildFaceDeepPrompt(buckets: FaceFeatureBuckets, preference: str
     partnerSummary(partnerBuckets(buckets)),
     "idealPartnerTraits는 위 인연의 특징과 어긋나지 않게, 왜 손님과 잘 맞는지 함께 풀어 주세요. 성별은 정하지 마세요.",
   ];
+  if (saju) {
+    lines.push("", `[사주 - 같은 손님: ${saju.name}${saju.hanjaName ? `(${saju.hanjaName})` : ""} · ${saju.birth}]`, saju.facts);
+  } else {
+    lines.push("", "[사주] 없음 - sajuLink는 null.");
+  }
   if (preference) lines.push("", "[손님이 적은 연애·관계 선호]", preference);
   lines.push("", "위 원칙과 분량을 지켜 JSON으로만 답하세요.");
   return lines.join("\n");
@@ -83,9 +103,11 @@ export function parseFaceDeep(raw: string, photoUsed: boolean, model: string): F
   const obj = parseAIResponse(raw) as Record<string, unknown>;
   const base = validateFaceAiResult(obj);
   const ph = obj.photoHighlights;
+  const sl = obj.sajuLink;
   return {
     ...base,
     photoHighlights: photoUsed && typeof ph === "string" && ph.trim() ? ph.trim() : null,
+    sajuLink: typeof sl === "string" && sl.trim() ? sl.trim() : null,
     photoUsed,
     model,
   };
@@ -137,13 +159,14 @@ async function callGeminiVision(system: string, user: string, photo: { mime: str
 export async function writeFaceDeep(
   buckets: FaceFeatureBuckets,
   preference: string | null,
-  photo: { mime: string; data: string } | null
+  photo: { mime: string; data: string } | null,
+  saju: FaceSaju | null = null
 ): Promise<FaceDeepResult> {
   const start = Date.now();
   const left = () => RETRY.budgetMs - (Date.now() - start);
 
   if (photo && process.env.GEMINI_API_KEY) {
-    const user = buildFaceDeepPrompt(buckets, preference, true);
+    const user = buildFaceDeepPrompt(buckets, preference, true, saju);
     for (let i = 0; ; i++) {
       try {
         const { text, model } = await callGeminiVision(FACE_DEEP_SYSTEM, user, photo);
@@ -166,10 +189,10 @@ export async function writeFaceDeep(
   if (!process.env.ANTHROPIC_API_KEY && !process.env.GEMINI_API_KEY) {
     const dev = getFaceCompletionProvider();
     const base = await interpretFace(dev, buckets, preference);
-    return { ...base, photoHighlights: null, photoUsed: false, model: dev.modelName };
+    return { ...base, photoHighlights: null, sajuLink: saju ? `${saju.name}님의 사주와 관상이 만나는 자리 (개발 환경 - 실제 AI 풀이 아님)` : null, photoUsed: false, model: dev.modelName };
   }
   const provider = getReadingProvider(6000);
-  const user = buildFaceDeepPrompt(buckets, preference, false);
+  const user = buildFaceDeepPrompt(buckets, preference, false, saju);
   let last: unknown;
   for (let i = 0; ; i++) {
     try {
