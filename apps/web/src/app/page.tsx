@@ -1,6 +1,5 @@
 import { CasualLanding } from "@/components/CasualLanding";
 import { ReviewStrip } from "@/components/reviews/ReviewStrip";
-import { OhaengEmblem } from "@/components/landing/OhaengEmblem";
 import { ProductIcon, type Kind } from "@/components/landing/ProductIcon";
 import { BUSINESS_INFO } from "@/lib/businessInfo";
 import { TOPICS, TOPIC_KEYS } from "@/lib/topics";
@@ -10,7 +9,8 @@ import { ScrollTopButton } from "@/components/ScrollTop";
 /**
  * 류결사주 대문 (2026-10-08 수정안 13번 재구성, 유샘 확정 순서).
  *
- *   2026-10-10 수정안 28·29 (현재 순서):
+ *   2026-10-13 수정안 61: 맨 위를 대문 영상(20대→70대 함께 나이 드는 두 사람, 소리 없이 반복)으로 바꾸고 "왜 류결사주인가"를 뺐다.
+ *   2026-10-10 수정안 28·29:
  *   (머리줄은 모든 화면 공통 SiteHeader) → 문양(고리에 "류결의 명견만리") + 대표 슬로건
  *   → 무료로 시작하기 + 가입 선물 엽전 → 엽전으로 보는 12가지 운세 (운세 보기 990만 표시)
  *   → 왜 류결사주인가(3줄 + 一~五) → 친구 초대 → 맨 위로
@@ -24,34 +24,6 @@ import { ScrollTopButton } from "@/components/ScrollTop";
  *   - 가격·보상 숫자는 lib/yeopjeon.ts 한 곳에서 온다.
  *   - 로고는 유샘이 만든다 - 그 전까지 머리줄은 글자 "류결사주".
  */
-
-const WHY = [
-  {
-    num: "一",
-    title: "절기(節氣) 기준 정밀 만세력",
-    body: "해(年)와 달(月)이 바뀌는 기준을 달력 날짜가 아닌 절입 시각으로 잡아 사주를 세웁니다. 음력과 윤달 생일도 그대로 넣을 수 있습니다.",
-  },
-  {
-    num: "二",
-    title: "태어난 곳의 시간까지",
-    body: "출생 지역에 따라 실제 해의 시간을 보정하고, 자시(子時)를 어떻게 나눌지도 고를 수 있습니다.",
-  },
-  {
-    num: "三",
-    title: "한자 이름을 한 글자씩",
-    body: "이름 소리에 맞는 한자를 뜻과 함께 골라 넣고, 그 이름의 획수·소리·오행이 사주와 맞는지 무료로 풀어 드립니다.",
-  },
-  {
-    num: "四",
-    title: "명리학(命理學) 원국 분석",
-    body: "천간·지지 여덟 글자에서 오행, 십신(十神), 신강신약, 대운·세운까지 정해진 계산식으로 풀어 냅니다.",
-  },
-  {
-    num: "五",
-    title: "사진이 밖으로 나가지 않는 관상",
-    body: "얼굴의 비율과 이목구비를 이용자의 휴대폰 안에서 살핍니다. 사진은 서버로 보내지 않습니다.",
-  },
-];
 
 const FREE: Array<{ icon: Kind; name: string; desc: string; href: string }> = [
   { icon: "manse", name: "만세력", desc: "여덟 글자 · 오행 · 신강신약 · 대운", href: "/start" },
@@ -95,21 +67,26 @@ export default function LandingPage() {
   return (
     <main className="min-h-screen pb-10">
       <div className="mx-auto max-w-xl px-5">
-        {/* 문양(로고 자리) + 대표 슬로건 (수정안 28) */}
-        <section className="pb-8 pt-7 text-center">
-          <div className="mx-auto h-[200px] w-[200px] sm:h-[230px] sm:w-[230px]">
-            <OhaengEmblem caption="류결의 명견만리" subCaption="四柱八字" />
-          </div>
-          <h1 className="mt-6 text-[25px] font-bold leading-[1.45] sm:text-[28px]" style={{ fontFamily: "var(--font-serif)", wordBreak: "keep-all" }}>
-            숨막혔던 나의 운명,
-            <br />
-            <span className="foil-text">숨을 쉬다</span>
-          </h1>
-          <p className="mt-3 flex items-center justify-center gap-2 text-[15px] font-bold tracking-[0.3em]" style={{ color: GOLD, fontFamily: "var(--font-serif)" }}>
-            <span aria-hidden className="h-px w-8" style={{ backgroundColor: "var(--color-gold-line)" }} />
-            류결사주
-            <span aria-hidden className="h-px w-8" style={{ backgroundColor: "var(--color-gold-line)" }} />
-          </p>
+        {/* 수정안 61: 대문 영상 - 나를 알고, 인연과 복을 잇다 (소리 없이 반복, 영상이 뜨기 전엔 같은 장면 그림) */}
+        <section className="pb-8 pt-5">
+          <h1 className="sr-only">나를 알고, 인연과 복을 잇다 · 류결사주</h1>
+          <video
+            className="mx-auto block w-full max-w-[460px] rounded-lg motion-reduce:hidden"
+            style={{ aspectRatio: "3 / 4", boxShadow: "0 6px 24px rgba(14,22,40,0.25)" }}
+            autoPlay
+            muted
+            loop
+            playsInline
+            preload="auto"
+            poster="/landing/hero-poster.jpg"
+            aria-label="20대부터 70대까지 함께 나이 들어 가는 두 사람 - 나를 알고, 인연과 복을 잇다"
+          >
+            <source src="/landing/hero.webm" type="video/webm" />
+            <source src="/landing/hero.mp4" type="video/mp4" />
+          </video>
+          {/* 움직임 줄이기를 켠 기기: 그림만 */}
+          {/* eslint-disable-next-line @next/next/no-img-element -- 정적 그림 */}
+          <img src="/landing/hero-poster.jpg" alt="나를 알고, 인연과 복을 잇다 · 류결사주" className="mx-auto hidden w-full max-w-[460px] rounded-lg motion-reduce:block" />
         </section>
 
         {/* 무료로 시작하기 - 첫 화면에 바로 보이게 */}
@@ -180,40 +157,7 @@ export default function LandingPage() {
         {/* 1004 천사의 한마디 (수정안 47: 관리자가 올린 후기만, 없으면 안 보임) */}
         <ReviewStrip />
 
-        {/* 왜 류결사주인가 (수정안 28: 3줄 글) */}
-        <section className="py-12">
-          <div className="rounded-2xl px-5 py-8" style={{ ...CARD, boxShadow: `${CARD.boxShadow}, 0 4px 18px rgba(22,41,74,0.07)` }}>
-            <h2 className="text-center text-[24px] font-bold" style={{ fontFamily: "var(--font-serif)", color: "var(--color-accent)" }}>
-              왜 류결사주인가
-            </h2>
-            <p className="mt-4 text-center text-[15px] leading-[1.9]" style={{ color: "var(--color-ink-soft)", fontFamily: "var(--font-serif)", wordBreak: "keep-all" }}>
-              태어난 그 순간,
-              <br />
-              하늘은 당신에게 여덟 글자의 편지를 보냅니다.
-              <br />
-              <b style={{ color: "var(--color-ink)" }}>류결사주는 그 운명을 읽어 드립니다.</b>
-            </p>
-            <div className="mt-8 space-y-6">
-              {WHY.map((w) => (
-                <div key={w.num} className="flex gap-3">
-                  <span className="foil-text w-6 shrink-0 text-[19px] font-bold" style={{ fontFamily: "var(--font-serif)" }}>
-                    {w.num}
-                  </span>
-                  <div>
-                    <h3 className="text-[16px] font-bold" style={{ fontFamily: "var(--font-serif)", color: "var(--color-accent)" }}>
-                      {w.title}
-                    </h3>
-                    <p className="mt-1.5 text-[14px] leading-relaxed" style={{ color: "var(--color-ink-soft)" }}>
-                      {w.body}
-                    </p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        <div className="hairline" />
+        <div className="hairline mt-12" />
 
         {/* 친구 초대 */}
         <section className="py-12">
