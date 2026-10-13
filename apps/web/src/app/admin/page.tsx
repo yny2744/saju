@@ -189,6 +189,11 @@ function AdminBody() {
         ) : null;
       })()}
 
+      {/* 수정안 58: 인연 관상도 시험 (관리자만) */}
+      <a href="/admin/partner-face" className="block rounded-2xl px-4 py-3 text-[15px] font-bold" style={{ border: "1px solid var(--color-gold-line)", backgroundColor: "var(--color-card)" }}>
+        ✦ 인연 관상도 시험하기 (AI가 인연 얼굴 그리기) →
+      </a>
+
       <StatGrid title="오늘" s={data.stats.today} />
       <StatGrid title="최근 7일" s={data.stats.week} />
       <p className="text-center text-[13px]" style={{ color: "var(--color-ink-faint)" }}>

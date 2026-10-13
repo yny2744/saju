@@ -4,6 +4,7 @@ import { validateFaceAiResult } from "./validateFaceAiResult";
 import { getFaceCompletionProvider } from "./faceAiProvider";
 import { interpretFace } from "./faceAiInterpreter";
 import { RETRY, getReadingProvider, isTransientAiError } from "@/server/readings/generateReading";
+import { partnerBuckets, partnerSummary } from "@/lib/facePartner";
 
 /**
  * 관상 심층 풀이 (2026-10-12 수정안 53) - 유료 4,900냥.
@@ -67,6 +68,10 @@ export function buildFaceDeepPrompt(buckets: FaceFeatureBuckets, preference: str
     `턱 너비: ${BUCKET_LABEL[buckets.jaw]}`,
     "",
     hasPhoto ? "[사진] 손님이 해석에 쓰도록 동의한 정면 사진이 함께 있습니다." : "[사진] 없음 - 비율 데이터만으로 쓰세요. photoHighlights는 null.",
+    "",
+    "[손님과 음양이 맞는 인연의 얼굴 특징 (규칙으로 정함)]",
+    partnerSummary(partnerBuckets(buckets)),
+    "idealPartnerTraits는 위 인연의 특징과 어긋나지 않게, 왜 손님과 잘 맞는지 함께 풀어 주세요. 성별은 정하지 마세요.",
   ];
   if (preference) lines.push("", "[손님이 적은 연애·관계 선호]", preference);
   lines.push("", "위 원칙과 분량을 지켜 JSON으로만 답하세요.");

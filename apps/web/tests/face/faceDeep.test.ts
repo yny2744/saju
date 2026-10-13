@@ -1,3 +1,5 @@
+import { buildPartnerImagePrompt } from "@/server/face/partnerImage";
+import { partnerBuckets, partnerSummary } from "@/lib/facePartner";
 import { buildFaceDeepPrompt, parseFaceDeep, parsePhotoDataUrl, writeFaceDeep, MAX_PHOTO_BYTES } from "@/server/face/faceVision";
 import { isPurchaseMode, planPurchase, productName } from "@/server/readings/readings";
 import { parseProduct } from "@/server/reviews/reviews";
@@ -71,5 +73,31 @@ describe("수정안 53 - 관상 심층 풀이", () => {
       if (keep.a) process.env.ANTHROPIC_API_KEY = keep.a;
       if (keep.g) process.env.GEMINI_API_KEY = keep.g;
     }
+  });
+});
+
+describe("수정안 56 - 인연 관상도", () => {
+  it("음양 조화: 둥근 얼굴 ↔ 갸름한 얼굴, 이마·코는 한 단계 밝게", () => {
+    const p = partnerBuckets(BUCKETS);
+    expect(p).toEqual({ faceShape: "mid", forehead: "mid", eyeSpacing: "high", nose: "mid", mouth: "low", jaw: "high" });
+    const q = partnerBuckets({ faceShape: "low", forehead: "low", eyeSpacing: "mid", nose: "low", mouth: "mid", jaw: "low" });
+    expect(q).toEqual({ faceShape: "high", forehead: "high", eyeSpacing: "mid", nose: "high", mouth: "mid", jaw: "high" });
+  });
+  it("유료 풀이 프롬프트에 인연 관상도 특징이 들어가 그림과 글이 맞는다", () => {
+    const text = buildFaceDeepPrompt(BUCKETS, null, false);
+    expect(text).toContain(partnerSummary(partnerBuckets(BUCKETS)));
+    expect(text).toContain("또렷한 턱선");
+  });
+});
+
+describe("수정안 58 - 인연 얼굴 그리기 문장", () => {
+  it("성별·특징·다른 사람·정면 조건이 들어간다", () => {
+    const p = partnerBuckets(BUCKETS);
+    const f = buildPartnerImagePrompt("female", p);
+    expect(f).toContain("woman with long straight dark hair");
+    expect(f).toContain("clearly DIFFERENT person");
+    expect(f).toContain("a clearly defined jawline");
+    expect(f).toContain("forehead fully visible");
+    expect(buildPartnerImagePrompt("male", p)).toContain("man with short, neat dark hair");
   });
 });

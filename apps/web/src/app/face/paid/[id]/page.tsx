@@ -14,6 +14,8 @@ import { CURRENCY_NAME, formatNyang } from "@/lib/yeopjeon";
 import { faceTypeName } from "@/lib/faceType";
 import type { FaceFeatureBuckets, FaceRuleResult } from "@/server/face/types";
 import type { FaceDeepResult } from "@/server/face/faceVision";
+import type { FaceMapResult } from "@/lib/faceMap";
+import { SamJeongBar } from "@/components/face/SamJeongBar";
 
 /**
  * 관상 심층 풀이 · 인연 궁합 (2026-10-12 수정안 53) - 4,900냥.
@@ -77,6 +79,7 @@ function FaceBody({ id }: { id: string }) {
   const [payOpen, setPayOpen] = useState(false);
   const [photo, setPhoto] = useState<string | null>(null);
   const [consent, setConsent] = useState(false);
+  const [faceMap, setFaceMap] = useState<FaceMapResult | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 
   const load = useCallback(async () => {
@@ -95,6 +98,8 @@ function FaceBody({ id }: { id: string }) {
     load();
     try {
       setPhoto(sessionStorage.getItem(`face_photo_paid_${id}`));
+      const map = sessionStorage.getItem(`face_map_paid_${id}`);
+      setFaceMap(map ? (JSON.parse(map) as FaceMapResult) : null);
     } catch {
       setPhoto(null);
     }
@@ -203,6 +208,19 @@ function FaceBody({ id }: { id: string }) {
         <p className="mb-5 rounded-xl px-4 py-3 text-center text-[14px]" style={{ backgroundColor: "var(--color-gold-soft)" }}>
           {notice}
         </p>
+      )}
+
+      {/* 수정안 57: 내 관상도 - 무료 관상에서 이 탭으로 넘어온 그림 (서버에 저장하지 않아 다른 기기·나중에는 안 보임) */}
+      {faceMap && (
+        <section className="mb-7">
+          <p className="section-label mb-1">내 관상도</p>
+          {/* eslint-disable-next-line @next/next/no-img-element -- 이 기기 안에서 만든 data URL */}
+          <img src={faceMap.dataUrl} alt="내 관상도" className="w-full rounded-xl" style={{ border: "1px solid var(--color-line)" }} />
+          {faceMap.samjeong && <SamJeongBar s={faceMap.samjeong} />}
+          <p className="mt-2 text-[11px] leading-relaxed" style={{ color: "var(--color-ink-faint)" }}>
+            사진을 이 기기 안에서 스케치로 바꾼 그림이에요. 서버에 저장하지 않아서, 이 창을 닫거나 다른 기기에서 열면 보이지 않아요.
+          </p>
+        </section>
       )}
 
       {state.status === "locked" && (
