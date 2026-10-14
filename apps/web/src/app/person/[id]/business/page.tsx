@@ -13,14 +13,14 @@ import { ReviewStrip } from "@/components/reviews/ReviewStrip";
 import { BusinessChars, BusinessFacts } from "@/components/BusinessReadingCard";
 import { notifyYeopjeonChanged, reportClientError, useYeopjeon } from "@/components/yeopjeon/useYeopjeon";
 import { CURRENCY_NAME, formatNyang } from "@/lib/yeopjeon";
-import { FEELINGS, INDUSTRIES, type FeelingKey } from "@/lib/businessName";
+import { BIZ_INFO, FEELINGS, INDUSTRIES, isBizKind, type BizKind, type FeelingKey } from "@/lib/businessName";
 import { ELEMENT_HANJA } from "@/lib/manseView";
 import type { ElementKo } from "@/lib/pillarView";
 import type { BusinessReport } from "@/server/naming/business";
 import type { ReadingHeader } from "@/server/readings/readings";
 
 /**
- * 상호 작명 화면 (2026-10-13 수정안 63).
+ * 상호·기업·브랜딩 작명 화면 (2026-10-13 수정안 63, 2026-10-14 수정안 15: ?kind=business|corp|brand).
  *   잠김(상품 소개·사기) → 조건(업종·느낌) → 상호 후보 7개(뜻·이야기·풀이·영문) + 상호 작명서 PDF + 7일 안 1회 다시 추천
  */
 
@@ -34,8 +34,16 @@ type State =
 const CARD = { border: "1px solid var(--color-line)", backgroundColor: "var(--color-card)" } as const;
 const GOLD = "var(--color-gold)";
 
+/** 화면 문구에 쓰는 이름: 상호 / 회사 이름 / 브랜드 이름 */
+const NOUN: Record<BizKind, string> = { business: "상호", corp: "회사 이름", brand: "브랜드 이름" };
+
 function Body({ id }: { id: string }) {
   const q = useSearchParams();
+  const kindQ = q.get("kind");
+  const kind: BizKind = isBizKind(kindQ) ? kindQ : "business";
+  const T = BIZ_INFO[kind].title;
+  const N = NOUN[kind];
+  const DOC = BIZ_INFO[kind].doc;
   const [state, setState] = useState<State>({ status: "loading" });
   const [busy, setBusy] = useState(false);
   const [writing, setWriting] = useState(false);
@@ -47,20 +55,20 @@ function Body({ id }: { id: string }) {
   const { data: wallet, reload: reloadWallet } = useYeopjeon(state.status === "locked");
 
   const load = useCallback(async () => {
-    const r = await fetch(`/api/persons/${encodeURIComponent(id)}/business`).catch(() => null);
+    const r = await fetch(`/api/persons/${encodeURIComponent(id)}/business?kind=${kind}`).catch(() => null);
     if (!r) return setState({ status: "error", message: "연결이 끊겼어요." });
     if (r.status === 401) {
-      window.location.replace(`/login?next=${encodeURIComponent(`/person/${id}/business`)}`);
+      window.location.replace(`/login?next=${encodeURIComponent(`/person/${id}/business?kind=${kind}`)}`);
       return;
     }
     const body = await r.json().catch(() => ({}));
     if (!r.ok) return setState({ status: "error", message: body?.error?.message ?? "불러오지 못했어요." });
     setState(body);
-  }, [id]);
+  }, [id, kind]);
 
   useEffect(() => {
     load();
-    if (q.get("paid") === "1") setNotice("결제가 끝나 열렸어요. 아래에서 업종을 고르고 상호 후보를 받아 보세요.");
+    if (q.get("paid") === "1") setNotice(`결제가 끝나 열렸어요. 아래에서 업종을 고르고 ${N} 후보를 받아 보세요.`);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [load]);
 
@@ -71,7 +79,7 @@ function Body({ id }: { id: string }) {
       const r = await fetch(`/api/persons/${encodeURIComponent(id)}/purchase`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ mode: "business", topics: [] }),
+        body: JSON.stringify({ mode: kind, topics: [] }),
       });
       const body = await r.json().catch(() => ({}));
       if (r.ok) {
@@ -81,7 +89,7 @@ function Body({ id }: { id: string }) {
       } else if (body?.error?.code === "INSUFFICIENT_YEOPJEON") setPayOpen(true);
       else setNotice(body?.error?.message ?? "잠시 후 다시 시도해 주세요.");
     } catch (e) {
-      reportClientError("상호 작명 열기", String(e));
+      reportClientError(`${T} 열기`, String(e));
       setNotice("연결이 끊겼어요. 잠시 후 다시 시도해 주세요.");
     }
     setBusy(false);
@@ -96,7 +104,7 @@ function Body({ id }: { id: string }) {
       const r = await fetch(`/api/persons/${encodeURIComponent(id)}/business`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ industry: industry || undefined, feelings, redo }),
+        body: JSON.stringify({ kind, industry: industry || undefined, feelings, redo }),
       });
       const body = await r.json().catch(() => ({}));
       await minWait;
@@ -106,7 +114,7 @@ function Body({ id }: { id: string }) {
         window.scrollTo({ top: 0 });
       } else setNotice(body?.error?.message ?? "잠시 후 다시 시도해 주세요.");
     } catch (e) {
-      reportClientError("상호 후보", String(e));
+      reportClientError(`${T} 후보`, String(e));
       setNotice("연결이 끊겼어요. 다시 눌러 주세요. 엽전은 빠지지 않아요.");
     }
     setWriting(false);
@@ -115,7 +123,7 @@ function Body({ id }: { id: string }) {
   async function downloadPdf() {
     setBusy(true);
     try {
-      const r = await fetch(`/api/persons/${encodeURIComponent(id)}/business/pdf`);
+      const r = await fetch(`/api/persons/${encodeURIComponent(id)}/business/pdf?kind=${kind}`);
       if (!r.ok) {
         const body = await r.json().catch(() => ({}));
         throw new Error(body?.error?.message ?? "작명서를 만들지 못했어요.");
@@ -124,7 +132,7 @@ function Body({ id }: { id: string }) {
       const m = (r.headers.get("Content-Disposition") ?? "").match(/filename\*=UTF-8''([^;]+)/);
       const a = document.createElement("a");
       a.href = URL.createObjectURL(blob);
-      a.download = m ? decodeURIComponent(m[1]) : "상호 작명서.pdf";
+      a.download = m ? decodeURIComponent(m[1]) : `${DOC}.pdf`;
       document.body.appendChild(a);
       a.click();
       a.remove();
@@ -139,7 +147,7 @@ function Body({ id }: { id: string }) {
   if (writing)
     return (
       <WritingOverlay
-        title="대표님 사주에 맞는 상호를 고르고 있어요"
+        title={`대표님 사주에 맞는 ${N}${N.endsWith("름") ? "을" : "를"} 고르고 있어요`}
         steps={["대표님 사주의 아쉬운 기운을 찾고 있어요", "업종의 오행을 살피고 있어요", "소리의 흐름을 맞춰 보고 있어요", "한자 총획을 셈하고 있어요", "이름 이야기를 쓰고 있어요"]}
         durationMs={9000}
       />
@@ -149,7 +157,7 @@ function Body({ id }: { id: string }) {
   const form = (
     <section className="space-y-5 rounded-2xl p-5" style={CARD}>
       <h2 className="text-[17px] font-bold" style={{ fontFamily: "var(--font-serif)" }}>
-        상호 지을 조건
+        {N} 지을 조건
       </h2>
       <div>
         <label className="mb-1.5 block text-sm font-medium" htmlFor="biz-ind">
@@ -186,14 +194,14 @@ function Body({ id }: { id: string }) {
         </div>
       </div>
       <button type="button" disabled={!industry} onClick={() => generate(state.status === "ready")} className="btn-primary disabled:opacity-50">
-        {state.status === "ready" ? "이 조건으로 다시 추천받기 (1회)" : "상호 후보 받기"}
+        {state.status === "ready" ? "이 조건으로 다시 추천받기 (1회)" : `${N} 후보 받기`}
       </button>
     </section>
   );
 
   return (
     <main className="mx-auto min-h-screen max-w-xl px-5 pb-20 pt-12 sm:pt-16">
-      <PersonHeader header={state.header} kicker="류결사주 · 상호 작명" title="상호" />
+      <PersonHeader header={state.header} kicker={`류결사주 · ${T}`} title={N} />
 
       {notice && (
         <p className="mb-5 rounded-xl px-4 py-3 text-center text-[14px]" style={{ backgroundColor: "var(--color-gold-soft)" }}>
@@ -206,20 +214,20 @@ function Body({ id }: { id: string }) {
           대표님 사주에는 {needText}의 기운이 아쉬워요.
         </p>
         <p className="mt-2 text-[13.5px]" style={{ color: "var(--color-ink-soft)" }}>
-          날마다 불리는 상호에 이 기운과 업종의 기운을 함께 담아 드려요.
+          날마다 불리는 {N}에 이 기운과 업종의 기운을 함께 담아 드려요.
         </p>
       </section>
 
       {state.status === "locked" && (
         <section className="rounded-2xl p-5" style={CARD}>
           <h2 className="text-[18px] font-bold" style={{ fontFamily: "var(--font-serif)" }}>
-            상호 작명 · {CURRENCY_NAME} {formatNyang(state.price)}
+            {T} · {CURRENCY_NAME} {formatNyang(state.price)}
           </h2>
           <ul className="mt-3 space-y-1.5 text-[14px] leading-relaxed" style={{ color: "var(--color-ink-soft)" }}>
-            <li>◆ 업종의 오행과 대표님 사주를 함께 맞춘 상호 후보 7개</li>
-            <li>◆ 한자 상호는 총획이 길한 수 · 소리가 부딪히지 않는 이름만</li>
+            <li>◆ 업종의 오행과 대표님 사주를 함께 맞춘 {N} 후보 7개</li>
+            <li>◆ 한자 이름은 총획이 길한 수 · 소리가 부딪히지 않는 이름만</li>
             <li>◆ 후보마다 뜻 · 이름 이야기 · 영문 표기</li>
-            <li>◆ 상호 작명서 PDF · 7일 안에 1회 다시 추천 (조건을 바꿔도 돼요)</li>
+            <li>◆ {DOC} PDF · 7일 안에 1회 다시 추천 (조건을 바꿔도 돼요)</li>
           </ul>
           <p className="mt-3 text-[13px]" style={{ color: "var(--color-ink-faint)" }}>
             내 {CURRENCY_NAME} {formatNyang(wallet?.balance ?? 0)}
@@ -232,7 +240,7 @@ function Body({ id }: { id: string }) {
       )}
 
       {state.status === "form" && form}
-      {state.status === "locked" && <ReviewStrip naming variant="mini" title="작명·개명·상호를 받은 분들의 한마디" />}
+      {state.status === "locked" && <ReviewStrip naming variant="mini" title="작명을 받은 분들의 한마디" />}
 
       {state.status === "ready" && (
         <div className="space-y-5">
@@ -275,7 +283,7 @@ function Body({ id }: { id: string }) {
             className="block w-full rounded-xl py-3.5 text-[16px] font-bold disabled:opacity-60"
             style={{ border: "1px solid var(--color-gold-line)", backgroundColor: "var(--color-gold-soft)", fontFamily: "var(--font-serif)" }}
           >
-            상호 작명서 PDF로 받기
+            {DOC} PDF로 받기
           </button>
           {state.redoLeft > 0 && !redoForm && (
             <button
@@ -287,11 +295,11 @@ function Body({ id }: { id: string }) {
               }}
               className="btn-secondary"
             >
-              마음에 드는 상호가 없어요 · 다시 추천받기 (1회)
+              마음에 드는 이름이 없어요 · 다시 추천받기 (1회)
             </button>
           )}
           {redoForm && form}
-          <ReviewBox personId={id} product="business" />
+          <ReviewBox personId={id} product={kind} />
         </div>
       )}
 
@@ -307,9 +315,9 @@ function Body({ id }: { id: string }) {
       {payOpen && (
         <PayDialog
           personId={id}
-          mode="business"
+          mode={kind}
           topics={[]}
-          backTo={`/person/${id}/business`}
+          backTo={`/person/${id}/business?kind=${kind}`}
           onEnough={() => {
             setPayOpen(false);
             buy();
@@ -322,7 +330,7 @@ function Body({ id }: { id: string }) {
 }
 
 export default function BusinessNamingPage({ params }: { params: { id: string } }) {
-  if (!isAuthEnabled()) return <ComingSoon title="상호 작명" />;
+  if (!isAuthEnabled()) return <ComingSoon title="작명" />;
   return (
     <Suspense fallback={<LoadingState message="불러오고 있어요..." />}>
       <Body id={params.id} />

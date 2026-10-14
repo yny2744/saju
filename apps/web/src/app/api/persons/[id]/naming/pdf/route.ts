@@ -24,7 +24,7 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
     const report = await getNamingReport(row.id, kind);
     if (!report) return NextResponse.json({ error: { code: "NOT_WRITTEN", message: "아직 이름 후보를 받지 않았어요." } }, { status: 409 });
     const pdf = await buildNamePdf({ report, nickname: row.nickname, header: row.header, saju: row.saju, siteUrl: process.env.SITE_URL });
-    const filename = kind === "naming" ? `${report.surname}씨 아기 작명서 - 류결사주.pdf` : `${row.nickname}님 개명 추천서 - 류결사주.pdf`;
+    const filename = kind === "naming" ? `${report.surname}씨 신생아 작명서 - 류결사주.pdf` : `${row.nickname}님 개명 추천서 - 류결사주.pdf`;
     return new NextResponse(new Uint8Array(pdf), {
       status: 200,
       headers: {

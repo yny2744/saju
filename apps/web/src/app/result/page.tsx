@@ -265,24 +265,36 @@ export default function ResultPage() {
   );
 }
 
-/** 이름 풀이 다음 - 개명 추천·아이 작명으로 (수정안 45·46, 티 나지 않게 안내만) */
+/** 이름 풀이 다음 - 개명·신생아 작명, 가게·회사·브랜드 이름으로 (수정안 45·46 → 2026-10-14 수정안 15) */
 function NamingCta() {
+  const items: Array<[string, string, string]> = [
+    ["改", "개명 추천", "/go?name=rename"],
+    ["命", "신생아 작명", "/start?name=naming"],
+    ["商", "상호 작명", "/go?name=business"],
+    ["社", "기업 작명", "/go?name=corp"],
+    ["標", "브랜딩 작명", "/go?name=brand"],
+  ];
   return (
     <section className="mb-10 rounded-2xl p-5" style={{ border: "1px solid var(--color-gold-line)", backgroundColor: "var(--color-card)" }}>
-      <p className="text-[15px] font-bold" style={{ fontFamily: "var(--font-serif)" }}>
+      <p className="text-[16px] font-bold" style={{ fontFamily: "var(--font-serif)" }}>
         이름은 평생 불리는 기운이에요
       </p>
       <p className="mt-1.5 text-[13.5px] leading-relaxed" style={{ color: "var(--color-ink-soft)" }}>
-        사주에 아쉬운 기운을 채워 주는 이름이 궁금하시면, 내 이름을 다시 짓거나 아이 이름을 지을 때 도와드려요.
+        사주에 아쉬운 기운을 이름에 담아 채워 드려요. 내 이름을 새로 짓거나, 아기·가게·회사·브랜드의 이름을 지을 때 함께할게요.
       </p>
       <div className="mt-4 grid grid-cols-2 gap-2">
-        <a href="/go?name=rename" className="btn-secondary block text-center">
-          개명 추천
-        </a>
-        <a href="/start?name=naming" className="btn-secondary block text-center">
-          아이 작명
-        </a>
+        {items.map(([h, t, href], i) => (
+          <a key={t} href={href} className={`flex items-center gap-2 rounded-xl px-3 py-3 ${i === 0 ? "col-span-2" : ""}`} style={{ border: "1px solid var(--color-gold-line)" }}>
+            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-[16px] font-bold text-white" style={{ backgroundColor: "var(--color-danger)", fontFamily: "var(--font-serif)" }}>
+              {h}
+            </span>
+            <span className="text-[14px] font-semibold">{t}</span>
+          </a>
+        ))}
       </div>
+      <a href="/name" className="mt-3 block text-center text-[13px] underline underline-offset-4" style={{ color: "var(--color-ink-faint)" }}>
+        작명 서비스 자세히 보기
+      </a>
     </section>
   );
 }

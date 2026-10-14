@@ -26,7 +26,7 @@ const saju = calculateSaju({ calendarType: "solar", date: "1967-04-03", time: "0
 
 describe("엽전 금액 (2026-10-08 유샘 확정)", () => {
   it("가격", () => {
-    expect(PRICE).toEqual({ BASIC: 990, TASTE: 990, DEEP: 4900, BUNDLE3: 9900, BUNDLE12: 29500, RENAME: 29500, NAMING: 49000, FACE: 4900, BUSINESS: 49000 });
+    expect(PRICE).toEqual({ BASIC: 990, TASTE: 990, DEEP: 4900, BUNDLE3: 9900, BUNDLE12: 29900, RENAME: 29900, NAMING: 49900, FACE: 4900, BUSINESS: 49900, CORP: 59900, BRAND: 59900 });
     expect(formatNyang(29500)).toBe("29,500냥");
   });
 
@@ -37,7 +37,7 @@ describe("엽전 금액 (2026-10-08 유샘 확정)", () => {
       sum += inviteRewardFor(n);
       totals.push(sum);
     }
-    expect(totals).toEqual([990, 1980, 4900, 5890, 9900, 10890, 11880, 12870, 13860, 29500]);
+    expect(totals).toEqual([990, 1980, 4900, 5890, 9900, 10890, 11880, 12870, 13860, 29900]);
     expect(totals[0]).toBe(PRICE.BASIC);
     expect(totals[2]).toBe(PRICE.DEEP);
     expect(totals[4]).toBe(PRICE.BUNDLE3);
@@ -50,14 +50,14 @@ describe("엽전 금액 (2026-10-08 유샘 확정)", () => {
     expect(inviteRewardFor(13)).toBe(inviteRewardFor(3));
     let sum = 0;
     for (let n = 11; n <= 20; n++) sum += inviteRewardFor(n);
-    expect(sum).toBe(29500);
+    expect(sum).toBe(29900);
     expect(inviteRewardFor(0)).toBe(0);
   });
 
   it("진행 상황", () => {
     expect(inviteProgress(0)).toMatchObject({ round: 1, inRound: 0, next: { atCount: 1, total: 990, remaining: 1 } });
     expect(inviteProgress(3)).toMatchObject({ inRound: 3, earnedThisRound: 4900, next: { atCount: 5, total: 9900, remaining: 2 } });
-    expect(inviteProgress(6)).toMatchObject({ next: { atCount: 10, total: 29500, remaining: 4 } });
+    expect(inviteProgress(6)).toMatchObject({ next: { atCount: 10, total: 29900, remaining: 4 } });
     expect(inviteProgress(10)).toMatchObject({ round: 2, inRound: 0, next: { atCount: 1 } });
   });
 
@@ -97,9 +97,9 @@ describe("운세 보기 990 · 할인 표시 · 들어온 길 (수정안 20~24)"
     expect(() => planPurchase("basic", [], [])).toThrow(PurchaseError);
   });
 
-  it("묶음 정가·할인: 3가지 14,700 → 9,900 (4,800 · 33%), 12가지 58,800 → 29,500 (29,300 · 50%)", () => {
+  it("묶음 정가·할인: 3가지 14,700 → 9,900 (4,800 · 33%), 12가지 58,800 → 29,900 (28,900 · 49%)", () => {
     expect(bundleDiscount(3, PRICE.BUNDLE3)).toEqual({ list: 14700, off: 4800, percent: 33 });
-    expect(bundleDiscount(12, PRICE.BUNDLE12)).toEqual({ list: 58800, off: 29300, percent: 50 });
+    expect(bundleDiscount(12, PRICE.BUNDLE12)).toEqual({ list: 58800, off: 28900, percent: 49 });
   });
 
   it("들어온 길(intent): 허용된 값만 읽고, 사람이 정해지면 알맞은 화면으로", () => {
@@ -162,11 +162,11 @@ describe("구매 계획 (planPurchase)", () => {
   });
   it("전부 보기: 안 연 것 전부 + 월별·개운법, 가격은 늘 29,500", () => {
     const all = planPurchase("bundle12", undefined, []);
-    expect(all.price).toBe(29500);
+    expect(all.price).toBe(29900);
     expect(all.topics).toHaveLength(14);
     const some = planPurchase("bundle12", undefined, ["money", "health"]);
     expect(some.topics).toHaveLength(12);
-    expect(some.price).toBe(29500);
+    expect(some.price).toBe(29900);
     expect(() => planPurchase("bundle12", undefined, [...TOPIC_KEYS, ...EXTRA_KEYS])).toThrow(PurchaseError);
   });
 });

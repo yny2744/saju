@@ -8,6 +8,9 @@ import { analyzeSaju } from "@/server/analyzeSaju";
 import { notifyError } from "@/server/alert";
 import { neededEnergy } from "@/lib/neededEnergy";
 import {
+  BIZ_INFO,
+  isBizKind,
+  type BizKind,
   FEELINGS,
   acceptable,
   businessSyllables,
@@ -29,7 +32,7 @@ import type { ElementKo } from "@/lib/pillarView";
 import { namingDicts } from "./naming";
 
 /**
- * 상호 풀이(무료) · 상호 작명(49,000냥) (2026-10-13 수정안 63).
+ * 상호 풀이(무료) · 상호 작명(49,000냥) (2026-10-13 수정안 63) · 기업 작명 · 브랜딩 작명 (2026-10-14 수정안 15, 같은 엔진 - 재료와 AI 요청만 다름).
  *  - 상호 풀이: 엔진 규칙만 (AI 없음). 로그인한 손님은 저장한 사람(대표자)을 골라 사주와의 어울림까지 본다.
  *  - 상호 작명: 대표자 사주(사람 하나)에 한 번 연다. 엔진 재료로 후보를 고르고, AI가 있으면 업종·느낌에 맞는 이름을 더 제안받아
  *    엔진이 똑같은 기준(소리·업종 오행·총획·사주)으로 걸러 7개를 고른다. 이야기도 AI로 다듬고, 실패하면 기본 문장.
@@ -41,8 +44,12 @@ import { namingDicts } from "./naming";
 export const BUSINESS_COUNT = 7;
 export const BUSINESS_REDO_DAYS = 7;
 
+/** 상품 종류별 가격 (수정안 15: 기업·브랜딩 작명 추가) */
+export const BIZ_PRICE: Record<BizKind, number> = { business: PRICE.BUSINESS, corp: PRICE.CORP, brand: PRICE.BRAND };
+
 export interface BusinessReport {
-  kind: "business";
+  /** 예전 저장분에는 없을 수 있다 → "business" */
+  kind: BizKind;
   industry: { key: IndustryKey; label: string; element: ElementKo; suffix: string };
   feelings: FeelingKey[];
   needed: ElementKo[];
@@ -109,18 +116,19 @@ async function member(token: string | undefined) {
   return { user } as const;
 }
 
-async function getStored(personId: string): Promise<{ content: BusinessReport; redoCount: number; createdAt: Date } | null> {
+async function getStored(personId: string, kind: BizKind): Promise<{ content: BusinessReport; redoCount: number; createdAt: Date } | null> {
   const pool = await db();
   const r = await pool.query<{ content: BusinessReport; redo_count: number; created_at: Date }>(
-    `SELECT content, redo_count, created_at FROM name_reports WHERE person_id = $1 AND kind = 'business'`,
-    [personId]
+    `SELECT content, redo_count, created_at FROM name_reports WHERE person_id = $1 AND kind = $2`,
+    [personId, kind]
   );
   const row = r.rows[0];
   return row ? { content: row.content, redoCount: row.redo_count, createdAt: row.created_at } : null;
 }
 
-export async function getBusinessReport(personId: string): Promise<BusinessReport | null> {
-  return (await getStored(personId))?.content ?? null;
+export async function getBusinessReport(personId: string, kind: BizKind = "business"): Promise<BusinessReport | null> {
+  const c = (await getStored(personId, kind))?.content ?? null;
+  return c ? { ...c, kind: c.kind ?? kind } : null;
 }
 
 function redoLeft(s: { redoCount: number; createdAt: Date } | null): number {
@@ -135,7 +143,13 @@ interface AiIdea {
 }
 
 /** AI에게 업종·느낌에 맞는 상호를 더 받아 온다 (실패하면 null - 엔진 재료만으로 간다) */
-async function ideasByAi(industry: Industry, feelings: FeelingKey[], needed: ElementKo[], good: ElementKo[], exclude: string[]): Promise<AiIdea[] | null> {
+const KIND_PROMPT: Record<BizKind, { what: string; rule: string }> = {
+  business: { what: "한국 가게 이름(상호)", rule: "- 2~3글자 한글 상호 20개. 업종 이름(식당·카페 등)은 붙이지 마세요.\n- 절반은 뜻이 밝은 한자어(한자 표기 포함), 절반은 부르기 좋은 순우리말·한글 조어로." },
+  corp: { what: "한국 회사·법인 이름", rule: "- 2~3글자 회사 이름 20개. '주식회사'나 업종 말은 붙이지 마세요.\n- 대부분은 무게 있고 뜻이 바른 한자어(한자 표기 포함), 몇 개는 세련된 한글 이름으로. 영문으로 옮겨도 어색하지 않게." },
+  brand: { what: "제품·서비스 브랜드 이름", rule: "- 2~4글자 브랜드 이름 20개. 부르기 쉽고 기억에 남는 한글 조어·순우리말 위주(한자어는 몇 개만).\n- 영문 로고로 썼을 때도 예쁘게 읽히는 소리로." },
+};
+
+async function ideasByAi(industry: Industry, feelings: FeelingKey[], needed: ElementKo[], good: ElementKo[], exclude: string[], kind: BizKind = "business"): Promise<AiIdea[] | null> {
   let provider;
   try {
     provider = getReadingProvider(4000);
@@ -144,7 +158,7 @@ async function ideasByAi(industry: Industry, feelings: FeelingKey[], needed: Ele
   }
   if (provider.providerName === "dev-fallback") return null;
   const feelText = feelings.length ? feelings.map((f) => FEELINGS.find((x) => x.key === f)!.label).join(", ") : "밝고 믿음직함";
-  const prompt = `# 요청: 한국 가게·회사 이름(상호) 후보를 지어 주세요
+  const prompt = `# 요청: ${KIND_PROMPT[kind].what} 후보를 지어 주세요
 업종: ${industry.label}
 원하는 느낌: ${feelText}
 첫소리로 쓰면 좋은 기운(소리오행): ${good.join("·")} (ㄱㅋ목 · ㄴㄷㄹㅌ화 · ㅇㅎ토 · ㅅㅈㅊ금 · ㅁㅂㅍ수)
@@ -152,8 +166,7 @@ async function ideasByAi(industry: Industry, feelings: FeelingKey[], needed: Ele
 이미 나온 이름(쓰지 마세요): ${exclude.slice(0, 60).join(", ") || "없음"}
 
 규칙:
-- 2~3글자 한글 상호 20개. 업종 이름(식당·카페 등)은 붙이지 마세요.
-- 절반은 뜻이 밝은 한자어(한자 표기 포함), 절반은 부르기 좋은 순우리말·한글 조어로.
+${KIND_PROMPT[kind].rule}
 - 한자는 실제로 그 소리로 읽히는 흔한 글자만. 뜻이 어둡거나 놀림받을 소리는 피하세요.
 - 실제 유명 브랜드·회사 이름과 같거나 비슷한 것은 피하세요.
 - meaning은 15자 안쪽의 쉬운 말.
@@ -186,7 +199,7 @@ JSON 형식: {"names":[{"hangul":"다온","meaning":"좋은 일이 다 온다"},
   }
 }
 
-async function storiesByAi(cands: BusinessCandidate[], industry: Industry, needed: ElementKo[]): Promise<string[] | null> {
+async function storiesByAi(cands: BusinessCandidate[], industry: Industry, needed: ElementKo[], kind: BizKind = "business"): Promise<string[] | null> {
   let provider;
   try {
     provider = getReadingProvider(3000);
@@ -205,13 +218,13 @@ async function storiesByAi(cands: BusinessCandidate[], industry: Industry, neede
     ].filter(Boolean);
     return `${i + 1}. ${c.hangul}${c.hanja ? `(${c.hanja})` : ""} - ${facts.join(", ")}`;
   });
-  const prompt = `# 요청: 상호 후보마다 "이름 이야기"를 써 주세요
+  const prompt = `# 요청: ${BIZ_INFO[kind].who} 이름 후보마다 "이름 이야기"를 써 주세요
 업종: ${industry.label} · 대표자 사주에 아쉬운 기운: ${needed.join("·")}
 ${lines.join("\n")}
 
 규칙:
 - 후보마다 120~180자, 사장님께 건네는 믿음직한 말투(존댓말).
-- 위에 적힌 뜻과 사실만 써서, 이 이름으로 가게가 어떤 곳으로 기억될지 그려 주세요. 없는 사실을 지어내지 마세요.
+- 위에 적힌 뜻과 사실만 써서, 이 이름으로 ${BIZ_INFO[kind].who}가 어떻게 기억될지 그려 주세요. 없는 사실을 지어내지 마세요.
 - 매출·성공을 장담하는 말은 쓰지 마세요.
 
 JSON 형식: {"stories":["1번 이야기","2번 이야기",...]}`;
@@ -255,6 +268,7 @@ function readIdea(x: AiIdea, industry: Industry, needed: ElementKo[]): BusinessR
 }
 
 export async function buildBusinessReport(args: {
+  kind?: BizKind;
   saju: Parameters<typeof neededEnergy>[0];
   industry: Industry;
   feelings: FeelingKey[];
@@ -264,7 +278,8 @@ export async function buildBusinessReport(args: {
 }): Promise<BusinessReport> {
   const { names } = namingDicts();
   const need = neededEnergy(args.saju);
-  const pool = poolCandidates(args.industry, need.elements, args.feelings, args.exclude, names);
+  const kind: BizKind = args.kind ?? "business";
+  const pool = poolCandidates(args.industry, need.elements, args.feelings, args.exclude, names, kind);
   const all: Array<Omit<BusinessCandidate, "story"> & { score: number }> = pool.map((p) => ({
     hangul: p.word.hangul,
     hanja: p.reading.hanja,
@@ -275,7 +290,7 @@ export async function buildBusinessReport(args: {
     score: p.score,
   }));
   if (args.useAi !== false) {
-    const ideas = await ideasByAi(args.industry, args.feelings, need.elements, goodSounds(args.industry.element), [...args.exclude, ...all.map((x) => x.hangul)]);
+    const ideas = await ideasByAi(args.industry, args.feelings, need.elements, goodSounds(args.industry.element), [...args.exclude, ...all.map((x) => x.hangul)], kind);
     const ex = new Set([...args.exclude, ...all.map((x) => x.hangul)]);
     for (const x of ideas ?? []) {
       if (ex.has(x.hangul)) continue;
@@ -299,9 +314,9 @@ export async function buildBusinessReport(args: {
   }
   if (picked.length < BUSINESS_COUNT) for (const c of all) if (!picked.includes(c) && picked.length < BUSINESS_COUNT) picked.push(c);
   const cands: BusinessCandidate[] = picked.map(({ score: _s, ...c }) => ({ ...c, story: "" }));
-  const ai = args.useAi !== false && cands.length > 0 ? await storiesByAi(cands, args.industry, need.elements) : null;
+  const ai = args.useAi !== false && cands.length > 0 ? await storiesByAi(cands, args.industry, need.elements, kind) : null;
   return {
-    kind: "business",
+    kind,
     industry: { key: args.industry.key, label: args.industry.label, element: args.industry.element, suffix: args.industry.suffix },
     feelings: args.feelings,
     needed: need.elements,
@@ -313,15 +328,16 @@ export async function buildBusinessReport(args: {
 }
 
 /** 화면이 처음 불러올 때: 잠김 / 조건 입력 / 결과 */
-export async function handleGetBusiness(token: string | undefined, personId: string): Promise<Out> {
+export async function handleGetBusiness(token: string | undefined, personId: string, rawKind: unknown = "business"): Promise<Out> {
+  const kind: BizKind = isBizKind(rawKind) ? rawKind : "business";
   const m = await member(token);
   if ("error" in m) return m.error!;
   const [row, summary] = await Promise.all([getPersonRow(m.user.id, personId), getPersonSummary(m.user.id, personId)]);
   if (!row || !summary) return err(404, "NOT_FOUND", "대표자 사주를 찾을 수 없어요.");
   const need = neededEnergy(row.saju);
-  const base = { header: row.header, nickname: row.nickname, needed: need.elements, price: PRICE.BUSINESS };
-  if (!summary.business) return { status: 200, body: { ...base, status: "locked" } };
-  const stored = await getStored(personId);
+  const base = { kind, header: row.header, nickname: row.nickname, needed: need.elements, price: BIZ_PRICE[kind] };
+  if (!summary.biz.includes(kind)) return { status: 200, body: { ...base, status: "locked" } };
+  const stored = await getStored(personId, kind);
   if (!stored) return { status: 200, body: { ...base, status: "form" } };
   return { status: 200, body: { ...base, status: "ready", report: stored.content, redoLeft: redoLeft(stored) } };
 }
@@ -331,10 +347,11 @@ export async function handleCreateBusiness(token: string | undefined, personId: 
   const m = await member(token);
   if ("error" in m) return m.error!;
   const b = (typeof raw === "object" && raw !== null ? raw : {}) as Record<string, unknown>;
+  const kind: BizKind = isBizKind(b.kind) ? b.kind : "business";
   const [row, summary] = await Promise.all([getPersonRow(m.user.id, personId), getPersonSummary(m.user.id, personId)]);
   if (!row || !summary) return err(404, "NOT_FOUND", "대표자 사주를 찾을 수 없어요.");
-  if (!summary.business) return err(402, "LOCKED", "먼저 상호 작명을 열어 주세요.");
-  const stored = await getStored(personId);
+  if (!summary.biz.includes(kind)) return err(402, "LOCKED", `먼저 ${BIZ_INFO[kind].title}을 열어 주세요.`);
+  const stored = await getStored(personId, kind);
   const redo = b.redo === true;
   if (stored && !redo) return { status: 200, body: { status: "ready", report: stored.content, redoLeft: redoLeft(stored) } };
   if (stored && redoLeft(stored) === 0) return err(400, "NO_REDO", `다시 추천은 처음 받은 뒤 ${BUSINESS_REDO_DAYS}일 안에 한 번만 받을 수 있어요.`);
@@ -343,6 +360,7 @@ export async function handleCreateBusiness(token: string | undefined, personId: 
   const feelings = b.feelings !== undefined ? parseFeelings(b.feelings) : stored?.content.feelings ?? [];
 
   const report = await buildBusinessReport({
+    kind,
     saju: row.saju,
     industry,
     feelings,
@@ -352,10 +370,10 @@ export async function handleCreateBusiness(token: string | undefined, personId: 
   if (report.candidates.length === 0) return err(422, "NO_CANDIDATE", "조건에 맞는 상호를 찾지 못했어요. 고객센터로 알려 주시면 직접 도와드릴게요.");
   const pool = await db();
   if (stored) {
-    await pool.query(`UPDATE name_reports SET content = $2, redo_count = redo_count + 1, updated_at = now() WHERE person_id = $1 AND kind = 'business'`, [personId, JSON.stringify(report)]);
+    await pool.query(`UPDATE name_reports SET content = $2, redo_count = redo_count + 1, updated_at = now() WHERE person_id = $1 AND kind = $3`, [personId, JSON.stringify(report), kind]);
   } else {
-    await pool.query(`INSERT INTO name_reports (person_id, kind, content) VALUES ($1, 'business', $2) ON CONFLICT (person_id, kind) DO NOTHING`, [personId, JSON.stringify(report)]);
+    await pool.query(`INSERT INTO name_reports (person_id, kind, content) VALUES ($1, $3, $2) ON CONFLICT (person_id, kind) DO NOTHING`, [personId, JSON.stringify(report), kind]);
   }
-  const now = await getStored(personId);
+  const now = await getStored(personId, kind);
   return { status: 200, body: { status: "ready", report: now?.content ?? report, redoLeft: redoLeft(now) } };
 }

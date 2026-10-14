@@ -41,7 +41,7 @@ type State =
   | (Base & { status: "locked" | "form"; preview: NameReadingResult | null })
   | (Base & { status: "ready"; report: NamingReport; redoLeft: number });
 
-const TITLE: Record<Kind, string> = { naming: "아이 작명", rename: "개명 추천" };
+const TITLE: Record<Kind, string> = { naming: "신생아 작명", rename: "개명 추천" };
 const GOLD = "var(--color-gold)";
 const elColor = (e: string) => (e ? `var(--color-element-${ELEMENT_TOKEN[e as ElementKo]})` : "var(--color-ink-faint)");
 const CARD = { border: "1px solid var(--color-line)", backgroundColor: "var(--color-card)" } as const;

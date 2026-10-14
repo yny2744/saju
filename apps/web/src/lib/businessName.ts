@@ -63,6 +63,18 @@ export function industryOf(key: unknown): Industry | null {
   return INDUSTRIES.find((x) => x.key === key) ?? null;
 }
 
+/** 가게·회사·브랜드 이름 상품 (2026-10-14 수정안 15) - 상호 작명 / 기업 작명 / 브랜딩 작명 */
+export type BizKind = "business" | "corp" | "brand";
+export const BIZ_KINDS: BizKind[] = ["business", "corp", "brand"];
+export function isBizKind(v: unknown): v is BizKind {
+  return v === "business" || v === "corp" || v === "brand";
+}
+export const BIZ_INFO: Record<BizKind, { title: string; doc: string; who: string; hint: string }> = {
+  business: { title: "상호 작명", doc: "상호 작명서", who: "가게", hint: "간판에 걸 가게 이름" },
+  corp: { title: "기업 작명", doc: "기업 작명서", who: "회사", hint: "법인·회사 이름 (한자·한글·영문 표기)" },
+  brand: { title: "브랜딩 작명", doc: "브랜드 작명서", who: "브랜드", hint: "제품·서비스·브랜드 이름 (부르기 쉬운 한글·영문)" },
+};
+
 export type FeelingKey = "trust" | "warm" | "young" | "premium" | "tradition" | "rich" | "nature" | "bright";
 export const FEELINGS: Array<{ key: FeelingKey; label: string }> = [
   { key: "trust", label: "믿음·정직" },
@@ -227,6 +239,8 @@ export function readBusinessName(name: string, hanja: string | null | undefined,
 
 /** 상호 후보 재료: 한자어(뜻이 밝은 말)와 순우리말. 한자는 인명용 사전에서 소리가 맞는지 시험으로 확인한다. */
 export interface PoolWord {
+  /** 어느 상품에서 쓰는 재료인지 (없으면 상호·기업·브랜딩 모두) */
+  kinds?: BizKind[];
   hangul: string;
   /** 한자어면 한자 (없으면 순우리말) */
   hanja?: string;
@@ -306,6 +320,31 @@ export const BUSINESS_POOL: PoolWord[] = [
   { hangul: "노을", meaning: "해 질 녘 붉은 하늘", feel: ["warm", "nature"] },
   { hangul: "모람", meaning: "모두 함께", feel: ["warm", "trust"] },
   { hangul: "벼리", meaning: "일의 뼈대, 중심", feel: ["trust", "tradition"] },
+  // 기업 작명 재료 - 무게 있는 한자어
+  { kinds: ["corp"], hangul: "태성", hanja: "泰成", meaning: "크고 편안하게 이룸", feel: ["trust", "rich"] },
+  { kinds: ["corp"], hangul: "대명", hanja: "大明", meaning: "크게 밝음", feel: ["bright", "premium"] },
+  { kinds: ["corp"], hangul: "동인", hanja: "同仁", meaning: "모두를 한마음으로 아낌", feel: ["trust", "warm"] },
+  { kinds: ["corp"], hangul: "정도", hanja: "正道", meaning: "바른 길", feel: ["trust", "tradition"] },
+  { kinds: ["corp"], hangul: "신의", hanja: "信義", meaning: "믿음과 의리", feel: ["trust"] },
+  { kinds: ["corp"], hangul: "해동", hanja: "海東", meaning: "바다 동쪽, 우리 땅", feel: ["tradition", "nature"] },
+  { kinds: ["corp"], hangul: "서진", hanja: "瑞進", meaning: "상서롭게 나아감", feel: ["bright", "young"] },
+  { kinds: ["corp"], hangul: "영진", hanja: "永進", meaning: "길이 나아감", feel: ["tradition", "young"] },
+  { kinds: ["corp"], hangul: "성원", hanja: "成元", meaning: "근본을 이룸", feel: ["trust", "premium"] },
+  { kinds: ["corp"], hangul: "대원", hanja: "大元", meaning: "큰 으뜸", feel: ["premium", "rich"] },
+  { kinds: ["corp"], hangul: "미래", hanja: "未來", meaning: "앞으로 올 날", feel: ["young", "bright"] },
+  // 브랜딩 작명 재료 - 부르기 쉬운 한글 조어
+  { kinds: ["brand"], hangul: "오롯", meaning: "온전하고 고스란함", feel: ["premium", "trust"] },
+  { kinds: ["brand"], hangul: "미리내", meaning: "은하수의 옛말", feel: ["bright", "nature"] },
+  { kinds: ["brand"], hangul: "너울", meaning: "크게 일렁이는 물결", feel: ["nature", "young"] },
+  { kinds: ["brand"], hangul: "하람", meaning: "하늘이 내린 사람", feel: ["premium", "bright"] },
+  { kinds: ["brand"], hangul: "온담", meaning: "온기를 담음", feel: ["warm"] },
+  { kinds: ["brand"], hangul: "새솔", meaning: "새로 돋은 소나무", feel: ["young", "nature"] },
+  { kinds: ["brand"], hangul: "이음", meaning: "사람과 사람을 이음", feel: ["warm", "trust"] },
+  { kinds: ["brand"], hangul: "빛담", meaning: "빛을 담음", feel: ["bright", "premium"] },
+  { kinds: ["brand"], hangul: "소이", meaning: "작고 어여쁨", feel: ["warm", "young"] },
+  { kinds: ["brand"], hangul: "누리", meaning: "온 세상", feel: ["rich", "bright"] },
+  { kinds: ["brand"], hangul: "다올", meaning: "좋은 일이 다 옴", feel: ["bright", "rich"] },
+  { kinds: ["brand"], hangul: "아라", meaning: "바다의 옛말", feel: ["nature", "young"] },
 ];
 
 export interface BusinessCandidate {
@@ -337,9 +376,16 @@ export function acceptable(r: BusinessReading): boolean {
 }
 
 /** 엔진 재료만으로 후보를 고른다 (AI가 없을 때도 이것만으로 충분히 나온다) */
-export function poolCandidates(industry: Industry, needed: ElementKo[], wantFeel: FeelingKey[], exclude: string[], dict: NameHanjaDict): Array<{ word: PoolWord; reading: BusinessReading; score: number }> {
+export function poolCandidates(
+  industry: Industry,
+  needed: ElementKo[],
+  wantFeel: FeelingKey[],
+  exclude: string[],
+  dict: NameHanjaDict,
+  kind: BizKind = "business"
+): Array<{ word: PoolWord; reading: BusinessReading; score: number }> {
   const ex = new Set(exclude);
-  return BUSINESS_POOL.filter((w) => !ex.has(w.hangul))
+  return BUSINESS_POOL.filter((w) => !ex.has(w.hangul) && (!w.kinds || w.kinds.includes(kind)))
     .map((w) => {
       const reading = readBusinessName(w.hangul, w.hanja ?? null, industry, needed, dict)!;
       return { word: w, reading, score: candidateScore(reading, w.feel, wantFeel) };

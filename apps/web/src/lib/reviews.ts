@@ -6,7 +6,7 @@ export const REVIEW_TITLE = "1004 천사의 한마디";
 export const REVIEW_GIFT = 990;
 /** 사이트 전체 1,004번째 후기 선물 (12가지 운세 전부 보기 값) */
 export const REVIEW_ANGEL_NO = 1004;
-export const REVIEW_ANGEL_GIFT = 29500;
+export const REVIEW_ANGEL_GIFT = 29900;
 export const REVIEW_MIN_CHARS = 20;
 
 /** "유남영" → "유*영", "김철" → "김*", 영문 닉네임도 가운데를 가린다 */
@@ -20,9 +20,11 @@ export function maskName(name: string): string {
 
 /** basic:money → "재물 운세 보기", deep:money → "재물 깊게 보기", naming → "아이 작명" */
 export function reviewProductLabel(product: string): string {
-  if (product === "naming") return "아이 작명";
+  if (product === "naming") return "신생아 작명";
   if (product === "rename") return "개명 추천";
   if (product === "business") return "상호 작명";
+  if (product === "corp") return "기업 작명";
+  if (product === "brand") return "브랜딩 작명";
   if (product === "face") return "관상 심층 풀이";
   const [k, t] = product.split(":");
   if (k === "basic" && isTopicKey(t)) return `${TOPICS[t].title} 운세 보기`;

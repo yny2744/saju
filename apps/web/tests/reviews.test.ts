@@ -11,7 +11,7 @@ describe("수정안 47 - 1004 천사의 한마디", () => {
   it("상품 이름", () => {
     expect(reviewProductLabel("basic:money")).toBe("재물 운세 보기");
     expect(reviewProductLabel("deep:monthly")).toBe("올해 월별 운세 깊게 보기");
-    expect(reviewProductLabel("naming")).toBe("아이 작명");
+    expect(reviewProductLabel("naming")).toBe("신생아 작명");
   });
   it("상품 키 검사", () => {
     expect(parseProduct("basic:money")).toEqual({ kind: "basic", topic: "money" });

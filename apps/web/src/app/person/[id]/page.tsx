@@ -346,18 +346,18 @@ function PersonBody({ id }: { id: string }) {
         <div className="mt-6 space-y-2">
           {person.naming.map((k) => (
             <a key={k} href={`/person/${id}/name?kind=${k}`} className="btn-secondary block text-center">
-              {k === "naming" ? "아이 작명 결과 보기" : "개명 추천 결과 보기"}
+              {k === "naming" ? "신생아 작명 결과 보기" : "개명 추천 결과 보기"}
             </a>
           ))}
         </div>
       )}
 
       {/* 수정안 63: 이 사람(대표자)으로 연 상호 작명 */}
-      {person.business && (
-        <a href={`/person/${id}/business`} className="btn-secondary mt-2 block text-center">
-          상호 작명 결과 보기
+      {(person.biz ?? []).map((k) => (
+        <a key={k} href={`/person/${id}/business?kind=${k}`} className="btn-secondary mt-2 block text-center">
+          {k === "corp" ? "기업 작명" : k === "brand" ? "브랜딩 작명" : "상호 작명"} 결과 보기
         </a>
-      )}
+      ))}
 
       {/* 수정안 38: 깊게 보기를 연 운세가 있으면 책자 PDF */}
       {owned.size > 0 && !picking && (

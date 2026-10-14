@@ -58,19 +58,21 @@ export interface PersonSummary {
   naming: NamingMode[];
   /** 상호 작명을 열었는지 (수정안 63) */
   business: boolean;
+  /** 연 가게·회사·브랜드 이름 상품 (수정안 15) */
+  biz: Array<"business" | "corp" | "brand">;
   createdAt: string;
 }
 
-export type PurchaseMode = "basic" | "deep" | "bundle3" | "bundle12" | NamingMode | "face" | "business";
+export type PurchaseMode = "basic" | "deep" | "bundle3" | "bundle12" | NamingMode | "face" | "business" | "corp" | "brand";
 /** 작명·개명 (수정안 46) - 주제가 아니라 사람 하나에 한 번 여는 상품. topic_unlocks에 topic = 상품 이름으로 남긴다 */
 export type NamingMode = "naming" | "rename";
-export const PURCHASE_MODES: PurchaseMode[] = ["basic", "deep", "bundle3", "bundle12", "naming", "rename", "face", "business"];
+export const PURCHASE_MODES: PurchaseMode[] = ["basic", "deep", "bundle3", "bundle12", "naming", "rename", "face", "business", "corp", "brand"];
 /** 상호 작명 (수정안 63) - 대표자 사주(사람 하나)에 한 번 여는 상품. 작명·개명과 같이 topic_unlocks에 topic = "business" */
 export const BUSINESS_MODE = "business" as const;
 /** 사람 하나에 한 번 여는 이름 상품 (작명·개명·상호 작명) */
-export type NameProductMode = NamingMode | typeof BUSINESS_MODE;
+export type NameProductMode = NamingMode | typeof BUSINESS_MODE | "corp" | "brand";
 export function isNameProductMode(v: unknown): v is NameProductMode {
-  return isNamingMode(v) || v === BUSINESS_MODE;
+  return isNamingMode(v) || v === BUSINESS_MODE || v === "corp" || v === "brand";
 }
 /**
  * 관상 심층 풀이 (수정안 53) - 사주 사람이 아니라 관상 풀이(face_readings) 하나를 여는 상품.
@@ -191,6 +193,7 @@ export async function getPersonSummary(userId: string, personId: string): Promis
     unlocked: unlocks.rows.map((u) => u.topic).filter(isAnyTopicKey),
     naming: unlocks.rows.map((u) => u.topic).filter(isNamingMode),
     business: unlocks.rows.some((u) => u.topic === BUSINESS_MODE),
+    biz: unlocks.rows.map((u) => u.topic).filter((t): t is "business" | "corp" | "brand" => t === "business" || t === "corp" || t === "brand"),
     basics: basics.rows.map((u) => u.topic).filter(isTopicKey),
     tasteReadingId: taste.rows[0]?.id ?? null,
     createdAt: row.created_at.toISOString(),
@@ -336,6 +339,8 @@ export function planPurchase(mode: PurchaseMode, requested: unknown, owned: AnyT
   if (isNamingMode(mode)) return { topics: [], price: mode === "naming" ? PRICE.NAMING : PRICE.RENAME };
   if (mode === FACE_MODE) return { topics: [], price: PRICE.FACE };
   if (mode === BUSINESS_MODE) return { topics: [], price: PRICE.BUSINESS };
+  if (mode === "corp") return { topics: [], price: PRICE.CORP };
+  if (mode === "brand") return { topics: [], price: PRICE.BRAND };
   const ownedSet = new Set(owned);
   if (mode === "bundle12") {
     const all: AnyTopicKey[] = [...TOPIC_KEYS, ...EXTRA_KEYS];
@@ -358,7 +363,7 @@ export function planPurchase(mode: PurchaseMode, requested: unknown, owned: AnyT
   return { topics, price: mode === "deep" ? PRICE.DEEP : PRICE.BUNDLE3 };
 }
 
-const MODE_LABEL: Record<PurchaseMode, string> = { basic: "운세 보기", deep: "깊게 보기", bundle3: "몰아보기", bundle12: "전부 보기", naming: "아이 작명", rename: "개명 추천", face: "관상 심층 풀이", business: "상호 작명" };
+const MODE_LABEL: Record<PurchaseMode, string> = { basic: "운세 보기", deep: "깊게 보기", bundle3: "몰아보기", bundle12: "전부 보기", naming: "신생아 작명", rename: "개명 추천", face: "관상 심층 풀이", business: "상호 작명", corp: "기업 작명", brand: "브랜딩 작명" };
 
 export async function purchaseTopics(args: { userId: string; personId: string; mode: PurchaseMode; topics: unknown }): Promise<AnyTopicKey[]> {
   if (!UUID_RE.test(args.personId)) throw new PurchaseError("NOT_FOUND", "풀이 대상을 찾을 수 없어요.");
@@ -440,10 +445,12 @@ export function productName(mode: PurchaseMode, topics: AnyTopicKey[]): string {
   if (mode === "basic") return `${TOPICS[topics[0]].title} 운세 보기`;
   if (mode === "deep") return `${TOPICS[topics[0]].title} 깊게 보기`;
   if (mode === "bundle3") return "3가지 운세 몰아보기";
-  if (mode === "naming") return "아이 작명";
+  if (mode === "naming") return "신생아 작명";
   if (mode === "rename") return "개명 추천";
   if (mode === FACE_MODE) return "관상 심층 풀이 · 인연 궁합";
   if (mode === BUSINESS_MODE) return "상호 작명";
+  if (mode === "corp") return "기업 작명";
+  if (mode === "brand") return "브랜딩 작명";
   return "12가지 운세 전부 보기";
 }
 

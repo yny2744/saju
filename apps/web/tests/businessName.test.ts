@@ -36,10 +36,10 @@ describe("수정안 63 - 상호 풀이 · 상호 작명", () => {
     expect(readBusinessName("", null, null, null, names)).toBeNull();
   });
   it("가격 · 들어오는 길", () => {
-    expect(PRICE.BUSINESS).toBe(49000);
+    expect(PRICE.BUSINESS).toBe(49900);
     const i = parseIntent(new URLSearchParams("name=business"))!;
     expect(i).toEqual({ kind: "name", mode: "business" });
-    expect(intentDestination("abc", i)).toBe("/person/abc/business");
+    expect(intentDestination("abc", i)).toBe("/person/abc/business?kind=business");
   });
   it("후보 7개 (AI 없이 엔진만) + 상호 작명서 PDF", async () => {
     const { buildBusinessReport } = jest.requireActual("@/server/naming/business");
@@ -59,4 +59,19 @@ describe("수정안 63 - 상호 풀이 · 상호 작명", () => {
     expect(buf.slice(0, 4).toString()).toBe("%PDF");
     if (process.env.BUSINESS_PDF_OUT) fs.writeFileSync(process.env.BUSINESS_PDF_OUT, buf);
   }, 60000);
+});
+
+describe("수정안 15 - 기업·브랜딩 작명", () => {
+  it("기업·브랜딩도 후보 7개, 재료 한자는 사전 소리와 맞는다", async () => {
+    const { buildBusinessReport } = jest.requireActual("@/server/naming/business");
+    const { calculateSaju } = jest.requireActual("saju-engine");
+    const saju = calculateSaju({ calendarType: "solar", date: "1980-08-15", time: "09:30", gender: "female" }, 2026);
+    for (const kind of ["corp", "brand"]) {
+      const rep = await buildBusinessReport({ kind, saju, industry: industryOf("it")!, feelings: ["trust"], exclude: [], round: 1, useAi: false });
+      expect(rep.kind).toBe(kind);
+      expect(rep.candidates.length).toBe(7);
+    }
+    const i = parseIntent(new URLSearchParams("name=corp"))!;
+    expect(intentDestination("abc", i)).toBe("/person/abc/business?kind=corp");
+  });
 });

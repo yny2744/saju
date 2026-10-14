@@ -38,7 +38,7 @@ import {
  *   표지 → 사주 요약(원국·오행·대운) → 아쉬운 기운과 이름에 담는 법 → (개명: 지금 이름 진단) → 후보마다 한 쪽 → 맺음(QR)
  */
 
-const KIND_TITLE = { naming: "아이 작명서", rename: "개명 추천서" } as const;
+const KIND_TITLE = { naming: "신생아 작명서", rename: "개명 추천서" } as const;
 
 function cover(doc: PDFKit.PDFDocument, title: string, who: string, header: ReadingHeader, issuedAt: Date) {
   doc.rect(0, 0, W, H).fill(NAVY);

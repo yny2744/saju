@@ -8,12 +8,12 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
 
-/** 상호 작명 (수정안 63) - GET: 상태·결과, POST {industry, feelings?, redo?}: 후보 만들기 */
+/** 상호·기업·브랜딩 작명 (수정안 63·15) - GET ?kind=business|corp|brand: 상태·결과, POST {kind, industry, feelings?, redo?}: 후보 만들기 */
 export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
   const blocked = blockIfAuthOff();
   if (blocked) return blocked;
   try {
-    const r = await handleGetBusiness(request.cookies.get(SESSION_COOKIE_NAME)?.value, params.id);
+    const r = await handleGetBusiness(request.cookies.get(SESSION_COOKIE_NAME)?.value, params.id, request.nextUrl.searchParams.get("kind") ?? "business");
     return NextResponse.json(r.body, { status: r.status, headers: { "Cache-Control": "private, no-store" } });
   } catch (e) {
     notifyError("상호 작명 불러오기", e);

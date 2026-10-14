@@ -5,6 +5,7 @@ import { isAuthEnabled } from "@/lib/launchMode";
 import { ComingSoon } from "@/components/ComingSoon";
 import { LoadingState } from "@/components/StatusScreens";
 import { formatNyang } from "@/lib/yeopjeon";
+import { REVIEW_ANGEL_GIFT } from "@/lib/reviews";
 import type { AdminMember, AdminStats, PeriodStats } from "@/server/admin/adminData";
 import type { AdminPayOrder, PayMode } from "@/server/pay/payOrders";
 import type { AdminReview } from "@/server/reviews/reviews";
@@ -340,7 +341,7 @@ function AdminBody() {
         <h2 className="text-[16px] font-bold">1004 천사의 한마디 · 들어온 후기 {data.reviews.total}개</h2>
         {data.reviews.angel && (
           <p className="mt-2 rounded-lg px-3 py-2 text-[13px]" style={{ backgroundColor: "var(--color-gold-soft)" }}>
-            🎉 1,004번째 천사: <b>{data.reviews.angel.name}</b> ({data.reviews.angel.productLabel}) · 엽전 29,500냥 자동 지급됨 · 굿즈를 보내 주세요 · 회원 번호 {data.reviews.angel.userId}
+            🎉 1,004번째 천사: <b>{data.reviews.angel.name}</b> ({data.reviews.angel.productLabel}) · 엽전 {formatNyang(REVIEW_ANGEL_GIFT)} 자동 지급됨 · 굿즈를 보내 주세요 · 회원 번호 {data.reviews.angel.userId}
           </p>
         )}
         {data.reviews.list.length === 0 ? (

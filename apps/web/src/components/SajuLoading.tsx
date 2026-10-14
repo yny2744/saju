@@ -24,16 +24,43 @@ export function randomLoadingMs(): number {
 const color = (el: string | undefined) =>
   el ? `var(--color-element-${ELEMENT_TOKEN[el as ElementKo]})` : "var(--color-ink)";
 
+/**
+ * 무엇을 기다리는지 (2026-10-14 수정안 13): 대문에서 고른 메뉴 이름대로 제목과 마지막 단계 문구를 바꾼다.
+ * 네 기둥이 하나씩 세워지는 연출은 그대로 - 모든 풀이가 이 사주를 바탕으로 하기 때문.
+ */
+export interface LoadingCopy {
+  /** "{이름}님의 ___" 뒤에 붙는 말. 예: "만세력을 풀이하고 있어요" */
+  title: string;
+  /** 네 기둥을 다 세운 뒤 두 단계 문구 */
+  after: [string, string];
+}
+
+export const LOADING_COPY = {
+  manse: { title: "만세력을 풀이하고 있어요", after: ["오행의 균형을 살피고 있어요", "풀이를 정리하고 있어요"] },
+  fortune: { title: "오늘·내일의 운세를 살피고 있어요", after: ["오늘과 내일의 기운을 맞춰 보고 있어요", "운세를 정리하고 있어요"] },
+  name: { title: "이름을 풀이하고 있어요", after: ["이름 글자의 획수와 소리를 살피고 있어요", "이름과 사주의 어울림을 정리하고 있어요"] },
+  face: { title: "관상과 함께 볼 사주를 세우고 있어요", after: ["오행의 균형을 살피고 있어요", "관상 풀이로 이어 가고 있어요"] },
+} satisfies Record<string, LoadingCopy>;
+
+/** 상품을 골라 들어온 경우: "재물 운세를 준비하고 있어요" 같은 제목 */
+export function intentLoadingCopy(label: string): LoadingCopy {
+  const last = label.charCodeAt(label.length - 1) - 0xac00;
+  const josa = last >= 0 && last <= 11171 && last % 28 !== 0 ? "을" : "를";
+  return { title: `${label}${josa} 준비하고 있어요`, after: ["오행의 균형을 살피고 있어요", `${label}${josa} 펼칠 준비를 마치고 있어요`] };
+}
+
 export function SajuLoading({
   nickname,
   saju,
   durationMs,
   onDone,
+  copy = LOADING_COPY.manse,
 }: {
   nickname: string;
   saju: SajuJson | null;
   durationMs: number;
   onDone: () => void;
+  copy?: LoadingCopy;
 }) {
   const [elapsed, setElapsed] = useState(0);
   const startRef = useRef<number>(Date.now());
@@ -82,8 +109,8 @@ export function SajuLoading({
           ? "태어난 시간을 모르셔서 시주는 비워 둘게요"
           : `${LABEL[stepKey]}를 세우고 있어요`
         : p < 0.92
-          ? "오행의 균형을 살피고 있어요"
-          : "풀이를 정리하고 있어요";
+          ? copy.after[0]
+          : copy.after[1];
 
   const R = 54;
   const C = 2 * Math.PI * R;
@@ -166,7 +193,7 @@ export function SajuLoading({
         })}
       </div>
 
-      <p className="mt-6 text-center text-[16px] font-semibold">{nickname}님의 만세력을 풀이하고 있어요</p>
+      <p className="mt-6 text-center text-[16px] font-semibold">{nickname}님의 {copy.title}</p>
       <p className="mt-1.5 text-center text-sm" style={{ color: "var(--color-ink-soft)" }}>
         {message}
       </p>

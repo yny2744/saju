@@ -31,8 +31,8 @@ export interface PublicReview {
 const pool = db;
 
 /** 상품 키: basic:<운세> · deep:<운세> · naming · rename · business · face (face 는 personId 자리에 관상 풀이 번호) */
-export function parseProduct(v: unknown): { kind: "basic" | "deep"; topic: string } | { kind: "naming" | "rename" | "face" | "business" } | null {
-  if (v === "naming" || v === "rename" || v === "face" || v === "business") return { kind: v };
+export function parseProduct(v: unknown): { kind: "basic" | "deep"; topic: string } | { kind: "naming" | "rename" | "face" | "business" | "corp" | "brand" } | null {
+  if (v === "naming" || v === "rename" || v === "face" || v === "business" || v === "corp" || v === "brand") return { kind: v };
   if (typeof v !== "string") return null;
   const [k, t] = v.split(":");
   if (k === "basic" && isTopicKey(t)) return { kind: "basic", topic: t };
@@ -142,7 +142,7 @@ export async function publicReviews(opts: { topic?: string | null; naming?: bool
   if (opts.topic && isAnyTopicKey(opts.topic)) {
     args.push(`basic:${opts.topic}`, `deep:${opts.topic}`);
     where.push(`product IN ($${args.length - 1}, $${args.length})`);
-  } else if (opts.naming) where.push(`product IN ('naming', 'rename', 'business')`);
+  } else if (opts.naming) where.push(`product IN ('naming', 'rename', 'business', 'corp', 'brand')`);
   else if (opts.face) where.push(`product = 'face'`);
   args.push(limit);
   const r = await p.query(

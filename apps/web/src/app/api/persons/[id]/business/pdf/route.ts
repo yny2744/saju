@@ -4,6 +4,7 @@ import { SESSION_COOKIE_NAME, getUserBySessionToken } from "@/server/auth/sessio
 import { notifyError } from "@/server/alert";
 import { getPersonRow } from "@/server/readings/readings";
 import { getBusinessReport } from "@/server/naming/business";
+import { BIZ_INFO, isBizKind } from "@/lib/businessName";
 import { buildBusinessPdf } from "@/server/pdf/buildBusinessPdf";
 
 export const runtime = "nodejs";
@@ -19,10 +20,12 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
     if (!user) return NextResponse.json({ error: { code: "LOGIN_REQUIRED", message: "로그인 후 이용할 수 있어요." } }, { status: 401 });
     const row = await getPersonRow(user.id, params.id);
     if (!row) return NextResponse.json({ error: { code: "NOT_FOUND", message: "대표자 사주를 찾을 수 없어요." } }, { status: 404 });
-    const report = await getBusinessReport(row.id);
+    const k = request.nextUrl.searchParams.get("kind");
+    const kind = isBizKind(k) ? k : "business";
+    const report = await getBusinessReport(row.id, kind);
     if (!report) return NextResponse.json({ error: { code: "NOT_WRITTEN", message: "아직 상호 후보를 받지 않았어요." } }, { status: 409 });
     const pdf = await buildBusinessPdf({ report, nickname: row.nickname, header: row.header, saju: row.saju, siteUrl: process.env.SITE_URL });
-    const filename = `${row.nickname}님 상호 작명서 - 류결사주.pdf`;
+    const filename = `${row.nickname}님 ${BIZ_INFO[kind].doc} - 류결사주.pdf`;
     return new NextResponse(new Uint8Array(pdf), {
       status: 200,
       headers: {

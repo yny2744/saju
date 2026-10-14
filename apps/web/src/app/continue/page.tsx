@@ -67,7 +67,7 @@ export default function ContinuePage() {
 
   const label = intentLabel(state.intent);
   const i = state.intent;
-  const price = i.kind === "topic" ? PRICE.BASIC : i.kind === "bundle" ? PRICE.BUNDLE3 : i.kind === "name" ? (i.mode === "naming" ? PRICE.NAMING : i.mode === "rename" ? PRICE.RENAME : PRICE.BUSINESS) : PRICE.BUNDLE12;
+  const price = i.kind === "topic" ? PRICE.BASIC : i.kind === "bundle" ? PRICE.BUNDLE3 : i.kind === "name" ? ({ naming: PRICE.NAMING, rename: PRICE.RENAME, business: PRICE.BUSINESS, corp: PRICE.CORP, brand: PRICE.BRAND }[i.mode]) : PRICE.BUNDLE12;
   const next = encodeURIComponent(CONTINUE_PATH);
   return (
     <main className="mx-auto min-h-screen max-w-md px-5 pb-16 pt-14 text-center">

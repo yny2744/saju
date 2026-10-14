@@ -2,13 +2,14 @@
 
 import { useEffect, useState } from "react";
 import type { SajuJson } from "saju-engine";
-import { neededEnergy } from "@/lib/neededEnergy";
-import { readName, type NameHanjaDict, type NameReadingResult } from "@/lib/nameReading";
-import { ELEMENT_TOKEN, type ElementKo } from "@/lib/pillarView";
+import type { NameHanjaDict } from "@/lib/nameReading";
+import { ELEMENT_HANJA } from "@/lib/manseView";
+import { buildNameReport, type MeaningDict, type NameReport } from "@/lib/nameReport";
+import { ElementDonut, FlowNodes, HBars, PairBars, ScoreRing, StepArrows, YinYangDots, elColor } from "@/components/charts/MiniCharts";
 
 /**
- * 무료 결과 화면 "이름 풀이" 칸 (수정안 11번, AI 없음).
- * 작명 자료(약 190KB)는 이 칸이 화면에 나올 때 한 번만 내려받는다.
+ * 무료 이름 풀이 (수정안 11번 → 2026-10-14 수정안 14: 사주와 함께 푸는 긴 리포트 + 그림, AI 없음).
+ * 작명 자료(획수 약 190KB, 뜻 약 180KB)는 이 칸이 화면에 나올 때 한 번만 내려받는다.
  */
 
 let dictCache: Promise<NameHanjaDict> | null = null;
@@ -27,163 +28,205 @@ function loadDict(): Promise<NameHanjaDict> {
   return dictCache;
 }
 
+let meaningCache: Promise<MeaningDict | null> | null = null;
+function loadMeanings(): Promise<MeaningDict | null> {
+  if (!meaningCache) {
+    meaningCache = fetch("/hanja/dict.json")
+      .then((r) => (r.ok ? (r.json() as Promise<MeaningDict>) : null))
+      .catch(() => null);
+  }
+  return meaningCache;
+}
+
 const GOLD = "var(--color-gold)";
-const elColor = (el: string) => (el ? `var(--color-element-${ELEMENT_TOKEN[el as ElementKo]})` : "var(--color-ink-faint)");
-const FLOW_LABEL: Record<string, string> = { 생: "→ 살려 줌", 받음: "← 도움 받음", 같음: "= 같은 기운", 극: "✕ 부딪힘", 눌림: "✕ 눌림" };
-const VERDICT: Record<NameReadingResult["verdict"], { label: string; text: string }> = {
-  good: { label: "잘 맞는 이름", text: "수리와 소리, 사주와의 어울림이 고루 좋은 이름이에요." },
-  fair: { label: "무난한 이름", text: "큰 흠 없이 무난한 이름이에요. 아쉬운 부분은 아래에서 확인해 보세요." },
-  weak: { label: "아쉬운 점이 있는 이름", text: "수리나 소리 흐름에서 아쉬운 부분이 보여요. 부르는 이름(호·아호)으로 보완하는 방법도 있어요." },
-};
+const CARD = { border: "1px solid var(--color-gold-line)", backgroundColor: "var(--color-card)" } as const;
+const VERDICT_LABEL: Record<NameReport["verdict"], string> = { good: "잘 맞는 이름", fair: "무난한 이름", weak: "아쉬운 점이 있는 이름" };
+
+function Block({ no, title, children }: { no: string; title: string; children: React.ReactNode }) {
+  return (
+    <section className="mb-5 rounded-2xl p-5" style={CARD}>
+      <p className="mb-1 text-[12px] font-semibold" style={{ color: GOLD }}>
+        {no}
+      </p>
+      <h3 className="mb-3 text-[18px] font-bold" style={{ fontFamily: "var(--font-serif)" }}>
+        {title}
+      </h3>
+      {children}
+    </section>
+  );
+}
+
+function P({ children }: { children: React.ReactNode }) {
+  return <p className="mt-3 text-[15px] leading-[1.85]">{children}</p>;
+}
 
 export function NameReadingSection({ nickname, hanjaName, saju }: { nickname: string; hanjaName?: string; saju: SajuJson }) {
-  const [result, setResult] = useState<NameReadingResult | null | "loading" | "error">("loading");
+  const [report, setReport] = useState<NameReport | null | "loading">("loading");
 
   useEffect(() => {
-    loadDict()
-      .then((dict) => setResult(readName(nickname, hanjaName, neededEnergy(saju).elements, dict)))
-      .catch(() => setResult("error"));
+    Promise.all([loadDict(), loadMeanings()])
+      .then(([dict, meanings]) => setReport(buildNameReport(nickname, hanjaName, saju, dict, meanings)))
+      .catch(() => setReport(null));
   }, [nickname, hanjaName, saju]);
 
-  if (result === "loading") return null;
-  if (result === "error" || result === null) return null; // 이름이 한 글자 등 풀 수 없으면 칸을 숨긴다
-
-  const v = VERDICT[result.verdict];
-  const needed = neededEnergy(saju).elements;
+  if (report === "loading" || report === null) return null; // 이름이 한 글자 등 풀 수 없으면 칸을 숨긴다
+  const r = report;
 
   return (
-    <section className="mb-10">
-      <div className="mb-3 flex items-baseline justify-between">
-        <h2 className="text-base font-semibold">이름 풀이</h2>
-        <span className="text-[12px]" style={{ color: "var(--color-ink-faint)" }}>
-          무료 · 작명 이론 참고용
-        </span>
-      </div>
-
-      <div className="rounded-2xl p-5" style={{ border: "1px solid var(--color-gold-line)", backgroundColor: "var(--color-card)" }}>
-        {/* 글자별 */}
-        <div className="flex justify-center gap-2">
-          {result.chars.map((c, i) => (
-            <div key={i} className="w-[64px] rounded-xl py-2 text-center" style={{ backgroundColor: "var(--color-paper-soft)" }}>
-              <p className="text-[24px] font-bold leading-tight" style={{ fontFamily: "var(--font-serif)" }}>
+    <div className="mb-10">
+      {/* 한눈에 */}
+      <section className="mb-5 rounded-2xl p-5 text-center" style={CARD}>
+        <div className="mb-4 flex justify-center gap-2">
+          {r.chars.map((c, i) => (
+            <span key={i} className="flex h-14 w-14 flex-col items-center justify-center rounded-xl text-white" style={{ backgroundColor: c.isSurname ? "#8f8a7d" : elColor(c.element ?? c.sound) }}>
+              <span className="text-[24px] font-bold leading-none" style={{ fontFamily: "var(--font-serif)" }}>
                 {c.hanja ?? c.hangul}
-              </p>
-              <p className="text-[12px]" style={{ color: "var(--color-ink-soft)" }}>
-                {c.hangul}
-              </p>
-              <p className="mt-1 text-[11px]" style={{ color: "var(--color-ink-faint)" }}>
-                {c.strokes !== null ? `${c.strokes}획 · ${c.yinYang}` : "한자 없음"}
-              </p>
-              {c.hanja && (
-                <p className="text-[11px] font-semibold" style={{ color: elColor(c.element) }}>
-                  {c.element ? `${c.element} 기운` : "—"}
+              </span>
+              <span className="mt-0.5 text-[10.5px]">{c.hangul}</span>
+            </span>
+          ))}
+        </div>
+        <ScoreRing score={r.score} label="이름 점수" />
+        <span className="mt-3 inline-block rounded-full px-3 py-1 text-[13px] font-bold" style={{ backgroundColor: "var(--color-accent-soft)", color: "var(--color-accent)" }}>
+          {VERDICT_LABEL[r.verdict]}
+        </span>
+        <p className="mt-3 text-[17px] font-bold leading-snug" style={{ fontFamily: "var(--font-serif)" }}>
+          {r.headline}
+        </p>
+        <p className="mt-2 text-left text-[14.5px] leading-[1.8]" style={{ color: "var(--color-ink-soft)" }}>
+          {r.summary}
+        </p>
+        <div className="mt-4 text-left">
+          <HBars rows={r.criteria} />
+        </div>
+      </section>
+
+      <Block no="첫째" title={`나의 바탕 — ${r.base.dayStemLabel}`}>
+        <ElementDonut shares={r.base.shares} needed={r.base.needed} />
+        <P>{r.base.dayText}</P>
+        <P>
+          사주의 다섯 기운을 보면 <b>{r.base.lackText}</b>
+        </P>
+        <P>이름은 이 바탕 위에 평생 덧입히는 옷이에요. 그래서 이름 풀이는 늘 사주와 함께 봐야 해요.</P>
+        {r.relation && (
+          <div className="mt-4 flex items-center justify-center gap-2 text-[13px]">
+            <span className="rounded-lg px-3 py-2 font-bold" style={{ backgroundColor: "var(--color-paper-soft)" }}>
+              나 · {r.base.dayStemLabel}
+            </span>
+            <span style={{ color: GOLD }}>⇄</span>
+            <span className="rounded-lg px-3 py-2 font-bold" style={{ backgroundColor: "var(--color-paper-soft)" }}>
+              이름 첫 글자
+            </span>
+          </div>
+        )}
+        {r.relation && <P>{r.relation}</P>}
+      </Block>
+
+      <Block no="둘째" title="이름 글자 하나하나">
+        <div className="space-y-3">
+          {r.chars.map((c, i) => (
+            <div key={i} className="flex gap-3 rounded-xl p-3" style={{ backgroundColor: c.fills ? "var(--color-gold-soft)" : "var(--color-paper-soft)" }}>
+              <div className="w-14 shrink-0 text-center">
+                <span className="mx-auto flex h-12 w-12 items-center justify-center rounded-lg text-[24px] font-bold text-white" style={{ backgroundColor: c.isSurname ? "#8f8a7d" : elColor(c.element ?? c.sound), fontFamily: "var(--font-serif)" }}>
+                  {c.hanja ?? c.hangul}
+                </span>
+                <span className="mt-1 block text-[11px]" style={{ color: "var(--color-ink-faint)" }}>
+                  {c.isSurname ? "성" : c.strokes !== null ? `${c.strokes}획` : "소리"}
+                </span>
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="text-[14px] font-bold">
+                  {c.meaning ?? c.hangul}
+                  {c.fills && (
+                    <span className="ml-1.5 rounded-full px-1.5 py-0.5 text-[11px]" style={{ backgroundColor: "var(--color-card)", color: "var(--color-danger)" }}>
+                      아쉬운 기운을 채움
+                    </span>
+                  )}
                 </p>
-              )}
+                <p className="mt-1 text-[13.5px] leading-[1.75]" style={{ color: "var(--color-ink-soft)" }}>
+                  {c.text}
+                </p>
+              </div>
             </div>
           ))}
         </div>
+      </Block>
 
-        <div className="mt-4 text-center">
-          <span className="inline-block rounded-full px-3 py-1 text-[13px] font-bold" style={{ backgroundColor: "var(--color-accent-soft)", color: "var(--color-accent)" }}>
-            {v.label}
-          </span>
-          <p className="mt-2 text-[14px] leading-relaxed" style={{ color: "var(--color-ink-soft)" }}>
-            {v.text}
-          </p>
-        </div>
+      <Block no="셋째" title="이름이 사주에 더해 주는 기운">
+        <PairBars before={r.boost.before} after={r.boost.after} needed={r.base.needed} />
+        <P>{r.boost.text}</P>
+      </Block>
 
-        {/* 수리 4격 */}
-        {result.complete ? (
-          <div className="mt-5">
-            <p className="mb-2 text-[14px] font-bold" style={{ color: GOLD }}>
-              수리 (원·형·이·정 4격)
-            </p>
-            <ul className="space-y-1.5">
-              {result.suri.map((s) => (
-                <li key={s.name} className="flex items-center justify-between gap-2 rounded-lg px-3 py-2 text-[13px]" style={{ backgroundColor: "var(--color-paper-soft)" }}>
-                  <span>
-                    <b>{s.name}</b> <span style={{ color: "var(--color-ink-faint)" }}>{s.meaning}</span>
-                  </span>
-                  <span className="shrink-0 font-bold" style={{ color: s.lucky ? "var(--color-element-wood)" : "var(--color-danger)" }}>
-                    {s.value}수 · {s.lucky ? "길" : "주의"}
-                  </span>
+      <Block no="넷째" title="수리 네 격 — 평생의 흐름">
+        {r.complete ? (
+          <>
+            <StepArrows steps={r.suri.map((s) => ({ top: s.name, big: String(s.value), sub: `${s.period.split("·")[0]} · ${s.lucky ? "길" : "보완"}`, good: s.lucky }))} />
+            <P>{r.suriText}</P>
+            <ul className="mt-3 space-y-2">
+              {r.suri.map((s) => (
+                <li key={s.name} className="rounded-xl px-3.5 py-2.5 text-[14px] leading-[1.75]" style={{ backgroundColor: "var(--color-paper-soft)" }}>
+                  <b>
+                    {s.name}({s.period}) {s.value}수 · {s.title}
+                  </b>
+                  <br />
+                  <span style={{ color: "var(--color-ink-soft)" }}>{s.text}</span>
                 </li>
               ))}
             </ul>
-            <p className="mt-2 text-[13px]" style={{ color: "var(--color-ink-soft)" }}>
-              음양: {result.yinYangBalanced ? "홀수·짝수 획이 섞여 음양이 조화로워요." : "획수가 모두 홀수이거나 모두 짝수라 음양이 한쪽으로 치우쳤어요."}
-            </p>
-          </div>
+          </>
         ) : (
-          <p className="mt-5 rounded-lg px-3 py-2.5 text-[13px]" style={{ backgroundColor: "var(--color-paper-soft)", color: "var(--color-ink-soft)" }}>
-            한자 이름을 넣으면 수리(원·형·이·정)와 음양, 자원오행까지 볼 수 있어요.{" "}
-            <a href="/start" className="underline underline-offset-4">
+          <p className="rounded-xl px-3.5 py-3 text-[14px] leading-relaxed" style={{ backgroundColor: "var(--color-paper-soft)", color: "var(--color-ink-soft)" }}>
+            {r.suriText}{" "}
+            <a href="/start?next=name" className="underline underline-offset-4">
               한자 넣고 다시 보기
             </a>
           </p>
         )}
+      </Block>
 
-        {/* 발음오행 */}
-        <div className="mt-5">
-          <p className="mb-2 text-[14px] font-bold" style={{ color: GOLD }}>
-            소리의 흐름 (발음오행)
-          </p>
-          <p className="text-[14px] leading-relaxed">
-            {result.chars.map((c, i) => (
-              <span key={i}>
-                {i > 0 && (
-                  <span className="mx-1 text-[12px]" style={{ color: "var(--color-ink-faint)" }}>
-                    {FLOW_LABEL[result.sound.flow[i - 1]] ?? "·"}
-                  </span>
-                )}
-                <b>{c.hangul}</b>
-                <span style={{ color: elColor(result.sound.elements[i] ?? "") }}>({result.sound.elements[i] ?? "?"})</span>
-              </span>
-            ))}
-          </p>
-          <p className="mt-1 text-[13px]" style={{ color: "var(--color-ink-soft)" }}>
-            {result.sound.clashes === 0 ? "부르는 소리가 서로 부딪히지 않고 부드럽게 이어져요." : `소리가 부딪히는 곳이 ${result.sound.clashes}군데 있어요.`}
-          </p>
-        </div>
+      <Block no="다섯째" title="부르는 소리의 흐름">
+        <FlowNodes nodes={r.sound.nodes.map((n) => ({ label: n.hangul, element: n.element }))} links={r.sound.links} />
+        <P>{r.sound.text}</P>
+        {r.impression && <P>{r.impression}</P>}
+      </Block>
 
-        {/* 사주 보완 */}
-        {result.complete && (
-          <div className="mt-5">
-            <p className="mb-2 text-[14px] font-bold" style={{ color: GOLD }}>
-              사주와의 어울림 (자원오행)
-            </p>
-            <p className="text-[14px] leading-relaxed">
-              사주에 필요한 기운: <b>{needed.join(" · ")}</b>
-              <br />
-              {result.supports.length > 0 ? (
-                <>
-                  이름 한자가 <b style={{ color: elColor(result.supports[0]) }}>{result.supports.join(" · ")}</b> 기운을 채워 주고 있어요.
-                </>
-              ) : (
-                "이름 한자에서 필요한 기운을 채워 주는 글자는 보이지 않아요."
-              )}
-            </p>
-            {result.unknownElements > 0 && (
-              <p className="mt-1 text-[12px]" style={{ color: "var(--color-ink-faint)" }}>
-                이름 글자 중 {result.unknownElements}자는 부수만으로 오행을 정하기 어려워 계산에서 뺐어요.
+      {r.yinYang.balanced !== null && (
+        <Block no="여섯째" title="음양의 짜임">
+          <YinYangDots labels={r.chars.map((c) => c.hanja ?? c.hangul)} marks={r.yinYang.marks} />
+          <p className="mt-2 text-center text-[11.5px]" style={{ color: "var(--color-ink-faint)" }}>
+            ● 양(홀수 획) · ○ 음(짝수 획)
+          </p>
+          <P>{r.yinYang.text}</P>
+        </Block>
+      )}
+
+      <Block no="맺음" title="이름과 함께 채우는 기운">
+        <div className="grid grid-cols-2 gap-2 text-[13.5px]">
+          {[
+            ["색", r.fill.colors],
+            ["방위", r.fill.direction],
+            ["숫자", r.fill.numbers],
+            ["곁에 둘 것", r.fill.object],
+          ].map(([k, v]) => (
+            <div key={k} className="rounded-xl px-3 py-2.5" style={{ backgroundColor: "var(--color-paper-soft)" }}>
+              <p className="text-[11.5px]" style={{ color: "var(--color-ink-faint)" }}>
+                {k}
               </p>
-            )}
-          </div>
-        )}
+              <p className="font-semibold" style={{ color: k === "색" ? elColor(r.fill.element) : undefined }}>
+                {v}
+              </p>
+            </div>
+          ))}
+        </div>
+        <p className="mt-2 text-center text-[12px]" style={{ color: "var(--color-ink-faint)" }}>
+          {r.fill.element}({ELEMENT_HANJA[r.fill.element]})의 기운 · 생활 습관: {r.fill.habit}
+        </p>
+        <P>{r.closing}</P>
+      </Block>
 
-        {/* 수정안 46: 작명·개명이 열렸다 */}
-        <a href="/name" className="mt-5 flex items-center justify-between gap-3 rounded-xl px-4 py-3" style={{ backgroundColor: "var(--color-paper-soft)" }}>
-          <span className="text-[13px]" style={{ color: "var(--color-ink-soft)" }}>
-            사주에 맞춘 아이 작명 · 개명 추천
-          </span>
-          <span className="shrink-0 rounded-full px-2.5 py-1 text-[12px] font-semibold" style={{ border: "1px solid var(--color-gold-line)", color: "var(--color-gold)" }}>
-            보러 가기 →
-          </span>
-        </a>
-      </div>
       <p className="mt-2 text-[11px] leading-relaxed" style={{ color: "var(--color-ink-faint)" }}>
-        획수는 강희자전 기준 원획, 81수리 길흉은 전해 오는 분류를 따랐어요. 작명 학파에 따라 획수와 기준이 조금 다를 수 있어요.
+        획수는 강희자전 기준 원획, 81수리는 전해 오는 분류를 따랐어요. 작명 학파에 따라 획수와 기준이 조금 다를 수 있어요. 재미와 참고로 봐 주세요.
       </p>
-    </section>
+    </div>
   );
 }
