@@ -1,5 +1,5 @@
 import { calculateSaju } from "saju-engine";
-import { INVITE_CUMULATIVE, PRICE, bundleDiscount, displayLedgerLabel, formatNyang, inviteProgress, inviteRewardFor } from "@/lib/yeopjeon";
+import { INVITEE_GIFT, INVITE_REWARD, PRICE, WELCOME_GIFT, bundleDiscount, displayLedgerLabel, formatNyang, inviteProgress, inviteRewardFor } from "@/lib/yeopjeon";
 import { intentDestination, intentLabel, intentQuery, parseIntent } from "@/lib/intent";
 import { isAuthEnabled, isLoginRequired } from "@/lib/launchMode";
 import { TOPIC_KEYS, EXTRA_KEYS, isTopicKey } from "@/lib/topics";
@@ -26,39 +26,24 @@ const saju = calculateSaju({ calendarType: "solar", date: "1967-04-03", time: "0
 
 describe("엽전 금액 (2026-10-08 유샘 확정)", () => {
   it("가격", () => {
-    expect(PRICE).toEqual({ BASIC: 990, TASTE: 990, DEEP: 4900, BUNDLE3: 9900, BUNDLE12: 29900, RENAME: 29900, NAMING: 49900, FACE: 4900, BUSINESS: 49900, CORP: 59900, BRAND: 59900 });
+    expect(PRICE).toEqual({ BASIC: 990, TASTE: 990, DEEP: 4900, BUNDLE3: 9900, BUNDLE12: 29900, RENAME: 29900, NAMING: 49900, FACE: 4900, BUSINESS: 49900, CORP: 59900, BRAND: 59900, COUPLE: 19900, PREMIUM_NAME: 69900, PREMIUM_BIZ: 79900, WALLPAPER: 990 });
     expect(formatNyang(29500)).toBe("29,500냥");
   });
 
-  it("친구 초대 누적 총액 (수정안 40): 1명 990 · 3명 4,900 · 5명 9,900 · 10명 29,500", () => {
-    let sum = 0;
-    const totals: number[] = [];
-    for (let n = 1; n <= 10; n++) {
-      sum += inviteRewardFor(n);
-      totals.push(sum);
-    }
-    expect(totals).toEqual([990, 1980, 4900, 5890, 9900, 10890, 11880, 12870, 13860, 29900]);
-    expect(totals[0]).toBe(PRICE.BASIC);
-    expect(totals[2]).toBe(PRICE.DEEP);
-    expect(totals[4]).toBe(PRICE.BUNDLE3);
-    expect(totals[9]).toBe(PRICE.BUNDLE12);
-    expect(totals).toEqual([...INVITE_CUMULATIVE]);
-  });
-
-  it("11명째부터 새 바퀴 (11명째 = 1명째, 20명째에 다시 29,500)", () => {
-    expect(inviteRewardFor(11)).toBe(990);
-    expect(inviteRewardFor(13)).toBe(inviteRewardFor(3));
-    let sum = 0;
-    for (let n = 11; n <= 20; n++) sum += inviteRewardFor(n);
-    expect(sum).toBe(29900);
+  it("친구 초대 (수정안 10): 초대한 사람 1,000 · 초대받은 사람 1,000, 친구마다 같다 · 가입 선물 엽전은 없다", () => {
+    expect(INVITE_REWARD).toBe(1000);
+    expect(INVITEE_GIFT).toBe(1000);
+    expect(WELCOME_GIFT).toBe(0);
+    expect(inviteRewardFor(1)).toBe(1000);
+    expect(inviteRewardFor(37)).toBe(1000);
     expect(inviteRewardFor(0)).toBe(0);
   });
 
   it("진행 상황", () => {
-    expect(inviteProgress(0)).toMatchObject({ round: 1, inRound: 0, next: { atCount: 1, total: 990, remaining: 1 } });
-    expect(inviteProgress(3)).toMatchObject({ inRound: 3, earnedThisRound: 4900, next: { atCount: 5, total: 9900, remaining: 2 } });
-    expect(inviteProgress(6)).toMatchObject({ next: { atCount: 10, total: 29900, remaining: 4 } });
-    expect(inviteProgress(10)).toMatchObject({ round: 2, inRound: 0, next: { atCount: 1 } });
+    expect(inviteProgress(0)).toMatchObject({ earned: 0, next: { atCount: 1, remaining: 1 } });
+    expect(inviteProgress(3)).toMatchObject({ earned: 3000, next: { atCount: 5, total: 5000, remaining: 2 } });
+    expect(inviteProgress(12)).toMatchObject({ earned: 12000, next: { atCount: 30, remaining: 18 } });
+    expect(inviteProgress(40).next).toBeNull();
   });
 
   it("예전 장부 기록의 '복채'는 '엽전'으로 보인다", () => {
@@ -90,7 +75,7 @@ describe("12가지 운", () => {
 
 describe("운세 보기 990 · 할인 표시 · 들어온 길 (수정안 20~24)", () => {
   it("운세 보기: 12가지 중 하나만, 990냥 / 깊게 보기가 이미 열렸으면 거절 / 전부 보기 전용은 못 고름", () => {
-    expect(planPurchase("basic", ["money"], [])).toEqual({ topics: ["money"], price: 990 });
+    expect(planPurchase("basic", ["money"], [])).toEqual({ topics: ["money"], price: 0 }); // 수정안 10: 로그인 회원 무료
     expect(() => planPurchase("basic", ["money"], ["money"])).toThrow(PurchaseError);
     expect(() => planPurchase("basic", ["money", "health"], [])).toThrow(PurchaseError);
     expect(() => planPurchase("basic", ["monthly"], [])).toThrow(PurchaseError);

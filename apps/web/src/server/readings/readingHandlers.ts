@@ -5,6 +5,7 @@ import { ensureRefCode, getBalance, grant, inviteStats, listLedger, Insufficient
 import { CURRENCY_NAME, PRICE, WELCOME_GIFT } from "@/lib/yeopjeon";
 import { isAnyTopicKey, isTopicKey } from "@/lib/topics";
 import { notifyError } from "@/server/alert";
+import { listCouples } from "@/server/couple/couple";
 import { listFaceReadings } from "@/server/face/faceReadings";
 import { recommendFromSaju, type Journey } from "@/lib/journey";
 import type { SajuJson } from "saju-engine";
@@ -56,17 +57,18 @@ function resultFrom(rawBody: unknown) {
 export async function handleYeopjeonSummary(token: string | undefined): Promise<Result<unknown>> {
   const m = await member(token);
   if ("error" in m) return m.error!;
-  // 이 기능 전에 가입한 회원도 가입 선물을 받게 한다 (멱등 - 이미 받았으면 아무 일 없음)
-  await grant(m.user.id, WELCOME_GIFT, "welcome", `회원가입 축하 ${CURRENCY_NAME}`);
-  const [balance, ledger, refCode, stats, persons, faces] = await Promise.all([
+  // (2026-10-14 수정안 10: 가입 선물 엽전은 없어졌다 - 예전 가입자의 기록은 그대로)
+  if (WELCOME_GIFT > 0) await grant(m.user.id, WELCOME_GIFT, "welcome", `회원가입 축하 ${CURRENCY_NAME}`);
+  const [balance, ledger, refCode, stats, persons, faces, couples] = await Promise.all([
     getBalance(m.user.id),
     listLedger(m.user.id),
     ensureRefCode(m.user.id),
     inviteStats(m.user.id),
     listPersons(m.user.id),
     listFaceReadings(m.user.id),
+    listCouples(m.user.id),
   ]);
-  return { status: 200, body: { balance, ledger, refCode, invited: stats.invited, persons, faces } };
+  return { status: 200, body: { balance, ledger, refCode, invited: stats.invited, persons, faces, couples } };
 }
 
 /**

@@ -286,7 +286,7 @@ function PersonBody({ id }: { id: string }) {
                       : "누르면 고르기"
                     : seen.has(t)
                       ? `운세 봄 · 깊게 보기 ${formatNyang(PRICE.DEEP)}`
-                      : `운세 보기 ${formatNyang(PRICE.BASIC)}`}
+                      : "무료로 보기"}
               </span>
             </>
           );
@@ -353,6 +353,22 @@ function PersonBody({ id }: { id: string }) {
       )}
 
       {/* 수정안 63: 이 사람(대표자)으로 연 상호 작명 */}
+      {/* 수정안 12: 나를 채우는 행운 배경화면 (990냥 시험판) */}
+      <a href={`/person/${id}/wallpaper`} className="mt-6 flex items-center gap-3 rounded-2xl px-4 py-3.5" style={{ backgroundColor: "#16213a", border: "1px solid var(--color-gold-line)" }}>
+        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-[18px] font-bold" style={{ border: "1.5px solid #d4b265", color: "#d4b265", fontFamily: "var(--font-serif)" }}>
+          福
+        </span>
+        <span className="min-w-0 flex-1">
+          <span className="block text-[15px] font-bold" style={{ color: "#f3e7c6", fontFamily: "var(--font-serif)" }}>
+            나를 채우는 행운 배경화면
+          </span>
+          <span className="block text-[12.5px]" style={{ color: "#c9cfda" }}>
+            {person.wallpaper ? "내 배경화면 다시 받기" : "부족한 기운을 담은 나만의 폰 배경화면"}
+          </span>
+        </span>
+        <span style={{ color: "#d4b265" }}>›</span>
+      </a>
+
       {(person.biz ?? []).map((k) => (
         <a key={k} href={`/person/${id}/business?kind=${k}`} className="btn-secondary mt-2 block text-center">
           {k === "corp" ? "기업 작명" : k === "brand" ? "브랜딩 작명" : "상호 작명"} 결과 보기

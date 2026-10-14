@@ -20,6 +20,7 @@ export interface YeopjeonSummary {
   persons: PersonListItem[];
   /** 연 관상 심층 풀이 (수정안 53) */
   faces?: Array<{ id: string; nickname: string; written: boolean; createdAt: string }>;
+  couples?: Array<{ id: string; a: string; b: string; paid: boolean; createdAt: string }>;
 }
 
 /** 로그인한 회원의 엽전 요약. 로그인 안 했으면 null. */
@@ -60,7 +61,7 @@ export function inviteUrl(refCode: string): string {
 /** 휴대폰이면 공유창(카카오톡 등), 아니면 링크 복사 */
 export async function shareInvite(refCode: string): Promise<"shared" | "copied" | "failed"> {
   const url = inviteUrl(refCode);
-  const text = "류결사주에서 내 사주 여덟 글자를 무료로 봤어요. 가입하면 엽전 선물로 12가지 운세 중 하나를 무료로 볼 수 있어요!";
+  const text = "류결사주에서 내 사주를 무료로 봤어요. 이 링크로 로그인하면 엽전 1,000냥을 받고, 12가지 운세도 모두 무료로 볼 수 있어요!";
   try {
     if (navigator.share) {
       await navigator.share({ title: "류결사주", text, url });

@@ -39,7 +39,7 @@ export function YeopjeonPanel() {
         </div>
         <span className="flex flex-col items-end gap-1.5">
           <a href="/#fortunes" className="btn-band rounded-xl px-4 py-2.5 text-[14px] font-bold">
-            운세 보기 {formatNyang(PRICE.BASIC)}
+            12가지 운세 무료로 보기
           </a>
         </span>
       </section>
@@ -89,6 +89,32 @@ export function YeopjeonPanel() {
                   </span>
                   <span className="shrink-0 text-[12px]" style={{ color: "var(--color-ink-soft)" }}>
                     {f.written ? "다시 보기 ›" : "풀이 받기 ›"}
+                  </span>
+                </a>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+
+      {/* 연인 궁합 (수정안 10) */}
+      {(data.couples?.length ?? 0) > 0 && (
+        <section className="mb-7">
+          <h2 className="section-label mb-3">연인 궁합</h2>
+          <ul className="overflow-hidden rounded-xl" style={{ border: "1px solid var(--color-line)" }}>
+            {data.couples!.map((c, i) => (
+              <li key={c.id} style={i > 0 ? { borderTop: "1px solid var(--color-line)" } : undefined}>
+                <a href={`/couple/${c.id}`} className="flex items-center justify-between gap-2 px-4 py-3">
+                  <span className="min-w-0">
+                    <span className="block text-[15px] font-semibold">
+                      {c.a} ♡ {c.b}
+                    </span>
+                    <span className="block text-[12px]" style={{ color: "var(--color-ink-faint)" }}>
+                      연인 궁합 · {fmtDate(c.createdAt).slice(0, 8)}
+                    </span>
+                  </span>
+                  <span className="shrink-0 text-[12px]" style={{ color: "var(--color-ink-soft)" }}>
+                    {c.paid ? "다시 보기 ›" : "미리보기 ›"}
                   </span>
                 </a>
               </li>

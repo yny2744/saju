@@ -1,7 +1,7 @@
 "use client";
 
 import { isAuthEnabled } from "@/lib/launchMode";
-import { CURRENCY_NAME, WELCOME_GIFT, formatNyang } from "@/lib/yeopjeon";
+import { CURRENCY_NAME, INVITEE_GIFT, formatNyang } from "@/lib/yeopjeon";
 import { safeNext } from "@/lib/safeNext";
 import { ConsentChecks, EMPTY_CONSENT, requiredConsentDone, type ConsentState } from "@/components/ConsentChecks";
 import { ComingSoon } from "@/components/ComingSoon";
@@ -69,10 +69,10 @@ function LoginPageBody() {
       <p className="mb-1 text-sm font-semibold" style={{ fontFamily: "var(--font-serif)", color: "var(--color-accent)" }}>
         류결사주
       </p>
-      <h1 className={`${isAuthEnabled() ? "mb-2" : "mb-7"} text-[24px] font-bold`}>{mode === "login" ? "로그인" : "회원가입"}</h1>
+      <h1 className={`${isAuthEnabled() ? "mb-2" : "mb-7"} text-[24px] font-bold`}>{mode === "login" ? "로그인" : "이메일로 시작하기"}</h1>
       {isAuthEnabled() && (
         <p className="mb-7 text-sm leading-relaxed" style={{ color: "var(--color-ink-soft)" }}>
-          카카오로 가입하면 <b>{CURRENCY_NAME} {formatNyang(WELCOME_GIFT)}</b>을 선물로 드려요. 12가지 운세 중 하나를 무료로 보실 수 있어요.
+          로그인하면 <b>12가지 운세를 모두 무료</b>로 보실 수 있어요. 친구의 초대 링크로 오셨다면 {CURRENCY_NAME} {formatNyang(INVITEE_GIFT)}도 함께 드려요.
         </p>
       )}
 
@@ -150,7 +150,7 @@ function LoginPageBody() {
         )}
 
         <button type="submit" disabled={submitting} className="btn-primary">
-          {submitting ? "처리 중..." : mode === "login" ? "로그인" : "회원가입"}
+          {submitting ? "처리 중..." : mode === "login" ? "로그인" : "시작하기"}
         </button>
       </form>
 
@@ -163,7 +163,7 @@ function LoginPageBody() {
         className="mt-4 block w-full text-center text-sm underline underline-offset-4"
         style={{ color: "var(--color-ink-soft)" }}
       >
-        {mode === "login" ? "계정이 없으신가요? 회원가입" : "이미 계정이 있으신가요? 로그인"}
+        {mode === "login" ? "처음이신가요? 이메일로 시작하기" : "이미 계정이 있으신가요? 로그인"}
       </button>
     </main>
   );

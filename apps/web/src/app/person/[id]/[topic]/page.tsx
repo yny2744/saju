@@ -50,6 +50,7 @@ function TopicBody({ id, topic }: { id: string; topic: string }) {
   const [payFor, setPayFor] = useState<"basic" | "deep" | null>(null); // 엽전이 모자라 결제 창을 띄운 상품
   const [confirmDeep, setConfirmDeep] = useState(false);
   const started = useRef(false);
+  const autoOpen = useRef(false);
   const url = `/api/persons/${encodeURIComponent(id)}/topics/${encodeURIComponent(topic)}`;
   const isLoggedView = state.status !== "loading";
   const { data: wallet, reload: reloadWallet } = useYeopjeon(isLoggedView);
@@ -97,7 +98,12 @@ function TopicBody({ id, topic }: { id: string; topic: string }) {
           return;
         }
         if (!r.ok) return setState({ status: "error", message: body?.error?.message ?? "불러오지 못했어요.", level: null });
-        if (body.status === "locked") return setState({ status: "locked", header: body.header ?? null });
+        if (body.status === "locked") {
+          setState({ status: "locked", header: body.header ?? null });
+          // 2026-10-14 수정안 10: 운세 보기는 로그인 회원에게 무료 - 잠긴 화면 없이 바로 연다 (12가지 운세만)
+          if (isTopicKey(topic)) autoOpen.current = true;
+          return;
+        }
         if (body.status === "ready") show(body);
         else write(body.level === "deep" ? "deep" : "basic", Boolean(body.grand));
       })
@@ -140,6 +146,15 @@ function TopicBody({ id, topic }: { id: string; topic: string }) {
     }
     setBuying(null);
   }
+
+  // 잠긴 운세(12가지)는 로그인 회원에게 무료라 바로 연다
+  useEffect(() => {
+    if (state.status === "locked" && autoOpen.current) {
+      autoOpen.current = false;
+      buy("basic");
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [state.status]);
 
   if (state.status === "loading") return <LoadingState message="불러오고 있어요..." />;
   if (state.status === "writing") {
@@ -261,7 +276,7 @@ function TopicBody({ id, topic }: { id: string; topic: string }) {
           )}
           {canBasic && (
             <button type="button" disabled={buying !== null} onClick={() => buy("basic")} className="btn-band mt-4 block w-full rounded-xl py-4 text-[17px] font-bold disabled:opacity-60" style={{ fontFamily: "var(--font-serif)" }}>
-              {title} 운세 보기 · {formatNyang(PRICE.BASIC)}
+              {title} 운세 무료로 보기
             </button>
           )}
           <button type="button" disabled={buying !== null} onClick={() => setConfirmDeep(true)} className="btn-secondary mt-2.5">

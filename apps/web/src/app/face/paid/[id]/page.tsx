@@ -17,6 +17,7 @@ import type { FaceDeepResult } from "@/server/face/faceVision";
 import type { FaceMapResult } from "@/lib/faceMap";
 import { SamJeongBar } from "@/components/face/SamJeongBar";
 import { PartnerPortrait, PartnerTeaser } from "@/components/face/PartnerPortrait";
+import { IdealSummary } from "@/components/face/IdealSummary";
 
 /**
  * 관상 심층 풀이 · 인연 궁합 (2026-10-12 수정안 53) - 4,900냥.
@@ -495,6 +496,7 @@ function Report({ content, buckets }: { content: FaceDeepResult; buckets: FaceFe
         </h3>
         <PartnerPortrait me={buckets} />
       </section>
+      <IdealSummary me={buckets} />
       <Para title="연애에서 보이는 모습" body={r.traditionalLoveTendency} />
       <Para title="잘 어울리는 인연의 관상" body={r.idealPartnerTraits} gold />
       <Para title="그런 인연의 성품" body={r.partnerFeatureNotes} />

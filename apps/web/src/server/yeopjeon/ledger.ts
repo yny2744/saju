@@ -1,6 +1,6 @@
 import { randomInt } from "crypto";
 import { db } from "@/server/auth/db";
-import { CURRENCY_NAME, REF_CODE_RE, WELCOME_GIFT, displayLedgerLabel, inviteRewardFor } from "@/lib/yeopjeon";
+import { CURRENCY_NAME, INVITEE_GIFT, REF_CODE_RE, WELCOME_GIFT, displayLedgerLabel, inviteRewardFor } from "@/lib/yeopjeon";
 
 /**
  * 엽전 장부 (2026-10-06, 이름은 10-08에 복채→엽전). 잔액 = bokchae_ledger.amount 합계 (테이블 이름은 예전 그대로).
@@ -75,13 +75,13 @@ export async function inviteStats(userId: string): Promise<{ invited: number }> 
 
 /**
  * 새 회원이 필수 동의를 처음 마친 순간 한 번 호출된다.
- *  - 가입 선물 엽전 지급
- *  - 초대 코드가 있으면(자기 자신 제외) 초대한 사람에게 n번째 친구 보상 (10명 단위 반복, 월 한도 없음)
+ *  - (가입 선물 엽전은 2026-10-14부터 없음 - 로그인 혜택은 운세 보기 무료)
+ *  - 초대 코드가 있으면(자기 자신 제외) 초대한 사람 1,000냥 + 초대받은 사람 1,000냥 (수정안 10)
  * 초대한 사람의 users 행을 잠가(FOR UPDATE) 동시에 두 명이 가입해도 n번째 계산이 겹치지 않게 한다.
  * 실패해도 가입 자체는 막지 않도록 호출하는 쪽에서 try/catch 한다.
  */
 export async function onNewMember(userId: string, refCode: string | undefined): Promise<void> {
-  await grant(userId, WELCOME_GIFT, "welcome", `회원가입 축하 ${CURRENCY_NAME}`);
+  if (WELCOME_GIFT > 0) await grant(userId, WELCOME_GIFT, "welcome", `회원가입 축하 ${CURRENCY_NAME}`);
 
   const code = refCode?.toUpperCase();
   if (!code || !REF_CODE_RE.test(code)) return;
@@ -112,6 +112,12 @@ export async function onNewMember(userId: string, refCode: string | undefined): 
       [referrerId, amount, `친구 초대 ${CURRENCY_NAME} (${nth}번째 친구)`, userId]
     );
     await client.query(`UPDATE referrals SET rewarded = true, nth = $2 WHERE referred_user_id = $1`, [userId, nth]);
+    // 초대받은 사람도 1,000냥 (한 번만)
+    await client.query(
+      `INSERT INTO bokchae_ledger (user_id, amount, kind, label, ref) VALUES ($1, $2, 'invited', $3, '')
+       ON CONFLICT (user_id, kind, ref) DO NOTHING`,
+      [userId, INVITEE_GIFT, `친구 초대로 받은 ${CURRENCY_NAME}`]
+    );
     await client.query("COMMIT");
   } catch (err) {
     await client.query("ROLLBACK").catch(() => {});

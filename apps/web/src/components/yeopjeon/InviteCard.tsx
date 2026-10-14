@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { CURRENCY_NAME, INVITE_CUMULATIVE, INVITE_MILESTONES, formatNyang, inviteProgress } from "@/lib/yeopjeon";
+import { CURRENCY_NAME, INVITEE_GIFT, INVITE_MILESTONES, INVITE_REWARD, formatNyang, inviteProgress } from "@/lib/yeopjeon";
 import { inviteUrl, shareInvite } from "./useYeopjeon";
 
 /** 친구 초대 카드 - 내 복주머니·풀이 화면에서 같이 쓴다 */
@@ -20,19 +20,21 @@ export function InviteCard({ refCode, invited }: { refCode: string; invited: num
         친구 초대하고 {CURRENCY_NAME} 받기
       </p>
       <ul className="mt-2 space-y-1 text-[14px]" style={{ color: "var(--color-ink-soft)" }}>
-        {INVITE_MILESTONES.map((m) => (
+        <li>
+          · 친구 한 명마다 나에게 <b>{formatNyang(INVITE_REWARD)}</b>, 친구에게도 <b>{formatNyang(INVITEE_GIFT)}</b>
+        </li>
+        {INVITE_MILESTONES.filter((m) => m.n > 1).map((m) => (
           <li key={m.n}>
-            · 친구 {m.n}명이면 모두 {formatNyang(INVITE_CUMULATIVE[m.n - 1])} ({m.label})
+            · 친구 {m.n}명이면 {formatNyang(m.n * INVITE_REWARD)} ({m.label})
           </li>
         ))}
-        <li>· 10명이 넘으면 처음부터 다시 쌓여요 · 친구도 가입 선물을 받아요</li>
       </ul>
       <p className="mt-3 text-[14px]">
-        지금까지 <b>{invited}명</b> 초대
+        지금까지 <b>{invited}명</b> 초대 · {formatNyang(p.earned)}
         {p.next && (
           <span style={{ color: "var(--color-ink-faint)" }}>
             {" "}
-            · {p.next.remaining}명 더 모이면 이번 바퀴 {formatNyang(p.next.total)}
+            · {p.next.remaining}명 더 모이면 {p.next.label}
           </span>
         )}
       </p>

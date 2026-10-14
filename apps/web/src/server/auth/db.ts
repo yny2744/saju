@@ -272,6 +272,21 @@ async function ensureSchema(): Promise<void> {
   await db.query(`ALTER TABLE face_readings ADD COLUMN IF NOT EXISTS person_id UUID REFERENCES persons(id) ON DELETE SET NULL;`);
   // 후기의 person_id 는 이제 "풀이 번호" - 사주 사람(persons) 또는 관상 풀이(face_readings). 회원 탈퇴 시 user_id 로 함께 지워진다.
   await db.query(`ALTER TABLE reviews DROP CONSTRAINT IF EXISTS reviews_person_id_fkey;`);
+  // 2026-10-14 수정안 10: 연인 궁합 (19,900냥) - 두 사람 모두 persons 행, 구매·결제는 personId 자리에 이 번호
+  await db.query(`
+    CREATE TABLE IF NOT EXISTS couple_readings (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      person_id UUID NOT NULL REFERENCES persons(id) ON DELETE CASCADE,
+      partner_person_id UUID NOT NULL REFERENCES persons(id) ON DELETE CASCADE,
+      paid_at TIMESTAMPTZ,
+      content JSONB,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+    );
+  `);
+  await db.query(`CREATE INDEX IF NOT EXISTS couple_readings_user_idx ON couple_readings(user_id, created_at DESC);`);
+  // 2026-10-14: 상호 작명 열람권이 12가지 운세 "business"(사업·창업)와 같은 이름으로 남던 것을 바로잡는다 (via 가 상품 이름인 줄만)
+  await db.query(`UPDATE topic_unlocks SET topic = 'name_business' WHERE topic = 'business' AND via IN ('business', 'p_business')`);
   await db.query(`CREATE INDEX IF NOT EXISTS pay_orders_user_idx ON pay_orders(user_id, created_at DESC);`);
   schemaReady = true;
 }

@@ -40,6 +40,14 @@ export const PRICE = {
   CORP: 59900,
   /** 브랜딩 작명 - 제품·서비스 브랜드 이름 후보 7개 (2026-10-14 수정안 15) */
   BRAND: 59900,
+  /** 연인 궁합 - 실제 두 사람의 사주 궁합, AI 긴 풀이 (2026-10-14 수정안 10) */
+  COUPLE: 19900,
+  /** 프리미엄 작명 - 12가지 운세 전부 보기 + 신생아·상호 작명 1건 (2026-10-14 수정안 11) */
+  PREMIUM_NAME: 69900,
+  /** 프리미엄 작명 - 12가지 운세 전부 보기 + 기업·브랜딩 작명 1건 (2026-10-14 수정안 11) */
+  PREMIUM_BIZ: 79900,
+  /** 나를 채우는 행운 배경화면 (시험판, 엽전으로만) (2026-10-14 수정안 12) */
+  WALLPAPER: 990,
 } as const;
 
 /** 묶음의 정가(깊게 보기 따로 산 값)·할인액·할인율 - 화면 표시용 */
@@ -49,50 +57,37 @@ export function bundleDiscount(count: number, price: number): { list: number; of
   return { list, off, percent: list > 0 ? Math.round((off / list) * 100) : 0 };
 }
 
-/** 가입 선물 */
-export const WELCOME_GIFT = 990;
+/**
+ * 가입 선물 (2026-10-14 수정안 10): 이제 엽전 선물 대신 "로그인하면 12가지 운세 보기 무료"가 혜택이다.
+ * 예전에 가입해 990냥을 받은 회원의 기록은 그대로 둔다. 새로 주는 가입 선물은 없다(0).
+ */
+export const WELCOME_GIFT = 0;
 
 /**
- * 친구 초대 - 한 바퀴(10명) 안에서 n번째 친구까지의 "누적 총액" (유샘 확정).
- * 2026-10-11 수정안 40: 상품 가격에 맞춤 — 1명 990(운세 보기) · 3명 4,900(깊게 보기) · 5명 9,900(3가지 몰아보기) · 10명 29,500(전부 보기).
- * 그 사이는 1명마다 +990.
- * 11명째부터는 새 바퀴로 처음부터 다시(11명째 = 1명째). 월 한도 없음.
+ * 친구 초대 (2026-10-14 유샘 확정, 수정안 10): 초대한 사람 1,000냥 · 초대받은 사람 1,000냥, 친구마다 똑같이.
+ * 예전의 누적 단계(1·3·5·10명)와 10명 바퀴는 없앴다. 화면에는 "몇 명이면 무엇을 볼 수 있는지"만 안내한다.
  */
-export const INVITE_CUMULATIVE = [990, 1980, 4900, 5890, 9900, 10890, 11880, 12870, 13860, 29900] as const;
+export const INVITE_REWARD = 1000;
+export const INVITEE_GIFT = 1000;
 
-/** 화면 안내용 단계 (친구 몇 명 = 무엇 1회) */
+/** 화면 안내용 (친구 몇 명 = 무엇 1회) - 1,000냥씩 모이면 */
 export const INVITE_MILESTONES: ReadonlyArray<{ n: number; label: string }> = [
-  { n: 1, label: "운세 보기 1회" },
-  { n: 3, label: "깊게 보기 1회" },
-  { n: 5, label: "3가지 몰아보기 1회" },
-  { n: 10, label: "전부 보기 1회" },
+  { n: 1, label: "친구도 1,000냥" },
+  { n: 5, label: "깊게 보기 1회" },
+  { n: 10, label: "3가지 몰아보기 1회" },
+  { n: 30, label: "12가지 운세 전부 보기 1회" },
 ];
-export const INVITE_CYCLE = INVITE_CUMULATIVE.length;
 
-/** n번째(1부터) 친구가 가입했을 때 받는 엽전 */
+/** n번째(1부터) 친구가 가입했을 때 받는 엽전 - 늘 같다 */
 export function inviteRewardFor(nth: number): number {
-  if (!Number.isInteger(nth) || nth < 1) return 0;
-  const pos = ((nth - 1) % INVITE_CYCLE) + 1; // 바퀴 안의 위치 1~10
-  const before = pos === 1 ? 0 : INVITE_CUMULATIVE[pos - 2];
-  return INVITE_CUMULATIVE[pos - 1] - before;
+  return Number.isInteger(nth) && nth >= 1 ? INVITE_REWARD : 0;
 }
 
-/** 지금 바퀴에서 몇 명째까지 왔는지 + 다음 큰 보상까지 남은 인원 */
-export function inviteProgress(invited: number): {
-  round: number;
-  inRound: number;
-  earnedThisRound: number;
-  next: { atCount: number; total: number; remaining: number } | null;
-} {
+/** 지금까지 받은 초대 엽전 + 다음 안내 단계까지 남은 인원 */
+export function inviteProgress(invited: number): { earned: number; next: { atCount: number; total: number; remaining: number; label: string } | null } {
   const n = Math.max(0, Math.floor(invited));
-  const round = Math.floor(n / INVITE_CYCLE) + 1;
-  const inRound = n % INVITE_CYCLE;
-  const earnedThisRound = inRound === 0 ? 0 : INVITE_CUMULATIVE[inRound - 1];
-  // 다음 "큰 보상" 지점: 1명(990)·3명(4,900)·5명(9,900)·10명(29,500)
-  const marks = [1, 3, 5, 10];
-  const mark = marks.find((m) => m > inRound);
-  const next = mark ? { atCount: mark, total: INVITE_CUMULATIVE[mark - 1], remaining: mark - inRound } : null;
-  return { round, inRound, earnedThisRound, next };
+  const m = INVITE_MILESTONES.find((x) => x.n > n);
+  return { earned: n * INVITE_REWARD, next: m ? { atCount: m.n, total: m.n * INVITE_REWARD, remaining: m.n - n, label: m.label } : null };
 }
 
 /** 초대 코드 쿠키 (친구가 초대 링크로 들어오면 30일 기억) */

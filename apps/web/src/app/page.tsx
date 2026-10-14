@@ -3,7 +3,7 @@ import { ReviewStrip } from "@/components/reviews/ReviewStrip";
 import { ProductIcon, type Kind } from "@/components/landing/ProductIcon";
 import { BUSINESS_INFO } from "@/lib/businessInfo";
 import { TOPICS, TOPIC_KEYS } from "@/lib/topics";
-import { CURRENCY_NAME, INVITE_CUMULATIVE, INVITE_MILESTONES, PRICE, formatNyang } from "@/lib/yeopjeon";
+import { CURRENCY_NAME, INVITEE_GIFT, INVITE_MILESTONES, INVITE_REWARD, formatNyang } from "@/lib/yeopjeon";
 import { ScrollTopButton } from "@/components/ScrollTop";
 
 /**
@@ -29,8 +29,8 @@ const FREE: Array<{ icon: Kind; name: string; desc: string; href: string }> = [
   { icon: "manse", name: "만세력", desc: "여덟 글자 · 오행 · 신강신약 · 대운", href: "/start" },
   { icon: "today", name: "오늘·내일의 운세", desc: "내 사주와 그날 기운의 만남", href: "/start?next=fortune" },
   { icon: "tti", name: "띠별 운세", desc: "생년월일 없이 띠만 골라 보는 오늘·내일 운세", href: "/tti" },
+  { icon: "match", name: "연인 궁합", desc: "두 사람의 사주로 보는 끌림과 인연 · 궁합 점수 미리보기", href: "/couple" },
   { icon: "name", name: "이름 풀이 · 개명 · 작명", desc: "내 이름 풀이는 무료 · 개명 · 작명", href: "/name" },
-  { icon: "face", name: "관상 · 인연의 관상", desc: "내 얼굴의 타고난 기질, 그리고 나와 맞는 인연은 어떤 얼굴일까?", href: "/face" },
 ];
 
 const GOLD = "var(--color-gold)";
@@ -92,6 +92,24 @@ export default function LandingPage() {
         {/* 무료로 시작하기 - 첫 화면에 바로 보이게 */}
         <section className="pb-12">
           <SectionTitle title="무료로 시작하기" sub="로그인 없이 바로 볼 수 있어요" />
+          {/* 2026-10-14 수정안 16: 관상 · 인연의 관상 - 그림 카드로 맨 앞에 (최고 후킹) */}
+          <a href="/face" className="mb-3 block overflow-hidden rounded-2xl transition-transform active:scale-[0.98]" style={CARD}>
+            {/* eslint-disable-next-line @next/next/no-img-element -- 정적 그림 */}
+            <img src="/landing/face-ideal.jpg" alt="당신의 이상형 관상 - 눈·코·입·턱선으로 보는 인연의 얼굴 (AI로 만든 예시 그림)" className="block w-full" loading="lazy" />
+            <span className="flex items-center gap-3 px-4 py-4">
+              <span className="min-w-0 flex-1">
+                <span className="block text-[17px] font-bold" style={{ fontFamily: "var(--font-serif)" }}>
+                  관상 · 인연의 관상
+                </span>
+                <span className="mt-0.5 block text-[13px]" style={{ color: "var(--color-ink-soft)", wordBreak: "keep-all" }}>
+                  내 얼굴의 타고난 기질, 그리고 나와 맞는 인연은 어떤 얼굴일까?
+                </span>
+              </span>
+              <span className="shrink-0 rounded-full px-2.5 py-0.5 text-[13px] font-bold" style={{ color: "var(--color-accent)", border: "1px solid var(--color-gold-line)" }}>
+                무료
+              </span>
+            </span>
+          </a>
           <div className="space-y-3">
             {FREE.map((p) => (
               <a key={p.name} href={p.href} className="flex items-center gap-4 rounded-2xl px-4 py-4 transition-transform active:scale-[0.98]" style={CARD}>
@@ -119,10 +137,10 @@ export default function LandingPage() {
 
         {/* 엽전으로 보는 12가지 운세 (수정안 29: 깊게 보기 4,900 표시 없음) */}
         <section id="fortunes" className="scroll-mt-4 py-12">
-          <SectionTitle title={`${CURRENCY_NAME}으로 보는 12가지 운세`} sub="궁금한 운세를 하나 골라 보세요" />
+          <SectionTitle title="12가지 운세" sub="궁금한 운세를 골라 보세요" />
           <div className="mb-5 flex justify-center">
             <span className="rounded-full px-3 py-1.5 text-[12.5px] font-semibold" style={{ backgroundColor: "var(--color-accent-soft)", color: "var(--color-accent)" }}>
-              운세 하나 {formatNyang(PRICE.BASIC)}
+              로그인하면 12가지 모두 무료
             </span>
           </div>
           <ul className="grid grid-cols-3 gap-2">
@@ -141,7 +159,7 @@ export default function LandingPage() {
             ))}
           </ul>
 
-          {/* 가입 선물 (2026-10-13: 12가지 운세 바로 아래, 감청·금빛으로 무게감 있게) */}
+          {/* 로그인 혜택 (2026-10-14 수정안 10: 엽전 선물 대신 12가지 운세 무료, "회원가입" 말은 쓰지 않는다) */}
           <a
             href="/login"
             className="mt-6 block rounded-2xl px-5 py-6 text-center"
@@ -151,13 +169,13 @@ export default function LandingPage() {
               錢
             </span>
             <span className="mt-3 block text-[19px] font-bold" style={{ color: "#f3e7c6", fontFamily: "var(--font-serif)" }}>
-              가입하면 {CURRENCY_NAME} 선물
+              로그인하면 12가지 운세가 무료
             </span>
             <span className="mt-1 block text-[14px]" style={{ color: "#c9cfda" }}>
-              위 운세 가운데 궁금한 하나를 선물로 먼저 열어 보세요
+              카카오나 이메일로 로그인만 하면 위 운세를 모두 바로 볼 수 있어요
             </span>
             <span className="mx-auto mt-4 block max-w-[240px] rounded-xl py-3 text-[15px] font-bold" style={{ background: "linear-gradient(180deg,#e2c47e,#c9a55a)", color: "#16213a" }}>
-              카카오로 가입하기
+              로그인하고 운세 보기
             </span>
           </a>
         </section>
@@ -171,24 +189,24 @@ export default function LandingPage() {
 
         {/* 친구 초대 */}
         <section className="py-12">
-          <SectionTitle title={`친구 초대하고 ${CURRENCY_NAME} 받기`} sub="친구도 가입 선물을 받아요" />
-          <div className="grid grid-cols-2 gap-2 text-center sm:grid-cols-4">
-            {INVITE_MILESTONES.map((x) => (
+          <SectionTitle title={`친구 초대하고 ${CURRENCY_NAME} 받기`} sub={`친구 한 명마다 나 ${formatNyang(INVITE_REWARD)} · 친구도 ${formatNyang(INVITEE_GIFT)}`} />
+          <div className="grid grid-cols-3 gap-2 text-center">
+            {INVITE_MILESTONES.filter((x) => x.n > 1).map((x) => (
               <div key={x.n} className="rounded-2xl px-2 py-4" style={CARD}>
                 <p className="text-[13px]" style={{ color: "var(--color-ink-soft)" }}>
                   친구 {x.n}명
                 </p>
                 <p className="mt-1 text-[17px] font-bold" style={{ color: GOLD }}>
-                  {formatNyang(INVITE_CUMULATIVE[x.n - 1])}
+                  {formatNyang(x.n * INVITE_REWARD)}
                 </p>
-                <p className="mt-0.5 text-[11px]" style={{ color: "var(--color-ink-faint)" }}>
+                <p className="mt-0.5 text-[11px] leading-snug" style={{ color: "var(--color-ink-faint)" }}>
                   {x.label}
                 </p>
               </div>
             ))}
           </div>
           <p className="mt-3 text-center text-[13px]" style={{ color: "var(--color-ink-faint)" }}>
-            10명이 넘으면 처음부터 다시 쌓여요
+            모은 {CURRENCY_NAME}은 어떤 풀이에든 먼저 쓰이고, 모자란 만큼만 결제해요
           </p>
           <a href="/mypage" className="mt-5 block rounded-2xl py-4 text-center text-[16px] font-bold" style={{ backgroundColor: "#16213a", color: "#f3e7c6", border: "1px solid var(--color-gold-line)", fontFamily: "var(--font-serif)" }}>
             내 초대 링크 받기

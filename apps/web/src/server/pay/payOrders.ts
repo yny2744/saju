@@ -104,6 +104,10 @@ interface OrderRow {
 
 function destination(o: Pick<OrderRow, "person_id" | "mode" | "topics">): string {
   if (o.mode === "face") return `/face/paid/${o.person_id}?paid=1`;
+  if (o.mode === "couple") return `/couple/${o.person_id}?paid=1`;
+  if (o.mode === "wallpaper") return `/person/${o.person_id}/wallpaper`;
+  if (o.mode === "p_naming") return `/person/${o.person_id}/name?kind=naming&paid=1`;
+  if (o.mode === "p_business" || o.mode === "p_corp" || o.mode === "p_brand") return `/person/${o.person_id}/business?kind=${o.mode.slice(2)}&paid=1`;
   const base = `/person/${o.person_id}`;
   if (o.mode === "naming" || o.mode === "rename") return `${base}/name?kind=${o.mode}&paid=1`;
   if (o.mode === "business" || o.mode === "corp" || o.mode === "brand") return `${base}/business?kind=${o.mode}&paid=1`;

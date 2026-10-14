@@ -12,7 +12,7 @@ import { ReviewBox } from "@/components/reviews/ReviewBox";
 import { ReviewStrip } from "@/components/reviews/ReviewStrip";
 import { BusinessChars, BusinessFacts } from "@/components/BusinessReadingCard";
 import { notifyYeopjeonChanged, reportClientError, useYeopjeon } from "@/components/yeopjeon/useYeopjeon";
-import { CURRENCY_NAME, formatNyang } from "@/lib/yeopjeon";
+import { CURRENCY_NAME, PRICE, formatNyang } from "@/lib/yeopjeon";
 import { BIZ_INFO, FEELINGS, INDUSTRIES, isBizKind, type BizKind, type FeelingKey } from "@/lib/businessName";
 import { ELEMENT_HANJA } from "@/lib/manseView";
 import type { ElementKo } from "@/lib/pillarView";
@@ -72,21 +72,29 @@ function Body({ id }: { id: string }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [load]);
 
-  async function buy() {
+  // 수정안 11: 프리미엄 작명 (12가지 운세 전부 보기 + 이 작명)
+  const premium = `p_${kind}` as "p_business" | "p_corp" | "p_brand";
+  const premiumPrice = (premium as string) === "p_naming" || premium === "p_business" ? PRICE.PREMIUM_NAME : PRICE.PREMIUM_BIZ;
+  const [payMode, setPayMode] = useState<string>(kind);
+
+  async function buy(m: string = kind) {
     setBusy(true);
     setNotice(null);
     try {
       const r = await fetch(`/api/persons/${encodeURIComponent(id)}/purchase`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ mode: kind, topics: [] }),
+        body: JSON.stringify({ mode: m, topics: [] }),
       });
       const body = await r.json().catch(() => ({}));
       if (r.ok) {
         reloadWallet();
         notifyYeopjeonChanged();
         await load();
-      } else if (body?.error?.code === "INSUFFICIENT_YEOPJEON") setPayOpen(true);
+      } else if (body?.error?.code === "INSUFFICIENT_YEOPJEON") {
+        setPayMode(m);
+        setPayOpen(true);
+      }
       else setNotice(body?.error?.message ?? "잠시 후 다시 시도해 주세요.");
     } catch (e) {
       reportClientError(`${T} 열기`, String(e));
@@ -233,9 +241,19 @@ function Body({ id }: { id: string }) {
             내 {CURRENCY_NAME} {formatNyang(wallet?.balance ?? 0)}
             {(wallet?.balance ?? 0) < state.price && " · 모자란 만큼만 카드·간편결제"}
           </p>
-          <button type="button" disabled={busy} onClick={buy} className="btn-primary mt-4 disabled:opacity-50">
+          <button type="button" disabled={busy} onClick={() => buy()} className="btn-primary mt-4 disabled:opacity-50">
             {busy ? "여는 중..." : (wallet?.balance ?? 0) >= state.price ? `${CURRENCY_NAME}으로 열기` : "결제하고 열기"}
           </button>
+          {true && (
+            <button type="button" disabled={busy} onClick={() => buy(premium)} className="mt-2.5 block w-full rounded-xl px-4 py-3 text-center disabled:opacity-50" style={{ border: "1px solid var(--color-gold-line)", backgroundColor: "var(--color-gold-soft)" }}>
+              <span className="block text-[15px] font-bold" style={{ fontFamily: "var(--font-serif)" }}>
+                프리미엄 · 12가지 운세 전부 보기와 함께
+              </span>
+              <span className="block text-[13px]" style={{ color: "var(--color-ink-soft)" }}>
+                <s>{formatNyang(state.price + PRICE.BUNDLE12)}</s> → <b>{formatNyang(premiumPrice)}</b>
+              </span>
+            </button>
+          )}
         </section>
       )}
 
@@ -315,12 +333,12 @@ function Body({ id }: { id: string }) {
       {payOpen && (
         <PayDialog
           personId={id}
-          mode={kind}
+          mode={payMode as typeof kind}
           topics={[]}
           backTo={`/person/${id}/business?kind=${kind}`}
           onEnough={() => {
             setPayOpen(false);
-            buy();
+            buy(payMode);
           }}
           onClose={() => setPayOpen(false)}
         />
