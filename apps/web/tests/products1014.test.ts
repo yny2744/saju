@@ -2,7 +2,7 @@ import { calculateSaju } from "saju-engine";
 import { branchRelation, coupleMatch, stemRelation } from "@/lib/coupleMatch";
 import { wallpaperSpec } from "@/lib/wallpaper";
 import { planPurchase, isPremiumMode, premiumBase } from "@/server/readings/readings";
-import { PRICE } from "@/lib/yeopjeon";
+import { PREMIUM_ON, PRICE } from "@/lib/yeopjeon";
 
 const a = calculateSaju({ calendarType: "solar", date: "1967-04-03", time: "04:50", gender: "male" }, 2026);
 const b = calculateSaju({ calendarType: "solar", date: "1970-09-21", time: "11:00", gender: "female" }, 2026);
@@ -27,10 +27,16 @@ describe("2026-10-14 수정안 10·11·12", () => {
   it("프리미엄 작명: 전부 보기 주제 + 가격", () => {
     expect(isPremiumMode("p_corp")).toBe(true);
     expect(premiumBase("p_corp")).toBe("corp");
+    if (!PREMIUM_ON) {
+      // 2026-10-17 포트원 심사 기간: 프리미엄은 숨기고 서버에서도 팔지 않는다
+      expect(() => planPurchase("p_naming", [], [])).toThrow();
+      expect(PRICE.PREMIUM_NAME).toBe(39900);
+      return;
+    }
     const p = planPurchase("p_naming", [], []);
     expect(p.price).toBe(PRICE.PREMIUM_NAME);
     expect(p.topics.length).toBeGreaterThanOrEqual(12);
-    expect(planPurchase("p_brand", [], []).price).toBe(79900);
+    expect(planPurchase("p_brand", [], []).price).toBe(39900);
     // 운세를 이미 다 열었어도 작명은 살 수 있다 (예외 없음)
     expect(() => planPurchase("p_business", [], p.topics)).not.toThrow();
   });

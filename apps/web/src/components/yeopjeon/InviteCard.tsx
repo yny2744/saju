@@ -1,13 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import { CURRENCY_NAME, INVITEE_GIFT, INVITE_MILESTONES, INVITE_REWARD, formatNyang, inviteProgress } from "@/lib/yeopjeon";
+import { CURRENCY_NAME, INVITEE_GIFT, INVITE_REWARD, formatNyang } from "@/lib/yeopjeon";
 import { inviteUrl, shareInvite } from "./useYeopjeon";
 
 /** 친구 초대 카드 - 내 복주머니·풀이 화면에서 같이 쓴다 */
 export function InviteCard({ refCode, invited }: { refCode: string; invited: number }) {
   const [msg, setMsg] = useState("");
-  const p = inviteProgress(invited);
 
   async function onShare() {
     const r = await shareInvite(refCode);
@@ -23,20 +22,11 @@ export function InviteCard({ refCode, invited }: { refCode: string; invited: num
         <li>
           · 친구 한 명마다 나에게 <b>{formatNyang(INVITE_REWARD)}</b>, 친구에게도 <b>{formatNyang(INVITEE_GIFT)}</b>
         </li>
-        {INVITE_MILESTONES.filter((m) => m.n > 1).map((m) => (
-          <li key={m.n}>
-            · 친구 {m.n}명이면 {formatNyang(m.n * INVITE_REWARD)} ({m.label})
-          </li>
-        ))}
+        <li>· {formatNyang(INVITE_REWARD)}이면 수능운 가볍게 보기를 바로 볼 수 있어요</li>
+        <li>· 초대 인원 제한 없이 한 명마다 계속 쌓여요</li>
       </ul>
       <p className="mt-3 text-[14px]">
-        지금까지 <b>{invited}명</b> 초대 · {formatNyang(p.earned)}
-        {p.next && (
-          <span style={{ color: "var(--color-ink-faint)" }}>
-            {" "}
-            · {p.next.remaining}명 더 모이면 {p.next.label}
-          </span>
-        )}
+        지금까지 <b>{invited}명</b> 초대
       </p>
       <button
         type="button"

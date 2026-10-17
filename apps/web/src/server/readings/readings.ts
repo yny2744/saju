@@ -3,11 +3,12 @@ import type { PoolClient } from "pg";
 import type { SajuJson } from "saju-engine";
 import { db } from "@/server/auth/db";
 import { InsufficientYeopjeonError } from "@/server/yeopjeon/ledger";
-import { PRICE } from "@/lib/yeopjeon";
+import { PREMIUM_ON, PRICE } from "@/lib/yeopjeon";
 import { isFocus, type Focus } from "@/lib/focus";
 import { EXTRA_KEYS, TOPICS, TOPIC_KEYS, isAnyTopicKey, isTopicKey, type AnyTopicKey, type TopicKey } from "@/lib/topics";
 import type { BasicContent, DeepContent, ReadingContent } from "./generateReading";
 import type { BasicReadingV2 } from "@/lib/basic/compose";
+import { examSeason, examUnlockTopic, SEASON_INFO } from "@/lib/suneung";
 
 /** 운세 보기 저장 내용: 2026-10-10부터 엔진 풀이(v2), 그 전에 산 것은 AI 풀이(BasicContent) */
 export type StoredBasic = BasicContent | BasicReadingV2;
@@ -62,14 +63,21 @@ export interface PersonSummary {
   wallpaper: boolean;
   /** 연 가게·회사·브랜드 이름 상품 (수정안 15) */
   biz: Array<"business" | "corp" | "brand">;
+  /** 지금 시즌 수능운(합격운·새 출발운)을 열었는지 (수정안 17) */
+  exam: { light: boolean; deep: boolean };
   createdAt: string;
 }
 
-export type PurchaseMode = "basic" | "deep" | "bundle3" | "bundle12" | NamingMode | "face" | "business" | "corp" | "brand" | "couple" | PremiumMode | "wallpaper";
+export type PurchaseMode = "basic" | "deep" | "bundle3" | "bundle12" | NamingMode | "face" | "business" | "corp" | "brand" | "couple" | PremiumMode | "wallpaper" | ExamMode;
+/** 수능운 (수정안 17): exam 가볍게 보기 990 / exam_deep 깊게 보기 4,900 - 시즌마다 topic_unlocks에 exam_<시즌>[_deep] */
+export type ExamMode = "exam" | "exam_deep";
+export function isExamMode(v: unknown): v is ExamMode {
+  return v === "exam" || v === "exam_deep";
+}
 /** 작명·개명 (수정안 46) - 주제가 아니라 사람 하나에 한 번 여는 상품. topic_unlocks에 topic = 상품 이름으로 남긴다 */
 export type NamingMode = "naming" | "rename";
-export const PURCHASE_MODES: PurchaseMode[] = ["basic", "deep", "bundle3", "bundle12", "naming", "rename", "face", "business", "corp", "brand", "couple", "p_naming", "p_business", "p_corp", "p_brand", "wallpaper"];
-/** 프리미엄 작명 (수정안 11): 12가지 운세 전부 보기 + 작명 1건. p_naming·p_business 69,900 / p_corp·p_brand 79,900 */
+export const PURCHASE_MODES: PurchaseMode[] = ["basic", "deep", "bundle3", "bundle12", "naming", "rename", "face", "business", "corp", "brand", "couple", "p_naming", "p_business", "p_corp", "p_brand", "wallpaper", "exam", "exam_deep"];
+/** 프리미엄 작명 (수정안 11): 12가지 운세 전부 보기 + 작명 1건. 심사용 모두 39,900 (PRICE 참고) */
 export type PremiumMode = "p_naming" | "p_business" | "p_corp" | "p_brand";
 export function isPremiumMode(v: unknown): v is PremiumMode {
   return v === "p_naming" || v === "p_business" || v === "p_corp" || v === "p_brand";
@@ -215,6 +223,11 @@ export async function getPersonSummary(userId: string, personId: string): Promis
     naming: unlocks.rows.map((u) => u.topic).filter(isNamingMode),
     business: unlocks.rows.some((u) => u.topic === unlockTopic(BUSINESS_MODE)),
     wallpaper: unlocks.rows.some((u) => u.topic === "wallpaper"),
+    exam: (() => {
+      const season = examSeason();
+      const has = (deep: boolean) => unlocks.rows.some((u) => u.topic === examUnlockTopic(season, deep));
+      return { light: has(false), deep: has(true) };
+    })(),
     biz: unlocks.rows
       .map((u) => (u.topic === unlockTopic(BUSINESS_MODE) ? "business" : u.topic))
       .filter((t): t is "business" | "corp" | "brand" => t === "business" || t === "corp" || t === "brand"),
@@ -367,8 +380,11 @@ export function planPurchase(mode: PurchaseMode, requested: unknown, owned: AnyT
   if (mode === "corp") return { topics: [], price: PRICE.CORP };
   if (mode === "brand") return { topics: [], price: PRICE.BRAND };
   if (mode === "wallpaper") return { topics: [], price: PRICE.WALLPAPER };
+  if (mode === "exam") return { topics: [], price: PRICE.EXAM };
+  if (mode === "exam_deep") return { topics: [], price: PRICE.EXAM_DEEP };
   const ownedSet = new Set(owned);
   if (isPremiumMode(mode)) {
+    if (!PREMIUM_ON) throw new PurchaseError("INVALID_TOPICS", "프리미엄 작명은 잠시 쉬고 있어요. 작명과 12가지 운세 전부 보기를 따로 열어 주세요.");
     const all: AnyTopicKey[] = [...TOPIC_KEYS, ...EXTRA_KEYS];
     return { topics: all.filter((t) => !ownedSet.has(t)), price: mode === "p_naming" || mode === "p_business" ? PRICE.PREMIUM_NAME : PRICE.PREMIUM_BIZ };
   }
@@ -394,7 +410,7 @@ export function planPurchase(mode: PurchaseMode, requested: unknown, owned: AnyT
   return { topics, price: mode === "deep" ? PRICE.DEEP : PRICE.BUNDLE3 };
 }
 
-const MODE_LABEL: Record<PurchaseMode, string> = { basic: "운세 보기", deep: "깊게 보기", bundle3: "몰아보기", bundle12: "전부 보기", naming: "신생아 작명", rename: "개명 추천", face: "관상 심층 풀이", business: "상호 작명", corp: "기업 작명", brand: "브랜딩 작명", couple: "연인 궁합", p_naming: "프리미엄 신생아 작명", p_business: "프리미엄 상호 작명", p_corp: "프리미엄 기업 작명", p_brand: "프리미엄 브랜딩 작명", wallpaper: "행운 배경화면" };
+const MODE_LABEL: Record<PurchaseMode, string> = { basic: "운세 보기", deep: "깊게 보기", bundle3: "몰아보기", bundle12: "전부 보기", naming: "신생아 작명", rename: "개명 추천", face: "관상 심층 풀이", business: "상호 작명", corp: "기업 작명", brand: "브랜딩 작명", couple: "연인 궁합", p_naming: "프리미엄 신생아 작명", p_business: "프리미엄 상호 작명", p_corp: "프리미엄 기업 작명", p_brand: "프리미엄 브랜딩 작명", wallpaper: "행운 배경화면", exam: "수능운 가볍게 보기", exam_deep: "수능운 깊게 보기" };
 
 export async function purchaseTopics(args: { userId: string; personId: string; mode: PurchaseMode; topics: unknown }): Promise<AnyTopicKey[]> {
   if (!UUID_RE.test(args.personId)) throw new PurchaseError("NOT_FOUND", "풀이 대상을 찾을 수 없어요.");
@@ -427,6 +443,19 @@ export async function purchaseWithClient(
       `[${MODE_LABEL.face}] ${plan.nickname}`,
       `face:${args.personId}`,
     ]);
+    return [];
+  }
+  if (isExamMode(args.mode)) {
+    const season = examSeason();
+    await client.query(`INSERT INTO topic_unlocks (person_id, topic, via) VALUES ($1, $2, $3)`, [args.personId, examUnlockTopic(season, args.mode === "exam_deep"), args.mode]);
+    if (plan.price > 0) {
+      await client.query(`INSERT INTO bokchae_ledger (user_id, amount, kind, label, ref) VALUES ($1, $2, 'spend', $3, $4)`, [
+        args.userId,
+        -plan.price,
+        `[${SEASON_INFO[season].title} ${args.mode === "exam_deep" ? "깊게 보기" : "가볍게 보기"}] ${plan.nickname}`,
+        `${args.mode}:${args.personId}:${season}`,
+      ]);
+    }
     return [];
   }
   if (isNameProductMode(args.mode)) {
@@ -489,6 +518,9 @@ export async function planForPerson(
   if (isPremiumMode(args.mode) && owned.rows.some((r) => r.topic === unlockTopic(premiumBase(args.mode as PremiumMode)))) {
     throw new PurchaseError("ALREADY_OWNED", "이 작명은 이미 열려 있어요. 12가지 운세 전부 보기는 따로 열 수 있어요.");
   }
+  if (isExamMode(args.mode) && owned.rows.some((r) => r.topic === examUnlockTopic(examSeason(), args.mode === "exam_deep"))) {
+    throw new PurchaseError("ALREADY_OWNED", "이미 열려 있어요. 다시 열어도 엽전은 빠지지 않아요.");
+  }
   if (isNameProductMode(args.mode) && owned.rows.some((r) => r.topic === unlockTopic(args.mode))) {
     throw new PurchaseError("ALREADY_OWNED", "이미 열려 있어요. 다시 열어도 엽전은 빠지지 않아요.");
   }
@@ -513,6 +545,7 @@ export function productName(mode: PurchaseMode, topics: AnyTopicKey[]): string {
   if (mode === BUSINESS_MODE) return "상호 작명";
   if (mode === "corp") return "기업 작명";
   if (mode === "wallpaper") return "나를 채우는 행운 배경화면";
+  if (isExamMode(mode)) return `${SEASON_INFO[examSeason()].title} ${mode === "exam_deep" ? "깊게 보기" : "가볍게 보기"}`;
   if (mode === "brand") return "브랜딩 작명";
   return "12가지 운세 전부 보기";
 }

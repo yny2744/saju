@@ -16,7 +16,8 @@ export const CURRENCY_NAME = "엽전";
 export const CURRENCY_UNIT = "냥";
 
 /** 가격 (냥) */
-/** 2026-10-14 유샘 확정: 만 원 위 상품도 900으로 끝냄 (4,900 · 9,900 · 19,900 · 29,900 · 49,900 · 59,900 · 69,900 · 79,900) */
+/** 2026-10-14 유샘 확정: 만 원 위 상품도 900으로 끝냄.
+ *  2026-10-17 포트원 심사용: 작명은 모두 29,900, 프리미엄 작명은 39,900 (심사 후 다시 조정 - 예전 값 신생아·상호 49,900 / 기업·브랜딩 59,900 / 프리미엄 69,900·79,900) */
 export const PRICE = {
   /** 운세 보기 - 12가지 중 고른 운세 하나 (2026-10-09 수정안 20) */
   BASIC: 990,
@@ -31,24 +32,34 @@ export const PRICE = {
   /** 개명 추천 - 지금 이름 진단 + 새 이름 후보 5개 (2026-10-12 수정안 46) */
   RENAME: 29900,
   /** 신생아(아이) 작명 - 후보 7개 + 이름 이야기 (2026-10-12 수정안 46) */
-  NAMING: 49900,
+  NAMING: 29900,
   /** 관상 심층 풀이 · 인연 궁합 - AI가 사진(동의 시)과 얼굴 비율로 깊게 풀이 (2026-10-12 수정안 53) */
   FACE: 4900,
   /** 상호 작명 - 대표자 사주와 업종 오행에 맞춘 가게·회사 이름 후보 7개 (2026-10-13 수정안 63) */
-  BUSINESS: 49900,
+  BUSINESS: 29900,
   /** 기업 작명 - 회사·법인 이름 후보 7개 (한자·한글·영문 표기) (2026-10-14 수정안 15) */
-  CORP: 59900,
+  CORP: 29900,
   /** 브랜딩 작명 - 제품·서비스 브랜드 이름 후보 7개 (2026-10-14 수정안 15) */
-  BRAND: 59900,
+  BRAND: 29900,
   /** 연인 궁합 - 실제 두 사람의 사주 궁합, AI 긴 풀이 (2026-10-14 수정안 10) */
   COUPLE: 19900,
   /** 프리미엄 작명 - 12가지 운세 전부 보기 + 신생아·상호 작명 1건 (2026-10-14 수정안 11) */
-  PREMIUM_NAME: 69900,
+  PREMIUM_NAME: 39900,
   /** 프리미엄 작명 - 12가지 운세 전부 보기 + 기업·브랜딩 작명 1건 (2026-10-14 수정안 11) */
-  PREMIUM_BIZ: 79900,
+  PREMIUM_BIZ: 39900,
   /** 나를 채우는 행운 배경화면 (시험판, 엽전으로만) (2026-10-14 수정안 12) */
   WALLPAPER: 990,
+  /** 수능운(시즌에 따라 합격운·새 출발운) 가볍게 보기 - AI 없이 엔진 (2026-10-17 수정안 17) */
+  EXAM: 990,
+  /** 수능운 깊게 보기 - AI 긴 풀이 (2026-10-17 수정안 17) */
+  EXAM_DEEP: 4900,
 } as const;
+
+/**
+ * 프리미엄 작명(작명 + 12가지 운세 전부 보기) 판매 여부 (2026-10-17 유샘: 포트원 심사 기간에는 단추 자체를 숨김).
+ * 심사가 끝나면 true로 바꾸면 화면 단추·안내와 서버 구매가 함께 열린다.
+ */
+export const PREMIUM_ON = false;
 
 /** 묶음의 정가(깊게 보기 따로 산 값)·할인액·할인율 - 화면 표시용 */
 export function bundleDiscount(count: number, price: number): { list: number; off: number; percent: number } {
@@ -58,36 +69,21 @@ export function bundleDiscount(count: number, price: number): { list: number; of
 }
 
 /**
- * 가입 선물 (2026-10-14 수정안 10): 이제 엽전 선물 대신 "로그인하면 12가지 운세 보기 무료"가 혜택이다.
- * 예전에 가입해 990냥을 받은 회원의 기록은 그대로 둔다. 새로 주는 가입 선물은 없다(0).
+ * 가입(로그인) 선물 (2026-10-17 유샘 확정): 990냥 - 수능운 가볍게 보기(990)를 바로 무료로 볼 수 있는 금액.
+ * 회원마다 한 번만 (장부 kind "welcome"). 12가지 운세 보기는 로그인하면 그대로 무료.
  */
-export const WELCOME_GIFT = 0;
+export const WELCOME_GIFT = 990;
 
 /**
- * 친구 초대 (2026-10-14 유샘 확정, 수정안 10): 초대한 사람 1,000냥 · 초대받은 사람 1,000냥, 친구마다 똑같이.
- * 예전의 누적 단계(1·3·5·10명)와 10명 바퀴는 없앴다. 화면에는 "몇 명이면 무엇을 볼 수 있는지"만 안내한다.
+ * 친구 초대 (2026-10-17 유샘 확정): 단계 없이 한 명마다 초대한 사람 990냥 · 초대받은 친구 990냥.
+ * 990냥이면 수능운 가볍게 보기·행운 배경화면 등 990냥 상품 하나를 바로 볼 수 있다.
  */
-export const INVITE_REWARD = 1000;
-export const INVITEE_GIFT = 1000;
+export const INVITE_REWARD = 990;
+export const INVITEE_GIFT = 990;
 
-/** 화면 안내용 (친구 몇 명 = 무엇 1회) - 1,000냥씩 모이면 */
-export const INVITE_MILESTONES: ReadonlyArray<{ n: number; label: string }> = [
-  { n: 1, label: "친구도 1,000냥" },
-  { n: 5, label: "깊게 보기 1회" },
-  { n: 10, label: "3가지 몰아보기 1회" },
-  { n: 30, label: "12가지 운세 전부 보기 1회" },
-];
-
-/** n번째(1부터) 친구가 가입했을 때 받는 엽전 - 늘 같다 */
+/** n번째(1부터) 친구가 가입했을 때 초대한 사람이 받는 엽전 - 늘 같은 금액 */
 export function inviteRewardFor(nth: number): number {
   return Number.isInteger(nth) && nth >= 1 ? INVITE_REWARD : 0;
-}
-
-/** 지금까지 받은 초대 엽전 + 다음 안내 단계까지 남은 인원 */
-export function inviteProgress(invited: number): { earned: number; next: { atCount: number; total: number; remaining: number; label: string } | null } {
-  const n = Math.max(0, Math.floor(invited));
-  const m = INVITE_MILESTONES.find((x) => x.n > n);
-  return { earned: n * INVITE_REWARD, next: m ? { atCount: m.n, total: m.n * INVITE_REWARD, remaining: m.n - n, label: m.label } : null };
 }
 
 /** 초대 코드 쿠키 (친구가 초대 링크로 들어오면 30일 기억) */

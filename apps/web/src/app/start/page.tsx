@@ -306,7 +306,9 @@ function StartForm({ member }: { member: MemberInfo | null }) {
           <>
             <h1 className="text-[26px] font-bold leading-snug">{intentLabel(intent)}</h1>
             <p className="mt-2 text-sm leading-relaxed" style={{ color: "var(--color-ink-soft)" }}>
-              {baby
+              {intent.kind === "exam"
+                ? "수험생의 이름과 생년월일을 알려 주세요. 시험날 기운과 행운 꾸러미를 사주로 풀어 드려요."
+                : baby
                 ? "아기의 성(姓)과 태어난 날·시간을 알려 주세요. 사주에 아쉬운 기운을 채우는 이름을 골라 드려요."
                 : intent.kind === "name" && (intent.mode === "business" || intent.mode === "corp" || intent.mode === "brand")
                   ? `${intent.mode === "brand" ? "브랜드" : intent.mode === "corp" ? "회사" : "가게"}를 이끌 대표자의 이름과 생년월일을 알려 주세요. 대표자 사주와 업종에 맞는 이름을 골라 드려요.`

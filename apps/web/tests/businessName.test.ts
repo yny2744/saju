@@ -36,7 +36,7 @@ describe("수정안 63 - 상호 풀이 · 상호 작명", () => {
     expect(readBusinessName("", null, null, null, names)).toBeNull();
   });
   it("가격 · 들어오는 길", () => {
-    expect(PRICE.BUSINESS).toBe(49900);
+    expect(PRICE.BUSINESS).toBe(29900);
     const i = parseIntent(new URLSearchParams("name=business"))!;
     expect(i).toEqual({ kind: "name", mode: "business" });
     expect(intentDestination("abc", i)).toBe("/person/abc/business?kind=business");

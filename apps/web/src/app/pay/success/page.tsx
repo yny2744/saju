@@ -15,10 +15,16 @@ function SuccessBody() {
   useEffect(() => {
     if (started.current) return;
     started.current = true;
+    // 포트원은 결제에 실패·취소하면 code·message를 붙여 돌려보낸다
+    if (q.get("code")) {
+      setError(/cancel|취소/i.test(`${q.get("code")} ${q.get("message") ?? ""}`) ? "결제를 취소했어요. 돈은 빠지지 않았어요." : q.get("message") || "결제가 되지 않았어요.");
+      return;
+    }
     fetch("/api/pay/confirm", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ paymentKey: q.get("paymentKey"), orderId: q.get("orderId"), amount: Number(q.get("amount")) }),
+      // 토스는 paymentKey, 포트원은 paymentId(= 주문 번호)
+      body: JSON.stringify({ paymentKey: q.get("paymentKey") ?? q.get("paymentId"), orderId: q.get("orderId"), amount: Number(q.get("amount")) }),
     })
       .then(async (r) => {
         const body = await r.json().catch(() => ({}));

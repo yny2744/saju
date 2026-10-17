@@ -1,5 +1,5 @@
 import { calculateSaju } from "saju-engine";
-import { INVITEE_GIFT, INVITE_REWARD, PRICE, WELCOME_GIFT, bundleDiscount, displayLedgerLabel, formatNyang, inviteProgress, inviteRewardFor } from "@/lib/yeopjeon";
+import { INVITEE_GIFT, INVITE_REWARD, PRICE, WELCOME_GIFT, bundleDiscount, displayLedgerLabel, formatNyang, inviteRewardFor } from "@/lib/yeopjeon";
 import { intentDestination, intentLabel, intentQuery, parseIntent } from "@/lib/intent";
 import { isAuthEnabled, isLoginRequired } from "@/lib/launchMode";
 import { TOPIC_KEYS, EXTRA_KEYS, isTopicKey } from "@/lib/topics";
@@ -26,24 +26,16 @@ const saju = calculateSaju({ calendarType: "solar", date: "1967-04-03", time: "0
 
 describe("엽전 금액 (2026-10-08 유샘 확정)", () => {
   it("가격", () => {
-    expect(PRICE).toEqual({ BASIC: 990, TASTE: 990, DEEP: 4900, BUNDLE3: 9900, BUNDLE12: 29900, RENAME: 29900, NAMING: 49900, FACE: 4900, BUSINESS: 49900, CORP: 59900, BRAND: 59900, COUPLE: 19900, PREMIUM_NAME: 69900, PREMIUM_BIZ: 79900, WALLPAPER: 990 });
+    expect(PRICE).toEqual({ BASIC: 990, TASTE: 990, DEEP: 4900, BUNDLE3: 9900, BUNDLE12: 29900, RENAME: 29900, NAMING: 29900, FACE: 4900, BUSINESS: 29900, CORP: 29900, BRAND: 29900, COUPLE: 19900, PREMIUM_NAME: 39900, PREMIUM_BIZ: 39900, WALLPAPER: 990, EXAM: 990, EXAM_DEEP: 4900 });
     expect(formatNyang(29500)).toBe("29,500냥");
   });
 
-  it("친구 초대 (수정안 10): 초대한 사람 1,000 · 초대받은 사람 1,000, 친구마다 같다 · 가입 선물 엽전은 없다", () => {
-    expect(INVITE_REWARD).toBe(1000);
-    expect(INVITEE_GIFT).toBe(1000);
-    expect(WELCOME_GIFT).toBe(0);
-    expect(inviteRewardFor(1)).toBe(1000);
-    expect(inviteRewardFor(37)).toBe(1000);
+  it("친구 초대 (2026-10-17): 한 명마다 990 · 친구도 990 · 가입 선물 990", () => {
+    expect([1, 2, 3, 10, 11, 50].map(inviteRewardFor)).toEqual([990, 990, 990, 990, 990, 990]);
     expect(inviteRewardFor(0)).toBe(0);
-  });
-
-  it("진행 상황", () => {
-    expect(inviteProgress(0)).toMatchObject({ earned: 0, next: { atCount: 1, remaining: 1 } });
-    expect(inviteProgress(3)).toMatchObject({ earned: 3000, next: { atCount: 5, total: 5000, remaining: 2 } });
-    expect(inviteProgress(12)).toMatchObject({ earned: 12000, next: { atCount: 30, remaining: 18 } });
-    expect(inviteProgress(40).next).toBeNull();
+    expect(INVITE_REWARD).toBe(990);
+    expect(INVITEE_GIFT).toBe(990);
+    expect(WELCOME_GIFT).toBe(990);
   });
 
   it("예전 장부 기록의 '복채'는 '엽전'으로 보인다", () => {

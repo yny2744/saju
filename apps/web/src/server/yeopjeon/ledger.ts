@@ -75,8 +75,8 @@ export async function inviteStats(userId: string): Promise<{ invited: number }> 
 
 /**
  * 새 회원이 필수 동의를 처음 마친 순간 한 번 호출된다.
- *  - (가입 선물 엽전은 2026-10-14부터 없음 - 로그인 혜택은 운세 보기 무료)
- *  - 초대 코드가 있으면(자기 자신 제외) 초대한 사람 1,000냥 + 초대받은 사람 1,000냥 (수정안 10)
+ *  - 가입 선물 990냥 (2026-10-17, 한 번만)
+ *  - 초대 코드가 있으면(자기 자신 제외) 초대한 사람 990냥 + 초대받은 사람 990냥 (2026-10-17)
  * 초대한 사람의 users 행을 잠가(FOR UPDATE) 동시에 두 명이 가입해도 n번째 계산이 겹치지 않게 한다.
  * 실패해도 가입 자체는 막지 않도록 호출하는 쪽에서 try/catch 한다.
  */
@@ -112,7 +112,7 @@ export async function onNewMember(userId: string, refCode: string | undefined): 
       [referrerId, amount, `친구 초대 ${CURRENCY_NAME} (${nth}번째 친구)`, userId]
     );
     await client.query(`UPDATE referrals SET rewarded = true, nth = $2 WHERE referred_user_id = $1`, [userId, nth]);
-    // 초대받은 사람도 1,000냥 (한 번만)
+    // 초대받은 사람도 990냥 (한 번만)
     await client.query(
       `INSERT INTO bokchae_ledger (user_id, amount, kind, label, ref) VALUES ($1, $2, 'invited', $3, '')
        ON CONFLICT (user_id, kind, ref) DO NOTHING`,

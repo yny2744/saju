@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { isAuthEnabled } from "@/lib/launchMode";
 import { CONTINUE_PATH, clearPendingIntent, intentDestination, intentLabel, intentQuery, readPendingIntent, type Intent } from "@/lib/intent";
-import { CURRENCY_NAME, PRICE, formatNyang } from "@/lib/yeopjeon";
+import { CURRENCY_NAME, PRICE, WELCOME_GIFT, formatNyang } from "@/lib/yeopjeon";
 import { LoadingState, ErrorState } from "@/components/StatusScreens";
 
 /**
@@ -67,7 +67,7 @@ export default function ContinuePage() {
 
   const label = intentLabel(state.intent);
   const i = state.intent;
-  const price = i.kind === "topic" ? PRICE.BASIC : i.kind === "bundle" ? PRICE.BUNDLE3 : i.kind === "name" ? ({ naming: PRICE.NAMING, rename: PRICE.RENAME, business: PRICE.BUSINESS, corp: PRICE.CORP, brand: PRICE.BRAND }[i.mode]) : PRICE.BUNDLE12;
+  const price = i.kind === "exam" ? PRICE.EXAM : i.kind === "topic" ? PRICE.BASIC : i.kind === "bundle" ? PRICE.BUNDLE3 : i.kind === "name" ? ({ naming: PRICE.NAMING, rename: PRICE.RENAME, business: PRICE.BUSINESS, corp: PRICE.CORP, brand: PRICE.BRAND }[i.mode]) : PRICE.BUNDLE12;
   const next = encodeURIComponent(CONTINUE_PATH);
   return (
     <main className="mx-auto min-h-screen max-w-md px-5 pb-16 pt-14 text-center">
@@ -78,14 +78,14 @@ export default function ContinuePage() {
         {label}
       </h1>
       <p className="mt-2 text-[15px]" style={{ color: "var(--color-ink-soft)" }}>
-        {i.kind === "topic" ? "로그인하면 무료로 바로 볼 수 있어요" : `${CURRENCY_NAME} ${formatNyang(price)} · 로그인하면 바로 이어서 볼 수 있어요`}
+        {i.kind === "exam" ? `카카오로 로그인하면 가입 선물 ${CURRENCY_NAME} ${formatNyang(WELCOME_GIFT)}으로 무료로 바로 볼 수 있어요` : i.kind === "topic" ? "로그인하면 무료로 바로 볼 수 있어요" : `${CURRENCY_NAME} ${formatNyang(price)} · 로그인하면 바로 이어서 볼 수 있어요`}
       </p>
       <a
         href={`/api/auth/kakao/start?next=${next}`}
         className="mt-8 block rounded-xl py-4 text-[17px] font-bold"
         style={{ backgroundColor: "#fee500", color: "#191600" }}
       >
-        카카오로 로그인하고 이어서 보기
+        {i.kind === "exam" ? "카카오로 로그인하고 무료로 보기" : "카카오로 로그인하고 이어서 보기"}
       </a>
       <p className="mt-3 text-[14px]" style={{ color: "var(--color-ink-soft)" }}>
         로그인하면 12가지 운세를 모두 무료로 볼 수 있어요

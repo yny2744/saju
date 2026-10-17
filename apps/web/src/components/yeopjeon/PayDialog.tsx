@@ -12,7 +12,36 @@ import { reportClientError } from "./useYeopjeon";
 
 type Quote =
   | { status: "enough" }
-  | { status: "pay"; orderId: string; orderName: string; price: number; useYeopjeon: number; amount: number; clientKey: string | null; customerKey: string; mock: boolean };
+  | {
+      status: "pay";
+      orderId: string;
+      orderName: string;
+      price: number;
+      useYeopjeon: number;
+      amount: number;
+      clientKey: string | null;
+      portone: { storeId: string; channelKey: string } | null;
+      customerKey: string;
+      mock: boolean;
+    };
+
+type PortOneSdk = {
+  requestPayment: (o: Record<string, unknown>) => Promise<{ code?: string; message?: string; paymentId?: string } | undefined>;
+};
+const PORTONE_SDK = "https://cdn.portone.io/v2/browser-sdk.js";
+
+function loadPortOne(): Promise<PortOneSdk> {
+  const w = window as unknown as { PortOne?: PortOneSdk };
+  if (w.PortOne) return Promise.resolve(w.PortOne);
+  return new Promise((resolve, reject) => {
+    const s = document.createElement("script");
+    s.src = PORTONE_SDK;
+    s.async = true;
+    s.onload = () => (w.PortOne ? resolve(w.PortOne) : reject(new Error("결제 모듈을 불러오지 못했어요.")));
+    s.onerror = () => reject(new Error("결제 모듈을 불러오지 못했어요."));
+    document.head.appendChild(s);
+  });
+}
 
 type TossPaymentsFn = (clientKey: string) => {
   payment: (o: { customerKey: string }) => {
@@ -45,7 +74,7 @@ export function PayDialog({
   onClose,
 }: {
   personId: string;
-  mode: "basic" | "deep" | "bundle3" | "bundle12" | "naming" | "rename" | "face" | "business" | "corp" | "brand" | "couple" | "p_naming" | "p_business" | "p_corp" | "p_brand" | "wallpaper";
+  mode: "basic" | "deep" | "bundle3" | "bundle12" | "naming" | "rename" | "face" | "business" | "corp" | "brand" | "couple" | "p_naming" | "p_business" | "p_corp" | "p_brand" | "wallpaper" | "exam" | "exam_deep";
   topics: string[];
   /** 결제를 그만두면 돌아올 주소 */
   backTo: string;
@@ -94,6 +123,37 @@ export function PayDialog({
     if (quote.mock) {
       // 시험 모드: 실제 결제 없이 승인된 것처럼
       window.location.href = `/pay/success?paymentKey=mock_${quote.orderId}&orderId=${encodeURIComponent(quote.orderId)}&amount=${quote.amount}`;
+      return;
+    }
+    if (quote.portone) {
+      // 포트원 V2 (2026-10-17): 결제 ID = 주문 번호. 폰에서는 결제 뒤 redirectUrl로 돌아오고(paymentId·code가 붙어 옴),
+      // PC에서는 결제창이 닫히며 결과를 돌려준다.
+      const success = `${origin}/pay/success?orderId=${encodeURIComponent(quote.orderId)}&amount=${quote.amount}`;
+      try {
+        const PortOne = await loadPortOne();
+        const res = await PortOne.requestPayment({
+          storeId: quote.portone.storeId,
+          channelKey: quote.portone.channelKey,
+          paymentId: quote.orderId,
+          orderName: quote.orderName,
+          totalAmount: quote.amount,
+          currency: "CURRENCY_KRW",
+          payMethod: "CARD",
+          customer: { customerId: quote.customerKey },
+          redirectUrl: success,
+        });
+        if (res?.code) {
+          setError(/cancel|취소/i.test(`${res.code} ${res.message ?? ""}`) ? "결제를 취소했어요." : res.message || "결제가 되지 않았어요.");
+          setBusy(false);
+          return;
+        }
+        window.location.href = `${success}&paymentId=${encodeURIComponent(quote.orderId)}`;
+      } catch (e) {
+        const msg = e instanceof Error ? e.message : String(e);
+        reportClientError("포트원 결제창", msg);
+        setError("결제창을 열지 못했어요. 잠시 후 다시 시도해 주세요.");
+        setBusy(false);
+      }
       return;
     }
     try {

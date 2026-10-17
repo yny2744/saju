@@ -8,6 +8,7 @@ import { LoadingState, ErrorState } from "@/components/StatusScreens";
 import { BUNDLE_SUGGESTIONS, EXTRA_KEYS, TOPICS, TOPIC_KEYS, isTopicKey, type AnyTopicKey, type TopicKey } from "@/lib/topics";
 import { CURRENCY_NAME, PRICE, bundleDiscount, formatNyang } from "@/lib/yeopjeon";
 import { PersonHeader } from "@/components/yeopjeon/PersonHeader";
+import { SEASON_INFO, examDday, examSeason } from "@/lib/suneung";
 import { InviteCard } from "@/components/yeopjeon/InviteCard";
 import { PayDialog } from "@/components/yeopjeon/PayDialog";
 import { WriteProgress } from "@/components/yeopjeon/WriteProgress";
@@ -192,6 +193,22 @@ function PersonBody({ id }: { id: string }) {
   return (
     <main className="mx-auto min-h-screen max-w-xl px-5 pb-24 pt-12 sm:pt-16">
       <PersonHeader header={person.header} kicker="류결사주 · 12가지 운세" title="12가지 운세" />
+      {/* 수정안 17: 수능운 (시즌에 따라 합격운·새 출발운) */}
+      <a href={`/person/${id}/exam`} className="mb-5 flex items-center gap-3 rounded-2xl px-4 py-3.5" style={{ backgroundColor: "#16213a", border: "1px solid var(--color-gold-line)" }}>
+        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-[18px] font-bold" style={{ border: "1.5px solid #d4b265", color: "#d4b265", fontFamily: "var(--font-serif)" }}>
+          {SEASON_INFO[examSeason()].hanja}
+        </span>
+        <span className="min-w-0 flex-1">
+          <span className="block text-[15px] font-bold" style={{ color: "#f3e7c6", fontFamily: "var(--font-serif)" }}>
+            {SEASON_INFO[examSeason()].title}
+            {examDday() !== null && <span className="ml-2 text-[13px]" style={{ color: "#d4b265" }}>D-{examDday()}</span>}
+          </span>
+          <span className="block text-[12.5px]" style={{ color: "#c9cfda" }}>
+            {person.exam?.light || person.exam?.deep ? "내 풀이 다시 보기" : SEASON_INFO[examSeason()].blurb}
+          </span>
+        </span>
+        <span style={{ color: "#d4b265" }}>›</span>
+      </a>
 
       <div className="mb-5 flex items-center justify-between rounded-xl px-4 py-3" style={{ backgroundColor: "var(--color-paper-soft)" }}>
         <span className="text-[14px]">

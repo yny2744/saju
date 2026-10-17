@@ -166,9 +166,10 @@ function AdminBody() {
   if (!data) return <LoadingState message="불러오고 있어요..." />;
 
   const PAY_MODE_LABEL: Record<PayMode, string> = {
-    toss: "카드·간편결제 켜짐 (토스페이먼츠)",
+    portone: "카드·간편결제 켜짐 (포트원)",
+    toss: "카드·간편결제 켜짐 (토스페이먼츠 직접)",
     mock: "시험 결제 모드 - 실제 돈이 오가지 않아요",
-    off: "결제 꺼짐 - Vercel에 TOSS_CLIENT_KEY·PAYMENT_SECRET_KEY 를 넣으면 켜져요",
+    off: "결제 꺼짐 - Vercel에 PORTONE_STORE_ID·PORTONE_CHANNEL_KEY·PORTONE_API_SECRET 를 넣으면 켜져요",
   };
 
   return (

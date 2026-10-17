@@ -120,7 +120,7 @@ JSON 형식:
 }
 
 /** AI 응답에서 JSON을 꺼낸다 (코드블록·앞뒤 말이 섞여 와도 첫 { ~ 마지막 } 사이를 읽음) */
-function extractJson(raw: string): unknown {
+export function extractJson(raw: string): unknown {
   const start = raw.indexOf("{");
   const end = raw.lastIndexOf("}");
   if (start < 0 || end <= start) throw new Error("AI 응답에서 JSON을 찾지 못했습니다.");

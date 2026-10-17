@@ -12,7 +12,7 @@ import { ReviewBox } from "@/components/reviews/ReviewBox";
 import { ReviewStrip } from "@/components/reviews/ReviewStrip";
 import { BusinessChars, BusinessFacts } from "@/components/BusinessReadingCard";
 import { notifyYeopjeonChanged, reportClientError, useYeopjeon } from "@/components/yeopjeon/useYeopjeon";
-import { CURRENCY_NAME, PRICE, formatNyang } from "@/lib/yeopjeon";
+import { CURRENCY_NAME, PREMIUM_ON, PRICE, formatNyang } from "@/lib/yeopjeon";
 import { BIZ_INFO, FEELINGS, INDUSTRIES, isBizKind, type BizKind, type FeelingKey } from "@/lib/businessName";
 import { ELEMENT_HANJA } from "@/lib/manseView";
 import type { ElementKo } from "@/lib/pillarView";
@@ -244,7 +244,7 @@ function Body({ id }: { id: string }) {
           <button type="button" disabled={busy} onClick={() => buy()} className="btn-primary mt-4 disabled:opacity-50">
             {busy ? "여는 중..." : (wallet?.balance ?? 0) >= state.price ? `${CURRENCY_NAME}으로 열기` : "결제하고 열기"}
           </button>
-          {true && (
+          {PREMIUM_ON && (
             <button type="button" disabled={busy} onClick={() => buy(premium)} className="mt-2.5 block w-full rounded-xl px-4 py-3 text-center disabled:opacity-50" style={{ border: "1px solid var(--color-gold-line)", backgroundColor: "var(--color-gold-soft)" }}>
               <span className="block text-[15px] font-bold" style={{ fontFamily: "var(--font-serif)" }}>
                 프리미엄 · 12가지 운세 전부 보기와 함께

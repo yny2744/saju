@@ -3,8 +3,9 @@ import { ReviewStrip } from "@/components/reviews/ReviewStrip";
 import { ProductIcon, type Kind } from "@/components/landing/ProductIcon";
 import { BUSINESS_INFO } from "@/lib/businessInfo";
 import { TOPICS, TOPIC_KEYS } from "@/lib/topics";
-import { CURRENCY_NAME, INVITEE_GIFT, INVITE_MILESTONES, INVITE_REWARD, formatNyang } from "@/lib/yeopjeon";
+import { CURRENCY_NAME, INVITEE_GIFT, INVITE_REWARD, formatNyang } from "@/lib/yeopjeon";
 import { ScrollTopButton } from "@/components/ScrollTop";
+import { SuneungHero } from "@/components/landing/SuneungHero";
 
 /**
  * 류결사주 대문 (2026-10-08 수정안 13번 재구성, 유샘 확정 순서).
@@ -67,9 +68,35 @@ export default function LandingPage() {
   return (
     <main className="min-h-screen pb-10">
       <div className="mx-auto max-w-xl px-5">
+        {/* 2026-10-17 수정안 17: 맨 위 수능대박운 영상 (수능이 끝나면 합격운·새 출발운 카드) */}
+        <section className="pb-6 pt-5">
+          <h1 className="sr-only">수능대박운 · 나를 알고, 인연과 복을 잇다 · 류결사주</h1>
+          <SuneungHero />
+        </section>
+
+        {/* 2026-10-17 수정안 17: 대문 순서 - 수능운 → 인연(관상·궁합) → 20대→70대 영상 → 무료로 시작하기 */}
+        <section className="pb-6">
+          <a href="/face" className="block overflow-hidden rounded-2xl transition-transform active:scale-[0.98]" style={CARD}>
+            {/* eslint-disable-next-line @next/next/no-img-element -- 정적 그림 */}
+            <img src="/landing/face-ideal.jpg" alt="당신의 이상형 관상 - 눈·코·입·턱선으로 보는 인연의 얼굴 (AI로 만든 예시 그림)" className="block w-full" />
+            <span className="flex items-center gap-3 px-4 py-4">
+              <span className="min-w-0 flex-1">
+                <span className="block text-[17px] font-bold" style={{ fontFamily: "var(--font-serif)" }}>
+                  관상 · 인연의 관상
+                </span>
+                <span className="mt-0.5 block text-[13px]" style={{ color: "var(--color-ink-soft)", wordBreak: "keep-all" }}>
+                  내 얼굴의 타고난 기질, 그리고 나와 맞는 인연은 어떤 얼굴일까?
+                </span>
+              </span>
+              <span className="shrink-0 rounded-full px-2.5 py-0.5 text-[13px] font-bold" style={{ color: "var(--color-accent)", border: "1px solid var(--color-gold-line)" }}>
+                무료
+              </span>
+            </span>
+          </a>
+        </section>
+
         {/* 수정안 61: 대문 영상 - 나를 알고, 인연과 복을 잇다 (소리 없이 반복, 영상이 뜨기 전엔 같은 장면 그림) */}
-        <section className="pb-8 pt-5">
-          <h1 className="sr-only">나를 알고, 인연과 복을 잇다 · 류결사주</h1>
+        <section className="pb-8">
           <video
             className="block w-full rounded-2xl motion-reduce:hidden"
             style={{ aspectRatio: "3 / 4", boxShadow: "0 6px 24px rgba(14,22,40,0.25)" }}
@@ -92,24 +119,6 @@ export default function LandingPage() {
         {/* 무료로 시작하기 - 첫 화면에 바로 보이게 */}
         <section className="pb-12">
           <SectionTitle title="무료로 시작하기" sub="로그인 없이 바로 볼 수 있어요" />
-          {/* 2026-10-14 수정안 16: 관상 · 인연의 관상 - 그림 카드로 맨 앞에 (최고 후킹) */}
-          <a href="/face" className="mb-3 block overflow-hidden rounded-2xl transition-transform active:scale-[0.98]" style={CARD}>
-            {/* eslint-disable-next-line @next/next/no-img-element -- 정적 그림 */}
-            <img src="/landing/face-ideal.jpg" alt="당신의 이상형 관상 - 눈·코·입·턱선으로 보는 인연의 얼굴 (AI로 만든 예시 그림)" className="block w-full" loading="lazy" />
-            <span className="flex items-center gap-3 px-4 py-4">
-              <span className="min-w-0 flex-1">
-                <span className="block text-[17px] font-bold" style={{ fontFamily: "var(--font-serif)" }}>
-                  관상 · 인연의 관상
-                </span>
-                <span className="mt-0.5 block text-[13px]" style={{ color: "var(--color-ink-soft)", wordBreak: "keep-all" }}>
-                  내 얼굴의 타고난 기질, 그리고 나와 맞는 인연은 어떤 얼굴일까?
-                </span>
-              </span>
-              <span className="shrink-0 rounded-full px-2.5 py-0.5 text-[13px] font-bold" style={{ color: "var(--color-accent)", border: "1px solid var(--color-gold-line)" }}>
-                무료
-              </span>
-            </span>
-          </a>
           <div className="space-y-3">
             {FREE.map((p) => (
               <a key={p.name} href={p.href} className="flex items-center gap-4 rounded-2xl px-4 py-4 transition-transform active:scale-[0.98]" style={CARD}>
@@ -189,24 +198,24 @@ export default function LandingPage() {
 
         {/* 친구 초대 */}
         <section className="py-12">
-          <SectionTitle title={`친구 초대하고 ${CURRENCY_NAME} 받기`} sub={`친구 한 명마다 나 ${formatNyang(INVITE_REWARD)} · 친구도 ${formatNyang(INVITEE_GIFT)}`} />
-          <div className="grid grid-cols-3 gap-2 text-center">
-            {INVITE_MILESTONES.filter((x) => x.n > 1).map((x) => (
-              <div key={x.n} className="rounded-2xl px-2 py-4" style={CARD}>
+          <SectionTitle title={`친구 초대하고 ${CURRENCY_NAME} 받기`} sub="친구 한 명마다, 나도 친구도 함께 받아요" />
+          <div className="grid grid-cols-2 gap-2 text-center">
+            {[
+              { who: "초대한 나", amt: INVITE_REWARD },
+              { who: "초대받은 친구", amt: INVITEE_GIFT },
+            ].map((x) => (
+              <div key={x.who} className="rounded-2xl px-2 py-4" style={CARD}>
                 <p className="text-[13px]" style={{ color: "var(--color-ink-soft)" }}>
-                  친구 {x.n}명
+                  {x.who}
                 </p>
-                <p className="mt-1 text-[17px] font-bold" style={{ color: GOLD }}>
-                  {formatNyang(x.n * INVITE_REWARD)}
-                </p>
-                <p className="mt-0.5 text-[11px] leading-snug" style={{ color: "var(--color-ink-faint)" }}>
-                  {x.label}
+                <p className="mt-1 text-[19px] font-bold" style={{ color: GOLD }}>
+                  {formatNyang(x.amt)}
                 </p>
               </div>
             ))}
           </div>
           <p className="mt-3 text-center text-[13px]" style={{ color: "var(--color-ink-faint)" }}>
-            모은 {CURRENCY_NAME}은 어떤 풀이에든 먼저 쓰이고, 모자란 만큼만 결제해요
+            {formatNyang(INVITE_REWARD)}이면 수능운 가볍게 보기 한 번 · 인원 제한 없이 계속 쌓여요
           </p>
           <a href="/mypage" className="mt-5 block rounded-2xl py-4 text-center text-[16px] font-bold" style={{ backgroundColor: "#16213a", color: "#f3e7c6", border: "1px solid var(--color-gold-line)", fontFamily: "var(--font-serif)" }}>
             내 초대 링크 받기

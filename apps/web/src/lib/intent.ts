@@ -1,4 +1,5 @@
 import { BUNDLE_SUGGESTIONS, TOPICS, isTopicKey, type TopicKey } from "@/lib/topics";
+import { SEASON_INFO, examSeason } from "@/lib/suneung";
 
 /**
  * 대문에서 무엇을 사려고 들어왔는지 (2026-10-09 수정안 20·24).
@@ -7,7 +8,7 @@ import { BUNDLE_SUGGESTIONS, TOPICS, isTopicKey, type TopicKey } from "@/lib/top
  *   ?all=1         → 12가지 운세 전부 보기 (29,500냥)
  * 이 값은 주소에 그대로 실려 다니므로 허용된 값만 읽는다(임의 주소로 보내지 못하게).
  */
-export type Intent = { kind: "topic"; topic: TopicKey } | { kind: "bundle"; index: number } | { kind: "all" } | { kind: "name"; mode: "naming" | "rename" | "business" | "corp" | "brand" };
+export type Intent = { kind: "topic"; topic: TopicKey } | { kind: "bundle"; index: number } | { kind: "all" } | { kind: "name"; mode: "naming" | "rename" | "business" | "corp" | "brand" } | { kind: "exam" };
 
 export function parseIntent(q: URLSearchParams): Intent | null {
   const topic = q.get("topic");
@@ -15,6 +16,8 @@ export function parseIntent(q: URLSearchParams): Intent | null {
   const b = q.get("bundle");
   if (b !== null && /^\d$/.test(b) && Number(b) < BUNDLE_SUGGESTIONS.length) return { kind: "bundle", index: Number(b) };
   if (q.get("all") === "1") return { kind: "all" };
+  // 2026-10-17 수정안 17: ?exam=1 수능운 (시즌에 따라 합격운·새 출발운)
+  if (q.get("exam") === "1") return { kind: "exam" };
   // 2026-10-12 수정안 46: ?name=naming 아이 작명 / ?name=rename 개명 추천
   const n = q.get("name");
   // 2026-10-13 수정안 63: ?name=business 상호 작명 (대표자 사주)
@@ -26,6 +29,7 @@ export function intentQuery(i: Intent): string {
   if (i.kind === "topic") return `topic=${i.topic}`;
   if (i.kind === "bundle") return `bundle=${i.index}`;
   if (i.kind === "name") return `name=${i.mode}`;
+  if (i.kind === "exam") return "exam=1";
   return "all=1";
 }
 
@@ -33,6 +37,7 @@ export function intentQuery(i: Intent): string {
 export function intentLabel(i: Intent): string {
   if (i.kind === "topic") return `${TOPICS[i.topic].title} 운세`;
   if (i.kind === "bundle") return `${BUNDLE_SUGGESTIONS[i.index].title} 몰아보기`;
+  if (i.kind === "exam") return SEASON_INFO[examSeason()].title;
   if (i.kind === "name") return { naming: "신생아 작명", rename: "개명 추천", business: "상호 작명", corp: "기업 작명", brand: "브랜딩 작명" }[i.mode];
   return "12가지 운세 전부 보기";
 }
@@ -42,6 +47,7 @@ export function intentDestination(personId: string, i: Intent): string {
   const base = `/person/${encodeURIComponent(personId)}`;
   if (i.kind === "topic") return `${base}/${i.topic}`;
   if (i.kind === "bundle") return `${base}?buy=bundle3&pick=${BUNDLE_SUGGESTIONS[i.index].topics.join(",")}`;
+  if (i.kind === "exam") return `${base}/exam`;
   if (i.kind === "name") return i.mode === "business" || i.mode === "corp" || i.mode === "brand" ? `${base}/business?kind=${i.mode}` : `${base}/name?kind=${i.mode}`;
   return `${base}?buy=bundle12`;
 }

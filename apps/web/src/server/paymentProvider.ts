@@ -158,3 +158,54 @@ export function getPaymentProvider(): PaymentProvider {
 export function resetPaymentProviderCacheForTesting(): void {
   cachedProvider = null;
 }
+
+/**
+ * 포트원(PortOne) V2 결제 확인 (2026-10-17). 포트원은 여러 PG(토스페이먼츠·KG이니시스 등)를 한 코드로 붙여 주는 연결 장치다.
+ * 결제창은 화면에서 포트원 SDK가 띄우고, 서버는 결제 단건 조회로 "정말 결제됐는지·금액이 맞는지"만 확인한다.
+ *   GET https://api.portone.io/payments/{paymentId}   Authorization: PortOne {V2 API Secret}
+ *   응답 status "PAID", amount.total = 결제 금액
+ * (공식 문서 기준으로 작성 - 테스트 채널로 한 번 결제해 보고 실제 응답을 확인해야 한다)
+ */
+export class PortOnePaymentProvider implements PaymentProvider {
+  readonly providerName = "portone";
+
+  constructor(
+    private readonly apiSecret: string,
+    private readonly storeId?: string
+  ) {}
+
+  async getPayment(paymentId: string): Promise<{ status: string; total: number | undefined; storeId: string | undefined } | null> {
+    let res: Response;
+    try {
+      res = await fetch(`https://api.portone.io/payments/${encodeURIComponent(paymentId)}`, {
+        headers: { Authorization: `PortOne ${this.apiSecret}` },
+      });
+    } catch (err) {
+      // eslint-disable-next-line no-console
+      console.error("[portone] 결제 조회 API 호출 실패:", err);
+      return null;
+    }
+    const data = (await res.json().catch(() => null)) as Record<string, unknown> | null;
+    if (!res.ok || !data) {
+      // eslint-disable-next-line no-console
+      console.error("[portone] 결제 조회 실패:", res.status, data?.type, data?.message);
+      return null;
+    }
+    const amount = data.amount as { total?: unknown } | undefined;
+    return {
+      status: typeof data.status === "string" ? data.status : "",
+      total: typeof amount?.total === "number" ? amount.total : undefined,
+      storeId: typeof data.storeId === "string" ? data.storeId : undefined,
+    };
+  }
+
+  async confirmPayment(input: ConfirmPaymentInput): Promise<ConfirmPaymentResult> {
+    // 포트원은 결제 ID(paymentId)를 우리가 정한다 = 주문 번호. 다른 주문의 결제로 바꿔치기 못 하게 같아야 한다.
+    if (input.paymentKey !== input.orderId) return { approved: false, failureReason: "결제 정보가 주문과 달라요." };
+    const p = await this.getPayment(input.orderId);
+    if (!p) return { approved: false, failureReason: "결제 서버와 통신하지 못했습니다." };
+    if (this.storeId && p.storeId && p.storeId !== this.storeId) return { approved: false, failureReason: "결제 정보가 주문과 달라요." };
+    if (p.status !== "PAID") return { approved: false, failureReason: p.status === "CANCELLED" ? "취소된 결제예요." : "결제가 완료 상태가 아닙니다." };
+    return { approved: true, approvedAmount: p.total };
+  }
+}

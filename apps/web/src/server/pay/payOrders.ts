@@ -2,7 +2,8 @@ import { randomBytes } from "crypto";
 import { db } from "@/server/auth/db";
 import { getBalance, InsufficientYeopjeonError } from "@/server/yeopjeon/ledger";
 import { PurchaseError, inTransaction, planForPerson, productName, purchaseWithClient, type PurchaseMode } from "@/server/readings/readings";
-import { MockPaymentProvider, TossPaymentProvider, type PaymentProvider } from "@/server/paymentProvider";
+import { MockPaymentProvider, PortOnePaymentProvider, TossPaymentProvider, type PaymentProvider } from "@/server/paymentProvider";
+import { createHmac, timingSafeEqual } from "crypto";
 import { notifyError } from "@/server/alert";
 import { splitPayment } from "@/lib/pay";
 import { formatNyang } from "@/lib/yeopjeon";
@@ -16,14 +17,18 @@ import type { AnyTopicKey } from "@/lib/topics";
  *     주문 paid + 결제 금액만큼 엽전 입금(kind 'pay') + 상품 구매(엽전 차감) → 바로 그 운세 화면으로
  *  3) 승인됐는데 그 사이 이미 열린 운세라 구매가 안 되면, 결제 금액은 엽전으로 남기고(status paid_credit) 알림 → 관리자가 환불 처리
  *
- * 환경변수: TOSS_CLIENT_KEY(결제창용, 공개돼도 되는 키), PAYMENT_SECRET_KEY(승인용 비밀 키) - 둘 다 있어야 결제가 켜진다.
+ * 환경변수 (2026-10-17 포트원 우선):
+ *   포트원 V2 - PORTONE_STORE_ID(상점 아이디) · PORTONE_CHANNEL_KEY(채널 키, 테스트/실 채널) · PORTONE_API_SECRET(V2 API Secret)
+ *              · PORTONE_WEBHOOK_SECRET(웹훅 시크릿, 선택 - 결제창을 닫아 버려도 웹훅으로 열어 준다)
+ *   (예전) 토스 직접 - TOSS_CLIENT_KEY · PAYMENT_SECRET_KEY. 포트원 값이 있으면 포트원이 먼저다.
  * 시험용: PAYMENT_MOCK=true (운영 배포에서는 ALLOW_MOCK_IN_PRODUCTION=true 일 때만) - 실제 결제 없이 승인된 것처럼.
  */
 
-export type PayMode = "toss" | "mock" | "off";
+export type PayMode = "portone" | "toss" | "mock" | "off";
 
 export function payMode(env: NodeJS.ProcessEnv = process.env): PayMode {
   if (env.PAYMENT_MOCK === "true" && (env.NODE_ENV !== "production" || env.ALLOW_MOCK_IN_PRODUCTION === "true")) return "mock";
+  if (env.PORTONE_STORE_ID && env.PORTONE_CHANNEL_KEY && env.PORTONE_API_SECRET) return "portone";
   if (env.TOSS_CLIENT_KEY && env.PAYMENT_SECRET_KEY) return "toss";
   return "off";
 }
@@ -32,6 +37,7 @@ let mockProvider: MockPaymentProvider | null = null;
 function provider(): PaymentProvider | null {
   const mode = payMode();
   if (mode === "mock") return (mockProvider ??= new MockPaymentProvider());
+  if (mode === "portone") return new PortOnePaymentProvider(process.env.PORTONE_API_SECRET!, process.env.PORTONE_STORE_ID);
   if (mode === "toss") return new TossPaymentProvider(process.env.PAYMENT_SECRET_KEY!);
   return null;
 }
@@ -53,6 +59,8 @@ export type CheckoutResult =
       useYeopjeon: number;
       amount: number;
       clientKey: string | null;
+      /** 포트원 결제창 값 (공개돼도 되는 값) */
+      portone: { storeId: string; channelKey: string } | null;
       customerKey: string;
       mock: boolean;
     };
@@ -85,6 +93,7 @@ export async function checkout(userId: string, personId: string, mode: PurchaseM
     useYeopjeon: split.useYeopjeon,
     amount: split.cash,
     clientKey: pm === "toss" ? process.env.TOSS_CLIENT_KEY! : null,
+    portone: pm === "portone" ? { storeId: process.env.PORTONE_STORE_ID!, channelKey: process.env.PORTONE_CHANNEL_KEY! } : null,
     customerKey: userId,
     mock: pm === "mock",
   };
@@ -106,6 +115,7 @@ function destination(o: Pick<OrderRow, "person_id" | "mode" | "topics">): string
   if (o.mode === "face") return `/face/paid/${o.person_id}?paid=1`;
   if (o.mode === "couple") return `/couple/${o.person_id}?paid=1`;
   if (o.mode === "wallpaper") return `/person/${o.person_id}/wallpaper`;
+  if (o.mode === "exam" || o.mode === "exam_deep") return `/person/${o.person_id}/exam?paid=1`;
   if (o.mode === "p_naming") return `/person/${o.person_id}/name?kind=naming&paid=1`;
   if (o.mode === "p_business" || o.mode === "p_corp" || o.mode === "p_brand") return `/person/${o.person_id}/business?kind=${o.mode.slice(2)}&paid=1`;
   const base = `/person/${o.person_id}`;
@@ -115,13 +125,14 @@ function destination(o: Pick<OrderRow, "person_id" | "mode" | "topics">): string
 }
 
 /** 결제 승인 → 엽전 입금 + 구매 (한 번만) → 갈 곳 */
-export async function confirmOrder(userId: string, input: { paymentKey: unknown; orderId: unknown; amount: unknown }): Promise<{ redirect: string; credited?: boolean }> {
+export async function confirmOrder(userId: string | null, input: { paymentKey: unknown; orderId: unknown; amount: unknown }): Promise<{ redirect: string; credited?: boolean }> {
   const paymentKey = typeof input.paymentKey === "string" ? input.paymentKey.slice(0, 200) : "";
   const orderId = typeof input.orderId === "string" ? input.orderId : "";
   const amount = Number(input.amount);
   const pool = await db();
+  // userId null = 포트원 웹훅 (서버끼리 - 결제사에 다시 물어 확인하므로 주문 주인을 따로 묻지 않는다)
   const r = await pool.query<OrderRow>(
-    `SELECT id, user_id, person_id, mode, topics, price, amount, order_name, status FROM pay_orders WHERE id = $1 AND user_id = $2`,
+    `SELECT id, user_id, person_id, mode, topics, price, amount, order_name, status FROM pay_orders WHERE id = $1 AND ($2::uuid IS NULL OR user_id = $2::uuid)`,
     [orderId, userId]
   );
   const order = r.rows[0];
@@ -138,6 +149,7 @@ export async function confirmOrder(userId: string, input: { paymentKey: unknown;
   }
 
   // 승인됨 - 이제부터는 실패해도 돈이 엽전으로 남도록
+  const uid = order.user_id;
   let credited = false;
   await inTransaction(async (client) => {
     const upd = await client.query(
@@ -147,11 +159,11 @@ export async function confirmOrder(userId: string, input: { paymentKey: unknown;
     if ((upd.rowCount ?? 0) === 0) return; // 동시에 두 번 - 먼저 처리된 쪽이 끝냄
     await client.query(
       `INSERT INTO bokchae_ledger (user_id, amount, kind, label, ref) VALUES ($1, $2, 'pay', $3, $4) ON CONFLICT (user_id, kind, ref) DO NOTHING`,
-      [userId, order.amount, `카드·간편결제 ${formatNyang(order.amount)} (${order.order_name})`, orderId]
+      [uid, order.amount, `카드·간편결제 ${formatNyang(order.amount)} (${order.order_name})`, orderId]
     );
     await client.query("SAVEPOINT buy");
     try {
-      await purchaseWithClient(client, { userId, personId: order.person_id, mode: order.mode, topics: order.topics });
+      await purchaseWithClient(client, { userId: uid, personId: order.person_id, mode: order.mode, topics: order.topics });
     } catch (e) {
       await client.query("ROLLBACK TO SAVEPOINT buy");
       if (!(e instanceof PurchaseError || e instanceof InsufficientYeopjeonError)) throw e;
@@ -161,6 +173,41 @@ export async function confirmOrder(userId: string, input: { paymentKey: unknown;
     }
   });
   return { redirect: destination(order), credited };
+}
+
+/**
+ * 포트원 웹훅 (2026-10-17) - 손님이 결제 뒤 창을 닫아 돌아오지 못해도 서버끼리 확인해 바로 열어 준다.
+ * 서명(Standard Webhooks: webhook-id · webhook-timestamp · webhook-signature, 시크릿 whsec_…)을 확인한 뒤
+ * 결제사에 결제를 다시 조회해서(confirmOrder) 처리한다. 이미 처리된 주문이면 아무 일도 하지 않는다.
+ */
+export function verifyPortOneWebhook(
+  headers: { id: string | null; timestamp: string | null; signature: string | null },
+  body: string,
+  secret: string,
+  nowSec: number = Math.floor(Date.now() / 1000)
+): boolean {
+  const { id, timestamp, signature } = headers;
+  if (!id || !timestamp || !signature || !secret) return false;
+  const ts = Number(timestamp);
+  if (!Number.isFinite(ts) || Math.abs(nowSec - ts) > 5 * 60) return false;
+  const key = Buffer.from(secret.replace(/^whsec_/, ""), "base64");
+  const expected = createHmac("sha256", key).update(`${id}.${timestamp}.${body}`).digest();
+  return signature.split(" ").some((part) => {
+    const sig = part.includes(",") ? part.split(",")[1] : part;
+    const got = Buffer.from(sig ?? "", "base64");
+    return got.length === expected.length && timingSafeEqual(got, expected);
+  });
+}
+
+export async function confirmFromWebhook(payload: unknown): Promise<"done" | "ignored"> {
+  const p = payload as { type?: unknown; data?: { paymentId?: unknown } } | null;
+  const paymentId = typeof p?.data?.paymentId === "string" ? p.data.paymentId : "";
+  if (p?.type !== "Transaction.Paid" || !paymentId.startsWith("ryg_")) return "ignored";
+  const pool = await db();
+  const r = await pool.query<{ amount: number }>(`SELECT amount FROM pay_orders WHERE id = $1`, [paymentId]);
+  if (!r.rows[0]) return "ignored";
+  await confirmOrder(null, { paymentKey: paymentId, orderId: paymentId, amount: r.rows[0].amount });
+  return "done";
 }
 
 export interface AdminPayOrder {
