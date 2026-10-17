@@ -95,26 +95,7 @@ export default function LandingPage() {
           </a>
         </section>
 
-        {/* 수정안 61: 대문 영상 - 나를 알고, 인연과 복을 잇다 (소리 없이 반복, 영상이 뜨기 전엔 같은 장면 그림) */}
-        <section className="pb-8">
-          <video
-            className="block w-full rounded-2xl motion-reduce:hidden"
-            style={{ aspectRatio: "3 / 4", boxShadow: "0 6px 24px rgba(14,22,40,0.25)" }}
-            autoPlay
-            muted
-            loop
-            playsInline
-            preload="auto"
-            poster="/landing/hero-poster.jpg"
-            aria-label="20대부터 70대까지 함께 나이 들어 가는 두 사람 - 나를 알고, 인연과 복을 잇다"
-          >
-            <source src="/landing/hero.webm" type="video/webm" />
-            <source src="/landing/hero.mp4" type="video/mp4" />
-          </video>
-          {/* 움직임 줄이기를 켠 기기: 그림만 */}
-          {/* eslint-disable-next-line @next/next/no-img-element -- 정적 그림 */}
-          <img src="/landing/hero-poster.jpg" alt="나를 알고, 인연과 복을 잇다 · 류결사주" className="hidden w-full rounded-2xl motion-reduce:block" />
-        </section>
+        {/* 2026-10-17: 20대→70대 대문 영상(수정안 61)은 수능운 대문에서 숨김 - 파일(/landing/hero.*)은 그대로 둠 */}
 
         {/* 무료로 시작하기 - 첫 화면에 바로 보이게 */}
         <section className="pb-12">

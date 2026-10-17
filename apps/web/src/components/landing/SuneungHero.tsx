@@ -126,20 +126,22 @@ export function SuneungHero() {
         <img src="/landing/suneung-poster.jpg" alt="수능대박운 · 류결사주" className="hidden w-full motion-reduce:block" />
 
         {caption && (
-          <p
-            aria-live="off"
-            className="absolute inset-x-3 bottom-3 rounded-lg px-3 py-1.5 text-center text-[14px] font-bold sm:text-[16px]"
-            style={{ backgroundColor: "rgba(22,33,58,0.72)", color: "#fff" }}
-          >
-            {caption}
-          </p>
+          <div className="pointer-events-none absolute inset-x-3 bottom-3 flex justify-center">
+            <p
+              aria-live="off"
+              className="rounded-lg px-3 py-1.5 text-center text-[14px] font-bold sm:text-[16px]"
+              style={{ backgroundColor: "rgba(22,33,58,0.72)", color: "#fff" }}
+            >
+              {caption}
+            </p>
+          </div>
         )}
       </div>
 
       <a
         href={href}
         className="mt-3 block rounded-2xl py-4 text-center text-[17px] font-bold"
-        style={{ backgroundColor: NAVY, color: GOLD_L, border: `1px solid ${GOLD}`, fontFamily: "var(--font-serif)" }}
+        style={{ backgroundColor: "#f6ecd2", color: NAVY, border: `1px solid ${GOLD}`, fontFamily: "var(--font-serif)" }}
       >
         카카오로 로그인하고 수능운 무료로 보기
       </a>
