@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { CURRENCY_NAME, INVITEE_GIFT, INVITE_REWARD, formatNyang } from "@/lib/yeopjeon";
+import { isSuneungOn } from "@/lib/launchMode";
 import { inviteUrl, shareInvite } from "./useYeopjeon";
 
 /** 친구 초대 카드 - 내 복주머니·풀이 화면에서 같이 쓴다 */
@@ -22,7 +23,7 @@ export function InviteCard({ refCode, invited }: { refCode: string; invited: num
         <li>
           · 친구 한 명마다 나에게 <b>{formatNyang(INVITE_REWARD)}</b>, 친구에게도 <b>{formatNyang(INVITEE_GIFT)}</b>
         </li>
-        <li>· {formatNyang(INVITE_REWARD)}이면 수능운 가볍게 보기를 바로 볼 수 있어요</li>
+        {isSuneungOn() && <li>· {formatNyang(INVITE_REWARD)}이면 수능운 가볍게 보기를 바로 볼 수 있어요</li>}
         <li>· 초대 인원 제한 없이 한 명마다 계속 쌓여요</li>
       </ul>
       <p className="mt-3 text-[14px]">

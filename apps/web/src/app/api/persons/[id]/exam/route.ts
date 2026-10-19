@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { blockIfAuthOff } from "@/server/launchGuard";
+import { isSuneungOn } from "@/lib/launchMode";
 import { SESSION_COOKIE_NAME, getUserBySessionToken } from "@/server/auth/session";
 import { notifyError } from "@/server/alert";
 import { getPersonRow, getPersonSummary } from "@/server/readings/readings";
@@ -16,6 +17,7 @@ export const dynamic = "force-dynamic";
  * 잠겨 있으면 D-day·요약·소제목만, 열렸으면 풀이 전체. 깊게 보기는 열렸는데 아직 안 썼으면 deep: null (화면이 /write를 부른다).
  */
 export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
+  if (!isSuneungOn()) return NextResponse.json({ error: { code: "NOT_FOUND", message: "준비 중이에요." } }, { status: 404 });
   const blocked = blockIfAuthOff();
   if (blocked) return blocked;
   try {

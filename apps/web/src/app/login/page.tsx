@@ -72,7 +72,7 @@ function LoginPageBody() {
       <h1 className={`${isAuthEnabled() ? "mb-2" : "mb-7"} text-[24px] font-bold`}>{mode === "login" ? "로그인" : "이메일로 시작하기"}</h1>
       {isAuthEnabled() && (
         <p className="mb-7 text-sm leading-relaxed" style={{ color: "var(--color-ink-soft)" }}>
-          로그인하면 <b>12가지 운세를 모두 무료</b>로 보시고, 가입 선물 {CURRENCY_NAME} {formatNyang(WELCOME_GIFT)}으로 <b>수능운</b>도 바로 보실 수 있어요. 친구의 초대 링크로 오셨다면 {formatNyang(INVITEE_GIFT)}을 더 드려요.
+          로그인하면 <b>12가지 운세를 모두 무료</b>로 보시고, 가입 선물 {CURRENCY_NAME} {formatNyang(WELCOME_GIFT)}을 드려요. 친구의 초대 링크로 오셨다면 {formatNyang(INVITEE_GIFT)}을 더 드려요.
         </p>
       )}
 

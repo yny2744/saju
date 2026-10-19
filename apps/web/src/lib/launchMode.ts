@@ -36,6 +36,16 @@ export function isMemberFeatureOn(): boolean {
   return process.env.NEXT_PUBLIC_LOGIN_REQUIRED === "true";
 }
 
+/**
+ * 수능운(합격운·새 출발운) 노출 스위치 (2026-10-19 유샘 결정: 결제 심사 동안 숨김).
+ * 미성년자 대상 서비스로 보여 심사에서 질문받을 수 있어, 기본은 꺼짐(숨김)이다.
+ * 켜려면 배포 환경변수 NEXT_PUBLIC_SUNEUNG=on 으로 넣고 재배포한다 (NEXT_PUBLIC_ 값은 빌드 시점에 박힌다).
+ * 꺼져 있으면: 대문 영상·버튼, 내 운세 화면의 수능운 카드, 수능운 화면·API·구매가 모두 막히고, 안내 문구에서도 빠진다.
+ */
+export function isSuneungOn(): boolean {
+  return process.env.NEXT_PUBLIC_SUNEUNG === "on";
+}
+
 /** 로그인·회원 화면/API를 열지 여부: 승인 후(live)이거나, 회원 기능 스위치가 켜졌을 때 */
 export function isAuthEnabled(): boolean {
   return isLive() || isMemberFeatureOn();

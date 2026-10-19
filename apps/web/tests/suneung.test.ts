@@ -1,6 +1,7 @@
 import { calculateDailyGanzhi, calculateSaju } from "saju-engine";
 import { EXAM_DATE, EXAM_DAY, composeExam, examDday, examFactsForPrompt, examSeason, examUnlockTopic } from "@/lib/suneung";
-import { planPurchase } from "@/server/readings/readings";
+import { isPurchaseMode, planPurchase } from "@/server/readings/readings";
+import { isSuneungOn } from "@/lib/launchMode";
 import { parseExamDeep } from "@/server/exam/exam";
 import { parseIntent, intentDestination } from "@/lib/intent";
 
@@ -50,9 +51,37 @@ describe("수능운 (2026-10-17 수정안 17)", () => {
     expect(parseExamDeep(parts("운이 붙는 흐름이라 차분히 준비하면 좋아요. 응원해요."), []).parts).toHaveLength(3);
   });
 
-  it("대문 ?exam=1 → 사람의 수능운 화면", () => {
-    const i = parseIntent(new URLSearchParams("exam=1"));
-    expect(i).toEqual({ kind: "exam" });
-    expect(intentDestination("abc", i!)).toBe("/person/abc/exam");
+  it("대문 ?exam=1 → 사람의 수능운 화면 (스위치 on 일 때)", () => {
+    const prev = process.env.NEXT_PUBLIC_SUNEUNG;
+    process.env.NEXT_PUBLIC_SUNEUNG = "on";
+    try {
+      const i = parseIntent(new URLSearchParams("exam=1"));
+      expect(i).toEqual({ kind: "exam" });
+      expect(intentDestination("abc", i!)).toBe("/person/abc/exam");
+    } finally {
+      if (prev === undefined) delete process.env.NEXT_PUBLIC_SUNEUNG;
+      else process.env.NEXT_PUBLIC_SUNEUNG = prev;
+    }
+  });
+
+  it("2026-10-19 심사 동안 숨김: 스위치가 꺼져 있으면(기본) 수능운 길·구매가 모두 막힌다", () => {
+    const prev = process.env.NEXT_PUBLIC_SUNEUNG;
+    try {
+      delete process.env.NEXT_PUBLIC_SUNEUNG;
+      expect(isSuneungOn()).toBe(false);
+      expect(parseIntent(new URLSearchParams("exam=1"))).not.toEqual({ kind: "exam" });
+      expect(isPurchaseMode("exam")).toBe(false);
+      expect(isPurchaseMode("exam_deep")).toBe(false);
+      expect(isPurchaseMode("basic")).toBe(true);
+      process.env.NEXT_PUBLIC_SUNEUNG = "on";
+      expect(isSuneungOn()).toBe(true);
+      expect(isPurchaseMode("exam")).toBe(true);
+      expect(isPurchaseMode("exam_deep")).toBe(true);
+      process.env.NEXT_PUBLIC_SUNEUNG = "true"; // "on" 만 켜진 값
+      expect(isSuneungOn()).toBe(false);
+    } finally {
+      if (prev === undefined) delete process.env.NEXT_PUBLIC_SUNEUNG;
+      else process.env.NEXT_PUBLIC_SUNEUNG = prev;
+    }
   });
 });

@@ -2,7 +2,7 @@
 
 import { Suspense, useCallback, useEffect, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { isAuthEnabled } from "@/lib/launchMode";
+import { isAuthEnabled, isSuneungOn } from "@/lib/launchMode";
 import { ComingSoon } from "@/components/ComingSoon";
 import { ErrorState, LoadingState } from "@/components/StatusScreens";
 import { PayDialog } from "@/components/yeopjeon/PayDialog";
@@ -296,7 +296,7 @@ function Body({ id }: { id: string }) {
 }
 
 export default function ExamPage({ params }: { params: { id: string } }) {
-  if (!isAuthEnabled()) return <ComingSoon title="수능운" />;
+  if (!isSuneungOn() || !isAuthEnabled()) return <ComingSoon title="수능운" />;
   return (
     <Suspense fallback={<LoadingState message="불러오고 있어요..." />}>
       <Body id={params.id} />

@@ -1,5 +1,6 @@
 import { BUNDLE_SUGGESTIONS, TOPICS, isTopicKey, type TopicKey } from "@/lib/topics";
 import { SEASON_INFO, examSeason } from "@/lib/suneung";
+import { isSuneungOn } from "@/lib/launchMode";
 
 /**
  * 대문에서 무엇을 사려고 들어왔는지 (2026-10-09 수정안 20·24).
@@ -17,7 +18,7 @@ export function parseIntent(q: URLSearchParams): Intent | null {
   if (b !== null && /^\d$/.test(b) && Number(b) < BUNDLE_SUGGESTIONS.length) return { kind: "bundle", index: Number(b) };
   if (q.get("all") === "1") return { kind: "all" };
   // 2026-10-17 수정안 17: ?exam=1 수능운 (시즌에 따라 합격운·새 출발운)
-  if (q.get("exam") === "1") return { kind: "exam" };
+  if (q.get("exam") === "1" && isSuneungOn()) return { kind: "exam" };
   // 2026-10-12 수정안 46: ?name=naming 아이 작명 / ?name=rename 개명 추천
   const n = q.get("name");
   // 2026-10-13 수정안 63: ?name=business 상호 작명 (대표자 사주)

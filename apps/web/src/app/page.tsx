@@ -6,6 +6,7 @@ import { TOPICS, TOPIC_KEYS } from "@/lib/topics";
 import { CURRENCY_NAME, INVITEE_GIFT, INVITE_REWARD, formatNyang } from "@/lib/yeopjeon";
 import { ScrollTopButton } from "@/components/ScrollTop";
 import { SuneungHero } from "@/components/landing/SuneungHero";
+import { isSuneungOn } from "@/lib/launchMode";
 
 /**
  * 류결사주 대문 (2026-10-08 수정안 13번 재구성, 유샘 확정 순서).
@@ -64,18 +65,24 @@ export default function LandingPage() {
   if (process.env.NEXT_PUBLIC_LANDING_VARIANT === "casual") {
     return <CasualLanding />;
   }
+  const suneung = isSuneungOn();
 
   return (
     <main className="min-h-screen pb-10">
       <div className="mx-auto max-w-xl px-5">
         {/* 2026-10-17 수정안 17: 맨 위 수능대박운 영상 (수능이 끝나면 합격운·새 출발운 카드) */}
-        <section className="pb-6 pt-5">
-          <h1 className="sr-only">수능대박운 · 나를 알고, 인연과 복을 잇다 · 류결사주</h1>
-          <SuneungHero />
-        </section>
+        {/* 2026-10-19: 결제 심사 동안 숨김 (isSuneungOn - NEXT_PUBLIC_SUNEUNG=on 일 때만 보임) */}
+        {suneung ? (
+          <section className="pb-6 pt-5">
+            <h1 className="sr-only">수능대박운 · 나를 알고, 인연과 복을 잇다 · 류결사주</h1>
+            <SuneungHero />
+          </section>
+        ) : (
+          <h1 className="sr-only">나를 알고, 인연과 복을 잇다 · 류결사주</h1>
+        )}
 
         {/* 2026-10-17 수정안 17: 대문 순서 - 수능운 → 인연(관상·궁합) → 20대→70대 영상 → 무료로 시작하기 */}
-        <section className="pb-6">
+        <section className={suneung ? "pb-6" : "pb-6 pt-5"}>
           <a href="/face" className="block overflow-hidden rounded-2xl transition-transform active:scale-[0.98]" style={CARD}>
             {/* eslint-disable-next-line @next/next/no-img-element -- 정적 그림 */}
             <img src="/landing/face-ideal.jpg" alt="당신의 이상형 관상 - 눈·코·입·턱선으로 보는 인연의 얼굴 (AI로 만든 예시 그림)" className="block w-full" />
@@ -95,7 +102,27 @@ export default function LandingPage() {
           </a>
         </section>
 
-        {/* 2026-10-17: 20대→70대 대문 영상(수정안 61)은 수능운 대문에서 숨김 - 파일(/landing/hero.*)은 그대로 둠 */}
+        {/* 수정안 61: 대문 영상 - 나를 알고, 인연과 복을 잇다 (소리 없이 반복, 영상이 뜨기 전엔 같은 장면 그림) */}
+        {/* 2026-10-19: 인연(관상·궁합) 카드 아래로 다시 넣음 */}
+        <section className="pb-8">
+          <video
+            className="block w-full rounded-2xl motion-reduce:hidden"
+            style={{ aspectRatio: "3 / 4", boxShadow: "0 6px 24px rgba(14,22,40,0.25)" }}
+            autoPlay
+            muted
+            loop
+            playsInline
+            preload="auto"
+            poster="/landing/hero-poster.jpg"
+            aria-label="20대부터 70대까지 함께 나이 들어 가는 두 사람 - 나를 알고, 인연과 복을 잇다"
+          >
+            <source src="/landing/hero.webm" type="video/webm" />
+            <source src="/landing/hero.mp4" type="video/mp4" />
+          </video>
+          {/* 움직임 줄이기를 켠 기기: 그림만 */}
+          {/* eslint-disable-next-line @next/next/no-img-element -- 정적 그림 */}
+          <img src="/landing/hero-poster.jpg" alt="나를 알고, 인연과 복을 잇다 · 류결사주" className="hidden w-full rounded-2xl motion-reduce:block" />
+        </section>
 
         {/* 무료로 시작하기 - 첫 화면에 바로 보이게 */}
         <section className="pb-12">
@@ -196,7 +223,7 @@ export default function LandingPage() {
             ))}
           </div>
           <p className="mt-3 text-center text-[13px]" style={{ color: "var(--color-ink-faint)" }}>
-            {formatNyang(INVITE_REWARD)}이면 수능운 가볍게 보기 한 번 · 인원 제한 없이 계속 쌓여요
+            {suneung ? `${formatNyang(INVITE_REWARD)}이면 수능운 가볍게 보기 한 번 · 인원 제한 없이 계속 쌓여요` : "인원 제한 없이 한 명마다 계속 쌓여요"}
           </p>
           <a href="/mypage" className="mt-5 block rounded-2xl py-4 text-center text-[16px] font-bold" style={{ backgroundColor: "#16213a", color: "#f3e7c6", border: "1px solid var(--color-gold-line)", fontFamily: "var(--font-serif)" }}>
             내 초대 링크 받기

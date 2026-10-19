@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { blockIfAuthOff } from "@/server/launchGuard";
+import { isSuneungOn } from "@/lib/launchMode";
 import { SESSION_COOKIE_NAME, getUserBySessionToken } from "@/server/auth/session";
 import { notifyError } from "@/server/alert";
 import { getPersonRow, getPersonSummary } from "@/server/readings/readings";
@@ -12,6 +13,7 @@ export const maxDuration = 60;
 
 /** 수능운 깊게 보기 쓰기 (산 사람만, 한 번 쓰면 저장한 것을 돌려준다) */
 export async function POST(request: NextRequest, { params }: { params: { id: string } }) {
+  if (!isSuneungOn()) return NextResponse.json({ error: { code: "NOT_FOUND", message: "준비 중이에요." } }, { status: 404 });
   const blocked = blockIfAuthOff();
   if (blocked) return blocked;
   try {

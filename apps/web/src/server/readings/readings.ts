@@ -4,6 +4,7 @@ import type { SajuJson } from "saju-engine";
 import { db } from "@/server/auth/db";
 import { InsufficientYeopjeonError } from "@/server/yeopjeon/ledger";
 import { PREMIUM_ON, PRICE } from "@/lib/yeopjeon";
+import { isSuneungOn } from "@/lib/launchMode";
 import { isFocus, type Focus } from "@/lib/focus";
 import { EXTRA_KEYS, TOPICS, TOPIC_KEYS, isAnyTopicKey, isTopicKey, type AnyTopicKey, type TopicKey } from "@/lib/topics";
 import type { BasicContent, DeepContent, ReadingContent } from "./generateReading";
@@ -109,6 +110,8 @@ export const FACE_MODE = "face" as const;
 /** 연인 궁합 (2026-10-14 수정안 10) - 관상처럼 personId 자리에 궁합 번호(couple_readings.id) */
 export const COUPLE_MODE = "couple" as const;
 export function isPurchaseMode(v: unknown): v is PurchaseMode {
+  // 2026-10-19: 수능운은 NEXT_PUBLIC_SUNEUNG=on 일 때만 살 수 있다 (심사 동안 숨김) - 주소를 알아도 구매·결제 주문이 안 만들어진다
+  if ((v === "exam" || v === "exam_deep") && !isSuneungOn()) return false;
   return typeof v === "string" && (PURCHASE_MODES as string[]).includes(v);
 }
 export function isNamingMode(v: unknown): v is NamingMode {
