@@ -14,7 +14,7 @@ export const metadata = { title: `개인정보처리방침 | ${BUSINESS_INFO.ser
  *     명시해야 한다 (얼버무리면 오히려 법적 리스크가 커진다).
  *   - 관상 원본 사진은 서버로 전송되지 않는다 (브라우저 내 처리) - 이것도
  *     실제로 그렇게 구현되어 있다(faceLandmarks.ts).
- *   - 결제 카드정보는 당사가 보관하지 않고 PG사(토스페이먼츠)가 직접 처리한다.
+ *   - 결제 카드정보는 당사가 보관하지 않고 PG사(NHN KCP)가 직접 처리한다.
  *
  * ⚠️ Claude가 표준 개인정보처리방침 구조를 참고해 초안으로 작성한 것으로,
  * 법률 자문을 대체하지 않는다. 특히 해외 제3자 처리위탁(Google/Anthropic/Vercel)
@@ -55,7 +55,7 @@ export default function PrivacyPage() {
               )}
               <br />
               ③ 유료 결제 이용 시: 주문 상품명, 결제 금액. <b>카드번호 등 결제 수단 정보는 회사가 직접
-              수집·보관하지 않으며</b>, 전자지급결제대행업체(토스페이먼츠(주))가 직접 수집·처리합니다.
+              수집·보관하지 않으며</b>, 전자지급결제대행업체(엔에이치엔케이씨피(NHN KCP))가 직접 수집·처리합니다.
               <br />
               ④ 서비스 이용 과정에서 자동 수집: IP 주소(부정 이용·과도한 요청 방지 목적)
               {auth && (
@@ -144,7 +144,7 @@ export default function PrivacyPage() {
                 </thead>
                 <tbody>
                   <tr style={{ borderTop: "1px solid var(--color-line)" }}>
-                    <td className="p-2">토스페이먼츠(주)</td>
+                    <td className="p-2">엔에이치엔케이씨피(NHN KCP)</td>
                     <td className="p-2">결제 처리 및 승인</td>
                     <td className="p-2">관계 법령에 따른 기간</td>
                   </tr>
