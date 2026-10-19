@@ -20,6 +20,12 @@ export function Footer() {
         {/* 금색 이중선 */}
         <div aria-hidden className="mx-auto mb-6 h-[4px] w-full" style={{ borderTop: "1px solid var(--color-gold-line)", borderBottom: "1px solid var(--color-gold-line)" }} />
         <nav className="mb-4 flex flex-wrap items-center justify-center gap-x-3 gap-y-1 text-[12.5px]">
+          <a href="/pricing" className="font-semibold underline-offset-2 hover:underline" style={{ color: "var(--color-ink-soft)" }}>
+            상품·가격 안내
+          </a>
+          <span aria-hidden style={{ color: "var(--color-line)" }}>
+            |
+          </span>
           <a href="/terms" className="underline-offset-2 hover:underline">
             이용약관
           </a>
@@ -57,7 +63,19 @@ export function Footer() {
             </>
           )}
         </p>
-        <p className="mt-1">고객센터 {BUSINESS_INFO.csEmail}</p>
+        <p className="mt-1">
+          <span className="inline-block">
+            고객센터{" "}
+            <a href={`tel:${BUSINESS_INFO.csPhone.replace(/-/g, "")}`} className="underline-offset-2 hover:underline">
+              {BUSINESS_INFO.csPhone}
+            </a>
+          </span>
+          <span aria-hidden className="mx-1.5 hidden sm:inline">
+            ·
+          </span>
+          <br className="sm:hidden" />
+          <span className="inline-block">{BUSINESS_INFO.csEmail}</span>
+        </p>
         <p className="mx-auto mt-5 max-w-[22rem] text-[11px]" style={{ color: "var(--color-ink-faint)" }}>
           모든 운세·사주·관상 콘텐츠는 전통 문화·오락 목적의 참고 정보이며, 성격·재물·건강·연애 등 미래를 과학적으로 확정하지 않습니다.
         </p>

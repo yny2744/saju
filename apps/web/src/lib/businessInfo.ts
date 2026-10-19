@@ -12,6 +12,8 @@ export const BUSINESS_INFO = {
   mailOrderSalesNumber: "제2026-서울강남-00670호",
   address: "서울특별시 강남구 양재대로55길 10, 102동 1116호 (일원동, 수서1단지 에스에이치빌)",
   csEmail: "yny1967@gmail.com",
+  /** 고객센터 전화 (2026-10-19 유샘 제공, 결제 심사 필수 항목 - 사이트 하단에 노출) */
+  csPhone: "010-2620-2744",
   /** 별도 지정된 개인정보 보호책임자가 없는 소규모 사업자라, 대표자가 겸임한다. */
   privacyOfficer: "유남영",
   privacyOfficerEmail: "yny1967@gmail.com",
