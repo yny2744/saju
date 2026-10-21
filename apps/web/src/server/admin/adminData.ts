@@ -16,7 +16,7 @@ export interface PeriodStats {
   signups: number;
   purchases: number;
   spent: number;
-  /** 카드·간편결제로 실제 받은 돈 */
+  /** 카드·계좌이체로 실제 받은 돈 */
   charged: number;
 }
 

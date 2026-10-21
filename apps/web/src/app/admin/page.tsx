@@ -166,8 +166,8 @@ function AdminBody() {
   if (!data) return <LoadingState message="불러오고 있어요..." />;
 
   const PAY_MODE_LABEL: Record<PayMode, string> = {
-    portone: "카드·간편결제 켜짐 (포트원)",
-    toss: "카드·간편결제 켜짐 (토스페이먼츠 직접)",
+    portone: "카드·계좌이체 켜짐 (포트원)",
+    toss: "카드·계좌이체 켜짐 (토스페이먼츠 직접)",
     mock: "시험 결제 모드 - 실제 돈이 오가지 않아요",
     off: "결제 꺼짐 - Vercel에 PORTONE_STORE_ID·PORTONE_CHANNEL_KEY·PORTONE_API_SECRET 를 넣으면 켜져요",
   };
@@ -228,7 +228,7 @@ function AdminBody() {
 
       {/* 결제 (수정안 31) */}
       <section className="gold-card rounded-2xl p-4">
-        <h2 className="text-[16px] font-bold">카드·간편결제</h2>
+        <h2 className="text-[16px] font-bold">카드·계좌이체</h2>
         <p
           className="mt-2 rounded-lg px-3 py-2 text-[13px]"
           style={{ backgroundColor: data.payMode === "toss" ? "#eef5ef" : "var(--color-danger-soft)", color: data.payMode === "toss" ? "var(--color-element-wood)" : "var(--color-danger)" }}

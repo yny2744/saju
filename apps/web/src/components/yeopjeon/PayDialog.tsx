@@ -3,10 +3,11 @@
 import { useEffect, useState } from "react";
 import { CURRENCY_NAME, formatNyang } from "@/lib/yeopjeon";
 import { PAY_BACK_KEY } from "@/lib/pay";
+import { DEFAULT_PAY_METHOD, PAY_METHODS, PAY_METHODS_TEXT, portonePayMethod, tossPayMethod, type PayMethodId } from "@/lib/payMethod";
 import { reportClientError } from "./useYeopjeon";
 
 /**
- * 결제 창 (2026-10-10 수정안 31). 엽전이 모자랄 때 뜬다 - 가진 엽전은 먼저 쓰고 모자란 만큼만 카드·간편결제.
+ * 결제 창 (2026-10-10 수정안 31). 엽전이 모자랄 때 뜬다 - 가진 엽전은 먼저 쓰고 모자란 만큼만 카드·계좌이체 (2026-10-21 결제수단 선택).
  * 결제가 승인되면 /pay/success 에서 바로 그 운세가 열린다.
  */
 
@@ -87,6 +88,7 @@ export function PayDialog({
   const [quote, setQuote] = useState<Quote | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [method, setMethod] = useState<PayMethodId>(DEFAULT_PAY_METHOD);
 
   useEffect(() => {
     let cancelled = false;
@@ -138,7 +140,7 @@ export function PayDialog({
           orderName: quote.orderName,
           totalAmount: quote.amount,
           currency: "CURRENCY_KRW",
-          payMethod: "CARD",
+          payMethod: portonePayMethod(method),
           customer: { customerId: quote.customerKey },
           redirectUrl: success,
         });
@@ -160,7 +162,7 @@ export function PayDialog({
       const TossPayments = await loadToss();
       const payment = TossPayments(quote.clientKey!).payment({ customerKey: quote.customerKey });
       await payment.requestPayment({
-        method: "CARD",
+        method: tossPayMethod(method),
         amount: { currency: "KRW", value: quote.amount },
         orderId: quote.orderId,
         orderName: quote.orderName,
@@ -208,11 +210,38 @@ export function PayDialog({
                 </dd>
               </div>
             </dl>
-            <button type="button" disabled={busy} onClick={pay} className="btn-band mt-4 block w-full rounded-xl py-4 text-[17px] font-bold disabled:opacity-60" style={{ fontFamily: "var(--font-serif)" }}>
-              {busy ? "결제창을 여는 중..." : `카드·간편결제로 ${quote.amount.toLocaleString("ko-KR")}원 결제`}
+            {!quote.mock && (
+              <div role="radiogroup" aria-label="결제수단" className="mt-4 grid grid-cols-2 gap-2">
+                {PAY_METHODS.map((m) => {
+                  const on = method === m.id;
+                  return (
+                    <button
+                      key={m.id}
+                      type="button"
+                      role="radio"
+                      aria-checked={on}
+                      disabled={busy}
+                      onClick={() => setMethod(m.id)}
+                      className="rounded-xl px-2 py-2.5 text-center disabled:opacity-60"
+                      style={{
+                        border: on ? "2px solid var(--color-accent)" : "1px solid var(--color-line)",
+                        backgroundColor: on ? "var(--color-paper-soft)" : "transparent",
+                      }}
+                    >
+                      <span className="block text-[15px] font-bold">{m.label}</span>
+                      <span className="mt-0.5 block text-[11px]" style={{ color: "var(--color-ink-faint)" }}>
+                        {m.hint}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+            <button type="button" disabled={busy} onClick={pay} className="btn-band mt-3 block w-full rounded-xl py-4 text-[17px] font-bold disabled:opacity-60" style={{ fontFamily: "var(--font-serif)" }}>
+              {busy ? "결제창을 여는 중..." : `${PAY_METHODS.find((m) => m.id === method)?.label ?? "카드"}로 ${quote.amount.toLocaleString("ko-KR")}원 결제`}
             </button>
             <p className="mt-2 text-center text-[12px] leading-relaxed" style={{ color: "var(--color-ink-faint)" }}>
-              카드·간편결제 · 결제하면 바로 열려요
+              {PAY_METHODS_TEXT} · 결제하면 바로 열려요
               <br />
               풀이를 열어 보기 전이면 7일 안에 전액 환불돼요
             </p>

@@ -488,7 +488,7 @@ function PersonBody({ id }: { id: string }) {
             </p>
             <p className="mt-1 text-center text-[13px]" style={{ color: "var(--color-ink-faint)" }}>
               내 {CURRENCY_NAME} {formatNyang(balance)}
-              {balance < priceOf(confirm.mode) && " · 모자란 만큼만 카드·간편결제"}
+              {balance < priceOf(confirm.mode) && " · 모자란 만큼만 카드·계좌이체"}
             </p>
             <div className="mt-5 grid grid-cols-2 gap-2">
               <button type="button" onClick={() => setConfirm(null)} className="btn-secondary">

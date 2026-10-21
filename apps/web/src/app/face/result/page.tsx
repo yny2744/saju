@@ -225,7 +225,7 @@ function FaceDeepCta({ resultId }: { resultId: string }) {
         {busy ? "준비하는 중..." : `심층 풀이 받기 · ${CURRENCY_NAME} ${formatNyang(PRICE.FACE)}`}
       </button>
       <p className="mt-2 text-center text-[12px]" style={{ color: "var(--color-ink-faint)" }}>
-        로그인 후 이용 · 엽전이 모자라면 모자란 만큼만 카드·간편결제
+        로그인 후 이용 · 엽전이 모자라면 모자란 만큼만 카드·계좌이체
       </p>
       {msg && (
         <p className="mt-3 rounded-xl px-4 py-2.5 text-center text-[13px]" style={{ backgroundColor: "var(--color-danger-soft)", color: "var(--color-danger)" }}>

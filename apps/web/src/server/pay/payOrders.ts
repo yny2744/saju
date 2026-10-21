@@ -10,7 +10,7 @@ import { formatNyang } from "@/lib/yeopjeon";
 import type { AnyTopicKey } from "@/lib/topics";
 
 /**
- * 카드·간편결제 주문 (2026-10-10 수정안 31). 결제가 승인되는 순간 운세가 열린다.
+ * 카드·계좌이체 주문 (2026-10-10 수정안 31). 결제가 승인되는 순간 운세가 열린다.
  *
  *  1) checkout: 엽전으로 부족한 만큼 주문(pay_orders, pending)을 만든다 → 화면이 토스 결제창을 띄운다
  *  2) 손님이 결제 → 토스가 successUrl로 돌려보냄 → confirm: 토스에 승인 요청 → 승인되면 한 트랜잭션으로
@@ -76,7 +76,7 @@ export async function checkout(userId: string, personId: string, mode: PurchaseM
   const balance = await getBalance(userId);
   if (balance >= plan.price) return { status: "enough", price: plan.price, balance };
   const pm = payMode();
-  if (pm === "off") throw new PayError("PAY_NOT_READY", "카드·간편결제를 준비하고 있어요. 곧 열려요.");
+  if (pm === "off") throw new PayError("PAY_NOT_READY", "결제를 준비하고 있어요. 곧 열려요.");
   const split = splitPayment(plan.price, balance);
   const orderId = newOrderId();
   const orderName = productName(mode, plan.topics);
@@ -141,7 +141,7 @@ export async function confirmOrder(userId: string | null, input: { paymentKey: u
   if (!paymentKey || amount !== order.amount) throw new PayError("AMOUNT_MISMATCH", "결제 금액이 주문과 달라요. 결제되지 않았어요.");
 
   const p = provider();
-  if (!p) throw new PayError("PAY_NOT_READY", "카드·간편결제를 준비하고 있어요.");
+  if (!p) throw new PayError("PAY_NOT_READY", "결제를 준비하고 있어요.");
   const res = await p.confirmPayment({ paymentKey, orderId, amount });
   if (!res.approved || (res.approvedAmount !== undefined && res.approvedAmount !== order.amount)) {
     await pool.query(`UPDATE pay_orders SET status = 'failed' WHERE id = $1 AND status = 'pending'`, [orderId]);
@@ -159,7 +159,7 @@ export async function confirmOrder(userId: string | null, input: { paymentKey: u
     if ((upd.rowCount ?? 0) === 0) return; // 동시에 두 번 - 먼저 처리된 쪽이 끝냄
     await client.query(
       `INSERT INTO bokchae_ledger (user_id, amount, kind, label, ref) VALUES ($1, $2, 'pay', $3, $4) ON CONFLICT (user_id, kind, ref) DO NOTHING`,
-      [uid, order.amount, `카드·간편결제 ${formatNyang(order.amount)} (${order.order_name})`, orderId]
+      [uid, order.amount, `결제 ${formatNyang(order.amount)} (${order.order_name})`, orderId]
     );
     await client.query("SAVEPOINT buy");
     try {

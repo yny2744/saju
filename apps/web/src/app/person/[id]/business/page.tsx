@@ -239,7 +239,7 @@ function Body({ id }: { id: string }) {
           </ul>
           <p className="mt-3 text-[13px]" style={{ color: "var(--color-ink-faint)" }}>
             내 {CURRENCY_NAME} {formatNyang(wallet?.balance ?? 0)}
-            {(wallet?.balance ?? 0) < state.price && " · 모자란 만큼만 카드·간편결제"}
+            {(wallet?.balance ?? 0) < state.price && " · 모자란 만큼만 카드·계좌이체"}
           </p>
           <button type="button" disabled={busy} onClick={() => buy()} className="btn-primary mt-4 disabled:opacity-50">
             {busy ? "여는 중..." : (wallet?.balance ?? 0) >= state.price ? `${CURRENCY_NAME}으로 열기` : "결제하고 열기"}

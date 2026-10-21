@@ -375,7 +375,7 @@ function FaceBody({ id }: { id: string }) {
             )}
             <p className="mt-3 text-[13px]" style={{ color: "var(--color-ink-faint)" }}>
               내 {CURRENCY_NAME} {formatNyang(state.balance)}
-              {state.balance < state.price && " · 모자란 만큼만 카드·간편결제"}
+              {state.balance < state.price && " · 모자란 만큼만 카드·계좌이체"}
             </p>
             <button type="button" disabled={busy || attaching || !state.person} onClick={buy} className="btn-primary mt-4 disabled:opacity-50">
               {!state.person
