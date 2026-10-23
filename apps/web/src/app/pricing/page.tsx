@@ -35,7 +35,7 @@ export default function PricingPage() {
       <section className="mb-9">
         <h2 className="mb-1 text-lg font-bold">유료 상품</h2>
         <p className="mb-3 text-[13px]" style={{ color: "var(--color-ink-faint)" }}>
-          가격은 부가세 포함입니다. 결제하면 바로 웹사이트에서 열람할 수 있어요.
+          가격은 부가세 포함입니다. 사이트 안에서는 같은 금액을 서비스 화폐 단위 "냥"으로 표시해요 (1냥 = 1원, 예: 990냥 = 990원). 결제하면 바로 웹사이트에서 열람할 수 있어요.
         </p>
         <ul className="space-y-2">
           {rows.map((p) => (

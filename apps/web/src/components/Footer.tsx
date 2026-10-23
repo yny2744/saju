@@ -42,6 +42,7 @@ export function Footer() {
             문의하기
           </a>
         </nav>
+        <p className="mb-3 text-[12px]">가격 단위: 1냥 = 1원 (부가세 포함)</p>
         <p className="font-semibold" style={{ color: "var(--color-ink-soft)" }}>
           {BUSINESS_INFO.companyName} ({BUSINESS_INFO.serviceName}) · 대표 {BUSINESS_INFO.representative}
         </p>

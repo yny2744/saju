@@ -7,6 +7,7 @@ import { LoadingState, ErrorState } from "@/components/StatusScreens";
 import { TOPICS, isAnyTopicKey, isTopicKey } from "@/lib/topics";
 import { CURRENCY_NAME, PRICE, formatNyang } from "@/lib/yeopjeon";
 import { PayDialog } from "@/components/yeopjeon/PayDialog";
+import { WonNote } from "@/components/WonNote";
 import { PersonHeader } from "@/components/yeopjeon/PersonHeader";
 import { WritingOverlay } from "@/components/yeopjeon/WritingOverlay";
 import { InviteCard } from "@/components/yeopjeon/InviteCard";
@@ -282,6 +283,7 @@ function TopicBody({ id, topic }: { id: string; topic: string }) {
           <button type="button" disabled={buying !== null} onClick={() => setConfirmDeep(true)} className="btn-secondary mt-2.5">
             바로 깊게 보기 · {formatNyang(PRICE.DEEP)}
           </button>
+          <WonNote />
           {canBasic && (
             <p className="mt-3 text-[12px]" style={{ color: "var(--color-ink-faint)" }}>
               운세 보기를 본 뒤에도 깊게 보기로 더 자세히 볼 수 있어요

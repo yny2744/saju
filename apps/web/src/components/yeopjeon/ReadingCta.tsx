@@ -8,6 +8,7 @@ import { focusLabel, type Focus } from "@/lib/focus";
 import { FOCUS_TOPICS, TOPICS, TOPIC_KEYS, type TopicKey } from "@/lib/topics";
 import { CONTINUE_PATH, savePendingIntent } from "@/lib/intent";
 import { reportClientError } from "./useYeopjeon";
+import { WonNote } from "@/components/WonNote";
 
 const GOLD = "var(--color-gold)";
 
@@ -98,6 +99,7 @@ export function ReadingCta({ resultId, nickname, focus }: { resultId: string; ni
         <a href={CONTINUE_PATH} onClick={rememberPick} className="mt-3 block rounded-xl py-3.5 text-center text-[15px] font-bold" style={{ border: "1px solid var(--color-line)" }}>
           로그인 없이 비회원으로 {title} 운세 보기 · {formatNyang(PRICE.BASIC)}
         </a>
+        <WonNote />
       </>
     );
   } else if (!me.termsAgreed) {
@@ -132,6 +134,7 @@ export function ReadingCta({ resultId, nickname, focus }: { resultId: string; ni
             </span>
           </button>
         </div>
+        <WonNote />
       </>
     );
   }

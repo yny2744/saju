@@ -53,7 +53,7 @@ export function GuestStart({ next, label = "비회원으로 바로 결제하기"
         {busy ? "준비 중..." : label}
       </button>
       <p className="mt-2 text-center text-[12px] leading-relaxed" style={{ color: "var(--color-ink-faint)" }}>
-        회원가입 없이 결제할 수 있어요. 비회원으로 산 풀이는 이 기기·브라우저에서 30일 동안 다시 볼 수 있어요.
+        회원가입 없이 결제할 수 있어요 (1냥 = 1원, 표시된 금액 그대로 원으로 결제). 비회원으로 산 풀이는 이 기기·브라우저에서 30일 동안 다시 볼 수 있어요.
       </p>
     </div>
   );

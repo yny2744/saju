@@ -11,6 +11,7 @@ import { PersonHeader } from "@/components/yeopjeon/PersonHeader";
 import { SEASON_INFO, examDday, examSeason } from "@/lib/suneung";
 import { InviteCard } from "@/components/yeopjeon/InviteCard";
 import { PayDialog } from "@/components/yeopjeon/PayDialog";
+import { WonNote } from "@/components/WonNote";
 import { WriteProgress } from "@/components/yeopjeon/WriteProgress";
 import { missingTopics, writeTopics } from "@/lib/writeTopics";
 import { PdfButton } from "@/components/yeopjeon/PdfButton";
@@ -440,6 +441,7 @@ function PersonBody({ id }: { id: string }) {
             </span>
           </button>
           )}
+          <WonNote className="mt-0" />
         </section>
       )}
 
