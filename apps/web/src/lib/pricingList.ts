@@ -25,6 +25,7 @@ export const FREE_ITEMS: Array<{ name: string; desc: string }> = [
 
 export function paidProducts(): PriceRow[] {
   const rows: PriceRow[] = [
+    { name: "운세 보기 (1가지)", desc: "12가지 주제 중 고른 한 가지의 기본 풀이 (회원 가입 시 선물 엽전으로 1회 무료)", price: PRICE.BASIC },
     { name: "운세 깊게 보기 (1가지)", desc: "12가지 주제(성향·연애·결혼·재물·취업·승진·사업·건강·인간관계·자녀가족·올해·평생대운) 중 고른 한 가지를 길게 풀이", price: PRICE.DEEP },
     { name: "3가지 운세 몰아보기", desc: "고른 운세 3가지를 한꺼번에 깊게 보기", price: PRICE.BUNDLE3 },
     { name: "12가지 운세 전부 보기", desc: "12가지 운세 전체 깊게 보기 + 월별 운세·개운법, 내려받는 사주 책자(PDF)", price: PRICE.BUNDLE12 },

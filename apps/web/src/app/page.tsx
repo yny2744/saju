@@ -176,7 +176,7 @@ export default function LandingPage() {
             ))}
           </ul>
 
-          {/* 로그인 혜택 (2026-10-14 수정안 10: 엽전 선물 대신 12가지 운세 무료, "회원가입" 말은 쓰지 않는다) */}
+          {/* 로그인 혜택 (2026-10-23: 가입 선물 990냥으로 운세 하나 무료 - 12가지 모두 무료였던 수정안 10을 대체) */}
           <a
             href="/login"
             className="mt-6 block rounded-2xl px-5 py-6 text-center"
@@ -186,13 +186,13 @@ export default function LandingPage() {
               錢
             </span>
             <span className="mt-3 block text-[19px] font-bold" style={{ color: "#f3e7c6", fontFamily: "var(--font-serif)" }}>
-              로그인하면 12가지 운세가 무료
+              가입하면 운세 하나가 무료
             </span>
             <span className="mt-1 block text-[14px]" style={{ color: "#c9cfda" }}>
-              카카오나 이메일로 로그인만 하면 위 운세를 모두 바로 볼 수 있어요
+              가입 선물 엽전 990냥으로 위 운세 중 하나를 바로 볼 수 있어요
             </span>
             <span className="mx-auto mt-4 block max-w-[240px] rounded-xl py-3 text-[15px] font-bold" style={{ background: "linear-gradient(180deg,#e2c47e,#c9a55a)", color: "#16213a" }}>
-              로그인하고 운세 보기
+              가입하고 운세 보기
             </span>
           </a>
         </section>
