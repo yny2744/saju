@@ -305,7 +305,7 @@ function PersonBody({ id }: { id: string }) {
                       : "누르면 고르기"
                     : seen.has(t)
                       ? `운세 봄 · 깊게 보기 ${formatNyang(PRICE.DEEP)}`
-                      : "무료로 보기"}
+                      : `운세 보기 · ${formatNyang(PRICE.BASIC)}`}
               </span>
             </>
           );

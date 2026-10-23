@@ -276,7 +276,7 @@ function TopicBody({ id, topic }: { id: string; topic: string }) {
           )}
           {canBasic && (
             <button type="button" disabled={buying !== null} onClick={() => buy("basic")} className="btn-band mt-4 block w-full rounded-xl py-4 text-[17px] font-bold disabled:opacity-60" style={{ fontFamily: "var(--font-serif)" }}>
-              {title} 운세 무료로 보기
+              {title} 운세 보기 · {formatNyang(PRICE.BASIC)}
             </button>
           )}
           <button type="button" disabled={buying !== null} onClick={() => setConfirmDeep(true)} className="btn-secondary mt-2.5">

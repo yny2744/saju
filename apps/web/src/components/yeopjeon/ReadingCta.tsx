@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { isAuthEnabled } from "@/lib/launchMode";
-import { PENDING_RESULT_KEY, PRICE, formatNyang } from "@/lib/yeopjeon";
+import { CURRENCY_NAME, PENDING_RESULT_KEY, PRICE, WELCOME_GIFT, formatNyang } from "@/lib/yeopjeon";
 import { focusLabel, type Focus } from "@/lib/focus";
 import { FOCUS_TOPICS, TOPICS, TOPIC_KEYS, type TopicKey } from "@/lib/topics";
 import { CONTINUE_PATH, savePendingIntent } from "@/lib/intent";
@@ -86,10 +86,10 @@ export function ReadingCta({ resultId, nickname, focus }: { resultId: string; ni
           className="block rounded-xl py-4 text-center text-[17px] font-bold"
           style={{ backgroundColor: "#fee500", color: "#191600" }}
         >
-          카카오로 로그인하고 {title} 운세 보기
+          카카오로 가입하고 {title} 운세 무료로 보기
         </a>
         <p className="mt-2 text-center text-[13px]" style={{ color: "var(--color-ink-soft)" }}>
-          로그인하면 12가지 운세를 모두 무료로 볼 수 있어요
+          가입하면 선물 {CURRENCY_NAME} {formatNyang(WELCOME_GIFT)}으로 운세 하나를 무료로 볼 수 있어요
         </p>
         <a href={`/login?next=${next}`} onClick={rememberPick} className="mt-1 block text-center text-[12px] underline underline-offset-4" style={{ color: "var(--color-ink-faint)" }}>
           이메일로 로그인하기
@@ -116,7 +116,7 @@ export function ReadingCta({ resultId, nickname, focus }: { resultId: string; ni
           className="btn-band block w-full rounded-xl py-4 text-[17px] font-bold disabled:opacity-60"
           style={{ fontFamily: "var(--font-serif)" }}
         >
-          {title} 운세 무료로 보기
+          {title} 운세 보기 · {formatNyang(PRICE.BASIC)}
         </button>
         <div className="mt-3 grid grid-cols-2 gap-2">
           <button type="button" disabled={busy} onClick={() => go((id) => `/person/${id}?buy=bundle3`)} className="rounded-xl px-2 py-3 text-[13px] font-semibold disabled:opacity-60" style={{ border: "1px solid var(--color-gold-line)" }}>
@@ -139,7 +139,7 @@ export function ReadingCta({ resultId, nickname, focus }: { resultId: string; ni
   return (
     <section className="gold-card mb-8 rounded-2xl p-5">
       <p className="text-center text-[13px]" style={{ color: GOLD }}>
-        이어서 보기 · 로그인하면 무료
+        이어서 보기 · 운세 하나 {formatNyang(PRICE.BASIC)} · 가입하면 하나 무료
       </p>
       <h2 className="mt-1 text-center text-[20px] font-bold leading-snug" style={{ fontFamily: "var(--font-serif)" }}>
         {nickname}님의 12가지 운세

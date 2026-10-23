@@ -70,7 +70,7 @@ export function bundleDiscount(count: number, price: number): { list: number; of
 
 /**
  * 가입(로그인) 선물 (2026-10-17 유샘 확정): 990냥 - 수능운 가볍게 보기(990)를 바로 무료로 볼 수 있는 금액.
- * 회원마다 한 번만 (장부 kind "welcome"). 12가지 운세 보기는 로그인하면 그대로 무료.
+ * 회원마다 한 번만 (장부 kind "welcome"). 2026-10-23: 12가지 운세 보기(990냥) 하나를 이 선물로 무료로 본다.
  */
 export const WELCOME_GIFT = 990;
 

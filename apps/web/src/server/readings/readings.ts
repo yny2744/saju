@@ -406,8 +406,9 @@ export function planPurchase(mode: PurchaseMode, requested: unknown, owned: AnyT
   const topics = uniq as TopicKey[];
   if (mode === "basic") {
     if (ownedSet.has(topics[0])) throw new PurchaseError("ALREADY_OWNED", "이미 깊게 보기가 열린 운세예요.");
-    // 2026-10-14 수정안 10: 로그인한 회원은 12가지 운세 보기가 무료 (엽전 차감 없음)
-    return { topics, price: 0 };
+    // 2026-10-23 유샘 결정: 12가지 운세 보기는 다시 990냥 (회원은 가입 선물 990냥으로 하나 무료, 비회원은 첫 운세부터 결제)
+    //   (2026-10-14 수정안 10 "회원은 12가지 모두 무료"를 대체 - 무료로 훑어보고 깊게 보기로 안 넘어가는 문제)
+    return { topics, price: PRICE.BASIC };
   }
   if (topics.some((t) => ownedSet.has(t))) throw new PurchaseError("ALREADY_OWNED", "이미 열린 운세가 들어 있어요. 다른 운세를 골라 주세요.");
   return { topics, price: mode === "deep" ? PRICE.DEEP : PRICE.BUNDLE3 };

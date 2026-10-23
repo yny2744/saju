@@ -67,7 +67,7 @@ describe("12가지 운", () => {
 
 describe("운세 보기 990 · 할인 표시 · 들어온 길 (수정안 20~24)", () => {
   it("운세 보기: 12가지 중 하나만, 990냥 / 깊게 보기가 이미 열렸으면 거절 / 전부 보기 전용은 못 고름", () => {
-    expect(planPurchase("basic", ["money"], [])).toEqual({ topics: ["money"], price: 0 }); // 수정안 10: 로그인 회원 무료
+    expect(planPurchase("basic", ["money"], [])).toEqual({ topics: ["money"], price: PRICE.BASIC }); // 2026-10-23: 다시 990냥 (가입 선물로 하나 무료)
     expect(() => planPurchase("basic", ["money"], ["money"])).toThrow(PurchaseError);
     expect(() => planPurchase("basic", ["money", "health"], [])).toThrow(PurchaseError);
     expect(() => planPurchase("basic", ["monthly"], [])).toThrow(PurchaseError);

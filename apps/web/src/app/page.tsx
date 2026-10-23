@@ -157,7 +157,7 @@ export default function LandingPage() {
           <SectionTitle title="12가지 운세" sub="궁금한 운세를 골라 보세요" />
           <div className="mb-5 flex justify-center">
             <span className="rounded-full px-3 py-1.5 text-[12.5px] font-semibold" style={{ backgroundColor: "var(--color-accent-soft)", color: "var(--color-accent)" }}>
-              로그인하면 12가지 모두 무료
+              가입하면 운세 하나 무료 · 하나에 990냥
             </span>
           </div>
           <ul className="grid grid-cols-3 gap-2">

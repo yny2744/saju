@@ -39,7 +39,7 @@ export function YeopjeonPanel() {
         </div>
         <span className="flex flex-col items-end gap-1.5">
           <a href="/#fortunes" className="btn-band rounded-xl px-4 py-2.5 text-[14px] font-bold">
-            12가지 운세 무료로 보기
+            12가지 운세 보기
           </a>
         </span>
       </section>
