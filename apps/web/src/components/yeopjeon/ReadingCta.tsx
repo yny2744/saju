@@ -94,6 +94,10 @@ export function ReadingCta({ resultId, nickname, focus }: { resultId: string; ni
         <a href={`/login?next=${next}`} onClick={rememberPick} className="mt-1 block text-center text-[12px] underline underline-offset-4" style={{ color: "var(--color-ink-faint)" }}>
           이메일로 로그인하기
         </a>
+        {/* 2026-10-23 비회원 결제: 고른 운세를 기억해 두고 이어서 보기 화면(약관 동의 → 결제)으로 */}
+        <a href={CONTINUE_PATH} onClick={rememberPick} className="mt-3 block rounded-xl py-3.5 text-center text-[15px] font-bold" style={{ border: "1px solid var(--color-line)" }}>
+          로그인 없이 비회원으로 {title} 운세 보기 · {formatNyang(PRICE.BASIC)}
+        </a>
       </>
     );
   } else if (!me.termsAgreed) {

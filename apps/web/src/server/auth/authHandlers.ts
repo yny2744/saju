@@ -1,4 +1,5 @@
 import {
+  createGuestUser,
   createUserWithEmail,
   recordConsent,
   setMarketingAgreed,
@@ -35,12 +36,12 @@ interface AuthErrorBody {
 }
 
 interface AuthUserBody {
-  user: { nickname: string; email: string | null; termsAgreed: boolean; marketingAgreed: boolean; isAdmin?: boolean };
+  user: { nickname: string; email: string | null; termsAgreed: boolean; marketingAgreed: boolean; isAdmin?: boolean; isGuest?: boolean };
 }
 
 function toPublicUser(user: User): AuthUserBody["user"] {
   // 수정안 48: 관리자에게만 내 복주머니에 [관리자 화면] 버튼
-  return { nickname: user.nickname, email: user.email, termsAgreed: user.termsAgreed, marketingAgreed: user.marketingAgreed, ...(isAdminUser(user) ? { isAdmin: true } : {}) };
+  return { nickname: user.nickname, email: user.email, termsAgreed: user.termsAgreed, marketingAgreed: user.marketingAgreed, ...(isAdminUser(user) ? { isAdmin: true } : {}), ...(user.isGuest ? { isGuest: true } : {}) };
 }
 
 /**
@@ -118,6 +119,32 @@ export async function handleLogin(rawBody: unknown): Promise<AuthHandlerResult<A
     // eslint-disable-next-line no-console
     console.error("[auth] 로그인 실패:", err);
     return { status: 500, body: { error: { code: "LOGIN_FAILED", message: "로그인에 실패했습니다. 잠시 후 다시 시도해주세요." } } };
+  }
+}
+
+/**
+ * 비회원으로 시작 (2026-10-23). 필수 약관 동의만 받고 비회원 계정 + 세션을 만든다 → 바로 결제창까지 간다.
+ * 이미 로그인(또는 비회원 시작)한 상태면 새로 만들지 않고 그대로 쓴다. 가입 선물·초대 보상은 없다.
+ */
+export async function handleGuestStart(token: string | undefined, rawBody: unknown): Promise<AuthHandlerResult<AuthUserBody | AuthErrorBody>> {
+  if (typeof rawBody !== "object" || rawBody === null) {
+    return { status: 400, body: { error: { code: "INVALID_BODY", message: "요청 형식이 올바르지 않습니다." } } };
+  }
+  const consent = readConsent(rawBody as Record<string, unknown>);
+  if (!consent) return { status: 400, body: CONSENT_REQUIRED_ERROR };
+  const current = await getUserBySessionToken(token);
+  if (current) {
+    if (!current.termsAgreed) await recordConsent(current.id, consent.marketing);
+    return { status: 200, body: { user: toPublicUser({ ...current, termsAgreed: true }) } };
+  }
+  try {
+    const user = await createGuestUser(consent.marketing);
+    const session = await createSession(user.id);
+    return { status: 200, body: { user: toPublicUser(user) }, session };
+  } catch (err) {
+    // eslint-disable-next-line no-console
+    console.error("[auth] 비회원 시작 실패:", err);
+    return { status: 500, body: { error: { code: "GUEST_FAILED", message: "잠시 문제가 생겼어요. 잠시 후 다시 시도해주세요." } } };
   }
 }
 

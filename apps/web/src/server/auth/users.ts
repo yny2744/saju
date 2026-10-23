@@ -10,6 +10,8 @@ export interface User {
   termsAgreed: boolean;
   /** 선택 동의: 마케팅·광고 정보 수신 */
   marketingAgreed: boolean;
+  /** 비회원(로그인 없이 결제) 계정 - 2026-10-23 */
+  isGuest: boolean;
 }
 
 interface UserRow {
@@ -19,9 +21,10 @@ interface UserRow {
   kakao_id: string | null;
   terms_agreed_at: Date | null;
   marketing_agreed: boolean;
+  is_guest: boolean;
 }
 
-const USER_COLUMNS = "id, email, nickname, kakao_id, terms_agreed_at, marketing_agreed";
+const USER_COLUMNS = "id, email, nickname, kakao_id, terms_agreed_at, marketing_agreed, is_guest";
 
 function toUser(row: UserRow): User {
   return {
@@ -31,6 +34,7 @@ function toUser(row: UserRow): User {
     kakaoId: row.kakao_id,
     termsAgreed: row.terms_agreed_at !== null,
     marketingAgreed: row.marketing_agreed,
+    isGuest: row.is_guest === true,
   };
 }
 
@@ -122,6 +126,25 @@ export async function findOrCreateKakaoUser(kakaoId: string, nickname: string): 
     [kakaoId, nickname]
   );
   return toUser(created.rows[0]);
+}
+
+export const GUEST_NICKNAME = "비회원";
+
+/**
+ * 비회원 계정 만들기 (2026-10-23, 카드사 심사 "결제창 확인 불가" 반려 대응).
+ * 로그인·회원가입 없이 필수 약관 동의만 받고 바로 결제할 수 있게, 이름 없는 계정을 하나 만든다.
+ * 이메일·비밀번호·카카오 ID가 없어서 다른 기기에서 다시 로그인할 수는 없고, 이 브라우저의 세션(30일)으로만 다시 본다.
+ * 구매·결제·풀이 저장은 회원과 똑같이 이 계정 번호로 기록된다. 가입 선물·초대 보상은 주지 않는다.
+ */
+export async function createGuestUser(marketingAgreed: boolean): Promise<User> {
+  const pool = await db();
+  const result = await pool.query<UserRow>(
+    `INSERT INTO users (nickname, is_guest, terms_agreed_at, marketing_agreed, marketing_agreed_at)
+     VALUES ($1, true, now(), $2::boolean, CASE WHEN $2::boolean THEN now() ELSE NULL END)
+     RETURNING ${USER_COLUMNS}`,
+    [GUEST_NICKNAME, marketingAgreed]
+  );
+  return toUser(result.rows[0]);
 }
 
 export async function getUserById(id: string): Promise<User | null> {

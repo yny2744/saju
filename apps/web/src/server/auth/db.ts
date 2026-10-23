@@ -288,6 +288,8 @@ async function ensureSchema(): Promise<void> {
   // 2026-10-14: 상호 작명 열람권이 12가지 운세 "business"(사업·창업)와 같은 이름으로 남던 것을 바로잡는다 (via 가 상품 이름인 줄만)
   await db.query(`UPDATE topic_unlocks SET topic = 'name_business' WHERE topic = 'business' AND via IN ('business', 'p_business')`);
   await db.query(`CREATE INDEX IF NOT EXISTS pay_orders_user_idx ON pay_orders(user_id, created_at DESC);`);
+  // 2026-10-23 비회원 결제: 로그인 없이 약관 동의만 받고 만든 "비회원" 계정 (가입 선물·초대 보상 없음, 이 브라우저 세션으로만 다시 본다)
+  await db.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS is_guest BOOLEAN NOT NULL DEFAULT false;`);
   schemaReady = true;
 }
 

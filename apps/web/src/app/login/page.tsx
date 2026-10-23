@@ -5,6 +5,7 @@ import { CURRENCY_NAME, INVITEE_GIFT, WELCOME_GIFT, formatNyang } from "@/lib/ye
 import { safeNext } from "@/lib/safeNext";
 import { ConsentChecks, EMPTY_CONSENT, requiredConsentDone, type ConsentState } from "@/components/ConsentChecks";
 import { ComingSoon } from "@/components/ComingSoon";
+import { GuestStart } from "@/components/GuestStart";
 import { Suspense, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 
@@ -75,6 +76,23 @@ function LoginPageBody() {
           로그인하면 <b>12가지 운세를 모두 무료</b>로 보시고, 가입 선물 {CURRENCY_NAME} {formatNyang(WELCOME_GIFT)}을 드려요. 친구의 초대 링크로 오셨다면 {formatNyang(INVITEE_GIFT)}을 더 드려요.
         </p>
       )}
+
+      {/* 2026-10-23 비회원 결제: 회원가입 없이 약관 동의만으로 바로 이어서 (카드사 심사 반려 대응) */}
+      <section className="mb-6 rounded-2xl p-4" style={{ border: "1px solid var(--color-line)" }}>
+        <h2 className="mb-1 text-[16px] font-bold">로그인 없이 비회원으로 이용</h2>
+        <p className="mb-3 text-[13px]" style={{ color: "var(--color-ink-soft)" }}>
+          약관에 동의하시면 바로 결제하고 풀이를 볼 수 있어요.
+        </p>
+        <GuestStart next={next} label="비회원으로 바로 이용하기" />
+      </section>
+
+      <div className="mb-5 flex items-center gap-3">
+        <div className="h-px flex-1" style={{ backgroundColor: "var(--color-line)" }} />
+        <span className="text-xs" style={{ color: "var(--color-ink-faint)" }}>
+          또는 회원으로
+        </span>
+        <div className="h-px flex-1" style={{ backgroundColor: "var(--color-line)" }} />
+      </div>
 
       <button
         type="button"

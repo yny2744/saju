@@ -86,7 +86,7 @@ export async function onNewMember(userId: string, refCode: string | undefined): 
   const code = refCode?.toUpperCase();
   if (!code || !REF_CODE_RE.test(code)) return;
   const pool = await db();
-  const ref = await pool.query<{ id: string }>(`SELECT id FROM users WHERE ref_code = $1`, [code]);
+  const ref = await pool.query<{ id: string }>(`SELECT id FROM users WHERE ref_code = $1 AND NOT is_guest`, [code]);
   const referrerId = ref.rows[0]?.id;
   if (!referrerId || referrerId === userId) return;
 

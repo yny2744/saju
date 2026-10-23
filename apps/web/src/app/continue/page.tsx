@@ -6,6 +6,7 @@ import { isAuthEnabled } from "@/lib/launchMode";
 import { CONTINUE_PATH, clearPendingIntent, intentDestination, intentLabel, intentQuery, readPendingIntent, type Intent } from "@/lib/intent";
 import { CURRENCY_NAME, PRICE, WELCOME_GIFT, formatNyang } from "@/lib/yeopjeon";
 import { LoadingState, ErrorState } from "@/components/StatusScreens";
+import { GuestStart } from "@/components/GuestStart";
 
 /**
  * 생년월일 입력 뒤 이어 가기 (2026-10-09 수정안 20·24).
@@ -80,9 +81,20 @@ export default function ContinuePage() {
       <p className="mt-2 text-[15px]" style={{ color: "var(--color-ink-soft)" }}>
         {i.kind === "exam" ? `카카오로 로그인하면 가입 선물 ${CURRENCY_NAME} ${formatNyang(WELCOME_GIFT)}으로 무료로 바로 볼 수 있어요` : i.kind === "topic" ? "로그인하면 무료로 바로 볼 수 있어요" : `${CURRENCY_NAME} ${formatNyang(price)} · 로그인하면 바로 이어서 볼 수 있어요`}
       </p>
+      {/* 2026-10-23 비회원 결제 - 로그인 없이 바로 이어서 */}
+      <div className="mt-8">
+        <GuestStart next={CONTINUE_PATH} label={`비회원으로 바로 결제하기 · ${formatNyang(price)}`} />
+      </div>
+      <div className="mt-6 flex items-center gap-3">
+        <div className="h-px flex-1" style={{ backgroundColor: "var(--color-line)" }} />
+        <span className="text-xs" style={{ color: "var(--color-ink-faint)" }}>
+          또는 회원으로
+        </span>
+        <div className="h-px flex-1" style={{ backgroundColor: "var(--color-line)" }} />
+      </div>
       <a
         href={`/api/auth/kakao/start?next=${next}`}
-        className="mt-8 block rounded-xl py-4 text-[17px] font-bold"
+        className="mt-6 block rounded-xl py-4 text-[17px] font-bold"
         style={{ backgroundColor: "#fee500", color: "#191600" }}
       >
         {i.kind === "exam" ? "카카오로 로그인하고 무료로 보기" : "카카오로 로그인하고 이어서 보기"}

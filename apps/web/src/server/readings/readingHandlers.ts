@@ -58,7 +58,8 @@ export async function handleYeopjeonSummary(token: string | undefined): Promise<
   const m = await member(token);
   if ("error" in m) return m.error!;
   // 가입 선물 990냥 (2026-10-17) - 예전 가입자도 복주머니를 열 때 한 번 받는다 (장부 kind "welcome"으로 한 번만)
-  if (WELCOME_GIFT > 0) await grant(m.user.id, WELCOME_GIFT, "welcome", `회원가입 축하 ${CURRENCY_NAME}`);
+  // 비회원(2026-10-23)은 가입 선물 없음
+  if (WELCOME_GIFT > 0 && !m.user.isGuest) await grant(m.user.id, WELCOME_GIFT, "welcome", `회원가입 축하 ${CURRENCY_NAME}`);
   const [balance, ledger, refCode, stats, persons, faces, couples] = await Promise.all([
     getBalance(m.user.id),
     listLedger(m.user.id),

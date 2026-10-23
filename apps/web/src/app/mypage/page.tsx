@@ -17,7 +17,7 @@ import { YeopjeonPanel } from "@/components/yeopjeon/YeopjeonPanel";
  * 로그인 안 한 상태로 들어오면 /login으로 보낸다.
  */
 
-type User = { nickname: string; email: string | null; marketingAgreed?: boolean; isAdmin?: boolean };
+type User = { nickname: string; email: string | null; marketingAgreed?: boolean; isAdmin?: boolean; isGuest?: boolean };
 
 
 function MyPageBody() {
@@ -120,7 +120,7 @@ function MyPageBody() {
             <div>
               <p className="font-semibold">{user.nickname}</p>
               <p className="text-xs" style={{ color: "var(--color-ink-faint)" }}>
-                {user.email ? user.email : "카카오로 가입된 계정입니다"}
+                {user.isGuest ? "비회원 · 이 기기·브라우저에서만 다시 볼 수 있어요 (로그아웃하면 다시 볼 수 없어요)" : user.email ? user.email : "카카오로 가입된 계정입니다"}
               </p>
             </div>
           </div>
