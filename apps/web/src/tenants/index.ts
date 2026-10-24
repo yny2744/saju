@@ -11,7 +11,7 @@ export const TENANT: TenantConfig = active;
 export const BRAND = TENANT.brand.name;
 
 /**
- * 받침에 맞는 조사 붙이기 - 브랜드명이 고객사마다 달라서 "류결사주는 / 인자당은" 처럼 바뀐다.
+ * 받침에 맞는 조사 붙이기 - 브랜드명이 고객사마다 달라서 "류결사주는 / 인자사주는" 처럼 바뀐다.
  * pair: "은/는" | "이/가" | "을/를" | "과/와" (앞 = 받침 있을 때)
  */
 export function josa(word: string, pair: "은/는" | "이/가" | "을/를" | "과/와"): string {

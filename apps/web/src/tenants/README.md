@@ -6,6 +6,7 @@
   기능 추가·수정은 언제나 베이직에서만 한다. 한 번 push 하면 모든 고객사 사이트가 같이 업데이트된다.
 - **고객사 설정**: `src/tenants/<id>.ts` 파일 하나. 브랜드명·로고 글자·문구·사업자 정보·정식 주소·가격·기능 켜기/끄기만 담는다.
   - 1번 `ryugyeol.ts` 류결사주
+  - 2번 `injasaju.ts` 인자사주 (사업자 정보 미정 - 시험판)
 - 빌드할 고객사는 Vercel 환경변수 **`NEXT_PUBLIC_TENANT=<id>`** 로 고른다. 없으면 류결사주.
   빌드에는 고른 고객사 파일 **하나만** 들어간다 (다른 고객사 사업자 정보가 화면 코드에 실려 나가지 않음).
   등록되지 않은 id 면 빌드가 멈춘다 (`src/tenants/pick.js`).
@@ -15,7 +16,7 @@
 | 필요한 것 | 쓰는 법 |
 | --- | --- |
 | 서비스 이름 | `import { BRAND } from "@/tenants"` |
-| 이름 뒤 조사 | `josa(BRAND, "은/는")` → 류결사주는 / 인자당은 |
+| 이름 뒤 조사 | `josa(BRAND, "은/는")` → 류결사주는 / 인자사주는 |
 | 로고 글자·슬로건 등 | `TENANT.brand.*` |
 | 사업자 정보 | `BUSINESS_INFO` (`@/lib/businessInfo`) |
 | 가격 | `PRICE` (`@/lib/yeopjeon`) |
@@ -36,7 +37,7 @@
 | 환경변수 | 내용 |
 | --- | --- |
 | `NEXT_PUBLIC_TENANT` | 고객사 id |
-| `SITE_URL` | 고객사 정식 주소 (예: https://injadang.com) |
+| `SITE_URL` | 고객사 정식 주소 (예: https://injasaju.com) |
 | `DATABASE_URL` | 고객사 전용 DB (Neon 프로젝트 따로) |
 | `NEXT_PUBLIC_LAUNCH_MODE` / `NEXT_PUBLIC_LOGIN_REQUIRED` | 류결사주와 같게 (`live` / `true`) |
 | `PORTONE_STORE_ID` · `PORTONE_CHANNEL_KEY` · `PORTONE_API_SECRET` · `PORTONE_WEBHOOK_SECRET` | 고객사 명의 결제 |
