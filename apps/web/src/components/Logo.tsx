@@ -1,3 +1,4 @@
+import { BRAND, TENANT } from "@/tenants";
 /**
  * 류결사주 로고 — "류결" 두 글자가 물결 곡선을 따라 흐르는 워드마크.
  * 전부 이 파일 안에서 직접 그린 SVG다 (폰트가 아니라 곡선 경로 위에 글자를
@@ -6,7 +7,7 @@
  */
 export function Logo({ height = 40 }: { height?: number }) {
   return (
-    <svg height={height} viewBox="0 0 220 90" role="img" aria-label="류결사주 로고">
+    <svg height={height} viewBox="0 0 220 90" role="img" aria-label={`${BRAND} 로고`}>
       <defs>
         <path id="logo-wave" d="M 8 48 C 42 20, 78 70, 112 48 C 136 32, 160 48, 196 34" fill="none" />
       </defs>
@@ -20,7 +21,7 @@ export function Logo({ height = 40 }: { height?: number }) {
       />
       <text fontFamily="var(--font-serif)" fontSize="30" fontWeight="700" letterSpacing="4" fill="var(--color-accent)">
         <textPath href="#logo-wave" startOffset="4">
-          류결
+          {TENANT.brand.logoText}
         </textPath>
       </text>
       <path
@@ -32,7 +33,7 @@ export function Logo({ height = 40 }: { height?: number }) {
         opacity="0.45"
       />
       <text x="110" y="86" textAnchor="middle" fontFamily="var(--font-serif)" fontSize="13" fontWeight="700" fill="var(--color-ink)">
-        사주
+        {TENANT.brand.logoSub}
       </text>
     </svg>
   );

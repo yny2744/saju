@@ -10,7 +10,8 @@
     "resolveJsonModule": true,
     "baseUrl": ".",
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["./src/*"],
+      "@tenant-active": ["./src/tenants/ryugyeol.ts"]
     }
   },
   "include": ["src/server/**/*.ts", "tests/**/*.ts"]

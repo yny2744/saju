@@ -1,3 +1,4 @@
+import { BRAND } from "@/tenants";
 import { logErrorToDb } from "@/server/admin/errorLog";
 /**
  * 오류 알림 (2026-10-08 수정안 9번).
@@ -13,7 +14,7 @@ const MAX_LEN = 900;
 
 export function formatAlert(where: string, error: unknown): string {
   const msg = error instanceof Error ? `${error.name}: ${error.message}` : String(error);
-  return `[류결사주 오류] ${where}\n${msg}`.slice(0, MAX_LEN);
+  return `[${BRAND} 오류] ${where}\n${msg}`.slice(0, MAX_LEN);
 }
 
 export function notifyError(where: string, error: unknown): void {
@@ -26,7 +27,7 @@ export function notifyError(where: string, error: unknown): void {
 
 /** 관리자 알림 (오류가 아닌 일 - 예: 충전 신청). 손님 이름·생년월일은 넣지 않는다. */
 export function notifyAdmin(message: string): void {
-  const text = `[류결사주 알림] ${message}`.slice(0, MAX_LEN);
+  const text = `[${BRAND} 알림] ${message}`.slice(0, MAX_LEN);
   // eslint-disable-next-line no-console
   console.log(text);
   sendWebhook(text);

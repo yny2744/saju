@@ -1,5 +1,7 @@
 "use client";
 
+
+import { BRAND, josa } from "@/tenants";
 import { useEffect, useState } from "react";
 import { HanjaPicker } from "@/components/HanjaPicker";
 import { BusinessChars, BusinessFacts, BUSINESS_VERDICT } from "@/components/BusinessReadingCard";
@@ -167,7 +169,7 @@ export default function BusinessReadingPage() {
             </p>
           )}
           <p className="text-[12.5px] leading-relaxed" style={{ color: "var(--color-ink-faint)" }}>
-            같은 이름이 상표로 등록돼 있는지는 류결사주가 확인하지 못해요.{" "}
+            같은 이름이 상표로 등록돼 있는지는 {josa(BRAND, "이/가")} 확인하지 못해요.{" "}
             <a href="https://www.kipris.or.kr" target="_blank" rel="noopener noreferrer" className="underline underline-offset-4">
               특허청 키프리스
             </a>

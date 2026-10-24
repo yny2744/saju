@@ -1,3 +1,4 @@
+import { BRAND } from "@/tenants";
 /**
  * 류결사주 대문 중앙 문양 (2026-10-06, 용사주 대문의 "가운데 큰 그림" 자리).
  * 용 그림은 따라 하지 않고, 팔괘(八卦) 고리 + 오행 다섯 점 + 가운데 命 자로 새로 그린 오리지널 SVG.
@@ -38,7 +39,7 @@ export function OhaengEmblem({ caption, subCaption }: { caption?: string; subCap
       width="100%"
       height="100%"
       role="img"
-      aria-label={caption ? `${caption} - 팔괘와 오행을 담은 류결사주 문양` : "팔괘와 오행을 담은 류결사주 문양"}
+      aria-label={caption ? `${caption} - 팔괘와 오행을 담은 ${BRAND} 문양` : `팔괘와 오행을 담은 ${BRAND} 문양`}
     >
       {ring && (
         <g>

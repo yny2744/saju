@@ -1,5 +1,7 @@
 "use client";
 
+
+import { BRAND } from "@/tenants";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { isAuthEnabled } from "@/lib/launchMode";
 import { ComingSoon } from "@/components/ComingSoon";
@@ -250,7 +252,7 @@ function TopicBody({ id, topic }: { id: string; topic: string }) {
     return (
       <main className="mx-auto min-h-screen max-w-xl px-5 pb-20 pt-12 sm:pt-16">
         {state.header ? (
-          <PersonHeader header={state.header} kicker="류결사주 · 12가지 운세" title={`${title} 운세`} />
+          <PersonHeader header={state.header} kicker={`${BRAND} · 12가지 운세`} title={`${title} 운세`} />
         ) : (
           <h1 className="mb-8 text-center text-[26px] font-bold" style={{ fontFamily: "var(--font-serif)" }}>
             {title} 운세
@@ -309,7 +311,7 @@ function TopicBody({ id, topic }: { id: string; topic: string }) {
     const { content, header } = state;
     return (
       <main className="mx-auto min-h-screen max-w-xl px-5 pb-20 pt-12 sm:pt-16">
-        <PersonHeader header={header} kicker={`류결사주 · 운세 보기`} title={`${content.title} 운세`} />
+        <PersonHeader header={header} kicker={`${BRAND} · 운세 보기`} title={`${content.title} 운세`} />
         {"v" in content && content.v === 2 ? (
           // 수정안 33·34: 엔진 풀이 + 그림
           <BasicReadingView content={content} />
@@ -367,7 +369,7 @@ function TopicBody({ id, topic }: { id: string; topic: string }) {
   const { content, header, journey, visual } = state;
   return (
     <main className="mx-auto min-h-screen max-w-xl px-5 pb-20 pt-12 sm:pt-16">
-      <PersonHeader header={header} kicker="류결사주 · 깊게 보기" title={content.title} />
+      <PersonHeader header={header} kicker={`${BRAND} · 깊게 보기`} title={content.title} />
 
       {/* 수정안 37: 990냥처럼 그림을 함께 */}
       <DeepReadingView content={content} visual={visual} />

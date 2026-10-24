@@ -1,5 +1,7 @@
 "use client";
 
+
+import { BRAND } from "@/tenants";
 import { useEffect } from "react";
 import { BUSINESS_INFO } from "@/lib/businessInfo";
 import { reportClientError } from "@/components/yeopjeon/useYeopjeon";
@@ -27,7 +29,7 @@ export default function GlobalError({ error, reset }: { error: Error & { digest?
       <a href="/" className="btn-secondary mt-2.5 block">
         처음으로
       </a>
-      <a href={`mailto:${BUSINESS_INFO.csEmail}?subject=${encodeURIComponent("[류결사주 문의] 오류")}`} className="mt-4 inline-block text-[13px] underline underline-offset-4" style={{ color: "var(--color-ink-soft)" }}>
+      <a href={`mailto:${BUSINESS_INFO.csEmail}?subject=${encodeURIComponent(`[${BRAND} 문의] 오류`)}`} className="mt-4 inline-block text-[13px] underline underline-offset-4" style={{ color: "var(--color-ink-soft)" }}>
         문의하기
       </a>
     </main>

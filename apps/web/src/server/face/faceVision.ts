@@ -1,3 +1,4 @@
+import { TENANT } from "@/tenants";
 import { parseAIResponse } from "saju-engine";
 import type { FaceAiResult, FaceFeatureBuckets } from "./types";
 import { validateFaceAiResult } from "./validateFaceAiResult";
@@ -27,7 +28,7 @@ export interface FaceDeepResult extends FaceAiResult {
 
 const BUCKET_LABEL: Record<string, string> = { low: "낮음", mid: "보통", high: "높음" };
 
-export const FACE_DEEP_SYSTEM = `당신은 한국 전통 관상학(觀相學) 해석가 "류결"입니다. 손님이 4,900냥을 내고 받는 심층 풀이를 씁니다.
+export const FACE_DEEP_SYSTEM = `당신은 한국 전통 관상학(觀相學) 해석가 "${TENANT.brand.persona}"입니다. 손님이 4,900냥을 내고 받는 심층 풀이를 씁니다.
 
 # 원칙
 1. [얼굴 비율 데이터]는 이미 측정된 값입니다. 다시 재거나 바꾸지 마세요.

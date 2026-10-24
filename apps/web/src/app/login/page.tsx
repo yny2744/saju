@@ -1,5 +1,7 @@
 "use client";
 
+
+import { BRAND } from "@/tenants";
 import { isAuthEnabled } from "@/lib/launchMode";
 import { CURRENCY_NAME, INVITEE_GIFT, WELCOME_GIFT, formatNyang } from "@/lib/yeopjeon";
 import { safeNext } from "@/lib/safeNext";
@@ -68,7 +70,7 @@ function LoginPageBody() {
   return (
     <main className="mx-auto min-h-screen max-w-sm px-5 pb-16 pt-14 sm:pt-20">
       <p className="mb-1 text-sm font-semibold" style={{ fontFamily: "var(--font-serif)", color: "var(--color-accent)" }}>
-        류결사주
+        {BRAND}
       </p>
       <h1 className={`${isAuthEnabled() ? "mb-2" : "mb-7"} text-[24px] font-bold`}>{mode === "login" ? "로그인" : "이메일로 시작하기"}</h1>
       {isAuthEnabled() && (

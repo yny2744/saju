@@ -1,5 +1,7 @@
 "use client";
 
+
+import { BRAND } from "@/tenants";
 import { Suspense, useCallback, useEffect, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { isAuthEnabled, isSuneungOn } from "@/lib/launchMode";
@@ -123,7 +125,7 @@ function Body({ id }: { id: string }) {
 
       <header className="rounded-2xl px-5 py-6 text-center" style={{ backgroundColor: NAVY, border: `1px solid ${GOLD}` }}>
         <p className="text-[13px] tracking-[0.2em]" style={{ color: GOLD }}>
-          류결사주
+          {BRAND}
         </p>
         <h1 className="mt-1 text-[28px] font-bold" style={{ fontFamily: "var(--font-serif)", color: GOLD_L }}>
           {state.nickname}님의 {r.title}

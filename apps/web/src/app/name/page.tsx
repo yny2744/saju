@@ -1,9 +1,10 @@
+import { BRAND } from "@/tenants";
 import type { Metadata } from "next";
 import { CURRENCY_NAME, PREMIUM_ON, PRICE, formatNyang } from "@/lib/yeopjeon";
 import { ReviewStrip } from "@/components/reviews/ReviewStrip";
 
 export const metadata: Metadata = {
-  title: "이름 풀이 · 개명 · 작명 · 류결사주",
+  title: `이름 풀이 · 개명 · 작명 · ${BRAND}`,
   description: "내 이름이 사주와 맞는지 무료로 풀어 보고, 사주에 맞춘 개명·신생아 작명·상호 작명·기업 작명·브랜딩 작명을 받아 보세요.",
 };
 

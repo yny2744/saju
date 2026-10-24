@@ -1,5 +1,7 @@
 "use client";
 
+
+import { BRAND, TENANT } from "@/tenants";
 import { useRef, useState } from "react";
 import { ElementRadarChart } from "@/components/ElementRadarChart";
 
@@ -7,7 +9,7 @@ import { ElementRadarChart } from "@/components/ElementRadarChart";
  * 공유 카드에 찍히는 사이트 주소. 도메인이 바뀌면 Vercel 환경변수 NEXT_PUBLIC_SITE_HOST만 바꾸고 재배포하면 된다
  * (NEXT_PUBLIC_ 값은 빌드 시점에 박힘). 값이 없으면 현재 Vercel 기본 주소를 쓴다.
  */
-const SITE_HOST = process.env.NEXT_PUBLIC_SITE_HOST || "saju-web-khaki.vercel.app";
+const SITE_HOST = process.env.NEXT_PUBLIC_SITE_HOST || new URL(TENANT.siteUrl).host;
 
 /**
  * "공유용 결과 카드" — SNS에 올려도 되는 정보만 따로 모아 이미지로 저장한다.
@@ -42,7 +44,7 @@ export function ShareCard({
       const { toPng } = await import("html-to-image");
       const dataUrl = await toPng(cardRef.current, { pixelRatio: 2, cacheBust: true });
       const link = document.createElement("a");
-      link.download = `류결사주-${nickname}.png`;
+      link.download = `${BRAND}-${nickname}.png`;
       link.href = dataUrl;
       link.click();
     } catch {
@@ -60,7 +62,7 @@ export function ShareCard({
         style={{ backgroundColor: "var(--color-paper)", border: "1px solid var(--color-line)" }}
       >
         <p className="mb-4 text-center text-xs font-semibold tracking-wide" style={{ fontFamily: "var(--font-serif)", color: "var(--color-accent)" }}>
-          류결사주
+          {BRAND}
         </p>
         <p className="mb-1 text-center text-lg font-bold" style={{ fontFamily: "var(--font-serif)" }}>
           {nickname}님의 사주

@@ -1,3 +1,4 @@
+import { BRAND, TENANT } from "@/tenants";
 import path from "path";
 import fs from "fs";
 import PDFDocument from "pdfkit";
@@ -174,7 +175,7 @@ function cover(ctx: Ctx, title: string) {
   doc.save().strokeColor(GOLD).lineWidth(1.4).rect(18, 18, W - 36, H - 36).stroke();
   doc.lineWidth(0.5).rect(24, 24, W - 48, H - 48).stroke().restore();
   doc.fillColor(GOLD_LIGHT).fontSize(11).text("류 결 사 주", 0, 100, { width: W, align: "center", characterSpacing: 6 });
-  doc.fillColor(GOLD_LIGHT).fontSize(8.5).text("류결의 명견만리", 0, 118, { width: W, align: "center", characterSpacing: 3 });
+  doc.fillColor(GOLD_LIGHT).fontSize(8.5).text(TENANT.brand.channelName, 0, 118, { width: W, align: "center", characterSpacing: 3 });
   doc.save().strokeColor(GOLD).lineWidth(0.7).moveTo(W / 2 - 44, 142).lineTo(W / 2 + 44, 142).stroke().restore();
   doc.fontSize(26);
   bold(doc, `${input.nickname}님의 사주`, 0, 205, { width: W, align: "center" }, "#f6ecd2");
@@ -183,10 +184,10 @@ function cover(ctx: Ctx, title: string) {
   doc.fillColor("#c9cfda").fontSize(9.5).text(input.header.birth, 0, 304, { width: W, align: "center" });
   const pillars = input.header.pillars.filter((p) => p.ganzhi).map((p) => `${p.label} ${p.ganzhi}`).join("  ·  ");
   doc.fillColor("#c9cfda").fontSize(9.5).text(pillars, 0, 320, { width: W, align: "center" });
-  doc.fillColor(GOLD_LIGHT).fontSize(11).text("숨막혔던 나의 운명, 숨을 쉬다", 0, H - 140, { width: W, align: "center" });
+  doc.fillColor(GOLD_LIGHT).fontSize(11).text(TENANT.brand.slogan, 0, H - 140, { width: W, align: "center" });
   const d = input.issuedAt ?? new Date();
   const kst = new Date(d.getTime() + 9 * 3600 * 1000);
-  doc.fillColor("#8f9bb3").fontSize(8).text(`${kst.getUTCFullYear()}년 ${kst.getUTCMonth() + 1}월 ${kst.getUTCDate()}일 펴냄 · 류결사주`, 0, H - 80, { width: W, align: "center" });
+  doc.fillColor("#8f9bb3").fontSize(8).text(`${kst.getUTCFullYear()}년 ${kst.getUTCMonth() + 1}월 ${kst.getUTCDate()}일 펴냄 · ${BRAND}`, 0, H - 80, { width: W, align: "center" });
 }
 
 function introPage(ctx: Ctx) {
@@ -196,7 +197,7 @@ function introPage(ctx: Ctx) {
   doc.moveDown(0.6);
   for (const p of BOOK_INTRO) para(doc, ctx.name(p), { size: 12 });
   doc.moveDown(1);
-  doc.fillColor(GOLD).fontSize(11).text("류결사주", M, doc.y, { width: TW, align: "right" });
+  doc.fillColor(GOLD).fontSize(11).text(BRAND, M, doc.y, { width: TW, align: "right" });
 }
 
 function tocPage(ctx: Ctx, full: boolean) {
@@ -535,8 +536,8 @@ export async function endPage(ctx: Ctx) {
   const url = input.siteUrl || DEFAULT_SITE_URL;
   const qr = await QRCode.toBuffer(url, { margin: 1, width: 240, color: { dark: "#16294aff", light: "#ffffffff" } });
   doc.fontSize(15);
-  bold(doc, "류결사주", 0, 150, { width: W, align: "center" }, NAVY);
-  doc.fillColor(GOLD).fontSize(10).text("숨막혔던 나의 운명, 숨을 쉬다", 0, 176, { width: W, align: "center" });
+  bold(doc, BRAND, 0, 150, { width: W, align: "center" }, NAVY);
+  doc.fillColor(GOLD).fontSize(10).text(TENANT.brand.slogan, 0, 176, { width: W, align: "center" });
   doc.image(qr, W / 2 - 50, 210, { width: 100 });
   doc.fillColor(SOFT).fontSize(10).text("오늘·내일의 운세와 만세력은 언제든 무료로 볼 수 있어요.", M, 326, { width: TW, align: "center" });
   doc.fillColor(FAINT).fontSize(9).text(url.replace(/^https?:\/\//, ""), M, 344, { width: TW, align: "center" });
@@ -568,7 +569,7 @@ export async function buildPdf(input: PdfInput): Promise<Buffer> {
     size: "A5",
     margins: { top: M, left: M, right: M, bottom: BOTTOM },
     bufferPages: true,
-    info: { Title: `${input.nickname}님의 사주 - 류결사주`, Author: "류결사주" },
+    info: { Title: `${input.nickname}님의 사주 - ${BRAND}`, Author: BRAND },
   });
   doc.registerFont("serif", fs.readFileSync(FONT_FILE));
   doc.font("serif");
@@ -613,7 +614,7 @@ export async function buildPdf(input: PdfInput): Promise<Buffer> {
     if (ctx.navy.has(range.start + i)) continue;
     const bottom = doc.page.margins.bottom;
     doc.page.margins.bottom = 0; // 아래 여백 밖에 쓰면 새 쪽이 생기지 않도록
-    doc.fillColor(FAINT).fontSize(7.5).text(`류결사주 · ${i}`, 0, H - 28, { width: W, align: "center", lineBreak: false });
+    doc.fillColor(FAINT).fontSize(7.5).text(`${BRAND} · ${i}`, 0, H - 28, { width: W, align: "center", lineBreak: false });
     doc.page.margins.bottom = bottom;
   }
   doc.end();

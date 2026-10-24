@@ -1,3 +1,4 @@
+import { BRAND, TENANT } from "@/tenants";
 import { CasualLanding } from "@/components/CasualLanding";
 import { ReviewStrip } from "@/components/reviews/ReviewStrip";
 import { ProductIcon, type Kind } from "@/components/landing/ProductIcon";
@@ -74,11 +75,11 @@ export default function LandingPage() {
         {/* 2026-10-19: 결제 심사 동안 숨김 (isSuneungOn - NEXT_PUBLIC_SUNEUNG=on 일 때만 보임) */}
         {suneung ? (
           <section className="pb-6 pt-5">
-            <h1 className="sr-only">수능대박운 · 나를 알고, 인연과 복을 잇다 · 류결사주</h1>
+            <h1 className="sr-only">{`수능대박운 · ${TENANT.brand.heroTagline} · ${BRAND}`}</h1>
             <SuneungHero />
           </section>
         ) : (
-          <h1 className="sr-only">나를 알고, 인연과 복을 잇다 · 류결사주</h1>
+          <h1 className="sr-only">{`${TENANT.brand.heroTagline} · ${BRAND}`}</h1>
         )}
 
         {/* 2026-10-17 수정안 17: 대문 순서 - 수능운 → 인연(관상·궁합) → 20대→70대 영상 → 무료로 시작하기 */}
@@ -114,14 +115,14 @@ export default function LandingPage() {
             playsInline
             preload="auto"
             poster="/landing/hero-poster.jpg"
-            aria-label="20대부터 70대까지 함께 나이 들어 가는 두 사람 - 나를 알고, 인연과 복을 잇다"
+            aria-label={`20대부터 70대까지 함께 나이 들어 가는 두 사람 - ${TENANT.brand.heroTagline}`}
           >
             <source src="/landing/hero.webm" type="video/webm" />
             <source src="/landing/hero.mp4" type="video/mp4" />
           </video>
           {/* 움직임 줄이기를 켠 기기: 그림만 */}
           {/* eslint-disable-next-line @next/next/no-img-element -- 정적 그림 */}
-          <img src="/landing/hero-poster.jpg" alt="나를 알고, 인연과 복을 잇다 · 류결사주" className="hidden w-full rounded-2xl motion-reduce:block" />
+          <img src="/landing/hero-poster.jpg" alt={`${TENANT.brand.heroTagline} · ${BRAND}`} className="hidden w-full rounded-2xl motion-reduce:block" />
         </section>
 
         {/* 무료로 시작하기 - 첫 화면에 바로 보이게 */}
@@ -234,14 +235,14 @@ export default function LandingPage() {
         <section className="pt-4 text-center">
           <ScrollTopButton className="btn-secondary mx-auto block max-w-xs" />
           <p className="foil-text mt-8 text-[20px] font-black" style={{ fontFamily: "var(--font-serif)" }}>
-            류결사주
+            {BRAND}
           </p>
           <p className="mt-2 text-[13px] leading-relaxed" style={{ color: "var(--color-ink-faint)" }}>
             본 서비스는 오락·참고 목적이며
             <br />
             중요한 결정의 근거로 삼지 마십시오.
           </p>
-          <a href={`mailto:${BUSINESS_INFO.csEmail}?subject=${encodeURIComponent("[류결사주 문의]")}`} className="mt-4 inline-block text-[13px] underline underline-offset-4" style={{ color: "var(--color-ink-soft)" }}>
+          <a href={`mailto:${BUSINESS_INFO.csEmail}?subject=${encodeURIComponent(`[${BRAND} 문의]`)}`} className="mt-4 inline-block text-[13px] underline underline-offset-4" style={{ color: "var(--color-ink-soft)" }}>
             문의하기
           </a>
         </section>

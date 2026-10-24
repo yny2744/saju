@@ -1,5 +1,7 @@
 "use client";
 
+
+import { BRAND } from "@/tenants";
 import { Suspense, useCallback, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { isAuthEnabled } from "@/lib/launchMode";
@@ -176,7 +178,7 @@ function NameBody({ id }: { id: string }) {
 
   return (
     <main className="mx-auto min-h-screen max-w-xl px-5 pb-20 pt-12 sm:pt-16">
-      <PersonHeader header={state.header} kicker={`류결사주 · ${TITLE[kind]}`} title={kind === "naming" ? "이름 짓기" : "새 이름"} />
+      <PersonHeader header={state.header} kicker={`${BRAND} · ${TITLE[kind]}`} title={kind === "naming" ? "이름 짓기" : "새 이름"} />
 
       {notice && (
         <p className="mb-5 rounded-xl px-4 py-3 text-center text-[14px]" style={{ backgroundColor: "var(--color-gold-soft)" }}>

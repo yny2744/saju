@@ -1,5 +1,7 @@
 "use client";
 
+
+import { BRAND } from "@/tenants";
 import { isLoginRequired } from "@/lib/launchMode";
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -300,7 +302,7 @@ function StartForm({ member }: { member: MemberInfo | null }) {
     <main className="mx-auto min-h-screen max-w-md px-5 pb-16 pt-12 sm:pt-16">
       <header className="mb-8">
         <p className="mb-2.5 text-sm font-semibold" style={{ fontFamily: "var(--font-serif)", color: "var(--color-accent)" }}>
-          류결사주
+          {BRAND}
         </p>
         {intent ? (
           <>

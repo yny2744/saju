@@ -1,5 +1,7 @@
 "use client";
 
+
+import { BRAND } from "@/tenants";
 import { useEffect, useState } from "react";
 import type { TtiDay } from "@/server/ttiService";
 import { BRANCHES, TTI, ttiOfYear, type Branch } from "@/lib/tti";
@@ -59,7 +61,7 @@ export function TtiBoard({ today, tomorrow }: { today: TtiDay; tomorrow: TtiDay 
   return (
     <main className="mx-auto min-h-screen max-w-xl px-5 pb-16 pt-10">
       <p className="text-center text-[13px]" style={{ color: GOLD }}>
-        류결사주 · 무료
+        {`${BRAND} · 무료`}
       </p>
       <h1 className="mt-1 text-center text-[26px] font-bold" style={{ fontFamily: "var(--font-serif)" }}>
         띠별 운세

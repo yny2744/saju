@@ -1,3 +1,4 @@
+import { BRAND } from "@/tenants";
 import { BUSINESS_INFO } from "@/lib/businessInfo";
 
 /**
@@ -12,7 +13,7 @@ export function Footer() {
   const cut = addr.indexOf(" (");
   const addrMain = cut > 0 ? addr.slice(0, cut) : addr;
   const addrSub = cut > 0 ? addr.slice(cut + 1) : "";
-  const mail = `mailto:${BUSINESS_INFO.csEmail}?subject=${encodeURIComponent("[류결사주 문의]")}`;
+  const mail = `mailto:${BUSINESS_INFO.csEmail}?subject=${encodeURIComponent(`[${BRAND} 문의]`)}`;
 
   return (
     <footer className="mt-10 px-6 pb-10 pt-8 text-center text-xs leading-relaxed" style={{ color: "var(--color-ink-faint)" }}>

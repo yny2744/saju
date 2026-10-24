@@ -1,3 +1,4 @@
+import { BRAND } from "@/tenants";
 import { HeaderAuth } from "@/components/landing/HeaderAuth";
 import { BgmToggle } from "@/components/bgm/BgmPlayer";
 
@@ -10,7 +11,7 @@ export function SiteHeader() {
     <header className="band-bg relative" style={{ color: "#f6ecd2" }}>
       <div className="mx-auto flex max-w-xl items-center justify-between px-6 py-3.5">
         <a href="/" className="foil-text text-[21px] font-black tracking-wide" style={{ fontFamily: "var(--font-serif)" }}>
-          류결사주
+          {BRAND}
         </a>
         <span className="flex items-center gap-3">
           <BgmToggle />

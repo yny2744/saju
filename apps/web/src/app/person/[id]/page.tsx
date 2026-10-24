@@ -1,5 +1,7 @@
 "use client";
 
+
+import { BRAND } from "@/tenants";
 import { Suspense, useCallback, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { isAuthEnabled, isSuneungOn } from "@/lib/launchMode";
@@ -193,7 +195,7 @@ function PersonBody({ id }: { id: string }) {
 
   return (
     <main className="mx-auto min-h-screen max-w-xl px-5 pb-24 pt-12 sm:pt-16">
-      <PersonHeader header={person.header} kicker="류결사주 · 12가지 운세" title="12가지 운세" />
+      <PersonHeader header={person.header} kicker={`${BRAND} · 12가지 운세`} title="12가지 운세" />
       {/* 수정안 17: 수능운 (시즌에 따라 합격운·새 출발운) */}
       {isSuneungOn() && (
         <a href={`/person/${id}/exam`} className="mb-5 flex items-center gap-3 rounded-2xl px-4 py-3.5" style={{ backgroundColor: "#16213a", border: "1px solid var(--color-gold-line)" }}>

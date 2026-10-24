@@ -1,5 +1,7 @@
 "use client";
 
+
+import { BRAND } from "@/tenants";
 import { useEffect, useState } from "react";
 
 export interface PersonListItem {
@@ -61,10 +63,10 @@ export function inviteUrl(refCode: string): string {
 /** 휴대폰이면 공유창(카카오톡 등), 아니면 링크 복사 */
 export async function shareInvite(refCode: string): Promise<"shared" | "copied" | "failed"> {
   const url = inviteUrl(refCode);
-  const text = "류결사주에서 내 사주를 무료로 봤어요. 이 링크로 가입하면 엽전 1,980냥(가입 선물 990냥 + 초대 선물 990냥)을 받아서 운세 두 가지를 무료로 볼 수 있어요!";
+  const text = `${BRAND}에서 내 사주를 무료로 봤어요. 이 링크로 가입하면 엽전 1,980냥(가입 선물 990냥 + 초대 선물 990냥)을 받아서 운세 두 가지를 무료로 볼 수 있어요!`;
   try {
     if (navigator.share) {
-      await navigator.share({ title: "류결사주", text, url });
+      await navigator.share({ title: BRAND, text, url });
       return "shared";
     }
   } catch {

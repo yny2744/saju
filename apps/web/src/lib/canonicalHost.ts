@@ -1,3 +1,4 @@
+import { TENANT } from "@/tenants";
 /**
  * 정식 주소 고정 (2026-10-10, 카카오 로그인 KOE006 해결).
  *
@@ -9,7 +10,8 @@
  *
  * 정식 주소는 Vercel 환경변수 SITE_URL (예: 나중에 산 도메인 https://ryugyeol.com) - 없으면 아래 기본값.
  */
-export const DEFAULT_SITE_URL = "https://saju-web-khaki.vercel.app";
+/** 2026-10-23 베이직: 기본 정식 주소는 고객사 설정의 siteUrl */
+export const DEFAULT_SITE_URL = TENANT.siteUrl;
 
 export function canonicalHost(siteUrl: string | undefined = process.env.SITE_URL): string {
   try {

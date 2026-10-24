@@ -1,3 +1,4 @@
+import { BRAND } from "@/tenants";
 import fs from "fs";
 import PDFDocument from "pdfkit";
 import type { SajuJson } from "saju-engine";
@@ -54,7 +55,7 @@ function cover(doc: PDFKit.PDFDocument, title: string, who: string, header: Read
   doc.fillColor("#c9cfda").fontSize(9.5).text(pillars, 0, 292, { width: W, align: "center" });
   doc.fillColor(GOLD_LIGHT).fontSize(11).text("이름은 평생 불리는 기운입니다", 0, H - 140, { width: W, align: "center" });
   const kst = new Date(issuedAt.getTime() + 9 * 3600 * 1000);
-  doc.fillColor("#8f9bb3").fontSize(8).text(`${kst.getUTCFullYear()}년 ${kst.getUTCMonth() + 1}월 ${kst.getUTCDate()}일 펴냄 · 류결사주`, 0, H - 80, { width: W, align: "center" });
+  doc.fillColor("#8f9bb3").fontSize(8).text(`${kst.getUTCFullYear()}년 ${kst.getUTCMonth() + 1}월 ${kst.getUTCDate()}일 펴냄 · ${BRAND}`, 0, H - 80, { width: W, align: "center" });
 }
 
 function needPage(doc: PDFKit.PDFDocument, r: NamingReport) {
@@ -139,7 +140,7 @@ function candidatePage(doc: PDFKit.PDFDocument, r: NamingReport, i: number) {
 
 export async function buildNamePdf(input: { report: NamingReport; nickname: string; header: ReadingHeader; saju: SajuJson; siteUrl?: string; issuedAt?: Date }): Promise<Buffer> {
   const r = input.report;
-  const doc = new PDFDocument({ size: "A5", margins: { top: M, left: M, right: M, bottom: BOTTOM }, bufferPages: true, info: { Title: `${KIND_TITLE[r.kind]} - 류결사주`, Author: "류결사주" } });
+  const doc = new PDFDocument({ size: "A5", margins: { top: M, left: M, right: M, bottom: BOTTOM }, bufferPages: true, info: { Title: `${KIND_TITLE[r.kind]} - ${BRAND}`, Author: BRAND } });
   doc.registerFont("serif", fs.readFileSync(FONT_FILE));
   doc.font("serif");
   const chunks: Buffer[] = [];
@@ -167,7 +168,7 @@ export async function buildNamePdf(input: { report: NamingReport; nickname: stri
     doc.switchToPage(range.start + i);
     const bottom = doc.page.margins.bottom;
     doc.page.margins.bottom = 0;
-    doc.fillColor(FAINT).fontSize(7.5).text(`류결사주 · ${i}`, 0, H - 28, { width: W, align: "center", lineBreak: false });
+    doc.fillColor(FAINT).fontSize(7.5).text(`${BRAND} · ${i}`, 0, H - 28, { width: W, align: "center", lineBreak: false });
     doc.page.margins.bottom = bottom;
   }
   doc.end();

@@ -1,5 +1,7 @@
 "use client";
 
+
+import { BRAND } from "@/tenants";
 import { useEffect, useRef, useState } from "react";
 import { bgm } from "@/components/bgm/bgm";
 import { SEASON_INFO, examDday, examSeason } from "@/lib/suneung";
@@ -71,7 +73,7 @@ export function SuneungHero() {
     return (
       <a href={href} className="block rounded-2xl px-5 py-7 text-center" style={{ backgroundColor: NAVY, border: `1px solid ${GOLD}` }}>
         <p className="text-[13px] tracking-[0.2em]" style={{ color: GOLD }}>
-          {info.hanja} · 류결사주
+          {info.hanja} · {BRAND}
         </p>
         <p className="mt-1 text-[28px] font-bold" style={{ fontFamily: "var(--font-serif)", color: GOLD_L }}>
           {info.title}
@@ -123,7 +125,7 @@ export function SuneungHero() {
           <source src="/landing/suneung.mp4" type="video/mp4" />
         </video>
         {/* eslint-disable-next-line @next/next/no-img-element -- 움직임 줄이기를 켠 기기: 그림만 */}
-        <img src="/landing/suneung-poster.jpg" alt="수능대박운 · 류결사주" className="hidden w-full motion-reduce:block" />
+        <img src="/landing/suneung-poster.jpg" alt={`수능대박운 · ${BRAND}`} className="hidden w-full motion-reduce:block" />
 
         {caption && (
           <div className="pointer-events-none absolute inset-x-3 bottom-3 flex justify-center">

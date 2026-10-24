@@ -1,3 +1,4 @@
+import { BRAND } from "@/tenants";
 import { getUserBySessionToken } from "@/server/auth/session";
 import { getPersonRow, getPersonSummary, listWrittenTopics } from "@/server/readings/readings";
 import { buildPdf } from "./buildPdf";
@@ -23,7 +24,7 @@ export async function handlePdf(token: string | undefined, personId: string, par
   const readings = written.filter((w) => summary.unlocked.includes(w.topic));
   if (readings.length === 0) return { status: 409, json: { error: { code: "NOT_WRITTEN", message: "아직 쓴 운세가 없어요." }, missing } };
   const pdf = await buildPdf({ nickname: row.nickname, header: row.header, saju: row.saju, readings, siteUrl: process.env.SITE_URL });
-  return { status: 200, pdf, filename: `${row.nickname}님의 사주 - 류결사주.pdf`, missing };
+  return { status: 200, pdf, filename: `${row.nickname}님의 사주 - ${BRAND}.pdf`, missing };
 }
 
 /** 열렸지만 아직 안 써진 운세 목록 (수정안 43: 몰아보기·전부 보기 결제 직후 한 번에 쓰기) */

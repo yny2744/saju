@@ -1,5 +1,7 @@
 "use client";
 
+
+import { BRAND } from "@/tenants";
 import { useState } from "react";
 import { TOPICS, isAnyTopicKey, type AnyTopicKey } from "@/lib/topics";
 import { writeTopics } from "@/lib/writeTopics";
@@ -32,7 +34,7 @@ export function PdfButton({ personId, className = "" }: { personId: string; clas
     const blob = await r.blob();
     const cd = r.headers.get("Content-Disposition") ?? "";
     const m = cd.match(/filename\*=UTF-8''([^;]+)/);
-    const name = m ? decodeURIComponent(m[1]) : "류결사주.pdf";
+    const name = m ? decodeURIComponent(m[1]) : `${BRAND}.pdf`;
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;

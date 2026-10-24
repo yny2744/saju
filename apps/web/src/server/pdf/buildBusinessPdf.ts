@@ -1,3 +1,4 @@
+import { BRAND, josa } from "@/tenants";
 import fs from "fs";
 import PDFDocument from "pdfkit";
 import type { SajuJson } from "saju-engine";
@@ -29,7 +30,7 @@ function cover(doc: PDFKit.PDFDocument, title: string, who: string, header: Read
   doc.fillColor("#c9cfda").fontSize(9.5).text(header.birth, 0, 276, { width: W, align: "center" });
   doc.fillColor(GOLD_LIGHT).fontSize(11).text("이름은 매일 듣는 첫인사입니다", 0, H - 140, { width: W, align: "center" });
   const kst = new Date(issuedAt.getTime() + 9 * 3600 * 1000);
-  doc.fillColor("#8f9bb3").fontSize(8).text(`${kst.getUTCFullYear()}년 ${kst.getUTCMonth() + 1}월 ${kst.getUTCDate()}일 펴냄 · 류결사주`, 0, H - 80, { width: W, align: "center" });
+  doc.fillColor("#8f9bb3").fontSize(8).text(`${kst.getUTCFullYear()}년 ${kst.getUTCMonth() + 1}월 ${kst.getUTCDate()}일 펴냄 · ${BRAND}`, 0, H - 80, { width: W, align: "center" });
 }
 
 function needPage(doc: PDFKit.PDFDocument, r: BusinessReport) {
@@ -90,7 +91,7 @@ function candidatePage(doc: PDFKit.PDFDocument, r: BusinessReport, i: number) {
 function trademarkPage(doc: PDFKit.PDFDocument, r: BusinessReport) {
   doc.addPage();
   pageTitle(doc, "이름을 정하기 전에 꼭 확인하세요");
-  para(doc, "류결사주는 이름의 뜻과 기운만 살펴요. 같은 이름이 이미 상표로 등록되어 있는지는 확인하지 못해요.");
+  para(doc, `${josa(BRAND, "은/는")} 이름의 뜻과 기운만 살펴요. 같은 이름이 이미 상표로 등록되어 있는지는 확인하지 못해요.`);
   para(doc, "◆ 특허청 키프리스(kipris.or.kr)에서 같은 업종의 상표가 있는지 찾아보세요.", { indent: 6 });
   para(doc, "◆ 사업자등록을 할 세무서 관할에서 같은 이름이 있는지, 쓰려는 인터넷 주소·SNS 이름이 비어 있는지도 함께 살펴보세요.", { indent: 6 });
   para(doc, `◆ 간판에는 업종 이름을 붙여도 좋아요 — 예: ${r.candidates[0]?.hangul ?? "다온"} ${r.industry.suffix.split(" · ")[0]}`, { indent: 6 });
@@ -99,7 +100,7 @@ function trademarkPage(doc: PDFKit.PDFDocument, r: BusinessReport) {
 
 export async function buildBusinessPdf(input: { report: BusinessReport; nickname: string; header: ReadingHeader; saju: SajuJson; siteUrl?: string; issuedAt?: Date }): Promise<Buffer> {
   const r = input.report;
-  const doc = new PDFDocument({ size: "A5", margins: { top: M, left: M, right: M, bottom: BOTTOM }, bufferPages: true, info: { Title: `${BIZ_INFO[r.kind ?? "business"].doc} - 류결사주`, Author: "류결사주" } });
+  const doc = new PDFDocument({ size: "A5", margins: { top: M, left: M, right: M, bottom: BOTTOM }, bufferPages: true, info: { Title: `${BIZ_INFO[r.kind ?? "business"].doc} - ${BRAND}`, Author: BRAND } });
   doc.registerFont("serif", fs.readFileSync(FONT_FILE));
   doc.font("serif");
   const chunks: Buffer[] = [];
@@ -126,7 +127,7 @@ export async function buildBusinessPdf(input: { report: BusinessReport; nickname
     doc.switchToPage(range.start + i);
     const bottom = doc.page.margins.bottom;
     doc.page.margins.bottom = 0;
-    doc.fillColor(FAINT).fontSize(7.5).text(`류결사주 · ${i}`, 0, H - 28, { width: W, align: "center", lineBreak: false });
+    doc.fillColor(FAINT).fontSize(7.5).text(`${BRAND} · ${i}`, 0, H - 28, { width: W, align: "center", lineBreak: false });
     doc.page.margins.bottom = bottom;
   }
   doc.end();

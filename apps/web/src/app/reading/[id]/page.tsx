@@ -1,5 +1,7 @@
 "use client";
 
+
+import { BRAND } from "@/tenants";
 import { useEffect, useState } from "react";
 import { isAuthEnabled } from "@/lib/launchMode";
 import { ComingSoon } from "@/components/ComingSoon";
@@ -50,7 +52,7 @@ function ReadingBody({ id }: { id: string }) {
 
   return (
     <main className="mx-auto min-h-screen max-w-xl px-5 pb-20 pt-12 sm:pt-16">
-      <PersonHeader header={header} kicker={`류결사주 · 맛보기 ${formatNyang(PRICE.TASTE)}`} title="12가지 운세 맛보기" sub={focus && isFocus(focus) ? `관심 분야 ${focusLabel(focus)}` : undefined} />
+      <PersonHeader header={header} kicker={`${BRAND} · 맛보기 ${formatNyang(PRICE.TASTE)}`} title="12가지 운세 맛보기" sub={focus && isFocus(focus) ? `관심 분야 ${focusLabel(focus)}` : undefined} />
 
       <div className="space-y-5">
         {content.sections.map((s) => {

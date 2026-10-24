@@ -1,5 +1,7 @@
 "use client";
 
+
+import { BRAND } from "@/tenants";
 import { Suspense, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { isAuthEnabled } from "@/lib/launchMode";
@@ -45,7 +47,7 @@ function ConsentBody() {
   return (
     <main className="mx-auto min-h-screen max-w-sm px-5 pb-16 pt-14 sm:pt-20">
       <p className="mb-1 text-sm font-semibold" style={{ fontFamily: "var(--font-serif)", color: "var(--color-accent)" }}>
-        류결사주
+        {BRAND}
       </p>
       <h1 className="mb-2 text-[24px] font-bold">반가워요!</h1>
       <p className="mb-6 text-sm leading-relaxed" style={{ color: "var(--color-ink-soft)" }}>

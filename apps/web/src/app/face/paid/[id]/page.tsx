@@ -1,5 +1,7 @@
 "use client";
 
+
+import { BRAND, josa } from "@/tenants";
 import { Suspense, useCallback, useEffect, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { isAuthEnabled } from "@/lib/launchMode";
@@ -255,7 +257,7 @@ function FaceBody({ id }: { id: string }) {
   return (
     <main className="mx-auto min-h-screen max-w-xl px-5 pb-20 pt-12 sm:pt-16">
       <header className="mb-6">
-        <p className="section-label mb-1.5">류결사주 · 관상 심층 풀이</p>
+        <p className="section-label mb-1.5">{BRAND} · 관상 심층 풀이</p>
         <div className="flex items-center gap-4">
           {photo && (
             // eslint-disable-next-line @next/next/no-img-element -- 이 기기 안의 data URL
@@ -361,7 +363,7 @@ function FaceBody({ id }: { id: string }) {
               <label className="mt-4 flex items-start gap-2 rounded-xl px-3 py-3 text-[13px] leading-relaxed" style={{ backgroundColor: "var(--color-paper-soft)" }}>
                 <input type="checkbox" checked={consent} onChange={(e) => setConsent(e.target.checked)} className="mt-0.5 h-4 w-4 shrink-0" />
                 <span>
-                  찍은 사진을 AI 풀이에 쓰는 데 동의해요. 사진은 풀이를 쓰는 동안 AI(Google Gemini)에 한 번 보내지고, 류결사주는 사진을 <b>저장하지 않아요</b>. 체크하지 않으면 얼굴
+                  찍은 사진을 AI 풀이에 쓰는 데 동의해요. 사진은 풀이를 쓰는 동안 AI(Google Gemini)에 한 번 보내지고, {josa(BRAND, "은/는")} 사진을 <b>저장하지 않아요</b>. 체크하지 않으면 얼굴
                   비율로만 풀어 드려요.
                 </span>
               </label>
@@ -416,7 +418,7 @@ function FaceBody({ id }: { id: string }) {
             <label className="flex items-start gap-2 rounded-xl px-3 py-3 text-[13px] leading-relaxed" style={{ backgroundColor: "var(--color-paper-soft)" }}>
               <input type="checkbox" checked={consent} onChange={(e) => setConsent(e.target.checked)} className="mt-0.5 h-4 w-4 shrink-0" />
               <span>
-                이 사진을 관상 풀이에 쓰는 데 동의해요. 사진은 풀이를 쓰는 동안 AI(Google Gemini)에 한 번 보내지고, 류결사주는 사진을 <b>저장하지 않아요</b>.
+                이 사진을 관상 풀이에 쓰는 데 동의해요. 사진은 풀이를 쓰는 동안 AI(Google Gemini)에 한 번 보내지고, {josa(BRAND, "은/는")} 사진을 <b>저장하지 않아요</b>.
               </span>
             </label>
           )}

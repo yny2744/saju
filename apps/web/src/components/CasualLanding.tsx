@@ -1,3 +1,4 @@
+import { TENANT } from "@/tenants";
 import { LoginButtons } from "@/components/LoginButtons";
 
 /**
@@ -55,7 +56,7 @@ export function CasualLanding() {
       <main className="mx-auto min-h-screen max-w-xl px-5 pb-16 pt-10 sm:pt-14">
         <div className="mb-7 flex items-center justify-between">
           <p className="text-lg font-bold" style={{ fontFamily: "var(--font-serif)", color: "var(--color-accent)" }}>
-            류결의사주
+            {TENANT.brand.casualName}
           </p>
         </div>
         <LoginButtons />

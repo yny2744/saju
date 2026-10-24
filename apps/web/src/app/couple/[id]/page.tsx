@@ -1,5 +1,7 @@
 "use client";
 
+
+import { BRAND } from "@/tenants";
 import { Suspense, useCallback, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { isAuthEnabled } from "@/lib/launchMode";
@@ -110,7 +112,7 @@ function Body({ id }: { id: string }) {
   return (
     <main className="mx-auto min-h-screen max-w-xl px-5 pb-20 pt-12 sm:pt-16">
       <header className="mb-6 text-center">
-        <p className="section-label">류결사주 · 연인 궁합</p>
+        <p className="section-label">{BRAND} · 연인 궁합</p>
         <h1 className="mt-1 text-[26px] font-bold" style={{ fontFamily: "var(--font-serif)" }}>
           {m.a.name} <span style={{ color: GOLD }}>♡</span> {m.b.name}
         </h1>

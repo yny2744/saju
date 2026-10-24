@@ -1,5 +1,7 @@
 "use client";
 
+
+import { BRAND } from "@/tenants";
 import { useCallback, useEffect, useState } from "react";
 import { isAuthEnabled } from "@/lib/launchMode";
 import { ComingSoon } from "@/components/ComingSoon";
@@ -75,7 +77,7 @@ function Body({ id }: { id: string }) {
   return (
     <main className="mx-auto min-h-screen max-w-xl px-5 pb-20 pt-12 sm:pt-16">
       <header className="mb-6 text-center">
-        <p className="section-label">류결사주 · 행운 배경화면</p>
+        <p className="section-label">{BRAND} · 행운 배경화면</p>
         <h1 className="mt-1 text-[24px] font-bold leading-snug" style={{ fontFamily: "var(--font-serif)" }}>
           {state.nickname}님을 채우는
           <br />

@@ -12,7 +12,8 @@ module.exports = {
   rootDir: ".",
   testMatch: ["<rootDir>/tests/**/*.test.ts"],
   // src 코드의 "@/..." 경로 별칭을 테스트에서도 그대로 쓰기 위함 (tsconfig paths와 동일)
-  moduleNameMapper: { "^@/(.*)$": "<rootDir>/src/$1" },
+  // "@tenant-active" = 이번 빌드의 고객사 설정 (src/tenants/pick.js, 없으면 류결사주)
+  moduleNameMapper: { "^@tenant-active$": require("./src/tenants/pick").tenantFile(), "^@/(.*)$": "<rootDir>/src/$1" },
   globals: {
     "ts-jest": {
       tsconfig: "tsconfig.jest.json",
