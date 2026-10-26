@@ -70,6 +70,24 @@ export interface TenantFeatures {
   premiumNaming: boolean;
 }
 
+/** 오행 이름 (목·화·토·금·수) */
+export type GoodsElement = "목" | "화" | "토" | "금" | "수";
+
+/** 굿즈 추천 링크 하나 - label 은 화면에 보이는 짧은 이름 (예: "초록 원목 화분") */
+export interface GoodsLink {
+  label: string;
+  url: string;
+}
+
+/**
+ * 굿즈 추천 (2026-10-26) - "나를 채우는 기운" 아래에 부족한 오행의 물건을 은근하게 보여 준다.
+ * coupang: 오행별 쿠팡 파트너스 링크. 비어 있는 오행·고객사는 칸 자체가 보이지 않는다.
+ * 2026-10-26 유샘: 쿠팡 링크는 유샘 링크로, 류결사주에만 넣는다 (다른 고객사는 비워 둔다).
+ */
+export interface TenantGoods {
+  coupang: Partial<Record<GoodsElement, GoodsLink[]>>;
+}
+
 export interface TenantConfig {
   /** 설정 이름 (NEXT_PUBLIC_TENANT 값) - 영문 소문자 */
   id: string;
@@ -79,4 +97,5 @@ export interface TenantConfig {
   siteUrl: string;
   prices: TenantPrices;
   features: TenantFeatures;
+  goods: TenantGoods;
 }

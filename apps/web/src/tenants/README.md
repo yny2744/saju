@@ -21,6 +21,7 @@
 | 사업자 정보 | `BUSINESS_INFO` (`@/lib/businessInfo`) |
 | 가격 | `PRICE` (`@/lib/yeopjeon`) |
 | 기능 켜기·끄기 | `TENANT.features.*` (예: `PREMIUM_ON`) |
+| 굿즈 추천 링크 (쿠팡 파트너스) | `TENANT.goods.coupang` - 오행별 링크. 비어 있으면 굿즈 칸이 안 보임 (2026-10-26: 류결사주에만) |
 
 "류결사주" 같은 글자를 코드에 직접 쓰지 않는다 (`tests/tenants.test.ts` 가 설정 값을 확인한다).
 

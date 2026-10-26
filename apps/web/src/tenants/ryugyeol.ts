@@ -58,6 +58,21 @@ export const ryugyeol: TenantConfig = {
     // 2026-10-17 유샘: 포트원 심사 기간에는 프리미엄 작명 단추 자체를 숨김
     premiumNaming: false,
   },
+  /**
+   * 2026-10-26 굿즈 추천 - 유샘의 쿠팡 파트너스 링크 (류결사주에만).
+   * 오행마다 { label: "화면에 보일 이름", url: "https://link.coupang.com/a/..." } 를 2~3개씩 넣는다.
+   * 비어 있는 오행은 굿즈 칸이 보이지 않는다 (쿠팡 파트너스 승인 전에도 배포해도 된다).
+   * 예) 목: [{ label: "원목 화분", url: "https://link.coupang.com/a/xxxx" }],
+   */
+  goods: {
+    coupang: {
+      목: [],
+      화: [],
+      토: [],
+      금: [],
+      수: [],
+    },
+  },
 };
 
 export default ryugyeol;

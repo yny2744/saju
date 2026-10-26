@@ -9,6 +9,7 @@ import {
 } from "@/lib/manseView";
 import { STEM_ELEMENT, BRANCH_ELEMENT } from "saju-engine/dist/src/rules/fiveElementTables";
 import { ENERGY_GUIDE, type NeededEnergy } from "@/lib/neededEnergy";
+import { GoodsPicks } from "@/components/GoodsPicks";
 
 /** 무료 만세력 화면의 표·그래프 묶음. 값은 전부 엔진 계산 결과를 그대로 쓴다. */
 
@@ -262,6 +263,8 @@ export function NeededEnergySection({ need, highlight }: { need: NeededEnergy; h
       <p className="mt-1.5 text-[11px] leading-relaxed" style={{ color: "var(--color-ink-faint)" }}>
         색·방위·숫자는 전통 오행 배속(숫자는 하도 河圖)을 따른 참고 정보예요.
       </p>
+      {/* 2026-10-26 굿즈 추천 - 고객사 설정에 링크가 있을 때만 보인다 */}
+      <GoodsPicks elements={need.elements} />
     </section>
   );
 }

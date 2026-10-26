@@ -53,6 +53,8 @@ const injasaju: TenantConfig = {
   features: {
     premiumNaming: false,
   },
+  // 2026-10-26 유샘: 쿠팡 굿즈 링크는 류결사주에만 - 인자사주는 비워 둔다 (굿즈 칸이 보이지 않음)
+  goods: { coupang: {} },
 };
 
 export default injasaju;

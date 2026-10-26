@@ -8,6 +8,7 @@ import { CURRENCY_NAME, INVITEE_GIFT, INVITE_REWARD, formatNyang } from "@/lib/y
 import { ScrollTopButton } from "@/components/ScrollTop";
 import { SuneungHero } from "@/components/landing/SuneungHero";
 import { isSuneungOn } from "@/lib/launchMode";
+import { FUN_KINDS, FUN_META, type FunKind } from "@/lib/fun/types";
 
 /**
  * 류결사주 대문 (2026-10-08 수정안 13번 재구성, 유샘 확정 순서).
@@ -35,6 +36,9 @@ const FREE: Array<{ icon: Kind; name: string; desc: string; href: string }> = [
   { icon: "match", name: "연인 궁합", desc: "두 사람의 사주로 보는 끌림과 인연 · 궁합 점수 미리보기", href: "/couple" },
   { icon: "name", name: "이름 풀이 · 개명 · 작명", desc: "내 이름 풀이는 무료 · 개명 · 작명", href: "/name" },
 ];
+
+/** 무료 묶음 카드 동그라미 글자 (2026-10-26) */
+const FUN_BADGE: Record<FunKind, string> = { numerology: "數", zodiac: "★", blood: "AB", flower: "花" };
 
 const GOLD = "var(--color-gold)";
 /** 금색 이중 테두리 카드 */
@@ -144,6 +148,32 @@ export default function LandingPage() {
                 </span>
                 <span className="shrink-0 rounded-full px-2.5 py-0.5 text-[13px] font-bold" style={{ color: "var(--color-accent)", border: "1px solid var(--color-gold-line)" }}>
                   무료
+                </span>
+              </a>
+            ))}
+          </div>
+
+          {/* 2026-10-26 무료 묶음: 가볍게 보고 사주로 이어지는 입구 (AI 없음) */}
+          <p className="mb-2 mt-6 text-center text-[14px] font-semibold" style={{ color: "var(--color-ink-soft)" }}>
+            재미로 보고, 사주와 겹쳐 보기
+          </p>
+          <div className="grid grid-cols-2 gap-2.5">
+            {FUN_KINDS.map((k) => (
+              <a key={k} href={`/fun/${k}`} className="flex items-center gap-3 rounded-2xl px-3 py-3 transition-transform active:scale-[0.98]" style={CARD}>
+                <span
+                  aria-hidden
+                  className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-[15px] font-bold"
+                  style={{ backgroundColor: "var(--color-band)", color: "var(--color-gold-light)", boxShadow: `0 0 0 1px ${GOLD}`, fontFamily: "var(--font-serif)" }}
+                >
+                  {FUN_BADGE[k]}
+                </span>
+                <span className="min-w-0">
+                  <span className="block text-[15px] font-bold leading-tight" style={{ fontFamily: "var(--font-serif)" }}>
+                    {FUN_META[k].title.split(" · ")[0]}
+                  </span>
+                  <span className="block text-[11.5px]" style={{ color: "var(--color-ink-faint)" }}>
+                    무료 · 사주와 함께
+                  </span>
                 </span>
               </a>
             ))}

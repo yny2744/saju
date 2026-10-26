@@ -150,6 +150,10 @@ export function SuneungHero() {
       <p className="mt-2 text-center text-[13px]" style={{ color: "var(--color-ink-soft)" }}>
         가볍게 보기 {formatNyang(PRICE.EXAM)} · 로그인 선물 {CURRENCY_NAME} {formatNyang(WELCOME_GIFT)}으로 바로 · 깊게 보기 {formatNyang(PRICE.EXAM_DEEP)}
       </p>
+      {/* 2026-10-26: 부모·조부모가 자녀·손주를 위해 보는 상품으로 (결제는 보호자) */}
+      <p className="mt-1 text-center text-[13px] font-semibold" style={{ color: "var(--color-ink)" }}>
+        자녀·손주의 생년월일로 보고, 시험날 응원을 건네 보세요
+      </p>
     </div>
   );
 }

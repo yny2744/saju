@@ -1,5 +1,6 @@
 import { ELEMENT_TOKEN, type ElementKo } from "@/lib/pillarView";
 import { ENERGY_GUIDE } from "@/lib/neededEnergy";
+import { GoodsPicks } from "@/components/GoodsPicks";
 import { TOPICS } from "@/lib/topics";
 import type { BasicReadingV2, FillCard } from "@/lib/basic/compose";
 
@@ -249,6 +250,8 @@ export function LuckCard({ fill: need, person }: { fill: FillCard; person: strin
             <br />
             <b>{person}</b>
           </p>
+          {/* 2026-10-26 굿즈 추천 - 고객사 설정에 링크가 있을 때만 보인다 */}
+          <GoodsPicks elements={[need.element]} tone="dark" />
         </div>
   );
 }
