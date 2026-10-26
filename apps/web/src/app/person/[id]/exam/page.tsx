@@ -8,6 +8,7 @@ import { isAuthEnabled, isSuneungOn } from "@/lib/launchMode";
 import { ComingSoon } from "@/components/ComingSoon";
 import { ErrorState, LoadingState } from "@/components/StatusScreens";
 import { PayDialog } from "@/components/yeopjeon/PayDialog";
+import { GuardianPayNote } from "@/components/yeopjeon/GuardianPayNote";
 import { WritingOverlay } from "@/components/yeopjeon/WritingOverlay";
 import { notifyYeopjeonChanged, reportClientError } from "@/components/yeopjeon/useYeopjeon";
 import { CURRENCY_NAME, formatNyang } from "@/lib/yeopjeon";
@@ -18,6 +19,7 @@ import type { ExamDeep } from "@/server/exam/exam";
 /**
  * 수능운 (2026-10-17 수정안 17) - 시즌에 따라 수능대박운 → 합격운 → 새 출발운.
  *   가볍게 보기 990냥 (엔진, 가입 선물 엽전으로 바로) → 깊게 보기 4,900냥 (AI)
+ *   2026-10-26 유샘: 가입하면 수능운 하나 무료(가입 선물 엽전), 그 뒤는 유료, 깊게 보기는 보호자 결제 (GuardianPayNote)
  */
 
 type Data = {
@@ -173,6 +175,8 @@ function Body({ id }: { id: string }) {
           <button type="button" disabled={busy} onClick={() => buy("exam_deep")} className="btn-secondary mt-3 block w-full text-center disabled:opacity-50">
             처음부터 깊게 보기 · {formatNyang(state.deepPrice)}
           </button>
+          {/* 2026-10-26: 깊게 보기·두 번째 사람부터(현금 결제)는 보호자가 - 가입 선물 엽전으로 보는 가볍게 보기는 그대로 */}
+          <GuardianPayNote title={r.title} />
         </section>
       ) : (
         <>
@@ -266,6 +270,7 @@ function Body({ id }: { id: string }) {
                 <button type="button" disabled={busy} onClick={() => buy("exam_deep")} className="btn-primary mt-5 disabled:opacity-50">
                   깊게 보기 · {formatNyang(state.deepPrice)}
                 </button>
+                <GuardianPayNote title={r.title} />
               </section>
             )
           )}

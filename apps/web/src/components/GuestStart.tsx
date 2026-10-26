@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { ConsentChecks, EMPTY_CONSENT, requiredConsentDone, type ConsentState } from "@/components/ConsentChecks";
+import { MinorNotice } from "@/components/yeopjeon/MinorNotice";
 
 /**
  * 비회원으로 바로 이용 (2026-10-23, 카드사 심사 "결제창 확인 불가" 반려 대응).
@@ -55,6 +56,8 @@ export function GuestStart({ next, label = "비회원으로 바로 결제하기"
       <p className="mt-2 text-center text-[12px] leading-relaxed" style={{ color: "var(--color-ink-faint)" }}>
         회원가입 없이 결제할 수 있어요 (1냥 = 1원, 표시된 금액 그대로 원으로 결제). 비회원으로 산 풀이는 이 기기·브라우저에서 30일 동안 다시 볼 수 있어요.
       </p>
+      {/* 2026-10-26 전자상거래법 제13조 제3항 - 미성년자 결제 취소 고지 */}
+      <MinorNotice className="mt-1" />
     </div>
   );
 }

@@ -5,6 +5,7 @@ import { CURRENCY_NAME, formatNyang } from "@/lib/yeopjeon";
 import { PAY_BACK_KEY } from "@/lib/pay";
 import { DEFAULT_PAY_METHOD, PAY_METHODS, PAY_METHODS_TEXT, portonePayMethod, tossPayMethod, type PayMethodId } from "@/lib/payMethod";
 import { reportClientError } from "./useYeopjeon";
+import { MinorNotice } from "./MinorNotice";
 
 /**
  * 결제 창 (2026-10-10 수정안 31). 엽전이 모자랄 때 뜬다 - 가진 엽전은 먼저 쓰고 모자란 만큼만 카드·계좌이체 (2026-10-21 결제수단 선택).
@@ -245,6 +246,8 @@ export function PayDialog({
               <br />
               풀이를 열어 보기 전이면 7일 안에 전액 환불돼요
             </p>
+            {/* 2026-10-26 전자상거래법 제13조 제3항 - 미성년자 결제 취소 고지 */}
+            <MinorNotice className="mt-1.5" />
           </>
         )}
         {error && (
