@@ -39,6 +39,33 @@ export function GateHero({ gate, brand }: { gate: TenantGate; brand: string }) {
     return () => mq.removeEventListener?.("change", pick);
   }, [gate]);
 
+  // 한 화면에 다 들어오게: 영상은 화면을 꽉 채우고(cover), 그림(길·운·채움)은
+  // 꽉 채워도 안 잘리면 그대로(slice), 잘릴 화면이면 전체가 보이게 줄인다(meet).
+  useEffect(() => {
+    const hero = heroRef.current;
+    if (!hero) return;
+    // 그림이 차지하는 범위 [x1, y1, x2, y2] (가로 1600×900, 세로 900×1600 좌표)
+    const fit = (svg: SVGSVGElement | null, vw: number, vh: number, box: [number, number, number, number]) => {
+      if (!svg) return;
+      const w = hero.clientWidth;
+      const h = hero.clientHeight;
+      if (!w || !h) return;
+      const s = Math.max(w / vw, h / vh);
+      const ox = (w - vw * s) / 2;
+      const oy = (h - vh * s) / 2;
+      const ok = box[0] * s + ox >= 0 && box[2] * s + ox <= w && box[1] * s + oy >= 0 && box[3] * s + oy <= h;
+      svg.setAttribute("preserveAspectRatio", ok ? "xMidYMid slice" : "xMidYMid meet");
+    };
+    const apply = () => {
+      fit(lsRef.current, 1600, 900, [200, 80, 1400, 870]);
+      fit(ptRef.current, 900, 1600, [96, 160, 804, 1500]);
+    };
+    apply();
+    const ro = typeof ResizeObserver !== "undefined" ? new ResizeObserver(apply) : null;
+    ro?.observe(hero);
+    return () => ro?.disconnect();
+  }, []);
+
   // 길·운 그리기 → 빛 구슬 흐름
   useEffect(() => {
     let stop: (() => void) | null = null;

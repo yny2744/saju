@@ -5,7 +5,7 @@
 export const GATE_CSS = `
 html,body{overflow-x:clip}
 .gh-hero{position:relative;z-index:25;overflow:hidden;background:#070b16;color:#ece6d8;
-  width:100vw;margin-left:calc(50% - 50vw);height:max(100svh,56.25vw);
+  width:100vw;margin-left:calc(50% - 50vw);height:100svh;min-height:480px;
   --gh-gold:#d6bc8a;--gh-gold-hi:#f4e2b8;--gh-ink:#ece6d8;--gh-dim:#b9b1a0;
   --gh-serif:"Noto Serif KR","Nanum Myeongjo","AppleMyungjo",serif;--gh-sans:"Gowun Dodum","Apple SD Gothic Neo","Malgun Gothic",sans-serif}
 @media (orientation:portrait){.gh-hero{height:100svh;min-height:520px}}
@@ -20,6 +20,8 @@ html,body{overflow-x:clip}
 .gh-brand img{width:30px;height:30px}
 .gh-nav{display:flex;align-items:center;gap:24px;font-size:14px;color:var(--gh-dim)}
 .gh-nl:hover,.gh-nl:focus-visible{color:var(--gh-gold-hi)}
+.gh-nav>*{flex-shrink:0}
+@media (max-width:1060px){.gh-nl{display:none}}
 @media (orientation:portrait){
   .gh-ls{display:none}.gh-pt{display:block}.gh-nl{display:none}
   .gh-bar{padding-top:calc(26px + env(safe-area-inset-top,0px));padding-bottom:16px;padding-left:max(20px,env(safe-area-inset-left,0px));padding-right:max(20px,env(safe-area-inset-right,0px))}
