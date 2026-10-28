@@ -4,6 +4,8 @@ import "./globals.css";
 import { AccessibilityInit } from "@/components/AccessibilityInit";
 import { Footer } from "@/components/Footer";
 import { SiteHeader } from "@/components/SiteHeader";
+import { HideOnGateHome } from "@/components/gate/HideOnGateHome";
+import { SrcCapture } from "@/components/SrcCapture";
 import { FloatingScrollTop } from "@/components/ScrollTop";
 import { RefCapture } from "@/components/yeopjeon/RefCapture";
 import { VisitBeacon } from "@/components/VisitBeacon";
@@ -20,12 +22,15 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className="min-h-screen">
         <AccessibilityInit />
         <RefCapture />
+        <SrcCapture />
         <VisitBeacon />
         <BgmStarter />
         {/* 사이트 액자: PC에서는 가운데 한 장, 폰에서는 화면 전체 (양옆 금색 뇌문 띠 포함) */}
         <div className="site-frame">
-          <div aria-hidden className="frame-edge" />
-          <SiteHeader />
+          <HideOnGateHome>
+            <div aria-hidden className="frame-edge" />
+            <SiteHeader />
+          </HideOnGateHome>
           {children}
           {/* 전자상거래법상 사업자 고지는 결제 화면을 포함한 모든 화면에 상시 노출한다 */}
           <Footer />

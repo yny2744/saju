@@ -1,4 +1,5 @@
 import { randomBytes } from "crypto";
+import { SRC_COOKIE_NAME, validSource } from "@/lib/source";
 import { db } from "@/server/auth/db";
 import { getBalance, InsufficientYeopjeonError } from "@/server/yeopjeon/ledger";
 import { PurchaseError, inTransaction, planForPerson, productName, purchaseWithClient, type PurchaseMode } from "@/server/readings/readings";
@@ -65,6 +66,16 @@ export type CheckoutResult =
       mock: boolean;
     };
 
+/** 2026-10-28 유입 경로 꼬리표 (요청 쿠키에서 - 요청 밖(시험 등)이면 없음) */
+async function requestSource(): Promise<string | null> {
+  try {
+    const { cookies } = await import("next/headers");
+    return validSource(cookies().get(SRC_COOKIE_NAME)?.value);
+  } catch {
+    return null;
+  }
+}
+
 function newOrderId(): string {
   return `ryg_${Date.now().toString(36)}_${randomBytes(8).toString("hex")}`;
 }
@@ -81,9 +92,9 @@ export async function checkout(userId: string, personId: string, mode: PurchaseM
   const orderId = newOrderId();
   const orderName = productName(mode, plan.topics);
   await pool.query(
-    `INSERT INTO pay_orders (id, user_id, person_id, mode, topics, price, use_yeopjeon, amount, order_name)
-     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
-    [orderId, userId, personId, mode, JSON.stringify(plan.topics), plan.price, split.useYeopjeon, split.cash, orderName]
+    `INSERT INTO pay_orders (id, user_id, person_id, mode, topics, price, use_yeopjeon, amount, order_name, src)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`,
+    [orderId, userId, personId, mode, JSON.stringify(plan.topics), plan.price, split.useYeopjeon, split.cash, orderName, await requestSource()]
   );
   return {
     status: "pay",

@@ -190,6 +190,15 @@ async function ensureSchema(): Promise<void> {
       PRIMARY KEY (day, vid)
     );
   `);
+  // 2026-10-28 유입 경로: 광고 꼬리표(출처|매체|캠페인|랜딩)가 있는 방문 (src/lib/source.ts)
+  await db.query(`
+    CREATE TABLE IF NOT EXISTS visit_sources (
+      day DATE NOT NULL,
+      vid TEXT NOT NULL,
+      src TEXT NOT NULL,
+      PRIMARY KEY (day, vid, src)
+    );
+  `);
   // 수정안 26: 최근 오류 (관리자 화면에서 보기 - 손님 정보는 담지 않는다)
   await db.query(`
     CREATE TABLE IF NOT EXISTS error_log (
@@ -217,6 +226,8 @@ async function ensureSchema(): Promise<void> {
       paid_at TIMESTAMPTZ
     );
   `);
+  // 2026-10-28 결제 주문에 유입 경로 꼬리표
+  await db.query(`ALTER TABLE pay_orders ADD COLUMN IF NOT EXISTS src TEXT;`);
   // 2026-10-12 수정안 46: 작명·개명 결과 - 사람 하나에 상품 하나. redo_count: 7일 안 1회 다시 추천
   await db.query(`
     CREATE TABLE IF NOT EXISTS name_reports (

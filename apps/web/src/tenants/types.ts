@@ -88,6 +88,62 @@ export interface TenantGoods {
   coupang: Partial<Record<GoodsElement, GoodsLink[]>>;
 }
 
+/**
+ * 대문(gate) - 2026-10-28 류결의 명견만리(mgml)에서 시작한 "세 길·일곱 운" 대문.
+ * 설정이 있는 고객사만 이 대문을 쓰고, 없으면 기존 대문 그대로다 (류결사주·인자사주는 없음).
+ * 글자·그림·방(관) 목록은 모두 여기서 정한다 - 고객사마다 자기 이름과 문구로 바꿔 쓸 수 있게.
+ */
+export interface GateRoom {
+  /** 방 이름 (예: "사주관") */
+  name: string;
+  /** 한 줄 설명 */
+  desc: string;
+  /** 누르면 갈 곳 - 없으면 "곧 열려요" */
+  href?: string;
+}
+
+export interface GateUn {
+  /** 주소에 쓰는 이름 (영문 소문자) - #un-<key>, /l/<key> */
+  key: string;
+  /** 동그라미 안 한자 (예: "命") */
+  glyph: string;
+  /** 대문에 보이는 짧은 이름 (예: "타고난 나") */
+  short: string;
+  /** 정식 이름 (예: "타고난 나의 운") */
+  name: string;
+  rooms: GateRoom[];
+  /** 광고 랜딩(/l/<key>) 머리글 */
+  landing: { headline: string; lead: string };
+}
+
+export interface GateWay {
+  key: string;
+  /** 예: "나를 아는 길" */
+  name: string;
+  /** 이 길이 답하는 물음 */
+  question: string;
+  uns: GateUn[];
+}
+
+export interface TenantGate {
+  /** 대문 큰 제목 (예: "류결의 명견만리") */
+  title: string;
+  /** 엠블럼 양옆 글자 (예: "三道", "七運") */
+  sideLeft: string;
+  sideRight: string;
+  /** 엠블럼 그림 (투명 배경 PNG) */
+  emblem: string;
+  /** 배경 영상·대체 그림 - 가로 화면(PC)·세로 화면(휴대폰) */
+  media: { landscape: string; portrait: string; posterLandscape: string; posterPortrait: string };
+  /** 소개글 - 엠블럼·제목을 누르면 창으로, 대문 아래에도 같은 글 */
+  intro: { heading: string; tagline: string; paragraphs: string[]; bridge: string; credential: string; closing: string };
+  ways: GateWay[];
+  /** 모든 길이 맺히는 자리 (채움) */
+  fruit: { glyph: string; title: string; sub: string; desc: string };
+  /** 계절 랜딩 (/l/<key>) - 예: 신년운세 */
+  seasonal: Array<{ key: string; glyph: string; name: string; headline: string; lead: string; rooms: GateRoom[] }>;
+}
+
 export interface TenantConfig {
   /** 설정 이름 (NEXT_PUBLIC_TENANT 값) - 영문 소문자 */
   id: string;
@@ -98,4 +154,6 @@ export interface TenantConfig {
   prices: TenantPrices;
   features: TenantFeatures;
   goods: TenantGoods;
+  /** 세 길·일곱 운 대문 - 없으면 기존 대문 */
+  gate?: TenantGate;
 }

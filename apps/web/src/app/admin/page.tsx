@@ -9,6 +9,8 @@ import { REVIEW_ANGEL_GIFT } from "@/lib/reviews";
 import type { AdminMember, AdminStats, PeriodStats } from "@/server/admin/adminData";
 import type { AdminPayOrder, PayMode } from "@/server/pay/payOrders";
 import type { AdminReview } from "@/server/reviews/reviews";
+import type { SourceRow } from "@/server/admin/visits";
+import { sourceLabel } from "@/lib/source";
 
 /**
  * 관리자 화면 (2026-10-10 수정안 26). Vercel 환경변수 ADMIN_USER_IDS 에 등록된 회원만 열린다.
@@ -23,6 +25,7 @@ type Overview = {
   payMode: PayMode;
   needed: { total: number; rows: Array<{ element: string; count: number; percent: number }> };
   reviews: { list: AdminReview[]; angel: AdminReview | null; total: number };
+  sources?: SourceRow[];
 };
 
 type Denied = { kind: "login" } | { kind: "notAdmin"; myId?: string; configured?: boolean } | { kind: "error"; message: string };
@@ -224,6 +227,51 @@ function AdminBody() {
             </div>
           ))}
         </div>
+      </section>
+
+      {/* 2026-10-28 유입 경로별 성과 (광고 주소의 utm 꼬리표) */}
+      <section className="gold-card rounded-2xl p-4">
+        <h2 className="text-[16px] font-bold">유입 경로별 성과 · 최근 30일</h2>
+        <p className="mt-1 text-[12px]" style={{ color: "var(--color-ink-faint)" }}>
+          광고·글 주소에 utm 꼬리표를 붙이면 여기에 나뉘어 보여요. 결제 금액은 카드·계좌로 실제 낸 돈만 셉니다.
+        </p>
+        {!data.sources || data.sources.length === 0 ? (
+          <p className="mt-3 text-[14px]" style={{ color: "var(--color-ink-faint)" }}>
+            아직 꼬리표가 붙은 방문이 없어요.
+          </p>
+        ) : (
+          <div className="mt-3 overflow-x-auto">
+            <table className="w-full min-w-[420px] text-left text-[12.5px]" style={{ fontVariantNumeric: "tabular-nums" }}>
+              <thead>
+                <tr style={{ color: "var(--color-ink-faint)" }}>
+                  <th className="py-1 pr-2 font-semibold">출처</th>
+                  <th className="py-1 pr-2 font-semibold">매체</th>
+                  <th className="py-1 pr-2 font-semibold">캠페인</th>
+                  <th className="py-1 pr-2 font-semibold">랜딩</th>
+                  <th className="py-1 pr-2 text-right font-semibold">방문자</th>
+                  <th className="py-1 pr-2 text-right font-semibold">결제</th>
+                  <th className="py-1 text-right font-semibold">금액</th>
+                </tr>
+              </thead>
+              <tbody>
+                {data.sources.map((r) => {
+                  const l = sourceLabel(r.src);
+                  return (
+                    <tr key={r.src ?? "-"} style={{ borderTop: "1px solid var(--color-line)" }}>
+                      <td className="py-1.5 pr-2 font-bold">{l.source}</td>
+                      <td className="py-1.5 pr-2">{l.medium}</td>
+                      <td className="py-1.5 pr-2">{l.campaign}</td>
+                      <td className="py-1.5 pr-2">{l.landing}</td>
+                      <td className="py-1.5 pr-2 text-right">{r.visitors}</td>
+                      <td className="py-1.5 pr-2 text-right">{r.orders}건</td>
+                      <td className="py-1.5 text-right">{r.revenue.toLocaleString("ko-KR")}원</td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
       </section>
 
       {/* 결제 (수정안 31) */}

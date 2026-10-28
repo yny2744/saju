@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import { SRC_COOKIE_NAME } from "@/lib/source";
 
 const VID_KEY = "ryugyeol_vid";
 const DAY_KEY = "ryugyeol_vid_day";
@@ -19,7 +20,7 @@ export function VisitBeacon() {
         vid = typeof crypto !== "undefined" && crypto.randomUUID ? crypto.randomUUID() : `v${Date.now().toString(36)}${Math.random().toString(36).slice(2, 12)}`;
         localStorage.setItem(VID_KEY, vid);
       }
-      fetch("/api/visit", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ vid }), keepalive: true })
+      fetch("/api/visit", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ vid, src: document.cookie.split("; ").find((c) => c.startsWith(`${SRC_COOKIE_NAME}=`))?.slice(SRC_COOKIE_NAME.length + 1) ?? null }), keepalive: true })
         .then(() => localStorage.setItem(DAY_KEY, day))
         .catch(() => {});
     } catch {

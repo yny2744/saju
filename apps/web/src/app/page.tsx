@@ -9,6 +9,10 @@ import { ScrollTopButton } from "@/components/ScrollTop";
 import { SuneungHero } from "@/components/landing/SuneungHero";
 import { isSuneungOn } from "@/lib/launchMode";
 import { FUN_KINDS, FUN_META, type FunKind } from "@/lib/fun/types";
+import type { TenantGate } from "@/tenants/types";
+import { GateHero } from "@/components/gate/GateHero";
+import { GateIntroSection } from "@/components/gate/GateIntro";
+import { GateRooms } from "@/components/gate/GateRooms";
 
 /**
  * 류결사주 대문 (2026-10-08 수정안 13번 재구성, 유샘 확정 순서).
@@ -66,11 +70,120 @@ function SectionTitle({ title, sub }: { title: string; sub?: string }) {
   );
 }
 
+/** 가입하면 운세 하나 무료 (대문 공통) */
+function JoinBanner() {
+  return (
+    <>
+      {/* 로그인 혜택 (2026-10-23: 가입 선물 990냥으로 운세 하나 무료 - 12가지 모두 무료였던 수정안 10을 대체) */}
+      <a
+        href="/login"
+        className="mt-6 block rounded-2xl px-5 py-6 text-center"
+        style={{ backgroundColor: "#16213a", border: "1px solid var(--color-gold-line)", boxShadow: "inset 0 0 0 3px #16213a, inset 0 0 0 4px rgba(212,178,101,0.55)" }}
+      >
+        <span className="mx-auto flex h-12 w-12 items-center justify-center rounded-full text-[19px] font-bold" style={{ border: "1.5px solid #d4b265", color: "#d4b265", fontFamily: "var(--font-serif)" }}>
+          錢
+        </span>
+        <span className="mt-3 block text-[19px] font-bold" style={{ color: "#f3e7c6", fontFamily: "var(--font-serif)" }}>
+          가입하면 운세 하나가 무료
+        </span>
+        <span className="mt-1 block text-[14px]" style={{ color: "#c9cfda" }}>
+          가입 선물 엽전 990냥으로 위 운세 중 하나를 바로 볼 수 있어요
+        </span>
+        <span className="mx-auto mt-4 block max-w-[240px] rounded-xl py-3 text-[15px] font-bold" style={{ background: "linear-gradient(180deg,#e2c47e,#c9a55a)", color: "#16213a" }}>
+          가입하고 운세 보기
+        </span>
+      </a>
+    </>
+  );
+}
+
+/** 친구 초대 (대문 공통) */
+function InviteSection({ suneung }: { suneung: boolean }) {
+  return (
+    <>
+      {/* 친구 초대 */}
+      <section className="py-12">
+        <SectionTitle title={`친구 초대하고 ${CURRENCY_NAME} 받기`} sub="친구 한 명마다, 나도 친구도 함께 받아요" />
+        <div className="grid grid-cols-2 gap-2 text-center">
+          {[
+            { who: "초대한 나", amt: INVITE_REWARD },
+            { who: "초대받은 친구", amt: INVITEE_GIFT },
+          ].map((x) => (
+            <div key={x.who} className="rounded-2xl px-2 py-4" style={CARD}>
+              <p className="text-[13px]" style={{ color: "var(--color-ink-soft)" }}>
+                {x.who}
+              </p>
+              <p className="mt-1 text-[19px] font-bold" style={{ color: GOLD }}>
+                {formatNyang(x.amt)}
+              </p>
+            </div>
+          ))}
+        </div>
+        <p className="mt-3 text-center text-[13px]" style={{ color: "var(--color-ink-faint)" }}>
+          {suneung ? `${formatNyang(INVITE_REWARD)}이면 수능운 가볍게 보기 한 번 · 인원 제한 없이 계속 쌓여요` : "인원 제한 없이 한 명마다 계속 쌓여요"}
+        </p>
+        <a href="/mypage" className="mt-5 block rounded-2xl py-4 text-center text-[16px] font-bold" style={{ backgroundColor: "#16213a", color: "#f3e7c6", border: "1px solid var(--color-gold-line)", fontFamily: "var(--font-serif)" }}>
+          내 초대 링크 받기
+        </a>
+      </section>
+    </>
+  );
+}
+
+/** 맨 아래 - 맨 위로 · 안내 · 문의 (대문 공통) */
+function BottomSection() {
+  return (
+    <>
+      {/* 아래쪽 (수정안 25: 무료 만세력 버튼 대신 맨 위로) */}
+      <section className="pt-4 text-center">
+        <ScrollTopButton className="btn-secondary mx-auto block max-w-xs" />
+        <p className="foil-text mt-8 text-[20px] font-black" style={{ fontFamily: "var(--font-serif)" }}>
+          {BRAND}
+        </p>
+        <p className="mt-2 text-[13px] leading-relaxed" style={{ color: "var(--color-ink-faint)" }}>
+          본 서비스는 오락·참고 목적이며
+          <br />
+          중요한 결정의 근거로 삼지 마십시오.
+        </p>
+        <a href={`mailto:${BUSINESS_INFO.csEmail}?subject=${encodeURIComponent(`[${BRAND} 문의]`)}`} className="mt-4 inline-block text-[13px] underline underline-offset-4" style={{ color: "var(--color-ink-soft)" }}>
+          문의하기
+        </a>
+      </section>
+    </>
+  );
+}
+
+/**
+ * 세 길·일곱 운 대문 (2026-10-28 mgml) - 고객사 설정에 gate 가 있을 때만.
+ * 대문(모션) → 소개글 → 세 길·일곱 운의 관 → 가입 혜택 → 후기 → 친구 초대 → 맨 아래
+ */
+function GateLanding({ gate, suneung }: { gate: TenantGate; suneung: boolean }) {
+  return (
+    <main className="min-h-screen pb-10">
+      <GateHero gate={gate} brand={BRAND} />
+      <GateIntroSection gate={gate} />
+      <div className="mx-auto max-w-xl px-5">
+        <GateRooms gate={gate} />
+        <div className="hairline" />
+        <section className="py-12">
+          <JoinBanner />
+        </section>
+        <div className="hairline" />
+        <ReviewStrip />
+        <div className="hairline mt-12" />
+        <InviteSection suneung={suneung} />
+        <BottomSection />
+      </div>
+    </main>
+  );
+}
+
 export default function LandingPage() {
   if (process.env.NEXT_PUBLIC_LANDING_VARIANT === "casual") {
     return <CasualLanding />;
   }
   const suneung = isSuneungOn();
+  if (TENANT.gate) return <GateLanding gate={TENANT.gate} suneung={suneung} />;
 
   return (
     <main className="min-h-screen pb-10">
@@ -207,25 +320,7 @@ export default function LandingPage() {
             ))}
           </ul>
 
-          {/* 로그인 혜택 (2026-10-23: 가입 선물 990냥으로 운세 하나 무료 - 12가지 모두 무료였던 수정안 10을 대체) */}
-          <a
-            href="/login"
-            className="mt-6 block rounded-2xl px-5 py-6 text-center"
-            style={{ backgroundColor: "#16213a", border: "1px solid var(--color-gold-line)", boxShadow: "inset 0 0 0 3px #16213a, inset 0 0 0 4px rgba(212,178,101,0.55)" }}
-          >
-            <span className="mx-auto flex h-12 w-12 items-center justify-center rounded-full text-[19px] font-bold" style={{ border: "1.5px solid #d4b265", color: "#d4b265", fontFamily: "var(--font-serif)" }}>
-              錢
-            </span>
-            <span className="mt-3 block text-[19px] font-bold" style={{ color: "#f3e7c6", fontFamily: "var(--font-serif)" }}>
-              가입하면 운세 하나가 무료
-            </span>
-            <span className="mt-1 block text-[14px]" style={{ color: "#c9cfda" }}>
-              가입 선물 엽전 990냥으로 위 운세 중 하나를 바로 볼 수 있어요
-            </span>
-            <span className="mx-auto mt-4 block max-w-[240px] rounded-xl py-3 text-[15px] font-bold" style={{ background: "linear-gradient(180deg,#e2c47e,#c9a55a)", color: "#16213a" }}>
-              가입하고 운세 보기
-            </span>
-          </a>
+          <JoinBanner />
         </section>
 
         <div className="hairline" />
@@ -235,47 +330,9 @@ export default function LandingPage() {
 
         <div className="hairline mt-12" />
 
-        {/* 친구 초대 */}
-        <section className="py-12">
-          <SectionTitle title={`친구 초대하고 ${CURRENCY_NAME} 받기`} sub="친구 한 명마다, 나도 친구도 함께 받아요" />
-          <div className="grid grid-cols-2 gap-2 text-center">
-            {[
-              { who: "초대한 나", amt: INVITE_REWARD },
-              { who: "초대받은 친구", amt: INVITEE_GIFT },
-            ].map((x) => (
-              <div key={x.who} className="rounded-2xl px-2 py-4" style={CARD}>
-                <p className="text-[13px]" style={{ color: "var(--color-ink-soft)" }}>
-                  {x.who}
-                </p>
-                <p className="mt-1 text-[19px] font-bold" style={{ color: GOLD }}>
-                  {formatNyang(x.amt)}
-                </p>
-              </div>
-            ))}
-          </div>
-          <p className="mt-3 text-center text-[13px]" style={{ color: "var(--color-ink-faint)" }}>
-            {suneung ? `${formatNyang(INVITE_REWARD)}이면 수능운 가볍게 보기 한 번 · 인원 제한 없이 계속 쌓여요` : "인원 제한 없이 한 명마다 계속 쌓여요"}
-          </p>
-          <a href="/mypage" className="mt-5 block rounded-2xl py-4 text-center text-[16px] font-bold" style={{ backgroundColor: "#16213a", color: "#f3e7c6", border: "1px solid var(--color-gold-line)", fontFamily: "var(--font-serif)" }}>
-            내 초대 링크 받기
-          </a>
-        </section>
+        <InviteSection suneung={suneung} />
 
-        {/* 아래쪽 (수정안 25: 무료 만세력 버튼 대신 맨 위로) */}
-        <section className="pt-4 text-center">
-          <ScrollTopButton className="btn-secondary mx-auto block max-w-xs" />
-          <p className="foil-text mt-8 text-[20px] font-black" style={{ fontFamily: "var(--font-serif)" }}>
-            {BRAND}
-          </p>
-          <p className="mt-2 text-[13px] leading-relaxed" style={{ color: "var(--color-ink-faint)" }}>
-            본 서비스는 오락·참고 목적이며
-            <br />
-            중요한 결정의 근거로 삼지 마십시오.
-          </p>
-          <a href={`mailto:${BUSINESS_INFO.csEmail}?subject=${encodeURIComponent(`[${BRAND} 문의]`)}`} className="mt-4 inline-block text-[13px] underline underline-offset-4" style={{ color: "var(--color-ink-soft)" }}>
-            문의하기
-          </a>
-        </section>
+        <BottomSection />
       </div>
     </main>
   );
