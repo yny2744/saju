@@ -11,7 +11,6 @@ import { isSuneungOn } from "@/lib/launchMode";
 import { FUN_KINDS, FUN_META, type FunKind } from "@/lib/fun/types";
 import type { TenantGate } from "@/tenants/types";
 import { GateHero } from "@/components/gate/GateHero";
-import { GateIntroSection } from "@/components/gate/GateIntro";
 import { GateRooms } from "@/components/gate/GateRooms";
 import { IntroCards } from "@/components/landing/IntroCards";
 
@@ -162,9 +161,8 @@ function GateLanding({ gate, suneung }: { gate: TenantGate; suneung: boolean }) 
   return (
     <main className="min-h-screen pb-10">
       <GateHero gate={gate} brand={BRAND} />
-      <GateIntroSection gate={gate} />
-      {/* 2026-10-29 소개 카드 9장 - 옆으로 넘겨 보기 */}
-      <section className="px-5 pb-14 pt-2" style={{ background: "#0e1830" }}>
+      {/* 2026-10-29 소개 카드 9장 - 옆으로 넘겨 보기 (긴 소개글 칸 대신, 유샘) */}
+      <section id="intro" className="scroll-mt-2 px-5 pb-14 pt-10" style={{ background: "linear-gradient(#070b16,#0e1830)" }} aria-label="류결의 명견만리 소개">
         <div className="mx-auto max-w-xl">
           <IntroCards dark />
         </div>
