@@ -161,12 +161,7 @@ function GateLanding({ gate, suneung }: { gate: TenantGate; suneung: boolean }) 
   return (
     <main className="min-h-screen pb-10">
       <GateHero gate={gate} brand={BRAND} />
-      {/* 2026-10-29 소개 카드 9장 - 옆으로 넘겨 보기 (긴 소개글 칸 대신, 유샘) */}
-      <section id="intro" className="scroll-mt-2 px-5 pb-14 pt-10" style={{ background: "linear-gradient(#070b16,#0e1830)" }} aria-label="류결의 명견만리 소개">
-        <div className="mx-auto max-w-xl">
-          <IntroCards dark />
-        </div>
-      </section>
+      {/* 2026-10-30 대문 아래 카드 칸은 뺌 - 카드 9장은 대문 장면 안에서 돈다 (유샘) */}
       <div className="mx-auto max-w-xl px-5">
         <GateRooms gate={gate} />
         <div className="hairline" />
