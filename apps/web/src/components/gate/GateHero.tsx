@@ -15,28 +15,19 @@ import { GATE_CSS } from "./gateStyles";
  *   - 일곱 운·길 이름·채움을 누르면 아래 그 방(관)으로 (1·3번 작업)
  */
 export function GateHero({ gate, brand }: { gate: TenantGate; brand: string }) {
-  const lsRef = useRef<SVGSVGElement>(null);
   const ptRef = useRef<SVGSVGElement>(null);
   const heroRef = useRef<HTMLElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const [introOpen, setIntroOpen] = useState(false);
 
-  // 영상: 화면 방향에 맞는 것 하나만 받는다
+  // 영상: 대문은 사이트 폭(휴대폰 폭) 안에 세로 구도로 들어간다 (2026-10-28 유샘: 아래 화면과 같은 폭)
   useEffect(() => {
     const v = videoRef.current;
     if (!v) return;
-    const mq = window.matchMedia("(orientation: portrait)");
-    const pick = () => {
-      const src = mq.matches ? gate.media.portrait : gate.media.landscape;
-      v.poster = mq.matches ? gate.media.posterPortrait : gate.media.posterLandscape;
-      if (v.getAttribute("src") !== src) {
-        v.setAttribute("src", src);
-        v.play?.().catch(() => {});
-      }
-    };
-    pick();
-    mq.addEventListener?.("change", pick);
-    return () => mq.removeEventListener?.("change", pick);
+    if (v.getAttribute("src") !== gate.media.portrait) {
+      v.setAttribute("src", gate.media.portrait);
+      v.play?.().catch(() => {});
+    }
   }, [gate]);
 
   // 한 화면에 다 들어오게: 영상은 화면을 꽉 채우고(cover), 그림(길·운·채움)은
@@ -57,7 +48,6 @@ export function GateHero({ gate, brand }: { gate: TenantGate; brand: string }) {
       svg.setAttribute("preserveAspectRatio", ok ? "xMidYMid slice" : "xMidYMid meet");
     };
     const apply = () => {
-      fit(lsRef.current, 1600, 900, [200, 80, 1400, 870]);
       fit(ptRef.current, 900, 1600, [96, 160, 804, 1500]);
     };
     apply();
@@ -74,9 +64,9 @@ export function GateHero({ gate, brand }: { gate: TenantGate; brand: string }) {
     const io = typeof IntersectionObserver !== "undefined" && heroRef.current ? new IntersectionObserver(([e]) => (onScreen = e.isIntersecting)) : null;
     if (io && heroRef.current) io.observe(heroRef.current);
     const build = () => {
-      if (done || !lsRef.current || !ptRef.current) return;
+      if (done || !ptRef.current) return;
       done = true;
-      const stages = [buildStage(lsRef.current, "ls", gate, [800, 262]), buildStage(ptRef.current, "pt", gate, [450, 388])];
+      const stages = [buildStage(ptRef.current, "pt", gate, [450, 388])];
       if (!window.matchMedia("(prefers-reduced-motion: reduce)").matches) stop = startFlow(stages, () => onScreen && !document.hidden);
     };
     // 글자 바탕 크기를 실제 글꼴로 재야 하므로 글꼴이 준비된 뒤 (최대 1.2초)
@@ -111,57 +101,10 @@ export function GateHero({ gate, brand }: { gate: TenantGate; brand: string }) {
             {brand}
           </a>
           <nav className="gh-nav" aria-label="세 길">
-            {gate.ways.map((w) => (
-              <a key={w.key} className="gh-nl" href={`#way-${w.key}`}>
-                {w.name}
-              </a>
-            ))}
-            <a className="gh-nl" href="#fill">
-              {gate.fruit.title}
-            </a>
             <BgmToggle />
             <HeaderAuth />
           </nav>
         </header>
-
-        {/* 가로 화면 (영상 16:9 기준 좌표) */}
-        <svg ref={lsRef} className="gh-stage gh-ls" viewBox="0 0 1600 900" preserveAspectRatio="xMidYMid slice">
-          <defs>
-            <filter id="gh-glow-ls" filterUnits="userSpaceOnUse" x="0" y="0" width="1600" height="900">
-              <feGaussianBlur stdDeviation="3" result="b" />
-              <feMerge>
-                <feMergeNode in="b" />
-                <feMergeNode in="SourceGraphic" />
-              </feMerge>
-            </filter>
-            <radialGradient id="gh-sun-ls">
-              <stop offset="0" stopColor="#f4e2b8" stopOpacity=".55" />
-              <stop offset="1" stopColor="#f4e2b8" stopOpacity="0" />
-            </radialGradient>
-          </defs>
-          <a href="#intro" onClick={openIntro} aria-label="소개글 보기">
-            <text className="gh-title gh-a-title" x="800" y="146" fontSize="60" textAnchor="middle">
-              {gate.title}
-            </text>
-          </a>
-          <text className="gh-side gh-a-tag" x="628" y="262" fontSize="44" textAnchor="middle" dominantBaseline="central">
-            {gate.sideLeft}
-          </text>
-          <text className="gh-side gh-a-tag" x="972" y="262" fontSize="44" textAnchor="middle" dominantBaseline="central">
-            {gate.sideRight}
-          </text>
-          <circle className="gh-halo" cx="800" cy="262" r="120" fill="url(#gh-sun-ls)" />
-          <a href="#intro" onClick={openIntro} aria-label="소개글 보기" className="gh-a-emblem">
-            <g className="gh-emblem-pulse">
-              <circle cx="800" cy="262" r="68" className="gh-disc" />
-              <image href={gate.emblem} x="740" y="202" width="120" height="120" />
-            </g>
-          </a>
-          <path className="gh-way-path gh-way-know" pathLength={1} />
-          <path className="gh-way-path gh-way-heart" pathLength={1} />
-          <path className="gh-way-path gh-way-ahead" pathLength={1} />
-          <g className="gh-nodes" />
-        </svg>
 
         {/* 세로 화면 (영상 9:16 기준 좌표) - 2026-10-28 유샘 확정 레이아웃 */}
         <svg ref={ptRef} className="gh-stage gh-pt" viewBox="0 0 900 1600" preserveAspectRatio="xMidYMid slice">

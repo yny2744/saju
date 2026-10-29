@@ -3,16 +3,13 @@
  * 짙은 남색·검정 바탕에 샴페인 금빛, 새벽빛. 글씨는 명조(Noto Serif KR) + 고운돋움.
  */
 export const GATE_CSS = `
-html,body{overflow-x:clip}
-.gh-hero{position:relative;z-index:25;overflow:hidden;background:#070b16;color:#ece6d8;
-  width:100vw;margin-left:calc(50% - 50vw);height:100svh;min-height:480px;
+.gh-hero{position:relative;overflow:hidden;background:#070b16;color:#ece6d8;
+  width:100%;height:100svh;min-height:520px;
   --gh-gold:#d6bc8a;--gh-gold-hi:#f4e2b8;--gh-ink:#ece6d8;--gh-dim:#b9b1a0;
   --gh-serif:"Noto Serif KR","Nanum Myeongjo","AppleMyungjo",serif;--gh-sans:"Gowun Dodum","Apple SD Gothic Neo","Malgun Gothic",sans-serif}
-@media (orientation:portrait){.gh-hero{height:100svh;min-height:520px}}
 .gh-video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
 .gh-shade{position:absolute;inset:0;pointer-events:none;background:linear-gradient(to bottom,rgba(7,11,22,.55) 0%,rgba(7,11,22,.05) 34%,rgba(7,11,22,0) 70%,rgba(7,11,22,.35) 100%)}
 .gh-stage{position:absolute;inset:0;width:100%;height:100%}
-.gh-pt{display:none}
 .gh-bar{position:absolute;inset:0 0 auto;z-index:3;display:flex;align-items:center;justify-content:space-between;gap:16px;
   padding:calc(14px + env(safe-area-inset-top,0px)) max(24px,env(safe-area-inset-right,0px)) 14px max(24px,env(safe-area-inset-left,0px));
   background:linear-gradient(to bottom,rgba(7,11,22,.78),rgba(7,11,22,0));color:#f6ecd2}
@@ -21,13 +18,9 @@ html,body{overflow-x:clip}
 .gh-nav{display:flex;align-items:center;gap:24px;font-size:14px;color:var(--gh-dim)}
 .gh-nl:hover,.gh-nl:focus-visible{color:var(--gh-gold-hi)}
 .gh-nav>*{flex-shrink:0}
-@media (max-width:1060px){.gh-nl{display:none}}
-@media (orientation:portrait){
-  .gh-ls{display:none}.gh-pt{display:block}.gh-nl{display:none}
-  .gh-bar{padding-top:calc(26px + env(safe-area-inset-top,0px));padding-bottom:16px;padding-left:max(20px,env(safe-area-inset-left,0px));padding-right:max(20px,env(safe-area-inset-right,0px))}
-  .gh-brand{font-size:18px}.gh-brand img{width:34px;height:34px}.gh-nav{gap:12px}
-  .gh-shade{background:linear-gradient(to bottom,rgba(7,11,22,.62) 0%,rgba(7,11,22,.22) 30%,rgba(7,11,22,.32) 60%,rgba(7,11,22,.55) 100%)}
-}
+.gh-bar{padding-top:calc(26px + env(safe-area-inset-top,0px));padding-bottom:16px;padding-left:max(20px,env(safe-area-inset-left,0px));padding-right:max(20px,env(safe-area-inset-right,0px))}
+.gh-brand{font-size:18px}.gh-brand img{width:34px;height:34px}.gh-nav{gap:12px}
+.gh-shade{background:linear-gradient(to bottom,rgba(7,11,22,.62) 0%,rgba(7,11,22,.22) 30%,rgba(7,11,22,.32) 60%,rgba(7,11,22,.55) 100%)}
 .gh-hero a:focus-visible{outline:2px solid var(--gh-gold);outline-offset:3px}
 .gh-title{font-family:var(--gh-serif);font-weight:900;fill:var(--gh-gold-hi);letter-spacing:.06em;paint-order:stroke;stroke:rgba(7,11,22,.6);stroke-width:5px;cursor:pointer}
 .gh-side{font-family:var(--gh-serif);font-weight:700;fill:var(--gh-gold-hi);letter-spacing:.14em;paint-order:stroke;stroke:rgba(5,8,16,.85);stroke-width:7px;stroke-linejoin:round}

@@ -45,7 +45,7 @@ export const STAGES: Record<StageKey, StageCfg> = {
     },
     at: { know: [0.2, 0.48, 0.76], heart: [0.34, 0.66], ahead: [0.3, 0.66] },
     atMode: "t",
-    wn_at: { know: [0.36, -150, -6], ahead: [0.36, 150, -6] },
+    wn_at: { know: [0.36, -150, -6], heart: [0.13, 0, 0], ahead: [0.36, 150, -6] },
     clamp: null,
   },
   pt: {
@@ -121,7 +121,7 @@ interface Built {
   svg: SVGSVGElement;
   paths: Record<WayKey, SVGPathElement>;
   lengths: Record<WayKey, number>;
-  nodes: Array<Pulser & { way: WayKey; frac: number }>;
+  nodes: Array<Pulser & { way: WayKey; frac: number; amp?: number }>;
   emblem: Pulser;
   fruit: Pulser;
   sparks: Record<WayKey, SVGCircleElement>;
@@ -178,9 +178,14 @@ export function buildStage(svg: SVGSVGElement, key: StageKey, gate: TenantGate, 
     // 길 이름표 (누르면 그 길로)
     const at = c.wn_at[w];
     if (at) {
-      const pt = c.atMode === "y" ? p.getPointAtLength(lengthAtY(p, at[0])) : p.getPointAtLength(L * at[0]);
+      const len = c.atMode === "y" ? lengthAtY(p, at[0]) : L * at[0];
+      const pt = p.getPointAtLength(len);
       const tag = el("a", { href: `#way-${way.key}`, class: "gh-way-tag", "aria-label": `${way.name} 보기` }, g);
-      pillText(tag, "gh-way-name", pt.x + at[1], pt.y + at[2], c.wn, way.name, c.wn * 0.7, c.wn * 0.32, "gh-way-pill", c.clamp);
+      // 2026-10-28 2번: 빛 구슬이 지날 때 길 이름표도 커졌다 작아진다
+      const inner = el("g", {}, tag);
+      pillText(inner, "gh-way-name", pt.x + at[1], pt.y + at[2], c.wn, way.name, c.wn * 0.7, c.wn * 0.32, "gh-way-pill", c.clamp);
+      const bb = inner.getBBox();
+      nodes.push({ g: inner, cx: bb.x + bb.width / 2, cy: bb.y + bb.height / 2, way: w, frac: len / L, amp: 0.6 });
     }
   });
 
@@ -260,7 +265,7 @@ export function startFlow(stages: Built[], isVisible: () => boolean): () => void
       });
       scaleAt(b.emblem, 1 + PULSE_SCALE * 0.6 * emblemS);
       scaleAt(b.fruit, 1 + PULSE_SCALE * fruitS);
-      for (const n of b.nodes) scaleAt(n, 1 + PULSE_SCALE * (nodeS.get(n.g) ?? 0));
+      for (const n of b.nodes) scaleAt(n, 1 + PULSE_SCALE * (n.amp ?? 1) * (nodeS.get(n.g) ?? 0));
     }
   };
   raf = requestAnimationFrame(frame);
