@@ -18,9 +18,9 @@ const AI = {
 
 describe("수정안 53 - 관상 심층 풀이", () => {
   it("상품: 4,900냥 · 구매 종류 face", () => {
-    expect(PRICE.FACE).toBe(4900);
+    expect(PRICE.FACE).toBe(5500);
     expect(isPurchaseMode("face")).toBe(true);
-    expect(planPurchase("face", [], [])).toEqual({ topics: [], price: 4900 });
+    expect(planPurchase("face", [], [])).toEqual({ topics: [], price: 5500 });
     expect(productName("face", [])).toBe("관상 심층 풀이 · 인연 궁합");
   });
 

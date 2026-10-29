@@ -4,7 +4,7 @@ import { ReviewStrip } from "@/components/reviews/ReviewStrip";
 import { ProductIcon, type Kind } from "@/components/landing/ProductIcon";
 import { BUSINESS_INFO } from "@/lib/businessInfo";
 import { TOPICS, TOPIC_KEYS } from "@/lib/topics";
-import { CURRENCY_NAME, INVITEE_GIFT, INVITE_REWARD, formatNyang } from "@/lib/yeopjeon";
+import { CURRENCY_NAME, INVITEE_GIFT, INVITE_REWARD, PRICE, formatNyang, saleNote } from "@/lib/yeopjeon";
 import { ScrollTopButton } from "@/components/ScrollTop";
 import { SuneungHero } from "@/components/landing/SuneungHero";
 import { isSuneungOn } from "@/lib/launchMode";
@@ -13,6 +13,7 @@ import type { TenantGate } from "@/tenants/types";
 import { GateHero } from "@/components/gate/GateHero";
 import { GateIntroSection } from "@/components/gate/GateIntro";
 import { GateRooms } from "@/components/gate/GateRooms";
+import { IntroCards } from "@/components/landing/IntroCards";
 
 /**
  * 류결사주 대문 (2026-10-08 수정안 13번 재구성, 유샘 확정 순서).
@@ -162,6 +163,12 @@ function GateLanding({ gate, suneung }: { gate: TenantGate; suneung: boolean }) 
     <main className="min-h-screen pb-10">
       <GateHero gate={gate} brand={BRAND} />
       <GateIntroSection gate={gate} />
+      {/* 2026-10-29 소개 카드 9장 - 옆으로 넘겨 보기 */}
+      <section className="px-5 pb-14 pt-2" style={{ background: "#0e1830" }}>
+        <div className="mx-auto max-w-xl">
+          <IntroCards dark />
+        </div>
+      </section>
       <div className="mx-auto max-w-xl px-5">
         <GateRooms gate={gate} />
         <div className="hairline" />
@@ -242,6 +249,11 @@ export default function LandingPage() {
           <img src="/landing/hero-poster.jpg" alt={`${TENANT.brand.heroTagline} · ${BRAND}`} className="hidden w-full rounded-2xl motion-reduce:block" />
         </section>
 
+        {/* 2026-10-29 류결의 명견만리 소개 카드 9장 - 옆으로 넘겨 보기 */}
+        <div className="pb-10">
+          <IntroCards />
+        </div>
+
         {/* 무료로 시작하기 - 첫 화면에 바로 보이게 */}
         <section className="pb-12">
           <SectionTitle title="무료로 시작하기" sub="로그인 없이 바로 볼 수 있어요" />
@@ -301,7 +313,7 @@ export default function LandingPage() {
           <SectionTitle title="12가지 운세" sub="궁금한 운세를 골라 보세요" />
           <div className="mb-5 flex justify-center">
             <span className="rounded-full px-3 py-1.5 text-[12.5px] font-semibold" style={{ backgroundColor: "var(--color-accent-soft)", color: "var(--color-accent)" }}>
-              가입하면 운세 하나 무료 · 하나에 990냥 (1냥 = 1원)
+              가입하면 운세 하나 무료 · {saleNote("BASIC") ? `${saleNote("BASIC")} ` : ""}하나에 {formatNyang(PRICE.BASIC)} (1냥 = 1원)
             </span>
           </div>
           <ul className="grid grid-cols-3 gap-2">

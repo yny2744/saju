@@ -25,7 +25,7 @@ describe("수능운 (2026-10-17 수정안 17)", () => {
 
   it("가격: 가볍게 990 · 깊게 4,900", () => {
     expect(planPurchase("exam", [], []).price).toBe(990);
-    expect(planPurchase("exam_deep", [], []).price).toBe(4900);
+    expect(planPurchase("exam_deep", [], []).price).toBe(5500);
   });
 
   it("여러 사주·시즌에서 풀이가 빈칸 없이 나오고, 합격·불합격을 단정하지 않는다", () => {

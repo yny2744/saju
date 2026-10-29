@@ -35,24 +35,31 @@ export const ryugyeol: TenantConfig = {
   },
   siteUrl: "https://saju-web-khaki.vercel.app",
   /** 2026-10-14 유샘 확정: 만 원 위 상품도 900으로 끝냄. 2026-10-17 포트원 심사용: 작명 29,900, 프리미엄 39,900 */
+  /** 2026-10-29 유샘 확정 (오픈 가격): 부가세가 딱 떨어지는 값(11로 나누어 떨어짐)으로 맞춤.
+   *  4,900 → 5,500(행사 후 11,000) · 전부 보기 19,800(행사 후 29,700) · 개명·아이 작명 22,000(행사 후 33,000)
+   *  상호 38,500(행사 후 55,000) · 기업·브랜드 55,000(행사 후 77,000). 990·9,900 은 그대로. */
   prices: {
     BASIC: 990,
     TASTE: 990,
-    DEEP: 4900,
+    DEEP: 5500,
     BUNDLE3: 9900,
-    BUNDLE12: 29900,
-    RENAME: 29900,
-    NAMING: 29900,
-    FACE: 4900,
-    BUSINESS: 29900,
-    CORP: 29900,
-    BRAND: 29900,
+    BUNDLE12: 19800,
+    RENAME: 22000,
+    NAMING: 22000,
+    FACE: 5500,
+    BUSINESS: 38500,
+    CORP: 55000,
+    BRAND: 55000,
     COUPLE: 19900,
     PREMIUM_NAME: 39900,
     PREMIUM_BIZ: 39900,
     WALLPAPER: 990,
     EXAM: 990,
-    EXAM_DEEP: 4900,
+    EXAM_DEEP: 5500,
+  },
+  openSale: {
+    label: "오픈 특가",
+    after: { BASIC: null, DEEP: 11000, FACE: 11000, EXAM_DEEP: 11000, BUNDLE12: 29700, RENAME: 33000, NAMING: 33000, BUSINESS: 55000, CORP: 77000, BRAND: 77000 },
   },
   features: {
     // 2026-10-17 유샘: 포트원 심사 기간에는 프리미엄 작명 단추 자체를 숨김

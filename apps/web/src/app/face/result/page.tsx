@@ -1,5 +1,6 @@
 "use client";
 import type { FaceMapResult } from "@/lib/faceMap";
+import { SaleNote } from "@/components/SaleNote";
 import { SamJeongBar } from "@/components/face/SamJeongBar";
 import { PartnerTeaser } from "@/components/face/PartnerPortrait";
 
@@ -224,6 +225,7 @@ function FaceDeepCta({ resultId }: { resultId: string }) {
       <button type="button" disabled={busy} onClick={go} className="btn-band mt-4 block w-full rounded-xl py-3.5 text-[16px] font-bold disabled:opacity-60" style={{ fontFamily: "var(--font-serif)" }}>
         {busy ? "준비하는 중..." : `심층 풀이 받기 · ${CURRENCY_NAME} ${formatNyang(PRICE.FACE)}`}
       </button>
+      <SaleNote k="FACE" />
       <p className="mt-2 text-center text-[12px]" style={{ color: "var(--color-ink-faint)" }}>
         로그인 후 이용 · 엽전이 모자라면 모자란 만큼만 카드·계좌이체
       </p>

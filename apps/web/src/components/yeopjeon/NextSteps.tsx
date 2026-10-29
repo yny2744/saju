@@ -1,4 +1,5 @@
 import { EXTRA_KEYS, TOPICS, TOPIC_KEYS } from "@/lib/topics";
+import { SaleNote } from "@/components/SaleNote";
 import { PRICE, bundleDiscount, formatNyang } from "@/lib/yeopjeon";
 import type { Journey } from "@/lib/journey";
 
@@ -88,6 +89,7 @@ export function NextSteps({ personId, nickname, journey }: { personId: string; n
             + {EXTRA_KEYS.map((k) => TOPICS[k].title).join(", ")}까지
           </span>
           <Badge count={left.length} price={PRICE.BUNDLE12} />
+          <SaleNote k="BUNDLE12" />
         </a>
       )}
     </section>

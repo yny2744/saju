@@ -2,6 +2,7 @@
 
 
 import { BRAND } from "@/tenants";
+import { SaleNote } from "@/components/SaleNote";
 import { Suspense, useCallback, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { isAuthEnabled, isSuneungOn } from "@/lib/launchMode";
@@ -441,6 +442,7 @@ function PersonBody({ id }: { id: string }) {
               <s style={{ color: "var(--color-ink-faint)" }}>{formatNyang(bundleDiscount(lockedTopics.length, PRICE.BUNDLE12).list)}</s> ·{" "}
               <b style={{ color: "var(--color-accent)" }}>{formatNyang(bundleDiscount(lockedTopics.length, PRICE.BUNDLE12).off)} 할인</b> · 월별 운세·개운법 포함
             </span>
+            <SaleNote k="BUNDLE12" className="mt-1 text-left" />
           </button>
           )}
           <WonNote className="mt-0" />

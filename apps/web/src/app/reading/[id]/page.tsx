@@ -2,6 +2,7 @@
 
 
 import { BRAND } from "@/tenants";
+import { SaleNote } from "@/components/SaleNote";
 import { useEffect, useState } from "react";
 import { isAuthEnabled } from "@/lib/launchMode";
 import { ComingSoon } from "@/components/ComingSoon";
@@ -114,6 +115,7 @@ function ReadingBody({ id }: { id: string }) {
             <p className="mt-2 text-[18px] font-bold" style={{ color: GOLD }}>
               {formatNyang(PRICE.BUNDLE12)}
             </p>
+            <SaleNote k="BUNDLE12" className="mt-0.5 text-left" />
           </a>
         </section>
       ) : (

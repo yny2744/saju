@@ -2,6 +2,7 @@
 
 
 import { BRAND, josa } from "@/tenants";
+import { SaleNote } from "@/components/SaleNote";
 import { useEffect, useState } from "react";
 import { HanjaPicker } from "@/components/HanjaPicker";
 import { BusinessChars, BusinessFacts, BUSINESS_VERDICT } from "@/components/BusinessReadingCard";
@@ -188,6 +189,7 @@ export default function BusinessReadingPage() {
         <a href="/go?name=business" className="btn-primary mt-4 block text-center">
           상호 작명 받기 · {CURRENCY_NAME} {formatNyang(PRICE.BUSINESS)}
         </a>
+        <SaleNote k="BUSINESS" />
         <a href="/name" className="mt-4 block text-[13px] underline underline-offset-4" style={{ color: "var(--color-ink-faint)" }}>
           이름 풀이 · 개명 · 작명으로
         </a>

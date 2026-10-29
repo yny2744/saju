@@ -24,6 +24,25 @@ export const CURRENCY_UNIT = "냥";
 export const PRICE: Readonly<TenantPrices> = TENANT.prices;
 
 /**
+ * 오픈 특가 안내 (2026-10-29) - 예) "오픈 특가 · 행사 후 11,000냥", 행사 후 가격이 없으면 "오픈 특가".
+ * 행사가 없거나 그 상품이 대상이 아니면 null. unit: 사이트 안은 "냥", 가격표(/pricing)는 "원".
+ */
+export function saleNote(key: keyof TenantPrices, unit: "냥" | "원" = "냥"): string | null {
+  const s = TENANT.openSale;
+  if (!s || !(key in s.after)) return null;
+  const after = s.after[key];
+  return after ? `${s.label} · 행사 후 ${after.toLocaleString("ko-KR")}${unit}` : s.label;
+}
+
+/** 가격 글자 뒤에 붙이는 꼬리 - 예) " · 오픈 특가 (행사 후 33,000냥)" */
+export function saleSuffix(key: keyof TenantPrices): string {
+  const s = TENANT.openSale;
+  if (!s || !(key in s.after)) return "";
+  const after = s.after[key];
+  return after ? ` · ${s.label} (행사 후 ${after.toLocaleString("ko-KR")}냥)` : ` · ${s.label}`;
+}
+
+/**
  * 프리미엄 작명(작명 + 12가지 운세 전부 보기) 판매 여부 (2026-10-17 유샘: 포트원 심사 기간에는 단추 자체를 숨김).
  * 심사가 끝나면 true로 바꾸면 화면 단추·안내와 서버 구매가 함께 열린다.
  */

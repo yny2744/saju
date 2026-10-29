@@ -144,6 +144,16 @@ export interface TenantGate {
   seasonal: Array<{ key: string; glyph: string; name: string; headline: string; lead: string; rooms: GateRoom[] }>;
 }
 
+/**
+ * 오픈 특가 (2026-10-29 유샘) - 지금 가격(prices)은 오픈 특가이고, 행사가 끝나면 after 의 가격으로 올린다.
+ * 화면에는 줄 그은 "정가"를 쓰지 않고 "오픈 특가 · 행사 후 ○원" 으로만 보여 준다 (그 값에 판 적이 없는 정가 표시는 허위 할인이 될 수 있어서).
+ * after 값이 null 이면 "오픈 특가" 표시만 붙인다. 행사가 끝나면 prices 를 after 값으로 바꾸고 openSale 을 지운다.
+ */
+export interface TenantOpenSale {
+  label: string;
+  after: Partial<Record<keyof TenantPrices, number | null>>;
+}
+
 export interface TenantConfig {
   /** 설정 이름 (NEXT_PUBLIC_TENANT 값) - 영문 소문자 */
   id: string;
@@ -154,6 +164,8 @@ export interface TenantConfig {
   prices: TenantPrices;
   features: TenantFeatures;
   goods: TenantGoods;
+  /** 오픈 특가 - 없으면 표시 없음 */
+  openSale?: TenantOpenSale;
   /** 세 길·일곱 운 대문 - 없으면 기존 대문 */
   gate?: TenantGate;
 }

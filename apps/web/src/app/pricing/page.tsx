@@ -1,4 +1,5 @@
 import { BUSINESS_INFO } from "@/lib/businessInfo";
+import { SaleNote } from "@/components/SaleNote";
 import { FREE_ITEMS, formatWon, paidProducts } from "@/lib/pricingList";
 
 export const metadata = { title: `상품·가격 안내 | ${BUSINESS_INFO.serviceName}` };
@@ -45,6 +46,7 @@ export default function PricingPage() {
                 <span className="mt-0.5 block text-[13px]" style={{ color: "var(--color-ink-soft)" }}>
                   {p.desc}
                 </span>
+                {p.key && <SaleNote k={p.key} unit="원" className="mt-1 text-left" />}
               </span>
               <span className="shrink-0 text-[15px] font-bold tabular-nums" style={{ color: "var(--color-accent)" }}>
                 {formatWon(p.price)}

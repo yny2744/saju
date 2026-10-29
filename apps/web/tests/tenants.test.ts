@@ -32,7 +32,8 @@ describe("고객사 설정 (베이직)", () => {
     expect(TENANT.business.businessRegistrationNumber).toBe("485-16-02724");
     expect(TENANT.business.csPhone).toBe("010-2620-2744");
     expect(TENANT.siteUrl).toBe("https://saju-web-khaki.vercel.app");
-    expect([PRICE.BASIC, PRICE.DEEP, PRICE.BUNDLE3, PRICE.BUNDLE12]).toEqual([990, 4900, 9900, 29900]);
+    // 2026-10-29 유샘: 오픈 가격 (부가세가 딱 떨어지는 값)
+    expect([PRICE.BASIC, PRICE.DEEP, PRICE.BUNDLE3, PRICE.BUNDLE12]).toEqual([990, 5500, 9900, 19800]);
   });
   it.each(TENANT_FILES)("%s: 파일 이름 = id, 빈 값 없음", (file) => {
     // eslint-disable-next-line @typescript-eslint/no-var-requires
@@ -43,6 +44,16 @@ describe("고객사 설정 (베이직)", () => {
       expect(`${k}:${typeof v === "string" && v.trim().length > 0}`).toBe(`${k}:true`);
     }
     for (const [k, v] of Object.entries(t.prices)) expect(`${k}:${Number.isInteger(v) && v > 0}`).toBe(`${k}:true`);
+  });
+  it("오픈 특가: 행사 후 가격이 지금보다 높고, 부가세가 딱 떨어진다", () => {
+    for (const [k, after] of Object.entries(TENANT.openSale?.after ?? {})) {
+      const now = PRICE[k as keyof typeof PRICE];
+      expect(`${k}:${now % 11}`).toBe(`${k}:0`);
+      if (after !== null && after !== undefined) {
+        expect(`${k}:${after > now}`).toBe(`${k}:true`);
+        expect(`${k}:${after % 11}`).toBe(`${k}:0`);
+      }
+    }
   });
   it("조사는 받침에 맞춘다", () => {
     expect(josa("류결사주", "은/는")).toBe("류결사주는");

@@ -26,7 +26,8 @@ const saju = calculateSaju({ calendarType: "solar", date: "1967-04-03", time: "0
 
 describe("엽전 금액 (2026-10-08 유샘 확정)", () => {
   it("가격", () => {
-    expect(PRICE).toEqual({ BASIC: 990, TASTE: 990, DEEP: 4900, BUNDLE3: 9900, BUNDLE12: 29900, RENAME: 29900, NAMING: 29900, FACE: 4900, BUSINESS: 29900, CORP: 29900, BRAND: 29900, COUPLE: 19900, PREMIUM_NAME: 39900, PREMIUM_BIZ: 39900, WALLPAPER: 990, EXAM: 990, EXAM_DEEP: 4900 });
+    // 2026-10-29 유샘: 오픈 가격
+    expect(PRICE).toEqual({ BASIC: 990, TASTE: 990, DEEP: 5500, BUNDLE3: 9900, BUNDLE12: 19800, RENAME: 22000, NAMING: 22000, FACE: 5500, BUSINESS: 38500, CORP: 55000, BRAND: 55000, COUPLE: 19900, PREMIUM_NAME: 39900, PREMIUM_BIZ: 39900, WALLPAPER: 990, EXAM: 990, EXAM_DEEP: 5500 });
     expect(formatNyang(29500)).toBe("29,500냥");
   });
 
@@ -75,8 +76,8 @@ describe("운세 보기 990 · 할인 표시 · 들어온 길 (수정안 20~24)"
   });
 
   it("묶음 정가·할인: 3가지 14,700 → 9,900 (4,800 · 33%), 12가지 58,800 → 29,900 (28,900 · 49%)", () => {
-    expect(bundleDiscount(3, PRICE.BUNDLE3)).toEqual({ list: 14700, off: 4800, percent: 33 });
-    expect(bundleDiscount(12, PRICE.BUNDLE12)).toEqual({ list: 58800, off: 28900, percent: 49 });
+    expect(bundleDiscount(3, PRICE.BUNDLE3)).toEqual({ list: 16500, off: 6600, percent: 40 });
+    expect(bundleDiscount(12, PRICE.BUNDLE12)).toEqual({ list: 66000, off: 46200, percent: 70 });
   });
 
   it("들어온 길(intent): 허용된 값만 읽고, 사람이 정해지면 알맞은 화면으로", () => {
@@ -125,7 +126,7 @@ describe("운세 보기 990 · 할인 표시 · 들어온 길 (수정안 20~24)"
 
 describe("구매 계획 (planPurchase)", () => {
   it("깊게 보기: 안 연 주제 1개 → 4,900", () => {
-    expect(planPurchase("deep", ["money"], [])).toEqual({ topics: ["money"], price: 4900 });
+    expect(planPurchase("deep", ["money"], [])).toEqual({ topics: ["money"], price: 5500 });
   });
   it("깊게 보기: 이미 연 주제면 거절", () => {
     expect(() => planPurchase("deep", ["money"], ["money"])).toThrow(PurchaseError);
@@ -139,11 +140,11 @@ describe("구매 계획 (planPurchase)", () => {
   });
   it("전부 보기: 안 연 것 전부 + 월별·개운법, 가격은 늘 29,500", () => {
     const all = planPurchase("bundle12", undefined, []);
-    expect(all.price).toBe(29900);
+    expect(all.price).toBe(19800);
     expect(all.topics).toHaveLength(14);
     const some = planPurchase("bundle12", undefined, ["money", "health"]);
     expect(some.topics).toHaveLength(12);
-    expect(some.price).toBe(29900);
+    expect(some.price).toBe(19800);
     expect(() => planPurchase("bundle12", undefined, [...TOPIC_KEYS, ...EXTRA_KEYS])).toThrow(PurchaseError);
   });
 });

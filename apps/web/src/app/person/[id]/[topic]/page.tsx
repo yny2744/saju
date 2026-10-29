@@ -2,6 +2,7 @@
 
 
 import { BRAND } from "@/tenants";
+import { SaleNote } from "@/components/SaleNote";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { isAuthEnabled } from "@/lib/launchMode";
 import { ComingSoon } from "@/components/ComingSoon";
@@ -234,6 +235,7 @@ function TopicBody({ id, topic }: { id: string; topic: string }) {
         <p className="mt-2 text-center text-[14px]" style={{ color: "var(--color-ink-soft)" }}>
           {CURRENCY_NAME} {formatNyang(PRICE.DEEP)}이 빠져요{balance !== null ? ` · 남은 ${CURRENCY_NAME} ${formatNyang(balance)}` : ""}
         </p>
+        <SaleNote k="DEEP" />
         <div className="mt-5 flex gap-2">
           <button type="button" onClick={() => setConfirmDeep(false)} className="btn-secondary flex-1">
             취소
@@ -285,6 +287,7 @@ function TopicBody({ id, topic }: { id: string; topic: string }) {
           <button type="button" disabled={buying !== null} onClick={() => setConfirmDeep(true)} className="btn-secondary mt-2.5">
             바로 깊게 보기 · {formatNyang(PRICE.DEEP)}
           </button>
+          <SaleNote k="DEEP" prefix="깊게 보기" />
           <WonNote />
           {canBasic && (
             <p className="mt-3 text-[12px]" style={{ color: "var(--color-ink-faint)" }}>
@@ -339,6 +342,7 @@ function TopicBody({ id, topic }: { id: string; topic: string }) {
           <button type="button" disabled={buying !== null} onClick={() => setConfirmDeep(true)} className="btn-band mt-4 block w-full rounded-xl py-4 text-[17px] font-bold" style={{ fontFamily: "var(--font-serif)" }}>
             {content.title} 깊게 보기 · {formatNyang(PRICE.DEEP)}
           </button>
+          <SaleNote k="DEEP" />
           <p className="mt-2 text-[12px]" style={{ color: "var(--color-ink-faint)" }}>
             소제목 5개 · 5,000자 넘게 · 꼭 채워야 할 하나까지
           </p>
