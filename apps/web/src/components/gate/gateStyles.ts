@@ -80,8 +80,12 @@ export const GATE_CSS = `
 .gh-cards-emblem img{width:89.8%;height:89.8%}
 .gh-card{position:absolute;inset:0;width:100%;height:100%;opacity:0;transition:opacity .6s ease}
 .gh-card.on{opacity:1}
-.gh-cards-next{position:absolute;right:8px;top:50%;transform:translateY(-50%);width:46px;height:46px;border-radius:50%;
-  background:rgba(7,11,22,.68);color:#f4e2b8;border:1px solid #d6bc8a;font-size:28px;line-height:42px;text-align:center}
+.gh-cards-next{position:absolute;right:8px;top:50%;transform:translateY(-50%);width:46px;height:46px;border-radius:50%;padding:0;
+  display:flex;align-items:center;justify-content:center;background:rgba(7,11,22,.68);color:#f4e2b8;border:1px solid #d6bc8a}
+.gh-cards-next svg{margin-left:2px}
+.gh-cards-frame{cursor:pointer;-webkit-tap-highlight-color:transparent}
+.gh-cards-paused{position:absolute;top:10px;right:10px;display:flex;align-items:center;gap:6px;padding:6px 12px;border-radius:999px;
+  background:rgba(7,11,22,.75);color:#f4e2b8;border:1px solid rgba(214,188,138,.7);font-size:13px;font-weight:700;letter-spacing:.04em;pointer-events:none}
 .gh-cards-dots{display:flex;gap:8px}
 .gh-cards-dots span{width:8px;height:8px;border-radius:4px;background:rgba(214,188,138,.38);transition:width .3s,background .3s}
 .gh-cards-dots span.on{width:22px;background:#f4e2b8}

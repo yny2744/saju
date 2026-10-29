@@ -137,6 +137,7 @@ export function GateHero({ gate, brand }: { gate: TenantGate; brand: string }) {
         </header>
 
         {/* 세로 화면 (영상 9:16 기준 좌표) - 2026-10-28 유샘 확정 레이아웃 */}
+        {/* 2026-10-30: 三道·七運은 제목 아래 끝과 카드 윗변(엠블럼 중심 + 반지름 × 0.71)의 정중앙 y=358 (유샘) */}
         <svg ref={ptRef} className="gh-stage gh-pt" viewBox="0 0 900 1600" preserveAspectRatio="xMidYMid slice">
           <defs>
             <filter id="gh-glow-pt" filterUnits="userSpaceOnUse" x="0" y="0" width="900" height="1600">
@@ -156,10 +157,10 @@ export function GateHero({ gate, brand }: { gate: TenantGate; brand: string }) {
               {gate.title}
             </text>
           </a>
-          <text className="gh-side gh-a-tag" x="232" y="388" fontSize="58" textAnchor="middle" dominantBaseline="central">
+          <text className="gh-side gh-a-tag" x="232" y="358" fontSize="58" textAnchor="middle" dominantBaseline="central">
             {gate.sideLeft}
           </text>
-          <text className="gh-side gh-a-tag" x="668" y="388" fontSize="58" textAnchor="middle" dominantBaseline="central">
+          <text className="gh-side gh-a-tag" x="668" y="358" fontSize="58" textAnchor="middle" dominantBaseline="central">
             {gate.sideRight}
           </text>
           <circle className="gh-halo" cx="450" cy="388" r="210" fill="url(#gh-sun-pt)" />
