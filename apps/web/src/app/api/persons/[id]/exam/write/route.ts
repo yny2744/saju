@@ -6,6 +6,7 @@ import { notifyError } from "@/server/alert";
 import { getPersonRow, getPersonSummary } from "@/server/readings/readings";
 import { generateExamDeep, getExamDeep, saveExamDeep } from "@/server/exam/exam";
 import { examSeason } from "@/lib/suneung";
+import { sanitizeExamProfile } from "@/lib/examProfile";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -24,7 +25,9 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
     if (!summary.exam.deep) return NextResponse.json({ error: { code: "LOCKED", message: "깊게 보기를 먼저 열어 주세요." } }, { status: 403 });
     const have = await getExamDeep(row.id, examSeason());
     if (have) return NextResponse.json({ deep: have });
-    const deep = await saveExamDeep(row.id, await generateExamDeep(row.saju, row.nickname));
+    // 2026-10-30: 깊게 보기 전에 고른 과목 (없거나 이상하면 과목 없이 쓴다)
+    const profile = sanitizeExamProfile(((await request.json().catch(() => null)) as { profile?: unknown } | null)?.profile);
+    const deep = await saveExamDeep(row.id, await generateExamDeep(row.saju, row.nickname, profile));
     return NextResponse.json({ deep });
   } catch (e) {
     notifyError("수능운 깊게 보기", e);

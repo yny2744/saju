@@ -1,11 +1,15 @@
 "use client";
 
-
 import { BRAND } from "@/tenants";
 import { useEffect, useRef, useState } from "react";
 import { bgm } from "@/components/bgm/bgm";
 import { SEASON_INFO, examDday, examSeason } from "@/lib/suneung";
-import { CURRENCY_NAME, PRICE, WELCOME_GIFT, formatNyang } from "@/lib/yeopjeon";
+import {
+  CURRENCY_NAME,
+  PRICE,
+  WELCOME_GIFT,
+  formatNyang,
+} from "@/lib/yeopjeon";
 
 /**
  * 대문 맨 위 - 수능대박운 영상 (2026-10-17 수정안 17).
@@ -27,12 +31,21 @@ const NAVY = "#16213a";
 const GOLD = "#d4b265";
 const GOLD_L = "#f3e7c6";
 
-export function SuneungHero() {
+/**
+ * inlineStart: 수능운 랜딩(/suneung)처럼 바로 아래에 생년월일 입력 칸이 있는 화면 - 영상 아래 로그인 단추·가격 줄을 빼고
+ * 입력 칸으로 이어지게 한다 (2026-10-30 무료 미리보기).
+ */
+export function SuneungHero({
+  inlineStart = false,
+}: { inlineStart?: boolean } = {}) {
   const ref = useRef<HTMLVideoElement>(null);
   const [caption, setCaption] = useState("");
   const [sound, setSound] = useState(false);
   // 날짜는 손님 기기에서 계산 (서버에서 미리 그린 화면이 하루 지나 남아 있어도 맞게)
-  const [today, setToday] = useState<{ season: ReturnType<typeof examSeason>; dday: number | null } | null>(null);
+  const [today, setToday] = useState<{
+    season: ReturnType<typeof examSeason>;
+    dday: number | null;
+  } | null>(null);
 
   useEffect(() => {
     setToday({ season: examSeason(), dday: examDday() });
@@ -71,17 +84,27 @@ export function SuneungHero() {
 
   if (season !== "suneung") {
     return (
-      <a href={href} className="block rounded-2xl px-5 py-7 text-center" style={{ backgroundColor: NAVY, border: `1px solid ${GOLD}` }}>
+      <a
+        href={href}
+        className="block rounded-2xl px-5 py-7 text-center"
+        style={{ backgroundColor: NAVY, border: `1px solid ${GOLD}` }}
+      >
         <p className="text-[13px] tracking-[0.2em]" style={{ color: GOLD }}>
           {info.hanja} · {BRAND}
         </p>
-        <p className="mt-1 text-[28px] font-bold" style={{ fontFamily: "var(--font-serif)", color: GOLD_L }}>
+        <p
+          className="mt-1 text-[28px] font-bold"
+          style={{ fontFamily: "var(--font-serif)", color: GOLD_L }}
+        >
           {info.title}
         </p>
         <p className="mt-2 text-[14px]" style={{ color: GOLD_L }}>
           {info.blurb}
         </p>
-        <span className="mt-4 inline-block rounded-xl px-5 py-2.5 text-[15px] font-bold" style={{ backgroundColor: GOLD, color: NAVY }}>
+        <span
+          className="mt-4 inline-block rounded-xl px-5 py-2.5 text-[15px] font-bold"
+          style={{ backgroundColor: GOLD, color: NAVY }}
+        >
           {info.short} 보기 · {formatNyang(PRICE.EXAM)}
         </span>
       </a>
@@ -92,9 +115,23 @@ export function SuneungHero() {
     <div>
       {/* D-day와 소리 단추는 영상 밖 위쪽에 - 영상 속 글씨를 가리지 않게 */}
       <div className="mb-2 flex items-center justify-between">
-        <span className="rounded-lg px-3 py-1 text-[15px] font-black tracking-wide" style={{ backgroundColor: NAVY, color: GOLD_L, border: `1px solid ${GOLD}` }}>
-          {today?.dday === 0 ? "오늘 수능 D-DAY" : today?.dday != null ? `수능 D-${today.dday}` : "수능대박운"}
-          <span className="ml-2 text-[12px] font-semibold" style={{ color: GOLD }}>
+        <span
+          className="rounded-lg px-3 py-1 text-[15px] font-black tracking-wide"
+          style={{
+            backgroundColor: NAVY,
+            color: GOLD_L,
+            border: `1px solid ${GOLD}`,
+          }}
+        >
+          {today?.dday === 0
+            ? "오늘 수능 D-DAY"
+            : today?.dday != null
+              ? `수능 D-${today.dday}`
+              : "수능대박운"}
+          <span
+            className="ml-2 text-[12px] font-semibold"
+            style={{ color: GOLD }}
+          >
             11월 19일 (목)
           </span>
         </span>
@@ -108,7 +145,10 @@ export function SuneungHero() {
           {sound ? "🔊 소리 끄기" : "🔈 소리 켜기"}
         </button>
       </div>
-      <div className="relative overflow-hidden rounded-2xl" style={{ boxShadow: "0 6px 24px rgba(14,22,40,0.25)" }}>
+      <div
+        className="relative overflow-hidden rounded-2xl"
+        style={{ boxShadow: "0 6px 24px rgba(14,22,40,0.25)" }}
+      >
         <video
           ref={ref}
           className="block w-full motion-reduce:hidden"
@@ -125,7 +165,11 @@ export function SuneungHero() {
           <source src="/landing/suneung.mp4" type="video/mp4" />
         </video>
         {/* eslint-disable-next-line @next/next/no-img-element -- 움직임 줄이기를 켠 기기: 그림만 */}
-        <img src="/landing/suneung-poster.jpg" alt={`수능대박운 · ${BRAND}`} className="hidden w-full motion-reduce:block" />
+        <img
+          src="/landing/suneung-poster.jpg"
+          alt={`수능대박운 · ${BRAND}`}
+          className="hidden w-full motion-reduce:block"
+        />
 
         {caption && (
           <div className="pointer-events-none absolute inset-x-3 bottom-3 flex justify-center">
@@ -140,20 +184,37 @@ export function SuneungHero() {
         )}
       </div>
 
-      <a
-        href={href}
-        className="mt-3 block rounded-2xl py-4 text-center text-[17px] font-bold"
-        style={{ backgroundColor: "#f6ecd2", color: NAVY, border: `1px solid ${GOLD}`, fontFamily: "var(--font-serif)" }}
-      >
-        카카오로 로그인하고 수능운 무료로 보기
-      </a>
-      <p className="mt-2 text-center text-[13px]" style={{ color: "var(--color-ink-soft)" }}>
-        가볍게 보기 {formatNyang(PRICE.EXAM)} · 로그인 선물 {CURRENCY_NAME} {formatNyang(WELCOME_GIFT)}으로 바로 · 깊게 보기 {formatNyang(PRICE.EXAM_DEEP)}
-      </p>
-      {/* 2026-10-26: 부모·조부모가 자녀·손주를 위해 보는 상품으로 (결제는 보호자) */}
-      <p className="mt-1 text-center text-[13px] font-semibold" style={{ color: "var(--color-ink)" }}>
-        자녀·손주의 생년월일로 보고, 시험날 응원을 건네 보세요
-      </p>
+      {!inlineStart && (
+        <>
+          <a
+            href={href}
+            className="mt-3 block rounded-2xl py-4 text-center text-[17px] font-bold"
+            style={{
+              backgroundColor: "#f6ecd2",
+              color: NAVY,
+              border: `1px solid ${GOLD}`,
+              fontFamily: "var(--font-serif)",
+            }}
+          >
+            카카오로 로그인하고 수능운 무료로 보기
+          </a>
+          <p
+            className="mt-2 text-center text-[13px]"
+            style={{ color: "var(--color-ink-soft)" }}
+          >
+            가볍게 보기 {formatNyang(PRICE.EXAM)} · 로그인 선물 {CURRENCY_NAME}{" "}
+            {formatNyang(WELCOME_GIFT)}으로 바로 · 깊게 보기{" "}
+            {formatNyang(PRICE.EXAM_DEEP)}
+          </p>
+          {/* 2026-10-26: 부모·조부모가 자녀·손주를 위해 보는 상품으로 (결제는 보호자) */}
+          <p
+            className="mt-1 text-center text-[13px] font-semibold"
+            style={{ color: "var(--color-ink)" }}
+          >
+            자녀·손주의 생년월일로 보고, 시험날 응원을 건네 보세요
+          </p>
+        </>
+      )}
     </div>
   );
 }

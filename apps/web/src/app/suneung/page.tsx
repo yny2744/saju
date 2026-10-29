@@ -4,6 +4,7 @@ import { BRAND, TENANT } from "@/tenants";
 import { isSuneungOn } from "@/lib/launchMode";
 import { SEASON_INFO, examSeason } from "@/lib/suneung";
 import { SuneungHero } from "@/components/landing/SuneungHero";
+import { ExamFreeStart } from "@/components/suneung/ExamFreeStart";
 import { CURRENCY_NAME, PRICE, formatNyang } from "@/lib/yeopjeon";
 
 /**
@@ -80,9 +81,14 @@ export default function SuneungLanding() {
           </span>
         </h1>
 
-        {/* 첫 화면: 영상 · D-day · 버튼 하나 (대문 맨 위와 같은 것) */}
-        <section className="pb-8 pt-4">
-          <SuneungHero />
+        {/* 첫 화면: 영상 · D-day (대문 맨 위와 같은 것) */}
+        <section className="pb-4 pt-4">
+          <SuneungHero inlineStart />
+        </section>
+
+        {/* 2026-10-30 유샘: 영상 바로 아래 - 로그인 없이 생년월일을 넣으면 만세력과 시험날 기운을 무료로 */}
+        <section id="exam-free" className="scroll-mt-4 pb-8">
+          <ExamFreeStart />
         </section>
 
         {season === "suneung" && (

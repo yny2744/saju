@@ -9,6 +9,8 @@ import { notifyError } from "@/server/alert";
 import { splitPayment } from "@/lib/pay";
 import { formatNyang } from "@/lib/yeopjeon";
 import type { AnyTopicKey } from "@/lib/topics";
+import { GiftError, getExamGift, giftWithClient } from "@/server/exam/gift";
+import { PRICE } from "@/lib/yeopjeon";
 
 /**
  * 카드·계좌이체 주문 (2026-10-10 수정안 31). 결제가 승인되는 순간 운세가 열린다.
@@ -110,8 +112,45 @@ export async function checkout(userId: string, personId: string, mode: PurchaseM
   };
 }
 
+/**
+ * 2026-10-30 수능운 깊게 보기 부모님 선물: 결제하는 사람(부모)의 엽전이 모자랄 때 주문.
+ * 주문의 person_id 는 수험생의 사람, gift_token 이 있으면 승인 뒤 purchase 대신 선물로 처리한다.
+ */
+export async function giftCheckout(payerId: string, token: string): Promise<CheckoutResult> {
+  const g = await getExamGift(token, payerId);
+  if (!g) throw new GiftError("NOT_FOUND", "선물 링크를 찾을 수 없어요.");
+  if (g.owned) throw new GiftError("ALREADY_OWNED", "이미 깊게 보기가 열려 있어요.");
+  const price = PRICE.EXAM_DEEP;
+  const balance = await getBalance(payerId);
+  if (balance >= price) return { status: "enough", price, balance };
+  const pm = payMode();
+  if (pm === "off") throw new PayError("PAY_NOT_READY", "결제를 준비하고 있어요. 곧 열려요.");
+  const split = splitPayment(price, balance);
+  const orderId = newOrderId();
+  const orderName = `${g.title} 깊게 보기 선물`;
+  const pool = await db();
+  await pool.query(
+    `INSERT INTO pay_orders (id, user_id, person_id, mode, topics, price, use_yeopjeon, amount, order_name, src, gift_token)
+     VALUES ($1, $2, $3, 'exam_deep', '[]', $4, $5, $6, $7, $8, $9)`,
+    [orderId, payerId, g.personId, price, split.useYeopjeon, split.cash, orderName, await requestSource(), token]
+  );
+  return {
+    status: "pay",
+    orderId,
+    orderName,
+    price,
+    useYeopjeon: split.useYeopjeon,
+    amount: split.cash,
+    clientKey: pm === "toss" ? process.env.TOSS_CLIENT_KEY! : null,
+    portone: pm === "portone" ? { storeId: process.env.PORTONE_STORE_ID!, channelKey: process.env.PORTONE_CHANNEL_KEY! } : null,
+    customerKey: payerId,
+    mock: pm === "mock",
+  };
+}
+
 interface OrderRow {
   id: string;
+  gift_token: string | null;
   user_id: string;
   person_id: string;
   mode: PurchaseMode;
@@ -122,7 +161,8 @@ interface OrderRow {
   status: string;
 }
 
-function destination(o: Pick<OrderRow, "person_id" | "mode" | "topics">): string {
+function destination(o: Pick<OrderRow, "person_id" | "mode" | "topics" | "gift_token">): string {
+  if (o.gift_token) return `/gift/exam/${o.gift_token}?paid=1`;
   if (o.mode === "face") return `/face/paid/${o.person_id}?paid=1`;
   if (o.mode === "couple") return `/couple/${o.person_id}?paid=1`;
   if (o.mode === "wallpaper") return `/person/${o.person_id}/wallpaper`;
@@ -143,7 +183,7 @@ export async function confirmOrder(userId: string | null, input: { paymentKey: u
   const pool = await db();
   // userId null = 포트원 웹훅 (서버끼리 - 결제사에 다시 물어 확인하므로 주문 주인을 따로 묻지 않는다)
   const r = await pool.query<OrderRow>(
-    `SELECT id, user_id, person_id, mode, topics, price, amount, order_name, status FROM pay_orders WHERE id = $1 AND ($2::uuid IS NULL OR user_id = $2::uuid)`,
+    `SELECT id, user_id, person_id, mode, topics, price, amount, order_name, status, gift_token FROM pay_orders WHERE id = $1 AND ($2::uuid IS NULL OR user_id = $2::uuid)`,
     [orderId, userId]
   );
   const order = r.rows[0];
@@ -174,10 +214,11 @@ export async function confirmOrder(userId: string | null, input: { paymentKey: u
     );
     await client.query("SAVEPOINT buy");
     try {
-      await purchaseWithClient(client, { userId: uid, personId: order.person_id, mode: order.mode, topics: order.topics });
+      if (order.gift_token) await giftWithClient(client, uid, order.gift_token);
+      else await purchaseWithClient(client, { userId: uid, personId: order.person_id, mode: order.mode, topics: order.topics });
     } catch (e) {
       await client.query("ROLLBACK TO SAVEPOINT buy");
-      if (!(e instanceof PurchaseError || e instanceof InsufficientYeopjeonError)) throw e;
+      if (!(e instanceof PurchaseError || e instanceof InsufficientYeopjeonError || e instanceof GiftError)) throw e;
       credited = true;
       await client.query(`UPDATE pay_orders SET status = 'paid_credit' WHERE id = $1`, [orderId]);
       notifyError("결제 후 구매 실패 - 결제 금액은 엽전으로 남김", e);

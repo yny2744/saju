@@ -265,7 +265,7 @@ export async function listPersons(
 
 // ───────────────────────── 공통: 잠금 + 잔액 ─────────────────────────
 
-async function lockAndBalance(client: PoolClient, userId: string): Promise<number> {
+export async function lockAndBalance(client: PoolClient, userId: string): Promise<number> {
   await client.query(`SELECT id FROM users WHERE id = $1 FOR UPDATE`, [userId]);
   const bal = await client.query<{ total: string | null }>(`SELECT SUM(amount) AS total FROM bokchae_ledger WHERE user_id = $1`, [userId]);
   return Number(bal.rows[0]?.total ?? 0);

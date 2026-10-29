@@ -15,11 +15,14 @@ import { CURRENCY_NAME, formatNyang } from "@/lib/yeopjeon";
 import { ELEMENT_TOKEN } from "@/lib/pillarView";
 import type { ExamReading } from "@/lib/suneung";
 import type { ExamDeep } from "@/server/exam/exam";
+import { ExamSubjectPicker } from "@/components/suneung/ExamSubjectPicker";
+import { examProfileKey, type ExamProfile } from "@/lib/examProfile";
 
 /**
  * 수능운 (2026-10-17 수정안 17) - 시즌에 따라 수능대박운 → 합격운 → 새 출발운.
- *   가볍게 보기 990냥 (엔진, 가입 선물 엽전으로 바로) → 깊게 보기 4,900냥 (AI)
+ *   가볍게 보기 990냥 (엔진, 가입 선물 엽전으로 바로) → 깊게 보기 5,500냥 (AI)
  *   2026-10-26 유샘: 가입하면 수능운 하나 무료(가입 선물 엽전), 그 뒤는 유료, 깊게 보기는 보호자 결제 (GuardianPayNote)
+ *   2026-10-30 유샘: 깊게 보기 전에 계열·수학·탐구를 버튼으로 고르고(건너뛰기 가능), "부모님께 선물 부탁하기" 링크로 보호자가 결제
  */
 
 type Data = {
@@ -45,6 +48,9 @@ function Body({ id }: { id: string }) {
   const [writing, setWriting] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
   const [pay, setPay] = useState<"exam" | "exam_deep" | null>(null);
+  // 깊게 보기 전 과목 고르기 → 그다음 할 일 (직접 열기 / 부모님께 선물 부탁)
+  const [picker, setPicker] = useState<"buy" | "gift" | null>(null);
+  const [giftUrl, setGiftUrl] = useState<string | null>(null);
   const wrote = useRef(false);
 
   const load = useCallback(async () => {
@@ -74,7 +80,17 @@ function Body({ id }: { id: string }) {
       setWriting(true);
       const minWait = new Promise((r) => setTimeout(r, 25000 + Math.random() * 5000));
       try {
-        const r = await fetch(`/api/persons/${encodeURIComponent(id)}/exam/write`, { method: "POST" });
+        let profile: unknown = null;
+        try {
+          profile = JSON.parse(localStorage.getItem(examProfileKey(id)) ?? "null");
+        } catch {
+          /* 과목 없이 쓴다 */
+        }
+        const r = await fetch(`/api/persons/${encodeURIComponent(id)}/exam/write`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ profile }),
+        });
         const body = await r.json().catch(() => ({}));
         await minWait;
         if (r.ok && body.deep) setState((s) => (s.status === "ready" ? { ...s, deep: body.deep } : s));
@@ -90,6 +106,38 @@ function Body({ id }: { id: string }) {
       setWriting(false);
     })();
   }, [state, id]);
+
+  function saveProfile(p: ExamProfile | null) {
+    try {
+      if (p) localStorage.setItem(examProfileKey(id), JSON.stringify(p));
+    } catch {
+      /* 저장 못 해도 진행 */
+    }
+  }
+
+  /** 부모님께 선물 부탁 링크 만들고 보내기 (카카오톡 등 공유 창, 안 되면 링크 복사) */
+  async function askGift() {
+    setBusy(true);
+    setNotice(null);
+    try {
+      const r = await fetch(`/api/persons/${encodeURIComponent(id)}/exam/gift`, { method: "POST" });
+      const b = await r.json().catch(() => ({}));
+      if (!r.ok || !b.url) {
+        setNotice(b?.error?.message ?? "잠시 후 다시 시도해 주세요.");
+        setBusy(false);
+        return;
+      }
+      setGiftUrl(b.url);
+      const text = `제 ${state.status === "ready" ? state.reading.title : "수능운"} 깊게 보기를 선물해 주세요. 시험날까지 힘낼게요!`;
+      const nav = navigator as Navigator & { share?: (d: { title?: string; text?: string; url?: string }) => Promise<void> };
+      if (nav.share) await nav.share({ title: BRAND, text, url: b.url }).catch(() => {});
+      else await navigator.clipboard?.writeText(`${text}\n${b.url}`).then(() => setNotice("링크를 복사했어요. 부모님께 카카오톡으로 보내 주세요.")).catch(() => {});
+    } catch (e) {
+      reportClientError("수능운 선물 부탁", String(e));
+      setNotice("연결이 끊겼어요. 잠시 후 다시 시도해 주세요.");
+    }
+    setBusy(false);
+  }
 
   async function buy(mode: "exam" | "exam_deep") {
     setBusy(true);
@@ -172,7 +220,7 @@ function Body({ id }: { id: string }) {
             내 {CURRENCY_NAME} {formatNyang(state.balance)}
             {state.balance >= state.price ? " · 가진 엽전으로 바로 열려요" : " · 모자란 만큼만 결제해요"}
           </p>
-          <button type="button" disabled={busy} onClick={() => buy("exam_deep")} className="btn-secondary mt-3 block w-full text-center disabled:opacity-50">
+          <button type="button" disabled={busy} onClick={() => setPicker("buy")} className="btn-secondary mt-3 block w-full text-center disabled:opacity-50">
             처음부터 깊게 보기 · {formatNyang(state.deepPrice)}
           </button>
           {/* 2026-10-26: 깊게 보기·두 번째 사람부터(현금 결제)는 보호자가 - 가입 선물 엽전으로 보는 가볍게 보기는 그대로 */}
@@ -196,7 +244,7 @@ function Body({ id }: { id: string }) {
           {kit && (
             <section className="mt-4 rounded-2xl p-5" style={{ backgroundColor: NAVY, border: `1px solid ${GOLD}` }}>
               <p className="text-center text-[17px] font-bold" style={{ fontFamily: "var(--font-serif)", color: GOLD_L }}>
-                행운 꾸러미 · {kit.nature}({kit.hanja})의 기운
+                마지막 한 칸 채우기 · {kit.nature}({kit.hanja})의 기운
               </p>
               <div className="mt-4 grid grid-cols-2 gap-2 text-center text-[13.5px]">
                 {[
@@ -267,9 +315,17 @@ function Body({ id }: { id: string }) {
                     </li>
                   ))}
                 </ul>
-                <button type="button" disabled={busy} onClick={() => buy("exam_deep")} className="btn-primary mt-5 disabled:opacity-50">
+                <button type="button" disabled={busy} onClick={() => setPicker("buy")} className="btn-primary mt-5 disabled:opacity-50">
                   깊게 보기 · {formatNyang(state.deepPrice)}
                 </button>
+                <button type="button" disabled={busy} onClick={() => setPicker("gift")} className="mt-2.5 block w-full rounded-xl py-3.5 text-center text-[15px] font-bold disabled:opacity-50" style={{ border: `1px solid ${GOLD}`, color: "var(--color-ink)" }}>
+                  부모님께 선물 부탁하기
+                </button>
+                {giftUrl && (
+                  <p className="mt-2 break-all text-center text-[12.5px]" style={{ color: "var(--color-ink-soft)" }}>
+                    선물 링크: <span className="select-all font-semibold">{giftUrl}</span>
+                  </p>
+                )}
                 <GuardianPayNote title={r.title} />
               </section>
             )
@@ -283,6 +339,19 @@ function Body({ id }: { id: string }) {
       <a href={`/person/${id}`} className="btn-secondary mt-4 block text-center">
         12가지 운세 보기
       </a>
+
+      {picker && (
+        <ExamSubjectPicker
+          onClose={() => setPicker(null)}
+          onDone={(p) => {
+            const next = picker;
+            setPicker(null);
+            saveProfile(p);
+            if (next === "gift") askGift();
+            else buy("exam_deep");
+          }}
+        />
+      )}
 
       {pay && (
         <PayDialog
