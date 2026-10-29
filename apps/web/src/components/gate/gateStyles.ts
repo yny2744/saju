@@ -66,4 +66,22 @@ export const GATE_CSS = `
   background:linear-gradient(#0b1224,#111a33);color:#ece6d8;border:1px solid rgba(214,188,138,.45);box-shadow:inset 0 0 0 4px #0b1224,inset 0 0 0 5px rgba(214,188,138,.25),0 20px 60px rgba(0,0,0,.5)}
 .gh-dialog-close{position:absolute;top:10px;right:12px;width:40px;height:40px;border-radius:50%;color:#d6bc8a;font-size:24px;line-height:40px;text-align:center}
 .gh-dialog-close:focus-visible{outline:2px solid #d6bc8a}
+/* 2026-10-29 첫 장면 뒤 소개 카드 9장 (3초마다, 9번 다음 1번) */
+@keyframes gh-cards-in{from{opacity:0;transform:scale(.86)}to{opacity:1;transform:none}}
+.gh-cards{position:absolute;inset:0;z-index:2;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;
+  padding:calc(84px + env(safe-area-inset-top,0px)) 16px calc(24px + env(safe-area-inset-bottom,0px));
+  background:radial-gradient(ellipse at 50% 70%,rgba(20,26,48,.82),rgba(7,11,22,.94));transform-origin:50% 84%;animation:gh-cards-in .9s cubic-bezier(.2,.7,.2,1) both}
+.gh-cards-frame{position:relative;width:min(100%,calc(100svh - 230px),640px);aspect-ratio:1;border-radius:16px;overflow:hidden;
+  box-shadow:0 0 0 1px rgba(214,188,138,.55),0 18px 50px rgba(0,0,0,.6)}
+.gh-card{position:absolute;inset:0;width:100%;height:100%;opacity:0;transition:opacity .6s ease}
+.gh-card.on{opacity:1}
+.gh-cards-next{position:absolute;right:8px;top:50%;transform:translateY(-50%);width:46px;height:46px;border-radius:50%;
+  background:rgba(7,11,22,.68);color:#f4e2b8;border:1px solid #d6bc8a;font-size:28px;line-height:42px;text-align:center}
+.gh-cards-dots{display:flex;gap:8px}
+.gh-cards-dots span{width:8px;height:8px;border-radius:4px;background:rgba(214,188,138,.38);transition:width .3s,background .3s}
+.gh-cards-dots span.on{width:22px;background:#f4e2b8}
+.gh-cards-skip{padding:9px 20px;border-radius:999px;border:1px solid rgba(214,188,138,.7);color:#f4e2b8;background:rgba(7,11,22,.5);
+  font-family:var(--gh-serif);font-weight:700;font-size:15px;letter-spacing:.06em}
+.gh-cards button:focus-visible{outline:2px solid #d6bc8a;outline-offset:3px}
+@media (prefers-reduced-motion:reduce){.gh-cards{animation:none}.gh-card{transition:none}}
 `;

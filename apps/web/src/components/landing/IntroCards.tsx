@@ -3,20 +3,21 @@
 import { useEffect, useRef, useState } from "react";
 
 /**
- * 류결의 명견만리 소개 카드 9장 (2026-10-29 유샘 확정본) - 옆으로 넘겨 보기.
+ * 류결의 명견만리 소개 카드 9장 (2026-10-29 天命→結 새 흐름) - 옆으로 넘겨 보기.
  * 휴대폰은 손가락으로 밀고, PC는 양옆 화살표·점으로 넘긴다.
  */
-const CARDS: Array<{ src: string; alt: string }> = [
+export const INTRO_CARDS: Array<{ src: string; alt: string }> = [
   { src: "/cards/intro-01.webp", alt: "류결사주 - 류결의 명견만리. 천 년의 지혜와 오늘이 만나는 곳. 나를 알고, 마음을 보고, 만 리 앞을 내다본다" },
-  { src: "/cards/intro-02.webp", alt: "01. 브랜드의 시작 - 사람은 누구나 묻습니다. 명리학은 천 년 넘게 그 물음에 답해 온 학문입니다" },
-  { src: "/cards/intro-03.webp", alt: "02. 전통과 AI의 만남 - 오랜 지혜를 오늘의 언어로" },
-  { src: "/cards/intro-04.webp", alt: "03. 명리학의 역사 - 천 년의 지혜가 지금까지 이어진 이유" },
-  { src: "/cards/intro-05.webp", alt: "04. 류결(流結), 흐르고 맺다 - 전통과 기술 사이에 다리를 놓았습니다" },
-  { src: "/cards/intro-06.webp", alt: "05. 창립자의 준비와 철학 - 명리심리사 1급" },
-  { src: "/cards/intro-07.webp", alt: "06. 세 개의 길과 일곱 개의 운 - 나를 아는 길, 마음을 보는 길, 앞을 내다보는 길, 그리고 채움" },
-  { src: "/cards/intro-08.webp", alt: "07. 우리의 약속 - 운명을 단정하기보다, 나를 이해하는 지혜로" },
+  { src: "/cards/intro-02.webp", alt: "01. 물음 - 天命, 왜 나인가. 오랜 지혜를 오늘의 언어로. 그 답은 내가 타고난 기운 안에 있습니다" },
+  { src: "/cards/intro-03.webp", alt: "02. 뿌리 - 나는 어디서 왔는가. 태어난 해와 달, 날과 시에 받은 네 기둥의 기운, 사주(四柱)" },
+  { src: "/cards/intro-04.webp", alt: "03. 읽는 법 - 명리학이란 무엇인가. 그 기운을 읽는, 나를 이해하는 오랜 지혜" },
+  { src: "/cards/intro-05.webp", alt: "04. 三道 - 하나의 물음, 세 개의 길. 나를 아는 길, 마음을 보는 길, 앞을 내다보는 길" },
+  { src: "/cards/intro-06.webp", alt: "05. 七運 - 세 길 위의 일곱 개의 운. 타고난 나, 나의 상징, 성향과 적성, 지금 내 마음, 우리 사이, 앞날, 이름과 날짜" },
+  { src: "/cards/intro-07.webp", alt: "06. 읽어 주는 이 - 누가 읽어 주는가. 명리심리사 1급 류결과 AI의 분석" },
+  { src: "/cards/intro-08.webp", alt: "07. 結 - 알고 나서, 채우며 살다" },
   { src: "/cards/intro-09.webp", alt: "08. 류결사주 - 운명의 문이 열리는 날, 류결의 명견만리에서 당신의 길을 만나 보세요" },
 ];
+const CARDS = INTRO_CARDS;
 
 export function IntroCards({ dark = false }: { dark?: boolean }) {
   const track = useRef<HTMLDivElement>(null);

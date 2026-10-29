@@ -4,7 +4,8 @@ import { useEffect, useRef, useState } from "react";
 import type { TenantGate } from "@/tenants/types";
 import { HeaderAuth } from "@/components/landing/HeaderAuth";
 import { BgmToggle } from "@/components/bgm/BgmPlayer";
-import { buildStage, startFlow } from "./gateMotion";
+import { buildStage, resetFruit, startFlow, startIntro, type Built } from "./gateMotion";
+import { GateCards } from "./GateCards";
 import { GateIntroDialog } from "./GateIntro";
 import { GATE_CSS } from "./gateStyles";
 
@@ -13,12 +14,17 @@ import { GATE_CSS } from "./gateStyles";
  *   - 화면 전체 폭 (PC에서는 액자 밖까지 - 가로 화면 구도, 휴대폰은 세로 화면 구도)
  *   - 엠블럼·제목을 누르면 소개글 창 (2번 작업)
  *   - 일곱 운·길 이름·채움을 누르면 아래 그 방(관)으로 (1·3번 작업)
+ *   - 2026-10-29 첫 장면: 빛 구슬이 세 길을 차례로 내려가고 채움(結)이 피었다 접히면 소개 카드 9장이
+ *     3초마다 넘어간다 (9번 다음은 1번 표지로). 오른쪽 화살표는 바로 다음 장, 건너뛰기는 대문으로.
  */
 export function GateHero({ gate, brand }: { gate: TenantGate; brand: string }) {
   const ptRef = useRef<SVGSVGElement>(null);
   const heroRef = useRef<HTMLElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const [introOpen, setIntroOpen] = useState(false);
+  const [phase, setPhase] = useState<"intro" | "cards" | "gate">("intro");
+  const builtRef = useRef<Built | null>(null);
+  const flowStop = useRef<(() => void) | null>(null);
 
   // 영상: 대문은 사이트 폭(휴대폰 폭) 안에 세로 구도로 들어간다 (2026-10-28 유샘: 아래 화면과 같은 폭)
   useEffect(() => {
@@ -56,28 +62,36 @@ export function GateHero({ gate, brand }: { gate: TenantGate; brand: string }) {
     return () => ro?.disconnect();
   }, []);
 
-  // 길·운 그리기 → 빛 구슬 흐름
+  // 길·운 그리기 → 첫 장면(빛 구슬이 세 길을 차례로) → 소개 카드
   useEffect(() => {
-    let stop: (() => void) | null = null;
+    let stopIntro: (() => void) | null = null;
     let done = false;
-    let onScreen = true;
-    const io = typeof IntersectionObserver !== "undefined" && heroRef.current ? new IntersectionObserver(([e]) => (onScreen = e.isIntersecting)) : null;
-    if (io && heroRef.current) io.observe(heroRef.current);
     const build = () => {
       if (done || !ptRef.current) return;
       done = true;
-      const stages = [buildStage(ptRef.current, "pt", gate, [450, 388])];
-      if (!window.matchMedia("(prefers-reduced-motion: reduce)").matches) stop = startFlow(stages, () => onScreen && !document.hidden);
+      const b = buildStage(ptRef.current, "pt", gate, [450, 388]);
+      builtRef.current = b;
+      if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) setPhase("cards");
+      else stopIntro = startIntro(b, () => setPhase("cards"));
     };
     // 글자 바탕 크기를 실제 글꼴로 재야 하므로 글꼴이 준비된 뒤 (최대 1.2초)
     const timer = window.setTimeout(build, 1200);
     document.fonts?.ready.then(build).catch(build);
     return () => {
       window.clearTimeout(timer);
-      stop?.();
-      io?.disconnect();
+      stopIntro?.();
+      flowStop.current?.();
     };
   }, [gate]);
+
+  // 건너뛰기 - 카드를 닫고 대문(세 길·일곱 운)으로. 빛 구슬은 그때부터 계속 흐른다.
+  const skipCards = () => {
+    setPhase("gate");
+    const b = builtRef.current;
+    if (!b || flowStop.current) return;
+    resetFruit(b);
+    if (!window.matchMedia("(prefers-reduced-motion: reduce)").matches) flowStop.current = startFlow([b], () => !document.hidden);
+  };
 
   const openIntro = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -144,6 +158,7 @@ export function GateHero({ gate, brand }: { gate: TenantGate; brand: string }) {
           <path className="gh-way-path gh-way-ahead" pathLength={1} />
           <g className="gh-nodes" />
         </svg>
+        {phase === "cards" && <GateCards onSkip={skipCards} />}
       </section>
       <GateIntroDialog gate={gate} open={introOpen} onClose={() => setIntroOpen(false)} />
     </>
