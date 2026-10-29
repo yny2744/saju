@@ -25,6 +25,22 @@ export function GateHero({ gate, brand }: { gate: TenantGate; brand: string }) {
   const [phase, setPhase] = useState<"intro" | "cards" | "gate">("intro");
   const builtRef = useRef<Built | null>(null);
   const flowStop = useRef<(() => void) | null>(null);
+  // 카드 칸 자리: 流結 엠블럼 아래쪽에 카드 윗변이 살짝 맞물리게 (2026-10-30 유샘 확정 시안) - 화면 크기에 따라 다시 잰다
+  const [disc, setDisc] = useState<{ cx: number; cy: number; r: number } | null>(null);
+  useEffect(() => {
+    if (phase !== "cards") return;
+    const measure = () => {
+      const hero = heroRef.current;
+      const d = ptRef.current?.querySelector(".gh-disc");
+      if (!hero || !d) return;
+      const a = d.getBoundingClientRect();
+      const h = hero.getBoundingClientRect();
+      setDisc({ cx: a.left + a.width / 2 - h.left, cy: a.top + a.height / 2 - h.top, r: a.width / 2 });
+    };
+    measure();
+    window.addEventListener("resize", measure);
+    return () => window.removeEventListener("resize", measure);
+  }, [phase]);
 
   // 영상: 대문은 사이트 폭(휴대폰 폭) 안에 세로 구도로 들어간다 (2026-10-28 유샘: 아래 화면과 같은 폭)
   useEffect(() => {
@@ -103,7 +119,7 @@ export function GateHero({ gate, brand }: { gate: TenantGate; brand: string }) {
       {/* eslint-disable-next-line @next/next/no-page-custom-font -- 대문 명조 글꼴 (한자 포함) */}
       <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@500;700;900&family=Gowun+Dodum&display=swap" />
       <style dangerouslySetInnerHTML={{ __html: GATE_CSS }} />
-      <section ref={heroRef} className="gh-hero" aria-labelledby="gh-h1">
+      <section ref={heroRef} className={phase === "cards" ? "gh-hero gh-cards-on" : "gh-hero"} aria-labelledby="gh-h1">
         <h1 id="gh-h1" className="sr-only">{`${gate.title} · ${gate.intro.tagline} · ${brand}`}</h1>
         <video ref={videoRef} className="gh-video" muted playsInline autoPlay loop preload="auto" aria-hidden="true" poster={gate.media.posterPortrait} />
         <div className="gh-shade" />
@@ -158,7 +174,7 @@ export function GateHero({ gate, brand }: { gate: TenantGate; brand: string }) {
           <path className="gh-way-path gh-way-ahead" pathLength={1} />
           <g className="gh-nodes" />
         </svg>
-        {phase === "cards" && <GateCards onSkip={skipCards} />}
+        {phase === "cards" && <GateCards onSkip={skipCards} disc={disc} emblem={gate.emblem} />}
       </section>
       <GateIntroDialog gate={gate} open={introOpen} onClose={() => setIntroOpen(false)} />
     </>

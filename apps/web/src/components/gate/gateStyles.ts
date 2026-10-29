@@ -68,11 +68,16 @@ export const GATE_CSS = `
 .gh-dialog-close:focus-visible{outline:2px solid #d6bc8a}
 /* 2026-10-29 첫 장면 뒤 소개 카드 9장 (3초마다, 9번 다음 1번) */
 @keyframes gh-cards-in{from{opacity:0;transform:scale(.86)}to{opacity:1;transform:none}}
-.gh-cards{position:absolute;inset:0;z-index:2;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;
-  padding:calc(84px + env(safe-area-inset-top,0px)) 16px calc(24px + env(safe-area-inset-bottom,0px));
-  background:radial-gradient(ellipse at 50% 70%,rgba(20,26,48,.82),rgba(7,11,22,.94));transform-origin:50% 84%;animation:gh-cards-in .9s cubic-bezier(.2,.7,.2,1) both}
-.gh-cards-frame{position:relative;width:min(100%,calc(100svh - 230px),640px);aspect-ratio:1;border-radius:16px;overflow:hidden;
+.gh-cards{position:absolute;inset:0;z-index:2;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;gap:14px;
+  padding:0 16px calc(18px + env(safe-area-inset-bottom,0px));container-type:size;
+  background:linear-gradient(to bottom,rgba(7,11,22,.55) 0,rgba(7,11,22,.92) 60px,rgba(9,14,28,.96) 100%);transform-origin:50% 60%;animation:gh-cards-in .9s cubic-bezier(.2,.7,.2,1) both}
+.gh-cards-frame{position:relative;flex-shrink:0;width:min(100%,640px);width:min(100%,calc(100cqh - 92px),640px);aspect-ratio:1;border-radius:16px;overflow:hidden;
   box-shadow:0 0 0 1px rgba(214,188,138,.55),0 18px 50px rgba(0,0,0,.6)}
+/* 카드가 열려 있는 동안 뒤의 길·운은 감춘다 (비쳐 보이지 않게) */
+.gh-cards-on .gh-nodes,.gh-cards-on .gh-way-path{visibility:hidden}
+.gh-cards-emblem{position:absolute;z-index:3;border-radius:50%;background:#0a1020;display:grid;place-items:center;pointer-events:none;
+  box-shadow:0 0 0 2px rgba(244,226,184,.85),0 8px 22px rgba(0,0,0,.7);animation:gh-fade .6s ease both}
+.gh-cards-emblem img{width:89.8%;height:89.8%}
 .gh-card{position:absolute;inset:0;width:100%;height:100%;opacity:0;transition:opacity .6s ease}
 .gh-card.on{opacity:1}
 .gh-cards-next{position:absolute;right:8px;top:50%;transform:translateY(-50%);width:46px;height:46px;border-radius:50%;

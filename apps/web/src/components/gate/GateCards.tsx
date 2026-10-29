@@ -5,12 +5,17 @@ import { INTRO_CARDS } from "@/components/landing/IntroCards";
 
 /**
  * 대문 첫 장면 뒤에 열리는 소개 카드 9장 (2026-10-29 유샘).
+ *   - 2026-10-30: 상단 제목·三道·流結·七運은 그대로 두고, 카드 윗변이 流結 엠블럼 아래쪽에 살짝 맞물린다
+ *     (엠블럼이 카드 위에 오도록 같은 자리에 엠블럼을 한 번 더 얹는다)
  *   - 3초마다 다음 장으로, 9번 다음은 1번 표지로 (계속 돈다)
  *   - 오른쪽 화살표: 바로 다음 장 / 건너뛰기: 카드를 닫고 대문으로 (어디로 보낼지는 추후 결정)
  */
 const DELAY = 3000;
 
-export function GateCards({ onSkip }: { onSkip: () => void }) {
+/** 카드 윗변 = 엠블럼 중심 + 반지름 × 0.71 (엠블럼 아래 약 1/7이 카드에 걸침) */
+const OVERLAP = 0.71;
+
+export function GateCards({ onSkip, disc, emblem }: { onSkip: () => void; disc: { cx: number; cy: number; r: number } | null; emblem: string }) {
   const [idx, setIdx] = useState(0);
   const n = INTRO_CARDS.length;
 
@@ -22,8 +27,11 @@ export function GateCards({ onSkip }: { onSkip: () => void }) {
 
   const next = () => setIdx((i) => (i + 1) % n);
 
+  const top = disc ? Math.round(disc.cy + disc.r * OVERLAP) : null;
+
   return (
-    <div className="gh-cards" role="region" aria-roledescription="carousel" aria-label="류결의 명견만리 소개 카드">
+    <>
+    <div className="gh-cards" style={top === null ? undefined : { top }} role="region" aria-roledescription="carousel" aria-label="류결의 명견만리 소개 카드">
       <div className="gh-cards-frame">
         {INTRO_CARDS.map((c, i) => (
           // eslint-disable-next-line @next/next/no-img-element -- 정적 카드 그림
@@ -51,5 +59,12 @@ export function GateCards({ onSkip }: { onSkip: () => void }) {
         건너뛰기 ›
       </button>
     </div>
+    {disc && (
+      <span className="gh-cards-emblem" aria-hidden="true" style={{ left: disc.cx - disc.r, top: disc.cy - disc.r, width: disc.r * 2, height: disc.r * 2 }}>
+        {/* eslint-disable-next-line @next/next/no-img-element -- 엠블럼 */}
+        <img src={emblem} alt="" />
+      </span>
+    )}
+    </>
   );
 }
