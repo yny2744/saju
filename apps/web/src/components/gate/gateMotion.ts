@@ -2,7 +2,7 @@
  * 세 길·일곱 운 대문의 그림 그리기와 움직임 (2026-10-28 mgml 1번 작업).
  *
  * 흐름(流) → 맺힘(結):
- *   처음 4초 - 엠블럼·제목이 나타나고, 세 길이 그려지며 일곱 운이 차례로 켜지고, 채움(結)이 맺힌다 (CSS).
+ *   처음 2초 - 엠블럼·제목이 나타나고, 세 길이 그려지며 일곱 운이 차례로 켜지고, 채움(結)이 맺힌다 (CSS).
  *   그다음   - 빛 구슬 세 개가 길을 따라 7초마다 흐른다. 구슬이 출발할 때 엠블럼이, 지나갈 때 그 운이,
  *              도착할 때 채움이 숨 쉬듯 살짝 커졌다 작아진다 (requestAnimationFrame).
  * 좌표는 영상 비율 기준: 가로 화면 1600×900, 세로 화면 900×1600 (preserveAspectRatio slice = 영상 object-fit cover).
@@ -63,8 +63,8 @@ export const STAGES: Record<StageKey, StageCfg> = {
 };
 
 /** 처음 그려지는 시간 (CSS와 맞춘다) */
-export const DRAW_START = 1.3;
-export const DRAW_DUR = 2.4;
+export const DRAW_START = 0.65;
+export const DRAW_DUR = 1.2;
 /** 빛 구슬: 출발 시각(초) · 한 바퀴(밀리초) · 길마다 시차(밀리초) */
 const FLOW_START = 4400;
 const FLOW_DUR = 7000;
@@ -221,10 +221,10 @@ export function buildStage(svg: SVGSVGElement, key: StageKey, gate: TenantGate, 
   };
 }
 
-function bump(ms: number): number {
+function bump(ms: number, half = PULSE_HALF): number {
   const d = Math.abs(ms);
-  if (d >= PULSE_HALF) return 0;
-  const k = Math.cos((d / PULSE_HALF) * (Math.PI / 2));
+  if (d >= half) return 0;
+  const k = Math.cos((d / half) * (Math.PI / 2));
   return k * k;
 }
 
@@ -273,26 +273,29 @@ export function startFlow(stages: Built[], isVisible: () => boolean): () => void
 }
 
 /**
- * 2026-10-29 대문 첫 장면 (유샘): 길이 다 그려진 뒤 빛 구슬이 첫째·둘째·셋째 길을 차례로 한 번씩 내려가고
- * (지나는 운·이름표가 커졌다 작아짐), 세 번째가 끝나면 채움(結)이 크게 피었다가 접히며 onDone 을 부른다
- * - 그때 소개 카드가 열린다. 돌려주는 함수를 부르면 멈춘다.
+ * 대문 첫 장면 (유샘): 길이 다 그려진 뒤 빛 구슬이 첫째·둘째·셋째 길을 내려가고 (지나는 운·이름표가 커졌다 작아짐),
+ * 세 번째가 끝나면 채움(結)이 한 번 크게 피었다가 접히며 onDone 을 부른다 - 그때 소개 카드가 열린다.
+ *   2026-10-30: 세 구슬이 시간차를 두고 겹쳐 내려가고(앞 구슬이 내려가는 중에 다음이 출발), 속도는 두 배,
+ *               結은 중간에 깜빡이지 않고 마지막에 한 번만.
  */
-const SEQ_START = 4200;
-const SEQ_DUR = 1900;
-const FRUIT_GROW = 1100;
+const SEQ_START = 2100;
+const SEQ_DUR = 950;
+const SEQ_GAP = 450;
+const SEQ_PULSE = 220;
+const FRUIT_GROW = 550;
 
 export function startIntro(b: Built, onDone: () => void): () => void {
   const t0 = performance.now();
   let raf = 0;
   let done = false;
   const ease = (x: number) => 0.5 - 0.5 * Math.cos(Math.PI * Math.max(0, Math.min(1, x)));
+  const seqEnd = SEQ_GAP * (WAYS.length - 1) + SEQ_DUR;
   const frame = (now: number) => {
     const t = now - t0 - SEQ_START;
     let emblemS = 0;
-    let fruitS = 0;
     const nodeS = new Map<SVGGElement, number>();
     WAYS.forEach((w, i) => {
-      const tt = t - i * SEQ_DUR;
+      const tt = t - i * SEQ_GAP;
       const sp = b.sparks[w];
       if (tt < 0 || tt > SEQ_DUR) {
         sp.setAttribute("cx", "-99");
@@ -304,14 +307,13 @@ export function startIntro(b: Built, onDone: () => void): () => void {
       sp.setAttribute("cx", pt.x.toFixed(1));
       sp.setAttribute("cy", pt.y.toFixed(1));
       sp.style.opacity = "1";
-      emblemS = Math.max(emblemS, bump(tt));
-      fruitS = Math.max(fruitS, bump(SEQ_DUR - tt));
-      for (const n of b.nodes) if (n.way === w) nodeS.set(n.g, Math.max(nodeS.get(n.g) ?? 0, bump((phase - n.frac) * SEQ_DUR)));
+      emblemS = Math.max(emblemS, bump(tt, SEQ_PULSE));
+      for (const n of b.nodes) if (n.way === w) nodeS.set(n.g, Math.max(nodeS.get(n.g) ?? 0, bump((phase - n.frac) * SEQ_DUR, SEQ_PULSE)));
     });
     scaleAt(b.emblem, 1 + PULSE_SCALE * 0.6 * emblemS);
     for (const n of b.nodes) scaleAt(n, 1 + PULSE_SCALE * (n.amp ?? 1) * (nodeS.get(n.g) ?? 0));
-    // 세 길이 끝나면 채움이 크게 피었다가(×2.2) 접힌다
-    const g = (t - 3 * SEQ_DUR) / FRUIT_GROW;
+    // 세 길이 모두 끝나면 채움이 한 번 크게 피었다가(×2.2) 접힌다
+    const g = (t - seqEnd) / FRUIT_GROW;
     if (g >= 0) {
       const s = g < 0.55 ? 1 + 1.2 * ease(g / 0.55) : 2.2 - 2.0 * ease((g - 0.55) / 0.45);
       scaleAt(b.fruit, Math.max(0.2, s));
@@ -321,8 +323,6 @@ export function startIntro(b: Built, onDone: () => void): () => void {
         onDone();
       }
       if (g >= 1) return;
-    } else {
-      scaleAt(b.fruit, 1 + PULSE_SCALE * fruitS);
     }
     raf = requestAnimationFrame(frame);
   };

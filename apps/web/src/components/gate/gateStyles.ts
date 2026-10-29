@@ -42,19 +42,19 @@ export const GATE_CSS = `
 .gh-fruit-lbl{font-family:var(--gh-serif);font-weight:700;fill:var(--gh-gold-hi)}
 .gh-spark{fill:#fff3d2;stroke:var(--gh-gold);stroke-width:2;opacity:0;transition:opacity .6s;filter:drop-shadow(0 0 6px rgba(244,226,184,.95)) drop-shadow(0 0 14px rgba(214,188,138,.7))}
 
-/* 등장 순서: 엠블럼 → 제목 → 세 길이 흐름(流) → 일곱 운 → 채움에서 맺힘(結) */
+/* 등장 순서: 엠블럼 → 제목 → 세 길이 흐름(流) → 일곱 운 → 채움에서 맺힘(結) - 2026-10-30 유샘: 모두 두 배 빠르게 */
 @keyframes gh-fade{from{opacity:0}to{opacity:1}}
 @keyframes gh-rise{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
 @keyframes gh-draw{to{stroke-dashoffset:0}}
 @keyframes gh-bloom{0%{opacity:0;transform:scale(.4)}70%{opacity:1;transform:scale(1.08)}100%{opacity:1;transform:scale(1)}}
 @keyframes gh-breathe{0%,100%{opacity:.55}50%{opacity:1}}
-.gh-a-emblem{animation:gh-fade 1.4s ease both}
-.gh-a-title{animation:gh-rise 1s ease .5s both}
-.gh-a-tag{animation:gh-rise 1s ease .8s both}
-.gh-way-path{stroke-dasharray:1;stroke-dashoffset:1;animation:gh-draw 2.4s cubic-bezier(.45,.05,.3,1) 1.3s forwards}
-.gh-way-tag{cursor:pointer;animation:gh-fade 1s ease 2.2s both}
-.gh-node{cursor:pointer;transform-box:fill-box;transform-origin:center;animation:gh-bloom .7s ease both}
-.gh-halo{animation:gh-breathe 4s ease-in-out 4.2s infinite}
+.gh-a-emblem{animation:gh-fade .7s ease both}
+.gh-a-title{animation:gh-rise .5s ease .25s both}
+.gh-a-tag{animation:gh-rise .5s ease .4s both}
+.gh-way-path{stroke-dasharray:1;stroke-dashoffset:1;animation:gh-draw 1.2s cubic-bezier(.45,.05,.3,1) .65s forwards}
+.gh-way-tag{cursor:pointer;animation:gh-fade .5s ease 1.1s both}
+.gh-node{cursor:pointer;transform-box:fill-box;transform-origin:center;animation:gh-bloom .35s ease both}
+.gh-halo{animation:gh-breathe 4s ease-in-out 2.1s infinite}
 @media (prefers-reduced-motion:reduce){
   .gh-a-emblem,.gh-a-title,.gh-a-tag,.gh-way-path,.gh-way-tag,.gh-node,.gh-halo{animation:none;opacity:1;stroke-dashoffset:0}
   .gh-spark{display:none}
