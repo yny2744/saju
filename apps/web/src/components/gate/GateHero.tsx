@@ -1,11 +1,12 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import type { TenantGate } from "@/tenants/types";
 import { HeaderAuth } from "@/components/landing/HeaderAuth";
 import { BgmToggle } from "@/components/bgm/BgmPlayer";
 import { buildStage, resetFruit, startFlow, startIntro, type Built } from "./gateMotion";
 import { GateCards } from "./GateCards";
+import { GateDoor } from "./GateDoor";
 import { GateIntroDialog } from "./GateIntro";
 import { GATE_CSS } from "./gateStyles";
 
@@ -23,6 +24,9 @@ export function GateHero({ gate, brand }: { gate: TenantGate; brand: string }) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [introOpen, setIntroOpen] = useState(false);
   const [phase, setPhase] = useState<"intro" | "cards" | "gate">("intro");
+  // 광고별 홀로그램 대문이 떠 있으면 대문 그림(제목·엠블럼·길)을 그만큼 아래로 내린다
+  const [doorOn, setDoorOn] = useState(false);
+  const onDoorShown = useCallback((on: boolean) => setDoorOn(on), []);
   const builtRef = useRef<Built | null>(null);
   const flowStop = useRef<(() => void) | null>(null);
   // 카드 칸 자리: 流結 엠블럼 아래쪽에 카드 윗변이 살짝 맞물리게 (2026-10-30 유샘 확정 시안) - 화면 크기에 따라 다시 잰다
@@ -60,8 +64,8 @@ export function GateHero({ gate, brand }: { gate: TenantGate; brand: string }) {
     // 그림이 차지하는 범위 [x1, y1, x2, y2] (가로 1600×900, 세로 900×1600 좌표)
     const fit = (svg: SVGSVGElement | null, vw: number, vh: number, box: [number, number, number, number]) => {
       if (!svg) return;
-      const w = hero.clientWidth;
-      const h = hero.clientHeight;
+      const w = svg.clientWidth || hero.clientWidth;
+      const h = svg.clientHeight || hero.clientHeight;
       if (!w || !h) return;
       const s = Math.max(w / vw, h / vh);
       const ox = (w - vw * s) / 2;
@@ -75,8 +79,42 @@ export function GateHero({ gate, brand }: { gate: TenantGate; brand: string }) {
     apply();
     const ro = typeof ResizeObserver !== "undefined" ? new ResizeObserver(apply) : null;
     ro?.observe(hero);
+    if (ptRef.current) ro?.observe(ptRef.current);
     return () => ro?.disconnect();
-  }, []);
+  }, [doorOn]);
+
+  // 홀로그램 대문과 제목이 겹치지 않게: 문 아래 끝 + 12px 아래에서 제목이 시작하도록 대문 그림을 내린다 (화면 크기마다 다시 잰다)
+  useEffect(() => {
+    const hero = heroRef.current;
+    if (!doorOn || !hero) return;
+    let shift = 54;
+    const measure = () => {
+      const wrap = hero.querySelector<HTMLElement>(".gh-door-wrap");
+      const title = ptRef.current?.querySelector(".gh-title");
+      if (!wrap || !title) return;
+      const doorBottom = wrap.offsetTop + wrap.offsetHeight;
+      const titleTop = title.getBoundingClientRect().top - hero.getBoundingClientRect().top;
+      const need = doorBottom + 12 - titleTop;
+      if (Math.abs(need) < 2) return;
+      shift = Math.max(0, Math.round(shift + need));
+      hero.style.setProperty("--gh-door-shift", `${shift}px`);
+    };
+    // 제목이 떠오르는 움직임(0.75초)이 끝난 뒤 두 번 잰다 (내리면 크기가 조금 바뀌므로)
+    const t1 = window.setTimeout(measure, 900);
+    const t2 = window.setTimeout(measure, 1100);
+    const onResize = () => {
+      shift = 54;
+      hero.style.setProperty("--gh-door-shift", "54px");
+      window.setTimeout(measure, 60);
+      window.setTimeout(measure, 160);
+    };
+    window.addEventListener("resize", onResize);
+    return () => {
+      window.clearTimeout(t1);
+      window.clearTimeout(t2);
+      window.removeEventListener("resize", onResize);
+    };
+  }, [doorOn]);
 
   // 길·운 그리기 → 첫 장면(빛 구슬이 세 길을 차례로) → 소개 카드
   useEffect(() => {
@@ -119,7 +157,7 @@ export function GateHero({ gate, brand }: { gate: TenantGate; brand: string }) {
       {/* eslint-disable-next-line @next/next/no-page-custom-font -- 대문 명조 글꼴 (한자 포함) */}
       <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@500;700;900&family=Gowun+Dodum&display=swap" />
       <style dangerouslySetInnerHTML={{ __html: GATE_CSS }} />
-      <section ref={heroRef} className={phase === "cards" ? "gh-hero gh-cards-on" : "gh-hero"} aria-labelledby="gh-h1">
+      <section ref={heroRef} className={`gh-hero${phase === "cards" ? " gh-cards-on" : ""}${doorOn ? " gh-door-on" : ""}`} aria-labelledby="gh-h1">
         <h1 id="gh-h1" className="sr-only">{`${gate.title} · ${gate.intro.tagline} · ${brand}`}</h1>
         <video ref={videoRef} className="gh-video" muted playsInline autoPlay loop preload="auto" aria-hidden="true" poster={gate.media.posterPortrait} />
         <div className="gh-shade" />
@@ -175,6 +213,7 @@ export function GateHero({ gate, brand }: { gate: TenantGate; brand: string }) {
           <path className="gh-way-path gh-way-ahead" pathLength={1} />
           <g className="gh-nodes" />
         </svg>
+        {gate.doors && <GateDoor doors={gate.doors} onShown={onDoorShown} />}
         {phase === "cards" && <GateCards onSkip={skipCards} disc={disc} emblem={gate.emblem} />}
       </section>
       <GateIntroDialog gate={gate} open={introOpen} onClose={() => setIntroOpen(false)} />

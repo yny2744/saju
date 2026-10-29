@@ -125,6 +125,19 @@ export interface GateWay {
   uns: GateUn[];
 }
 
+export interface GateDoor {
+  key: string;
+  /** 꼬리표가 이 말들 중 하나로 시작하면 이 문 (영문 소문자) */
+  match: string[];
+  /** 문 위 큰 글씨 (예: "수능 대박운 무료 보기") */
+  title: string;
+  /** 작은 글씨 (예: "운명의 문을 여세요") */
+  sub: string;
+  /** 문을 열면 가는 곳 */
+  href: string;
+  needs?: "suneung";
+}
+
 export interface TenantGate {
   /** 대문 큰 제목 (예: "류결의 명견만리") */
   title: string;
@@ -140,6 +153,12 @@ export interface TenantGate {
   ways: GateWay[];
   /** 모든 길이 맺히는 자리 (채움) */
   fruit: { glyph: string; title: string; sub: string; desc: string };
+  /**
+   * 광고별 홀로그램 대문 (2026-10-30 유샘) - 머리줄 아래·제목 위에 반투명 문이 뜨고, 누르면 '슝' 소리와 함께 열리며 href 로 들어간다.
+   * 광고 주소의 꼬리표(?door= · utm_campaign · /l/<key>, 또는 30일 기억한 유입 꼬리표)가 match 중 하나로 시작하면 그 문,
+   * 아무것도 맞지 않으면 fallback. needs: "suneung" 인 문은 수능 스위치가 꺼져 있으면 건너뛴다.
+   */
+  doors?: { list: GateDoor[]; fallback?: Omit<GateDoor, "match" | "needs"> };
   /** 계절 랜딩 (/l/<key>) - 예: 신년운세 */
   seasonal: Array<{ key: string; glyph: string; name: string; headline: string; lead: string; rooms: GateRoom[] }>;
 }

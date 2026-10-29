@@ -160,6 +160,12 @@ const mgml: TenantConfig = {
       sub: "부족한 기운을 채우는 길",
       desc: "풀이에서 드러난 부족한 기운을 일상의 실천과 곁에 두는 물건으로 보완해, 아는 데서 그치지 않고 삶으로 이어지게 합니다.",
     },
+    // 2026-10-30 광고별 홀로그램 대문 - 광고 주소 예: /?utm_source=youtube&utm_campaign=suneung01 또는 /?door=suneung
+    doors: {
+      list: [{ key: "suneung", match: ["suneung", "exam"], title: "수능 대박운 무료 보기", sub: "운명의 문을 여세요", href: "/suneung", needs: "suneung" }],
+      // 꼬리표 없이 들어온 분 (문구는 추후 유샘 확정)
+      fallback: { key: "today", title: "오늘의 운세 무료 보기", sub: "운명의 문을 여세요", href: "/start?next=fortune" },
+    },
     seasonal: [
       {
         key: "newyear",

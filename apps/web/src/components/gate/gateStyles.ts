@@ -93,4 +93,31 @@ export const GATE_CSS = `
   font-family:var(--gh-serif);font-weight:700;font-size:15px;letter-spacing:.06em}
 .gh-cards button:focus-visible{outline:2px solid #d6bc8a;outline-offset:3px}
 @media (prefers-reduced-motion:reduce){.gh-cards{animation:none}.gh-card{transition:none}}
+/* 2026-10-30 광고별 홀로그램 대문 - 머리줄 사이 바로 아래, 제목 위. 대문 그림은 그만큼(54px) 아래로 */
+.gh-hero{container-type:inline-size}
+.gh-door-on .gh-stage{top:var(--gh-door-shift,54px);height:calc(100% - var(--gh-door-shift,54px))}
+.gh-door-wrap{position:absolute;left:50%;top:calc(62px + env(safe-area-inset-top,0px));z-index:4;width:min(48cqw,280px);transform:translateX(-50%);perspective:900px;
+  animation:gh-fade .5s ease .4s both,gh-door-bob 3.2s ease-in-out 1s infinite}
+@keyframes gh-door-bob{0%,100%{translate:0 0}50%{translate:0 -4px}}
+.gh-door{position:relative;display:flex;width:100%;aspect-ratio:256/70;cursor:pointer;border:0;padding:0;background:none;color:inherit;font:inherit}
+.gh-door:focus-visible{outline:2px solid var(--gh-gold-hi);outline-offset:5px;border-radius:999px}
+.gh-door-leaf{position:relative;flex:1;overflow:hidden;
+  background:linear-gradient(160deg,rgba(255,240,205,.26),rgba(160,200,255,.10) 60%,rgba(255,240,205,.18));
+  border:1px solid rgba(244,226,184,.8);backdrop-filter:blur(6px) saturate(1.3);-webkit-backdrop-filter:blur(6px) saturate(1.3);
+  box-shadow:0 0 18px rgba(244,226,184,.35),inset 0 0 14px rgba(255,255,255,.12);transition:transform .85s cubic-bezier(.6,.05,.3,1),opacity .85s}
+.gh-door-leaf.l{border-radius:36px 0 0 8px;transform-origin:left center;border-right:none}
+.gh-door-leaf.r{border-radius:0 36px 8px 0;transform-origin:right center;border-left:none}
+.gh-door-leaf::after{content:"";position:absolute;inset:-40% -60%;background:linear-gradient(105deg,transparent 40%,rgba(255,255,255,.35) 50%,transparent 60%);animation:gh-door-shine 3.6s linear infinite}
+@keyframes gh-door-shine{from{transform:translateX(-60%)}to{transform:translateX(60%)}}
+.gh-door-txt{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;pointer-events:none;
+  font-family:var(--gh-serif);color:#fff6dc;text-shadow:0 0 8px rgba(244,226,184,.9),0 0 2px rgba(0,0,0,.6);transition:opacity .35s}
+.gh-door-txt b{font-size:min(3.9cqw,22px);font-weight:900;letter-spacing:.04em;white-space:nowrap}
+.gh-door-txt small{font-size:min(2.9cqw,16px);font-weight:700;color:var(--gh-gold-hi);letter-spacing:.12em;margin-top:2px;white-space:nowrap}
+.gh-door-light{position:absolute;inset:0;border-radius:36px 36px 8px 8px;background:radial-gradient(ellipse at center,#fff6dc 0%,rgba(244,226,184,.8) 40%,rgba(244,226,184,0) 75%);opacity:0;transition:opacity .85s}
+.gh-door.open .gh-door-leaf.l{transform:rotateY(-80deg);opacity:.5}.gh-door.open .gh-door-leaf.r{transform:rotateY(80deg);opacity:.5}
+.gh-door.open .gh-door-txt{opacity:0}.gh-door.open .gh-door-light{opacity:1}
+.gh-door-flash{position:fixed;inset:0;z-index:70;pointer-events:none;opacity:0;transition:opacity .7s;
+  background:radial-gradient(circle at 50% 12%,#fff6dc 0%,rgba(244,226,184,.9) 30%,rgba(7,11,22,0) 75%)}
+.gh-door-flash.on{opacity:1}
+@media (prefers-reduced-motion:reduce){.gh-door-wrap{animation:none}.gh-door-leaf::after{animation:none}}
 `;
