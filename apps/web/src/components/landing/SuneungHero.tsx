@@ -13,7 +13,7 @@ import {
 
 /**
  * 대문 맨 위 - 수능대박운 영상 (2026-10-17 수정안 17).
- *   영상(16:9, 10초 반복)은 소리 없이 자동 재생 (폰 브라우저 규칙). 🔊를 누르면 나레이션이 나오고 가야금 배경음은 잠시 멈춘다.
+ *   영상(16:9, 10초 반복)은 소리 켠 채 시작을 시도하고, 막히면 소리 없이 재생 (폰 브라우저 규칙). 🔊를 누르면 나레이션이 나오고 가야금 배경음은 잠시 멈춘다.
  *   D-day 숫자와 자막은 영상에 굽지 않고 화면 글자로 얹는다 - 날짜가 바뀌어도 영상을 다시 만들 필요가 없다.
  *   수능이 끝나면(11/20~) 영상 대신 합격운·새 출발운 카드로 바뀐다.
  */
@@ -41,6 +41,8 @@ export function SuneungHero({
   const ref = useRef<HTMLVideoElement>(null);
   const [caption, setCaption] = useState("");
   const [sound, setSound] = useState(false);
+  // 소리를 켠 채 시작하려다 브라우저가 막았을 때 - 소리 켜기 단추를 금빛으로 깜빡여 알린다
+  const [hint, setHint] = useState(false);
   // 날짜는 손님 기기에서 계산 (서버에서 미리 그린 화면이 하루 지나 남아 있어도 맞게)
   const [today, setToday] = useState<{
     season: ReturnType<typeof examSeason>;
@@ -62,6 +64,37 @@ export function SuneungHero({
     return () => v.removeEventListener("timeupdate", onTime);
   }, [today]);
 
+  // 2026-10-31 유샘: 대문 문을 누르고 들어오면 나레이션이 바로 나오게 - 소리를 켠 채 처음부터 재생을 시도한다.
+  //   브라우저가 막으면 (아이폰·카카오톡 안 브라우저 등) 영상이 멈추지 않게 소리 없이 다시 재생하고 소리 켜기 단추를 깜빡인다.
+  useEffect(() => {
+    const v = ref.current;
+    if (!v || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    let done = false;
+    const fallback = () => {
+      if (done) return;
+      done = true;
+      v.muted = true;
+      v.play().catch(() => {});
+      setSound(false);
+      setHint(true);
+      bgm().pauseForHidden(false);
+    };
+    v.muted = false;
+    v.currentTime = 0;
+    v.play()
+      .then(() => {
+        // 소리 켠 재생이 받아들여졌어도 곧바로 멈춰 버리는 브라우저가 있어 한 번 더 본다
+        window.setTimeout(() => {
+          if (done) return;
+          if (v.paused || v.muted) return fallback();
+          done = true;
+          setSound(true);
+          bgm().pauseForHidden(true);
+        }, 300);
+      })
+      .catch(fallback);
+  }, []);
+
   // 화면을 떠나면 배경음을 돌려놓는다
   useEffect(() => () => bgm().pauseForHidden(false), []);
 
@@ -76,6 +109,7 @@ export function SuneungHero({
       bgm().pauseForHidden(true);
     } else bgm().pauseForHidden(false);
     setSound(next);
+    setHint(false);
   }
 
   const season = today?.season ?? "suneung";
@@ -114,9 +148,9 @@ export function SuneungHero({
   return (
     <div>
       {/* D-day와 소리 단추는 영상 밖 위쪽에 - 영상 속 글씨를 가리지 않게 */}
-      <div className="mb-2 flex items-center justify-between">
+      <div className="mb-2 flex items-center justify-between gap-2">
         <span
-          className="rounded-lg px-3 py-1 text-[15px] font-black tracking-wide"
+          className="whitespace-nowrap rounded-lg px-2.5 py-1 text-[clamp(12px,3.9vw,15px)] font-black tracking-wide"
           style={{
             backgroundColor: NAVY,
             color: GOLD_L,
@@ -129,7 +163,7 @@ export function SuneungHero({
               ? `수능 D-${today.dday}`
               : "수능대박운"}
           <span
-            className="ml-2 text-[12px] font-semibold"
+            className="ml-1.5 text-[clamp(10.5px,3.3vw,12px)] font-semibold"
             style={{ color: GOLD }}
           >
             11월 19일 (목)
@@ -139,10 +173,10 @@ export function SuneungHero({
           type="button"
           onClick={toggleSound}
           aria-label={sound ? "소리 끄기" : "소리 켜기"}
-          className="rounded-full px-3 py-1 text-[13px] font-bold"
+          className={`shrink-0 whitespace-nowrap rounded-full px-2.5 py-1 text-[clamp(12px,3.8vw,13px)] font-bold${hint ? " sound-hint" : ""}`}
           style={{ border: `1px solid ${GOLD}`, color: "var(--color-ink)" }}
         >
-          {sound ? "🔊 소리 끄기" : "🔈 소리 켜기"}
+          {sound ? "🔊 소리 끄기" : hint ? "🔈 나레이션 듣기" : "🔈 소리 켜기"}
         </button>
       </div>
       <div
