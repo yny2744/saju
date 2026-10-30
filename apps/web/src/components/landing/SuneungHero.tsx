@@ -148,7 +148,7 @@ export function SuneungHero({
   return (
     <div>
       {/* D-day와 소리 단추는 영상 밖 위쪽에 - 영상 속 글씨를 가리지 않게 */}
-      <div className="mb-2 flex items-center justify-between gap-2">
+      <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
         <span
           className="whitespace-nowrap rounded-lg px-2.5 py-1 text-[clamp(12px,3.9vw,15px)] font-black tracking-wide"
           style={{

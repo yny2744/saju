@@ -15,7 +15,7 @@ export function SiteHeader() {
           <a href="/" className="flex items-center gap-2.5">
             {/* eslint-disable-next-line @next/next/no-img-element -- 엠블럼 */}
             <img src={TENANT.gate.emblem} alt="" width={34} height={34} className="h-[34px] w-[34px]" />
-            <span className="foil-text whitespace-nowrap text-[clamp(16px,5.2vw,19px)] font-black tracking-wide" style={{ fontFamily: "var(--font-serif)" }}>
+            <span className="foil-text min-w-0 text-[clamp(16px,5.2vw,19px)] font-black tracking-wide" style={{ fontFamily: "var(--font-serif)", wordBreak: "keep-all" }}>
               {TENANT.gate.title}
             </span>
           </a>

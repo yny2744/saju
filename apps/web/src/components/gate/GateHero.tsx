@@ -83,6 +83,21 @@ export function GateHero({ gate, brand }: { gate: TenantGate; brand: string }) {
     return () => ro?.disconnect();
   }, [doorOn]);
 
+  // 2026-10-31 유샘: 카카오톡 안 브라우저처럼 글자 크기를 키워 보여 주는 곳에서는 대문 글자(머리줄·문 문구·건너뛰기)가
+  //   커져 문이 머리줄 위로 넘친다. 실제로 그려진 글자 폭을 재서 키운 만큼 되돌린다 (--gh-tz). 보통 브라우저에서는 1.
+  useEffect(() => {
+    const hero = heroRef.current;
+    if (!hero) return;
+    const probe = document.createElement("span");
+    probe.textContent = "가가가가가";
+    probe.setAttribute("aria-hidden", "true");
+    probe.style.cssText = "position:absolute;left:-9999px;top:0;visibility:hidden;font-size:100px;line-height:1;letter-spacing:0;white-space:nowrap";
+    hero.appendChild(probe);
+    const f = probe.getBoundingClientRect().width / 500;
+    probe.remove();
+    if (f > 1.05 && f < 3) hero.style.setProperty("--gh-tz", String(1 / f));
+  }, []);
+
   // 홀로그램 대문과 제목이 겹치지 않게: 문 아래 끝 + 12px 아래에서 제목이 시작하도록 대문 그림을 내린다.
   // 2026-10-30 고침: 화면에 그려진 제목 위치를 재면(그리기 전·움직이는 중에 재면) 크게 어긋날 수 있어,
   // 화면 크기와 그림 비율(fit 과 같은 규칙)로 계산한다 - 언제 재도 같은 값.

@@ -15,11 +15,11 @@ export const GATE_CSS = `
   background:linear-gradient(to bottom,rgba(7,11,22,.78),rgba(7,11,22,0));color:#f6ecd2}
 .gh-brand{display:flex;align-items:center;gap:10px;font-family:var(--gh-serif);font-weight:700;letter-spacing:.08em;font-size:16px;color:#f6ecd2}
 .gh-brand img{width:30px;height:30px}
-.gh-nav{display:flex;align-items:center;gap:24px;font-size:14px;color:var(--gh-dim)}
+.gh-nav{display:flex;align-items:center;gap:24px;font-size:calc(14px * var(--gh-tz,1));color:var(--gh-dim)}
 .gh-nl:hover,.gh-nl:focus-visible{color:var(--gh-gold-hi)}
 .gh-nav>*{flex-shrink:0}
 .gh-bar{padding-top:calc(26px + env(safe-area-inset-top,0px));padding-bottom:16px;padding-left:max(20px,env(safe-area-inset-left,0px));padding-right:max(20px,env(safe-area-inset-right,0px))}
-.gh-brand{font-size:clamp(14px,4.3vw,18px);letter-spacing:.04em;white-space:nowrap;min-width:0}.gh-brand img{width:34px;height:34px;flex-shrink:0}.gh-nav{gap:12px}
+.gh-brand{font-size:calc(clamp(14px,4.3vw,18px) * var(--gh-tz,1));letter-spacing:.04em;white-space:nowrap;min-width:0}.gh-brand img{width:34px;height:34px;flex-shrink:0}.gh-nav{gap:12px}
 .gh-shade{background:linear-gradient(to bottom,rgba(7,11,22,.62) 0%,rgba(7,11,22,.22) 30%,rgba(7,11,22,.32) 60%,rgba(7,11,22,.55) 100%)}
 .gh-hero a:focus-visible{outline:2px solid var(--gh-gold);outline-offset:3px}
 .gh-title{font-family:var(--gh-serif);font-weight:900;fill:var(--gh-gold-hi);letter-spacing:.06em;paint-order:stroke;stroke:rgba(7,11,22,.6);stroke-width:5px;cursor:pointer}
@@ -85,16 +85,16 @@ export const GATE_CSS = `
 .gh-cards-next svg{margin-left:2px}
 .gh-cards-frame{cursor:pointer;-webkit-tap-highlight-color:transparent}
 .gh-cards-paused{position:absolute;top:10px;right:10px;display:flex;align-items:center;gap:6px;padding:6px 12px;border-radius:999px;
-  background:rgba(7,11,22,.75);color:#f4e2b8;border:1px solid rgba(214,188,138,.7);font-size:13px;font-weight:700;letter-spacing:.04em;pointer-events:none}
+  background:rgba(7,11,22,.75);color:#f4e2b8;border:1px solid rgba(214,188,138,.7);font-size:calc(13px * var(--gh-tz,1));font-weight:700;letter-spacing:.04em;pointer-events:none}
 .gh-cards-dots{display:flex;gap:8px}
 .gh-cards-dots span{width:8px;height:8px;border-radius:4px;background:rgba(214,188,138,.38);transition:width .3s,background .3s}
 .gh-cards-dots span.on{width:22px;background:#f4e2b8}
 .gh-cards-skip{padding:9px 20px;border-radius:999px;border:1px solid rgba(214,188,138,.7);color:#f4e2b8;background:rgba(7,11,22,.5);
-  font-family:var(--gh-serif);font-weight:700;font-size:15px;letter-spacing:.06em}
+  font-family:var(--gh-serif);font-weight:700;font-size:calc(15px * var(--gh-tz,1));letter-spacing:.06em}
 .gh-cards button:focus-visible{outline:2px solid #d6bc8a;outline-offset:3px}
 @media (prefers-reduced-motion:reduce){.gh-cards{animation:none}.gh-card{transition:none}}
 /* 2026-10-30 광고별 홀로그램 대문 - 머리줄 사이 바로 아래, 제목 위. 대문 그림은 그만큼(54px) 아래로 */
-.gh-hero{container-type:inline-size}
+.gh-hero{container-type:inline-size;-webkit-text-size-adjust:100%;text-size-adjust:100%}
 .gh-door-on .gh-stage{top:var(--gh-door-shift,54px);height:calc(100% - var(--gh-door-shift,54px))}
 .gh-door-wrap{position:absolute;left:50%;top:calc(62px + env(safe-area-inset-top,0px));z-index:4;width:min(48cqw,280px);transform:translateX(-50%);perspective:900px;
   animation:gh-fade 1.4s ease 2s both,gh-door-bob 3.2s ease-in-out 3.4s infinite}
@@ -111,8 +111,8 @@ export const GATE_CSS = `
 @keyframes gh-door-shine{from{transform:translateX(-60%)}to{transform:translateX(60%)}}
 .gh-door-txt{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;pointer-events:none;
   font-family:var(--gh-serif);color:#fff6dc;text-shadow:0 0 8px rgba(244,226,184,.9),0 0 2px rgba(0,0,0,.6);transition:opacity .35s}
-.gh-door-txt b{font-size:min(3.9cqw,22px);font-weight:900;letter-spacing:.04em;white-space:nowrap}
-.gh-door-txt small{font-size:min(2.9cqw,16px);font-weight:700;color:var(--gh-gold-hi);letter-spacing:.12em;margin-top:2px;white-space:nowrap}
+.gh-door-txt b{font-size:calc(min(3.9cqw,22px) * var(--gh-tz,1));font-weight:900;letter-spacing:.04em;white-space:nowrap}
+.gh-door-txt small{font-size:calc(min(2.9cqw,16px) * var(--gh-tz,1));font-weight:700;color:var(--gh-gold-hi);letter-spacing:.12em;margin-top:2px;white-space:nowrap}
 .gh-door-light{position:absolute;inset:0;border-radius:36px 36px 8px 8px;background:radial-gradient(ellipse at center,#fff6dc 0%,rgba(244,226,184,.8) 40%,rgba(244,226,184,0) 75%);opacity:0;transition:opacity .85s}
 .gh-door.open .gh-door-leaf.l{transform:rotateY(-80deg);opacity:.5}.gh-door.open .gh-door-leaf.r{transform:rotateY(80deg);opacity:.5}
 .gh-door.open .gh-door-txt{opacity:0}.gh-door.open .gh-door-light{opacity:1}
