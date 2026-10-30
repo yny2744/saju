@@ -91,11 +91,13 @@ html[data-contrast="high"] {
     margin: 0 auto;
     background-color: var(--color-paper);
   }
-  /* 2026-10-30 유샘 확정 (바탕 시안 1번): 한지 질감 - 따뜻한 미색 + 가로 섬유결 + 아주 옅은 얼룩. 카드도 옅은 미색으로 */
+  /* 2026-10-30 유샘 확정 (바탕 시안 1번): 한지 질감 - 따뜻한 미색 + 가로 섬유결 + 아주 옅은 얼룩. 카드도 옅은 미색으로
+     + 금박 격자 시안 3번: 마름모(능화) 격자 - 금빛이 흐르는 가는 선을 은은하게 */
   .site-frame.paper-hanji {
     --color-card: #fffdf8;
     background-color: #f3ece0;
     background-image:
+      url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20width='56'%20height='56'%3E%3Cdefs%3E%3ClinearGradient%20id='au'%20x1='0'%20y1='0'%20x2='1'%20y2='1'%3E%3Cstop%20offset='0'%20stop-color='%23c9a24e'/%3E%3Cstop%20offset='.5'%20stop-color='%23f1dc9f'/%3E%3Cstop%20offset='1'%20stop-color='%23b08a3e'/%3E%3C/linearGradient%3E%3C/defs%3E%3Cg%20fill='none'%20stroke='url%28%23au%29'%20stroke-width='1'%20opacity='.2'%3E%3Cpath%20d='M28%200L56%2028L28%2056L0%2028Z'/%3E%3Cpath%20d='M28%2012L44%2028L28%2044L12%2028Z'%20opacity='.6'/%3E%3C/g%3E%3Ccircle%20cx='28'%20cy='28'%20r='1.5'%20fill='url%28%23au%29'%20opacity='.3'/%3E%3C/svg%3E"),
       url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='f'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9 0.035' numOctaves='3' seed='7'/%3E%3CfeColorMatrix values='0 0 0 0 0.45 0 0 0 0 0.36 0 0 0 0 0.22 0 0 0 0.10 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23f)'/%3E%3C/svg%3E"),
       url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.02' numOctaves='2' seed='3'/%3E%3CfeColorMatrix values='0 0 0 0 0.6 0 0 0 0 0.5 0 0 0 0 0.3 0 0 0 0.05 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23g)'/%3E%3C/svg%3E");
   }
