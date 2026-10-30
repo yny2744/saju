@@ -1,4 +1,4 @@
-import { BRAND } from "@/tenants";
+import { BRAND, TENANT } from "@/tenants";
 import { HeaderAuth } from "@/components/landing/HeaderAuth";
 import { BgmToggle } from "@/components/bgm/BgmPlayer";
 
@@ -10,9 +10,20 @@ export function SiteHeader() {
   return (
     <header className="band-bg relative" style={{ color: "#f6ecd2" }}>
       <div className="mx-auto flex max-w-xl items-center justify-between px-6 py-3.5">
-        <a href="/" className="foil-text text-[21px] font-black tracking-wide" style={{ fontFamily: "var(--font-serif)" }}>
-          {BRAND}
-        </a>
+        {/* 2026-10-30 유샘: 대문이 있는 고객사(명견만리)는 그 엠블럼과 대문 이름으로 */}
+        {TENANT.gate ? (
+          <a href="/" className="flex items-center gap-2.5">
+            {/* eslint-disable-next-line @next/next/no-img-element -- 엠블럼 */}
+            <img src={TENANT.gate.emblem} alt="" width={34} height={34} className="h-[34px] w-[34px]" />
+            <span className="foil-text text-[19px] font-black tracking-wide" style={{ fontFamily: "var(--font-serif)" }}>
+              {TENANT.gate.title}
+            </span>
+          </a>
+        ) : (
+          <a href="/" className="foil-text text-[21px] font-black tracking-wide" style={{ fontFamily: "var(--font-serif)" }}>
+            {BRAND}
+          </a>
+        )}
         <span className="flex items-center gap-3">
           <BgmToggle />
           <HeaderAuth />

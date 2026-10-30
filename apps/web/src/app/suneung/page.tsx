@@ -19,10 +19,12 @@ import { CURRENCY_NAME, PRICE, formatNyang } from "@/lib/yeopjeon";
 export const revalidate = 3600;
 
 const SUB_BRAND = `${TENANT.brand.logoText}수능운`;
+/** 화면에 내세우는 이름 - 대문이 있는 고객사(명견만리)는 대문 이름 (2026-10-30) */
+const SITE_NAME = TENANT.gate?.title ?? BRAND;
 
 export function generateMetadata(): Metadata {
   const info = SEASON_INFO[examSeason()];
-  const title = `${SUB_BRAND} · ${info.title}`;
+  const title = `${TENANT.gate ? SITE_NAME : SUB_BRAND} · ${info.title}`;
   const description =
     info.title === "수능대박운"
       ? `11월 19일 수능, 시험날 나의 기운은? 공부 체질 · 시험날 일진 · 행운 꾸러미까지 사주로 확인해 보세요. 로그인하면 무료 - ${BRAND}`
@@ -72,17 +74,25 @@ export default function SuneungLanding() {
   return (
     <main className="min-h-screen pb-10">
       <div className="mx-auto max-w-xl px-5">
-        <h1 className="pt-5 text-center">
-          <span className="block text-[13px] tracking-[0.25em]" style={{ color: "var(--color-gold)" }}>
-            {info.hanja} · {BRAND}
-          </span>
-          <span className="mt-1 block text-[26px] font-bold" style={{ fontFamily: "var(--font-serif)" }}>
-            {SUB_BRAND}
-          </span>
-        </h1>
+        {TENANT.gate ? (
+          // 2026-10-30 유샘: 머리줄에 이미 「류결의 명견만리」가 있으니 위 작은 줄은 빼고 제목만 (그만큼 위로)
+          <h1 className="pt-4 text-center text-[28px] font-bold" style={{ fontFamily: "var(--font-serif)" }}>
+            <span className="sr-only">{SITE_NAME} · </span>
+            {info.title}
+          </h1>
+        ) : (
+          <h1 className="pt-5 text-center">
+            <span className="block text-[13px] tracking-[0.25em]" style={{ color: "var(--color-gold)" }}>
+              {info.hanja} · {BRAND}
+            </span>
+            <span className="mt-1 block text-[26px] font-bold" style={{ fontFamily: "var(--font-serif)" }}>
+              {SUB_BRAND}
+            </span>
+          </h1>
+        )}
 
         {/* 첫 화면: 영상 · D-day (대문 맨 위와 같은 것) */}
-        <section className="pb-4 pt-4">
+        <section className="pb-4 pt-3">
           <SuneungHero inlineStart />
         </section>
 
@@ -134,7 +144,7 @@ export default function SuneungLanding() {
         {/* 아래쪽에만 본 사이트로 */}
         <section className="pb-6">
           <h2 className="mb-4 text-center text-[18px] font-bold" style={{ fontFamily: "var(--font-serif)" }}>
-            {BRAND}의 다른 운세
+            {SITE_NAME}의 다른 운세
           </h2>
           <div className="grid grid-cols-2 gap-2.5">
             {MORE.map((m) => (
@@ -149,7 +159,7 @@ export default function SuneungLanding() {
             ))}
           </div>
           <a href="/" className="btn-secondary mt-4 block text-center">
-            {BRAND} 처음 화면으로
+            {SITE_NAME} 처음 화면으로
           </a>
         </section>
       </div>

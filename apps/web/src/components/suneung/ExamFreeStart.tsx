@@ -6,6 +6,13 @@ import { CONTINUE_PATH, savePendingIntent } from "@/lib/intent";
 import { CURRENCY_NAME, PRICE, WELCOME_GIFT, formatNyang } from "@/lib/yeopjeon";
 import { ELEMENT_TOKEN, type ElementKo } from "@/lib/pillarView";
 import { reportClientError } from "@/components/yeopjeon/useYeopjeon";
+import type { SajuJson } from "saju-engine";
+import { TENANT } from "@/tenants";
+import { SajuPillarsCard } from "@/components/SajuPillarsCard";
+import { DaeunTimeline, ElementBalance, NeededEnergySection, RelationsTable } from "@/components/ManseSections";
+import { SaleNote } from "@/components/SaleNote";
+import { neededEnergy } from "@/lib/neededEnergy";
+import { daeunCells, elementShares, kstDateString, relationRows, yinYangCount } from "@/lib/manseView";
 
 /**
  * 수능운 무료 미리보기 (2026-10-30 유샘) - 수능운 랜딩 영상 바로 아래.
@@ -13,6 +20,8 @@ import { reportClientError } from "@/components/yeopjeon/useYeopjeon";
  *   ② 무료로: 만세력 여덟 글자·오행 비율 + "시험날 기운이 활짝 열려 있어요" 게이지 + "마지막 한 칸은 ○○ 기운으로 채워요" + 한 줄 요약
  *      (점수는 쓰지 않는다 - 수험생이 숫자로 불안해하지 않게. 마지막 한 칸 = 가장 모자란 오행 = 행운 꾸러미의 기운)
  *   ③ 나머지 풀이는 흐리게 → 카카오로 가입하면 선물 990냥으로 가볍게 보기가 바로 열린다 (/continue 가 사람을 만들고 수능운으로).
+ *   2026-10-30 유샘 2차 순서: ① 만세력 전부(무료 만세력 화면과 같은 칸) → ② 수능대박운을 사주와 엮어 (게이지·일간과 시험날 일진·공부 체질·시험날 기운)
+ *   → ③ 부족한 기운 채우기 (카카오 가입 · 오픈 행사 990냥 선물로 가볍게 보기) → ④ 깊게 보기 5,500냥 (오픈 특가)
  */
 
 type Pillar = { label: string; empty: boolean; stem: Glyph | null; branch: Glyph | null };
@@ -25,6 +34,12 @@ type Preview = {
   summary: string;
   fill: { element: ElementKo; hanja: string; nature: string; reason: "lacking" | "weakest" };
   headings: string[];
+  freeSections: Array<{ heading: string; body: string }>;
+  lockedHeadings: string[];
+  deeper: string[];
+  dayMaster: { stem: string; hanja: string; element: ElementKo };
+  examDay: { ganzhi: string; hanja: string; group: string; relation: string } | null;
+  saju: SajuJson;
   pillars: Pillar[];
   shares: Array<{ element: ElementKo; percent: number }>;
 };
@@ -36,6 +51,11 @@ const GOLD_L = "#f3e7c6";
 const CARD = { border: "1px solid var(--color-gold-line)", backgroundColor: "var(--color-card)" } as const;
 const EL = (e: ElementKo) => `var(--color-element-${ELEMENT_TOKEN[e]})`;
 const HOURS = Array.from({ length: 24 }, (_, h) => h);
+function birthLine(saju: SajuJson): string {
+  const [y, m, d] = saju.birth.date.split("-").map(Number);
+  const cal = saju.birth.calendarType === "solar" ? "양력" : "음력";
+  return `${cal} ${y}년 ${m}월 ${d}일${saju.birth.time ? ` ${saju.birth.time}` : " · 시간 모름"}`;
+}
 const hourLabel = (h: number) => `${h < 12 ? "오전" : "오후"} ${h % 12 === 0 ? 12 : h % 12}시`;
 
 export function ExamFreeStart() {
@@ -215,8 +235,38 @@ export function ExamFreeStart() {
 
       {pv && (
         <div id="exam-free-result" className="scroll-mt-4">
-          {/* 시험날 기운 - 점수 대신 거의 가득 찬 일곱 칸, 마지막 한 칸은 채울 기운 */}
-          <section className="rounded-2xl px-5 py-6 text-center" style={{ backgroundColor: NAVY, border: `1px solid ${GOLD}` }}>
+          {/* ① 만세력 - 전부 무료 (무료 만세력 화면과 같은 칸) */}
+          <section className="rounded-2xl p-5" style={CARD}>
+            <p className="text-[12px] tracking-[0.2em]" style={{ color: GOLD }}>
+              무료 만세력
+            </p>
+            <h2 className="mt-1 text-[22px] font-bold" style={{ fontFamily: "var(--font-serif)" }}>
+              {pv.nickname}님의 만세력
+            </h2>
+            <p className="mt-1 text-[13px]" style={{ color: "var(--color-ink-soft)" }}>
+              {birthLine(pv.saju)}
+            </p>
+            <div className="mt-4">
+              <SajuPillarsCard saju={pv.saju} />
+            </div>
+          </section>
+          <div className="mt-6">
+            <ElementBalance
+              shares={elementShares(pv.saju)}
+              dominant={pv.saju.elements.summary.dominant as ElementKo}
+              lacking={pv.saju.elements.summary.lacking as ElementKo[]}
+              yinYang={yinYangCount(pv.saju)}
+            />
+            <NeededEnergySection need={neededEnergy(pv.saju)} />
+            <RelationsTable rows={relationRows(pv.saju)} />
+            <DaeunTimeline
+              cells={daeunCells(pv.saju, kstDateString())}
+              seun={{ year: pv.saju.seun.year, stem: pv.saju.seun.pillar.stem, branch: pv.saju.seun.pillar.branch, tenGod: pv.saju.seun.tenGod }}
+            />
+          </div>
+
+          {/* ② 수능대박운 - 사주와 엮어서 (무료) */}
+          <section className="mt-2 rounded-2xl px-5 py-6 text-center" style={{ backgroundColor: NAVY, border: `1px solid ${GOLD}` }}>
             <p className="text-[13px] tracking-[0.2em]" style={{ color: GOLD }}>
               {pv.title}
               {pv.dday !== null ? ` · 수능 ${pv.dday === 0 ? "D-DAY" : `D-${pv.dday}`}` : ""}
@@ -243,62 +293,36 @@ export function ExamFreeStart() {
               </b>
               으로 채워요
             </p>
-            <p className="mx-auto mt-4 max-w-[30em] text-[14.5px] leading-relaxed" style={{ color: GOLD_L, opacity: 0.9, wordBreak: "keep-all" }}>
+            <p className="mx-auto mt-4 max-w-[30em] text-[14px] leading-relaxed" style={{ color: GOLD_L, opacity: 0.92, wordBreak: "keep-all" }}>
+              {pv.nickname}님의 일간은 {pv.dayMaster.hanja}({pv.dayMaster.stem}) {pv.dayMaster.element}
+              {pv.examDay ? `, 11월 19일 ${pv.examDay.hanja}(${pv.examDay.ganzhi})일은 나에게 ${pv.examDay.group}의 날이에요.` : "이에요."}
+              <br />
               {pv.summary}
             </p>
           </section>
+          <div className="mt-4 space-y-4">
+            {pv.freeSections.map((sec) => (
+              <section key={sec.heading} className="rounded-2xl p-5" style={CARD}>
+                <h3 className="text-[17px] font-bold" style={{ fontFamily: "var(--font-serif)" }}>
+                  {sec.heading}
+                </h3>
+                <p className="mt-2 text-[15px] leading-[1.85]" style={{ color: "var(--color-ink-soft)", wordBreak: "keep-all" }}>
+                  {sec.body}
+                </p>
+              </section>
+            ))}
+          </div>
 
-          {/* 만세력 (무료) */}
-          <section className="mt-4 rounded-2xl p-5" style={CARD}>
-            <p className="text-center text-[16px] font-bold" style={{ fontFamily: "var(--font-serif)" }}>
-              {pv.nickname}님의 만세력
+          {/* ③ 부족한 기운 채우기 - 가입하면 오픈 행사 선물 990냥으로 */}
+          <section className="mt-4 rounded-2xl p-5" style={{ ...CARD, boxShadow: `0 0 0 2px ${GOLD} inset` }}>
+            <p className="text-center text-[12px] tracking-[0.2em]" style={{ color: GOLD }}>
+              가볍게 보기
             </p>
-            <div className="mt-3 grid grid-cols-4 gap-1.5 text-center">
-              {pv.pillars.map((c) => (
-                <div key={c.label} className="rounded-xl py-2" style={{ border: "1px solid var(--color-line)" }}>
-                  <p className="text-[11px]" style={{ color: "var(--color-ink-faint)" }}>
-                    {c.label}
-                  </p>
-                  {c.empty ? (
-                    <p className="py-4 text-[12px]" style={{ color: "var(--color-ink-faint)" }}>
-                      시간
-                      <br />
-                      모름
-                    </p>
-                  ) : (
-                    <>
-                      <p className="mt-1 text-[26px] font-bold leading-tight" style={{ fontFamily: "var(--font-serif)", color: c.stem ? EL(c.stem.element) : undefined }}>
-                        {c.stem?.hanja}
-                      </p>
-                      <p className="text-[26px] font-bold leading-tight" style={{ fontFamily: "var(--font-serif)", color: c.branch ? EL(c.branch.element) : undefined }}>
-                        {c.branch?.hanja}
-                      </p>
-                    </>
-                  )}
-                </div>
-              ))}
-            </div>
-            <div className="mt-4 flex h-3 overflow-hidden rounded-full" role="img" aria-label={pv.shares.map((s) => `${s.element} ${s.percent}%`).join(", ")}>
-              {pv.shares.filter((s) => s.percent > 0).map((s) => (
-                <span key={s.element} style={{ width: `${s.percent}%`, backgroundColor: EL(s.element) }} />
-              ))}
-            </div>
-            <div className="mt-2 flex justify-between text-[12px]" style={{ color: "var(--color-ink-soft)" }}>
-              {pv.shares.map((s) => (
-                <span key={s.element} style={{ fontWeight: s.element === pv.fill.element ? 700 : 400 }}>
-                  {s.element} {s.percent}%
-                </span>
-              ))}
-            </div>
-          </section>
-
-          {/* 잠긴 풀이 (흐리게) */}
-          <section className="mt-4 rounded-2xl p-5" style={CARD}>
-            <p className="text-center text-[16px] font-bold" style={{ fontFamily: "var(--font-serif)" }}>
-              마지막 한 칸을 채우는 법
+            <p className="mt-1 text-center text-[19px] font-bold" style={{ fontFamily: "var(--font-serif)" }}>
+              부족한 기운 채우기 · {pv.fill.nature}({pv.fill.hanja})
             </p>
-            <ul className="mt-3 space-y-3">
-              {[...pv.headings, "마음 한 줄"].map((h) => (
+            <ul className="mt-4 space-y-3">
+              {[...pv.lockedHeadings, "마음 한 줄"].map((h) => (
                 <li key={h}>
                   <p className="text-[14.5px] font-bold">{h}</p>
                   <p className="mt-1 select-none text-[13.5px] leading-relaxed" aria-hidden="true" style={{ filter: "blur(5px)", color: "var(--color-ink-soft)" }}>
@@ -309,6 +333,11 @@ export function ExamFreeStart() {
             </ul>
 
             <div className="mt-5">
+              <p className="mb-3 text-center">
+                <span className="inline-block rounded-full px-3 py-1 text-[12.5px] font-bold" style={{ backgroundColor: "var(--color-danger)", color: "#fff" }}>
+                  {TENANT.openSale?.label ?? "오픈 행사"} · 가입하면 {CURRENCY_NAME} {formatNyang(WELCOME_GIFT)} 선물
+                </span>
+              </p>
               {me === "loading" ? (
                 <div className="h-[56px]" />
               ) : !isAuthEnabled() ? (
@@ -318,10 +347,10 @@ export function ExamFreeStart() {
               ) : !me ? (
                 <>
                   <a href={`/api/auth/kakao/start?next=${encodeURIComponent(CONTINUE_PATH)}`} onClick={remember} className="block rounded-xl py-4 text-center text-[17px] font-bold" style={{ backgroundColor: "#fee500", color: "#191600" }}>
-                    카카오로 가입하고 무료로 채우는 법 보기
+                    카카오로 가입하고 무료로 채우기
                   </a>
                   <p className="mt-2 text-center text-[13px]" style={{ color: "var(--color-ink-soft)", wordBreak: "keep-all" }}>
-                    가입하면 선물 {CURRENCY_NAME} {formatNyang(WELCOME_GIFT)}으로 가볍게 보기({formatNyang(PRICE.EXAM)})가 바로 열려요
+                    선물 {formatNyang(WELCOME_GIFT)}으로 가볍게 보기({formatNyang(PRICE.EXAM)})가 바로 열려요
                   </p>
                   <a href={`/login?next=${encodeURIComponent(CONTINUE_PATH)}`} onClick={remember} className="mt-1 block text-center text-[12px] underline underline-offset-4" style={{ color: "var(--color-ink-faint)" }}>
                     이메일로 로그인하기
@@ -329,14 +358,36 @@ export function ExamFreeStart() {
                 </>
               ) : !me.termsAgreed ? (
                 <a href={`/consent?next=${encodeURIComponent(CONTINUE_PATH)}`} onClick={remember} className="btn-primary block text-center">
-                  약관 동의하고 채우는 법 보기
+                  약관 동의하고 채우기
                 </a>
               ) : (
                 <a href={CONTINUE_PATH} onClick={remember} className="btn-primary block text-center">
-                  채우는 법 보기 · 가볍게 보기 {formatNyang(PRICE.EXAM)}
+                  부족한 기운 채우기 · 가볍게 보기 {formatNyang(PRICE.EXAM)}
                 </a>
               )}
             </div>
+          </section>
+
+          {/* ④ 깊게 보기 5,500냥 - 오픈 특가 */}
+          <section className="mt-4 rounded-2xl p-5" style={CARD}>
+            <p className="text-center text-[12px] tracking-[0.2em]" style={{ color: GOLD }}>
+              깊게 보기
+            </p>
+            <p className="mt-1 text-center text-[19px] font-bold" style={{ fontFamily: "var(--font-serif)" }}>
+              {pv.title} 깊게 보기 · {formatNyang(PRICE.EXAM_DEEP)}
+            </p>
+            <SaleNote k="EXAM_DEEP" />
+            <ul className="mx-auto mt-3 max-w-xs space-y-1.5 text-[14.5px]">
+              {pv.deeper.map((d) => (
+                <li key={d} className="flex gap-2">
+                  <span style={{ color: GOLD }}>◆</span>
+                  <span>{d}</span>
+                </li>
+              ))}
+            </ul>
+            <p className="mt-3 text-center text-[12.5px] leading-relaxed" style={{ color: "var(--color-ink-soft)", wordBreak: "keep-all" }}>
+              가입 뒤 수능운 화면에서 과목(계열·수학·탐구)을 고르면 그에 맞춰 풀어 드려요. 결제는 보호자께 부탁할 수 있어요.
+            </p>
           </section>
 
           <button type="button" onClick={() => setPv(null)} className="mx-auto mt-4 block text-[13px] underline underline-offset-4" style={{ color: "var(--color-ink-faint)" }}>

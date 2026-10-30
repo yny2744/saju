@@ -26,7 +26,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <VisitBeacon />
         <BgmStarter />
         {/* 사이트 액자: PC에서는 가운데 한 장, 폰에서는 화면 전체 (양옆 금색 뇌문 띠 포함) */}
-        <div className="site-frame">
+        {/* 2026-10-30 유샘: 대문이 있는 고객사(명견만리)는 한지 질감 바탕 */}
+        <div className={TENANT.gate ? "site-frame paper-hanji" : "site-frame"}>
           <HideOnGateHome>
             <div aria-hidden className="frame-edge" />
             <SiteHeader />

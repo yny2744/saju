@@ -91,6 +91,14 @@ html[data-contrast="high"] {
     margin: 0 auto;
     background-color: var(--color-paper);
   }
+  /* 2026-10-30 유샘 확정 (바탕 시안 1번): 한지 질감 - 따뜻한 미색 + 가로 섬유결 + 아주 옅은 얼룩. 카드도 옅은 미색으로 */
+  .site-frame.paper-hanji {
+    --color-card: #fffdf8;
+    background-color: #f3ece0;
+    background-image:
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='f'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9 0.035' numOctaves='3' seed='7'/%3E%3CfeColorMatrix values='0 0 0 0 0.45 0 0 0 0 0.36 0 0 0 0 0.22 0 0 0 0.10 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23f)'/%3E%3C/svg%3E"),
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.02' numOctaves='2' seed='3'/%3E%3CfeColorMatrix values='0 0 0 0 0.6 0 0 0 0 0.5 0 0 0 0 0.3 0 0 0 0.05 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23g)'/%3E%3C/svg%3E");
+  }
   @media (min-width: 641px) {
     .site-frame {
       box-shadow: 0 0 0 1px rgba(22, 41, 74, 0.08), 0 10px 40px rgba(22, 41, 74, 0.16);

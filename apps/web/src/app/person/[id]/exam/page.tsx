@@ -17,6 +17,7 @@ import type { ExamReading } from "@/lib/suneung";
 import type { ExamDeep } from "@/server/exam/exam";
 import { ExamSubjectPicker } from "@/components/suneung/ExamSubjectPicker";
 import { examProfileKey, type ExamProfile } from "@/lib/examProfile";
+import { SaleNote } from "@/components/SaleNote";
 
 /**
  * 수능운 (2026-10-17 수정안 17) - 시즌에 따라 수능대박운 → 합격운 → 새 출발운.
@@ -223,6 +224,7 @@ function Body({ id }: { id: string }) {
           <button type="button" disabled={busy} onClick={() => setPicker("buy")} className="btn-secondary mt-3 block w-full text-center disabled:opacity-50">
             처음부터 깊게 보기 · {formatNyang(state.deepPrice)}
           </button>
+          <SaleNote k="EXAM_DEEP" />
           {/* 2026-10-26: 깊게 보기·두 번째 사람부터(현금 결제)는 보호자가 - 가입 선물 엽전으로 보는 가볍게 보기는 그대로 */}
           <GuardianPayNote title={r.title} />
         </section>
@@ -318,6 +320,7 @@ function Body({ id }: { id: string }) {
                 <button type="button" disabled={busy} onClick={() => setPicker("buy")} className="btn-primary mt-5 disabled:opacity-50">
                   깊게 보기 · {formatNyang(state.deepPrice)}
                 </button>
+                <SaleNote k="EXAM_DEEP" />
                 <button type="button" disabled={busy} onClick={() => setPicker("gift")} className="mt-2.5 block w-full rounded-xl py-3.5 text-center text-[15px] font-bold disabled:opacity-50" style={{ border: `1px solid ${GOLD}`, color: "var(--color-ink)" }}>
                   부모님께 선물 부탁하기
                 </button>
