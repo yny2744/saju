@@ -19,7 +19,7 @@ export const GATE_CSS = `
 .gh-nl:hover,.gh-nl:focus-visible{color:var(--gh-gold-hi)}
 .gh-nav>*{flex-shrink:0}
 .gh-bar{padding-top:calc(26px + env(safe-area-inset-top,0px));padding-bottom:16px;padding-left:max(20px,env(safe-area-inset-left,0px));padding-right:max(20px,env(safe-area-inset-right,0px))}
-.gh-brand{font-size:18px}.gh-brand img{width:34px;height:34px}.gh-nav{gap:12px}
+.gh-brand{font-size:clamp(14px,4.3vw,18px);letter-spacing:.04em;white-space:nowrap;min-width:0}.gh-brand img{width:34px;height:34px;flex-shrink:0}.gh-nav{gap:12px}
 .gh-shade{background:linear-gradient(to bottom,rgba(7,11,22,.62) 0%,rgba(7,11,22,.22) 30%,rgba(7,11,22,.32) 60%,rgba(7,11,22,.55) 100%)}
 .gh-hero a:focus-visible{outline:2px solid var(--gh-gold);outline-offset:3px}
 .gh-title{font-family:var(--gh-serif);font-weight:900;fill:var(--gh-gold-hi);letter-spacing:.06em;paint-order:stroke;stroke:rgba(7,11,22,.6);stroke-width:5px;cursor:pointer}

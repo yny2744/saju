@@ -83,36 +83,50 @@ export function GateHero({ gate, brand }: { gate: TenantGate; brand: string }) {
     return () => ro?.disconnect();
   }, [doorOn]);
 
-  // 홀로그램 대문과 제목이 겹치지 않게: 문 아래 끝 + 12px 아래에서 제목이 시작하도록 대문 그림을 내린다 (화면 크기마다 다시 잰다)
+  // 홀로그램 대문과 제목이 겹치지 않게: 문 아래 끝 + 12px 아래에서 제목이 시작하도록 대문 그림을 내린다.
+  // 2026-10-30 고침: 화면에 그려진 제목 위치를 재면(그리기 전·움직이는 중에 재면) 크게 어긋날 수 있어,
+  // 화면 크기와 그림 비율(fit 과 같은 규칙)로 계산한다 - 언제 재도 같은 값.
   useEffect(() => {
     const hero = heroRef.current;
     if (!doorOn || !hero) return;
-    let shift = 54;
-    const measure = () => {
+    const solve = () => {
+      const W = hero.clientWidth;
+      const H = hero.clientHeight;
       const wrap = hero.querySelector<HTMLElement>(".gh-door-wrap");
-      const title = ptRef.current?.querySelector(".gh-title");
-      if (!wrap || !title) return;
+      if (!W || !H || !wrap) return;
       const doorBottom = wrap.offsetTop + wrap.offsetHeight;
-      const titleTop = title.getBoundingClientRect().top - hero.getBoundingClientRect().top;
-      const need = doorBottom + 12 - titleTop;
-      if (Math.abs(need) < 2) return;
-      shift = Math.max(0, Math.round(shift + need));
-      hero.style.setProperty("--gh-door-shift", `${shift}px`);
+      // 제목 글자 윗선 (그림 좌표, 글꼴이 늦게 와도 170 근처)
+      let tTop = 170;
+      try {
+        const bb = (ptRef.current?.querySelector(".gh-title") as SVGGraphicsElement | null)?.getBBox();
+        if (bb && bb.height > 10) tTop = bb.y;
+      } catch {
+        /* 기본값 */
+      }
+      const titleAt = (S: number) => {
+        const h = H - S;
+        const s1 = Math.max(W / 900, h / 1600);
+        const ox = (W - 900 * s1) / 2;
+        const oy = (h - 1600 * s1) / 2;
+        const ok = 96 * s1 + ox >= 0 && 804 * s1 + ox <= W && 160 * s1 + oy >= 0 && 1500 * s1 + oy <= h;
+        const sc = ok ? s1 : Math.min(W / 900, h / 1600);
+        const oyy = ok ? oy : (h - 1600 * sc) / 2;
+        return S + oyy + tTop * sc;
+      };
+      let S = 0;
+      while (S < 200 && titleAt(S) < doorBottom + 12) S += 2;
+      hero.style.setProperty("--gh-door-shift", `${S}px`);
     };
-    // 제목이 떠오르는 움직임(0.75초)이 끝난 뒤 두 번 잰다 (내리면 크기가 조금 바뀌므로)
-    const t1 = window.setTimeout(measure, 900);
-    const t2 = window.setTimeout(measure, 1100);
-    const onResize = () => {
-      shift = 54;
-      hero.style.setProperty("--gh-door-shift", "54px");
-      window.setTimeout(measure, 60);
-      window.setTimeout(measure, 160);
-    };
-    window.addEventListener("resize", onResize);
+    const raf = requestAnimationFrame(solve);
+    const t1 = window.setTimeout(solve, 400);
+    const t2 = window.setTimeout(solve, 1200);
+    document.fonts?.ready.then(solve).catch(() => {});
+    window.addEventListener("resize", solve);
     return () => {
+      cancelAnimationFrame(raf);
       window.clearTimeout(t1);
       window.clearTimeout(t2);
-      window.removeEventListener("resize", onResize);
+      window.removeEventListener("resize", solve);
     };
   }, [doorOn]);
 
@@ -166,7 +180,8 @@ export function GateHero({ gate, brand }: { gate: TenantGate; brand: string }) {
           <a className="gh-brand" href="/">
             {/* eslint-disable-next-line @next/next/no-img-element -- 엠블럼 */}
             <img src={gate.emblem} alt="" />
-            {brand}
+            {/* 2026-10-30 유샘: 머리줄은 엠블럼 + 대문 이름 (모든 화면 머리줄과 같게) */}
+            {gate.title}
           </a>
           <nav className="gh-nav" aria-label="세 길">
             <BgmToggle />
