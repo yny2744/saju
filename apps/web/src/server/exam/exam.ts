@@ -7,7 +7,7 @@ import { examProfileLines, type ExamProfile } from "@/lib/examProfile";
 import { EXAM_DEEP_POINTS, SEASON_INFO, examFactsForPrompt, examSeason, examUnlockTopic, type ExamSeason } from "@/lib/suneung";
 
 /**
- * 수능운 깊게 보기 (5,500냥, 수정안 17) - 엔진이 확정한 사실 목록만 근거로 AI가 쓴다.
+ * 수능대박운 깊게 보기 (5,500냥, 수정안 17) - 엔진이 확정한 사실 목록만 근거로 AI가 쓴다.
  * 시즌마다 따로 저장 (topic_readings.topic = exam_<시즌>_deep). 손님 이름은 AI로 보내지 않는다.
  */
 
@@ -57,7 +57,7 @@ export function parseExamDeep(raw: string, allowedDaeun: string[]): { summary: s
   const parts = (parsed.parts ?? [])
     .filter((p) => typeof p.heading === "string" && typeof p.body === "string" && p.body.trim().length >= 20)
     .map((p) => ({ heading: p.heading!.trim(), body: p.body!.trim() }));
-  if (parts.length < 3) throw new Error("AI 응답의 수능운 깊은 풀이가 너무 짧습니다.");
+  if (parts.length < 3) throw new Error("AI 응답의 수능대박운 깊은 풀이가 너무 짧습니다.");
   const text = parts.map((p) => p.body).join("\n");
   const bad = inventedDaeun(text, allowedDaeun);
   if (bad) throw new Error(`AI가 확정 사실에 없는 대운(${bad})을 썼습니다.`);

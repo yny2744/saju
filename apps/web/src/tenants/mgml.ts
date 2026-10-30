@@ -135,7 +135,7 @@ const mgml: TenantConfig = {
               { name: "재물관", desc: "재물 그릇과 돈이 모이는 때", href: "/go?topic=money" },
               { name: "승진관", desc: "자리와 이름이 오르는 때", href: "/go?topic=promotion" },
               { name: "대운관", desc: "10년마다 바뀌는 큰 흐름", href: "/go?topic=daeun" },
-              { name: "수능운관", desc: "시험을 앞둔 수험생의 기운", href: "/go?exam=1" },
+              { name: "수능대박운관", desc: "시험을 앞둔 수험생의 기운", href: "/go?exam=1" },
             ],
             landing: { headline: "앞으로의 흐름, 미리 읽어 두면 다릅니다", lead: "올해와 다가올 큰 흐름 속에서 재물·일·자리의 때를 짚어 드립니다." },
           },

@@ -32,7 +32,7 @@ const GOLD = "#d4b265";
 const GOLD_L = "#f3e7c6";
 
 /**
- * inlineStart: 수능운 랜딩(/suneung)처럼 바로 아래에 생년월일 입력 칸이 있는 화면 - 영상 아래 로그인 단추·가격 줄을 빼고
+ * inlineStart: 수능대박운 랜딩(/suneung)처럼 바로 아래에 생년월일 입력 칸이 있는 화면 - 영상 아래 로그인 단추·가격 줄을 빼고
  * 입력 칸으로 이어지게 한다 (2026-10-30 무료 미리보기).
  */
 export function SuneungHero({
@@ -196,7 +196,7 @@ export function SuneungHero({
               fontFamily: "var(--font-serif)",
             }}
           >
-            카카오로 로그인하고 수능운 무료로 보기
+            카카오로 로그인하고 수능대박운 무료로 보기
           </a>
           <p
             className="mt-2 text-center text-[13px]"

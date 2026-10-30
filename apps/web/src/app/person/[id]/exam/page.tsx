@@ -20,9 +20,9 @@ import { examProfileKey, type ExamProfile } from "@/lib/examProfile";
 import { SaleNote } from "@/components/SaleNote";
 
 /**
- * 수능운 (2026-10-17 수정안 17) - 시즌에 따라 수능대박운 → 합격운 → 새 출발운.
+ * 수능대박운 (2026-10-17 수정안 17) - 시즌에 따라 수능대박운 → 합격운 → 새 출발운.
  *   가볍게 보기 990냥 (엔진, 가입 선물 엽전으로 바로) → 깊게 보기 5,500냥 (AI)
- *   2026-10-26 유샘: 가입하면 수능운 하나 무료(가입 선물 엽전), 그 뒤는 유료, 깊게 보기는 보호자 결제 (GuardianPayNote)
+ *   2026-10-26 유샘: 가입하면 수능대박운 하나 무료(가입 선물 엽전), 그 뒤는 유료, 깊게 보기는 보호자 결제 (GuardianPayNote)
  *   2026-10-30 유샘: 깊게 보기 전에 계열·수학·탐구를 버튼으로 고르고(건너뛰기 가능), "부모님께 선물 부탁하기" 링크로 보호자가 결제
  */
 
@@ -101,7 +101,7 @@ function Body({ id }: { id: string }) {
         }
       } catch (e) {
         wrote.current = false;
-        reportClientError("수능운 깊게 보기", String(e));
+        reportClientError("수능대박운 깊게 보기", String(e));
         setNotice("연결이 끊겼어요. 새로고침해 주세요. 엽전은 그대로예요.");
       }
       setWriting(false);
@@ -129,12 +129,12 @@ function Body({ id }: { id: string }) {
         return;
       }
       setGiftUrl(b.url);
-      const text = `제 ${state.status === "ready" ? state.reading.title : "수능운"} 깊게 보기를 선물해 주세요. 시험날까지 힘낼게요!`;
+      const text = `제 ${state.status === "ready" ? state.reading.title : "수능대박운"} 깊게 보기를 선물해 주세요. 시험날까지 힘낼게요!`;
       const nav = navigator as Navigator & { share?: (d: { title?: string; text?: string; url?: string }) => Promise<void> };
       if (nav.share) await nav.share({ title: BRAND, text, url: b.url }).catch(() => {});
       else await navigator.clipboard?.writeText(`${text}\n${b.url}`).then(() => setNotice("링크를 복사했어요. 부모님께 카카오톡으로 보내 주세요.")).catch(() => {});
     } catch (e) {
-      reportClientError("수능운 선물 부탁", String(e));
+      reportClientError("수능대박운 선물 부탁", String(e));
       setNotice("연결이 끊겼어요. 잠시 후 다시 시도해 주세요.");
     }
     setBusy(false);
@@ -157,7 +157,7 @@ function Body({ id }: { id: string }) {
       } else if (body?.error?.code === "INSUFFICIENT_YEOPJEON") setPay(mode);
       else setNotice(body?.error?.message ?? "잠시 후 다시 시도해 주세요.");
     } catch (e) {
-      reportClientError("수능운 열기", String(e));
+      reportClientError("수능대박운 열기", String(e));
       setNotice("연결이 끊겼어요. 잠시 후 다시 시도해 주세요.");
     }
     setBusy(false);
@@ -375,7 +375,7 @@ function Body({ id }: { id: string }) {
 }
 
 export default function ExamPage({ params }: { params: { id: string } }) {
-  if (!isSuneungOn() || !isAuthEnabled()) return <ComingSoon title="수능운" />;
+  if (!isSuneungOn() || !isAuthEnabled()) return <ComingSoon title="수능대박운" />;
   return (
     <Suspense fallback={<LoadingState message="불러오고 있어요..." />}>
       <Body id={params.id} />

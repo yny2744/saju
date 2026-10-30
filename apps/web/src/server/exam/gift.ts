@@ -7,7 +7,7 @@ import { EXAM_DEEP_POINTS, SEASON_INFO, examSeason, examUnlockTopic, type ExamSe
 import { PRICE } from "@/lib/yeopjeon";
 
 /**
- * 수능운 깊게 보기 - 부모님 선물 (2026-10-30 유샘).
+ * 수능대박운 깊게 보기 - 부모님 선물 (2026-10-30 유샘).
  *   수험생(본인 계정)이 "부모님께 선물 부탁하기"를 누르면 선물 링크(토큰)가 생기고, 카카오톡 등으로 보낸다.
  *   부모님은 링크를 열어 본인 계정으로 로그인 → 본인 엽전·카드로 결제 → 수험생의 그 사람(person)에 깊게 보기가 열린다.
  *   미성년자가 결제하지 않고 보호자가 결제하는 구조 (GuardianPayNote 정책과 같음). 링크에는 개인 정보가 없다.

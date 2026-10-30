@@ -9,7 +9,7 @@ import type { TenGodGroup } from "@/lib/journey";
 import { DAY_MASTER, FILL, GROUP_LABEL } from "@/lib/basic/common";
 
 /**
- * 수능운 (2026-10-17 수정안 17) - 시즌에 따라 이름과 내용이 바뀐다 (자동으로 내리지 않고 이어 간다).
+ * 수능대박운 (2026-10-17 수정안 17) - 시즌에 따라 이름과 내용이 바뀐다 (자동으로 내리지 않고 이어 간다).
  *   수능대박운: 수능 날(2026-11-19)까지
  *   합격운:     11/20 ~ 2월 말 (정시 원서·면접·발표를 기다리는 때)
  *   새 출발운:  3월부터 (새 학기·새 출발)
@@ -28,7 +28,7 @@ export const EXAM_DAY = { stem: "정", branch: "유" } as const;
 export type ExamSeason = "suneung" | "pass" | "start";
 
 export const SEASON_INFO: Record<ExamSeason, { title: string; short: string; hanja: string; blurb: string }> = {
-  suneung: { title: "수능대박운", short: "수능운", hanja: "試", blurb: "시험날 나의 기운과 행운 꾸러미" },
+  suneung: { title: "수능대박운", short: "수능대박운", hanja: "試", blurb: "시험날 나의 기운과 행운 꾸러미" },
   pass: { title: "합격운", short: "합격운", hanja: "榜", blurb: "원서·면접·발표까지 나의 흐름" },
   start: { title: "새 출발운", short: "새 출발운", hanja: "始", blurb: "새 학기, 새 자리에서 나의 흐름" },
 };

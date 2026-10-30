@@ -12,12 +12,12 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 /**
- * 수능운 무료 미리보기 (2026-10-30 유샘) - 로그인 없이.
+ * 수능대박운 무료 미리보기 (2026-10-30 유샘) - 로그인 없이.
  *   /api/saju/analyze 로 받은 무료 결과 토큰(id)으로, 만세력 여덟 글자·오행 비율과
- *   수능운 한 줄 요약 · "마지막 한 칸은 ○○ 기운으로 채워요"(가장 모자란 오행 = 행운 꾸러미의 기운)만 돌려준다.
+ *   수능대박운 한 줄 요약 · "마지막 한 칸은 ○○ 기운으로 채워요"(가장 모자란 오행 = 행운 꾸러미의 기운)만 돌려준다.
  *   풀이 본문·행운 꾸러미·마음 한 줄은 주지 않는다 (가입 선물 990냥으로 여는 가볍게 보기에서).
  *   2026-10-30 유샘 2차: 만세력은 전부 무료(엔진 원본 saju 를 주어 무료 만세력 화면과 같은 칸으로 그린다),
- *   수능운은 사주와 엮어 앞 두 칸(공부 체질 · 시험날 기운)까지 무료, 나머지(공부 리듬 · 행운 꾸러미 · 마음 한 줄)가 "부족한 기운 채우기".
+ *   수능대박운은 사주와 엮어 앞 두 칸(공부 체질 · 시험날 기운)까지 무료, 나머지(공부 리듬 · 행운 꾸러미 · 마음 한 줄)가 "부족한 기운 채우기".
  */
 export async function POST(request: NextRequest) {
   if (!isSuneungOn()) return NextResponse.json({ error: { code: "NOT_FOUND", message: "준비 중이에요." } }, { status: 404 });
@@ -58,7 +58,7 @@ export async function POST(request: NextRequest) {
       { headers: { "Cache-Control": "private, no-store" } }
     );
   } catch (e) {
-    notifyError("수능운 미리보기", e);
+    notifyError("수능대박운 미리보기", e);
     return NextResponse.json({ error: { code: "SERVER_ERROR", message: "잠시 후 다시 시도해 주세요." } }, { status: 500 });
   }
 }

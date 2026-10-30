@@ -23,7 +23,7 @@ export function InviteCard({ refCode, invited }: { refCode: string; invited: num
         <li>
           · 친구 한 명마다 나에게 <b>{formatNyang(INVITE_REWARD)}</b>, 친구에게도 <b>{formatNyang(INVITEE_GIFT)}</b>
         </li>
-        {isSuneungOn() && <li>· {formatNyang(INVITE_REWARD)}이면 수능운 가볍게 보기를 바로 볼 수 있어요</li>}
+        {isSuneungOn() && <li>· {formatNyang(INVITE_REWARD)}이면 수능대박운 가볍게 보기를 바로 볼 수 있어요</li>}
         <li>· 초대 인원 제한 없이 한 명마다 계속 쌓여요</li>
       </ul>
       <p className="mt-3 text-[14px]">

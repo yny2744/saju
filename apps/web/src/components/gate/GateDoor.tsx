@@ -94,6 +94,19 @@ export function GateDoor({ doors, onShown }: { doors: NonNullable<TenantGate["do
     onShown(!!d);
   }, [doors, onShown]);
 
+  // 2026-10-30 유샘: 문을 열고 들어간 뒤 브라우저 "뒤로"로 돌아오면 (bfcache 로 멈춘 화면 - 금빛 번쩍임·열린 문·소개 창이 남는다)
+  //   새로 불러와 깨끗한 대문으로 시작한다.
+  useEffect(() => {
+    const onShow = (e: PageTransitionEvent) => {
+      if (!e.persisted) return;
+      setStage("closed");
+      document.body.style.overflow = "";
+      window.location.reload();
+    };
+    window.addEventListener("pageshow", onShow);
+    return () => window.removeEventListener("pageshow", onShow);
+  }, []);
+
   if (!door) return null;
 
   const enter = () => {

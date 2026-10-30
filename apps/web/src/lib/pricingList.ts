@@ -5,7 +5,7 @@ import { isSuneungOn } from "@/lib/launchMode";
 /**
  * 상품·가격 안내 페이지(/pricing)에 보여 줄 목록 (2026-10-19, 결제 심사용 - 로그인 없이 볼 수 있는 가격표).
  * 가격은 lib/yeopjeon.ts 의 PRICE 에서 그대로 읽는다 - 화면에 보이는 금액과 결제 금액이 늘 같다.
- * "지금 사이트에서 실제로 살 수 있는 것"만 담는다: 프리미엄 작명은 PREMIUM_ON, 수능운은 NEXT_PUBLIC_SUNEUNG=on 일 때만 나온다.
+ * "지금 사이트에서 실제로 살 수 있는 것"만 담는다: 프리미엄 작명은 PREMIUM_ON, 수능대박운은 NEXT_PUBLIC_SUNEUNG=on 일 때만 나온다.
  */
 
 export interface PriceRow {
@@ -48,8 +48,8 @@ export function paidProducts(): PriceRow[] {
   }
   if (isSuneungOn()) {
     rows.push(
-      { name: "수능운 가볍게 보기", desc: "내 사주로 보는 수능 시즌 운세", price: PRICE.EXAM },
-      { key: "EXAM_DEEP", name: "수능운 깊게 보기", desc: "수능 시즌 운세 긴 풀이", price: PRICE.EXAM_DEEP }
+      { name: "수능대박운 가볍게 보기", desc: "내 사주로 보는 수능 시즌 운세", price: PRICE.EXAM },
+      { key: "EXAM_DEEP", name: "수능대박운 깊게 보기", desc: "수능 시즌 운세 긴 풀이", price: PRICE.EXAM_DEEP }
     );
   }
   return rows;

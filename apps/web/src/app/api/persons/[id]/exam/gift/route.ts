@@ -20,7 +20,7 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
     return NextResponse.json({ token, url: `${request.nextUrl.origin}/gift/exam/${token}` });
   } catch (e) {
     if (e instanceof GiftError) return NextResponse.json({ error: { code: e.code, message: e.message } }, { status: e.code === "NOT_FOUND" ? 404 : 409 });
-    notifyError("수능운 선물 링크", e);
+    notifyError("수능대박운 선물 링크", e);
     return NextResponse.json({ error: { code: "SERVER_ERROR", message: "잠시 후 다시 시도해 주세요." } }, { status: 500 });
   }
 }

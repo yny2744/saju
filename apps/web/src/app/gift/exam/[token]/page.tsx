@@ -11,7 +11,7 @@ import { PayDialog } from "@/components/yeopjeon/PayDialog";
 import { notifyYeopjeonChanged, reportClientError } from "@/components/yeopjeon/useYeopjeon";
 
 /**
- * 수능운 깊게 보기 - 부모님 선물 화면 (2026-10-30 유샘).
+ * 수능대박운 깊게 보기 - 부모님 선물 화면 (2026-10-30 유샘).
  *   수험생이 보낸 링크를 부모님이 연다 → 본인 계정으로 로그인 → 선물하기(엽전, 모자라면 모자란 만큼 카드 결제)
  *   → 수험생 화면에 깊게 보기가 열린다. 부모님 쪽에는 결제 내역만 남는다 (풀이는 수험생 화면에서).
  */
@@ -65,7 +65,7 @@ function Body({ token }: { token: string }) {
       } else if (b?.error?.code === "INSUFFICIENT_YEOPJEON") setPay(true);
       else setNotice(b?.error?.message ?? "잠시 후 다시 시도해 주세요.");
     } catch (e) {
-      reportClientError("수능운 선물", String(e));
+      reportClientError("수능대박운 선물", String(e));
       setNotice("연결이 끊겼어요. 잠시 후 다시 시도해 주세요.");
     }
     setBusy(false);
@@ -179,7 +179,7 @@ function Body({ token }: { token: string }) {
 }
 
 export default function ExamGiftPage({ params }: { params: { token: string } }) {
-  if (!isSuneungOn() || !isAuthEnabled()) return <ComingSoon title="수능운 선물" />;
+  if (!isSuneungOn() || !isAuthEnabled()) return <ComingSoon title="수능대박운 선물" />;
   return (
     <Suspense fallback={<LoadingState message="불러오고 있어요..." />}>
       <Body token={params.token} />

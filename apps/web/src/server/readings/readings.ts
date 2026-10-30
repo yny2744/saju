@@ -64,13 +64,13 @@ export interface PersonSummary {
   wallpaper: boolean;
   /** 연 가게·회사·브랜드 이름 상품 (수정안 15) */
   biz: Array<"business" | "corp" | "brand">;
-  /** 지금 시즌 수능운(합격운·새 출발운)을 열었는지 (수정안 17) */
+  /** 지금 시즌 수능대박운(합격운·새 출발운)을 열었는지 (수정안 17) */
   exam: { light: boolean; deep: boolean };
   createdAt: string;
 }
 
 export type PurchaseMode = "basic" | "deep" | "bundle3" | "bundle12" | NamingMode | "face" | "business" | "corp" | "brand" | "couple" | PremiumMode | "wallpaper" | ExamMode;
-/** 수능운 (수정안 17): exam 가볍게 보기 990 / exam_deep 깊게 보기 4,900 - 시즌마다 topic_unlocks에 exam_<시즌>[_deep] */
+/** 수능대박운 (수정안 17): exam 가볍게 보기 990 / exam_deep 깊게 보기 4,900 - 시즌마다 topic_unlocks에 exam_<시즌>[_deep] */
 export type ExamMode = "exam" | "exam_deep";
 export function isExamMode(v: unknown): v is ExamMode {
   return v === "exam" || v === "exam_deep";
@@ -110,7 +110,7 @@ export const FACE_MODE = "face" as const;
 /** 연인 궁합 (2026-10-14 수정안 10) - 관상처럼 personId 자리에 궁합 번호(couple_readings.id) */
 export const COUPLE_MODE = "couple" as const;
 export function isPurchaseMode(v: unknown): v is PurchaseMode {
-  // 2026-10-19: 수능운은 NEXT_PUBLIC_SUNEUNG=on 일 때만 살 수 있다 (심사 동안 숨김) - 주소를 알아도 구매·결제 주문이 안 만들어진다
+  // 2026-10-19: 수능대박운은 NEXT_PUBLIC_SUNEUNG=on 일 때만 살 수 있다 (심사 동안 숨김) - 주소를 알아도 구매·결제 주문이 안 만들어진다
   if ((v === "exam" || v === "exam_deep") && !isSuneungOn()) return false;
   return typeof v === "string" && (PURCHASE_MODES as string[]).includes(v);
 }
@@ -414,7 +414,7 @@ export function planPurchase(mode: PurchaseMode, requested: unknown, owned: AnyT
   return { topics, price: mode === "deep" ? PRICE.DEEP : PRICE.BUNDLE3 };
 }
 
-const MODE_LABEL: Record<PurchaseMode, string> = { basic: "운세 보기", deep: "깊게 보기", bundle3: "몰아보기", bundle12: "전부 보기", naming: "신생아 작명", rename: "개명 추천", face: "관상 심층 풀이", business: "상호 작명", corp: "기업 작명", brand: "브랜딩 작명", couple: "연인 궁합", p_naming: "프리미엄 신생아 작명", p_business: "프리미엄 상호 작명", p_corp: "프리미엄 기업 작명", p_brand: "프리미엄 브랜딩 작명", wallpaper: "행운 배경화면", exam: "수능운 가볍게 보기", exam_deep: "수능운 깊게 보기" };
+const MODE_LABEL: Record<PurchaseMode, string> = { basic: "운세 보기", deep: "깊게 보기", bundle3: "몰아보기", bundle12: "전부 보기", naming: "신생아 작명", rename: "개명 추천", face: "관상 심층 풀이", business: "상호 작명", corp: "기업 작명", brand: "브랜딩 작명", couple: "연인 궁합", p_naming: "프리미엄 신생아 작명", p_business: "프리미엄 상호 작명", p_corp: "프리미엄 기업 작명", p_brand: "프리미엄 브랜딩 작명", wallpaper: "행운 배경화면", exam: "수능대박운 가볍게 보기", exam_deep: "수능대박운 깊게 보기" };
 
 export async function purchaseTopics(args: { userId: string; personId: string; mode: PurchaseMode; topics: unknown }): Promise<AnyTopicKey[]> {
   if (!UUID_RE.test(args.personId)) throw new PurchaseError("NOT_FOUND", "풀이 대상을 찾을 수 없어요.");

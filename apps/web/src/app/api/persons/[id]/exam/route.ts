@@ -13,7 +13,7 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 /**
- * 수능운 (수정안 17) - 가볍게 보기(엔진)·깊게 보기(AI) 상태.
+ * 수능대박운 (수정안 17) - 가볍게 보기(엔진)·깊게 보기(AI) 상태.
  * 잠겨 있으면 D-day·요약·소제목만, 열렸으면 풀이 전체. 깊게 보기는 열렸는데 아직 안 썼으면 deep: null (화면이 /write를 부른다).
  */
 export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
@@ -44,7 +44,7 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
       { headers: { "Cache-Control": "private, no-store" } }
     );
   } catch (e) {
-    notifyError("수능운", e);
+    notifyError("수능대박운", e);
     return NextResponse.json({ error: { code: "SERVER_ERROR", message: "잠시 후 다시 시도해 주세요." } }, { status: 500 });
   }
 }

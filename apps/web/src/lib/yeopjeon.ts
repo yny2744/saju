@@ -19,7 +19,7 @@ export const CURRENCY_UNIT = "냥";
 
 /** 가격 (냥) - 2026-10-23 베이직: 값은 고객사 설정(src/tenants/<id>.ts)의 prices.
  *  BASIC 운세 보기 · DEEP 깊게 보기 · BUNDLE3 몰아보기 · BUNDLE12 전부 보기 · RENAME/NAMING 개명·신생아 작명 · FACE 관상 심층
- *  BUSINESS/CORP/BRAND 상호·기업·브랜딩 작명 · COUPLE 연인 궁합 · PREMIUM_* 프리미엄 작명 · WALLPAPER 배경화면 · EXAM/EXAM_DEEP 수능운
+ *  BUSINESS/CORP/BRAND 상호·기업·브랜딩 작명 · COUPLE 연인 궁합 · PREMIUM_* 프리미엄 작명 · WALLPAPER 배경화면 · EXAM/EXAM_DEEP 수능대박운
  *  TASTE 예전 맛보기(더 이상 팔지 않음, 이미 산 풀이 다시 보기용) */
 export const PRICE: Readonly<TenantPrices> = TENANT.prices;
 
@@ -56,14 +56,14 @@ export function bundleDiscount(count: number, price: number): { list: number; of
 }
 
 /**
- * 가입(로그인) 선물 (2026-10-17 유샘 확정): 990냥 - 수능운 가볍게 보기(990)를 바로 무료로 볼 수 있는 금액.
+ * 가입(로그인) 선물 (2026-10-17 유샘 확정): 990냥 - 수능대박운 가볍게 보기(990)를 바로 무료로 볼 수 있는 금액.
  * 회원마다 한 번만 (장부 kind "welcome"). 2026-10-23: 12가지 운세 보기(990냥) 하나를 이 선물로 무료로 본다.
  */
 export const WELCOME_GIFT = 990;
 
 /**
  * 친구 초대 (2026-10-17 유샘 확정): 단계 없이 한 명마다 초대한 사람 990냥 · 초대받은 친구 990냥.
- * 990냥이면 수능운 가볍게 보기·행운 배경화면 등 990냥 상품 하나를 바로 볼 수 있다.
+ * 990냥이면 수능대박운 가볍게 보기·행운 배경화면 등 990냥 상품 하나를 바로 볼 수 있다.
  */
 export const INVITE_REWARD = 990;
 export const INVITEE_GIFT = 990;

@@ -7,22 +7,25 @@ import { CURRENCY_NAME, PRICE, WELCOME_GIFT, formatNyang } from "@/lib/yeopjeon"
 import { ELEMENT_TOKEN, type ElementKo } from "@/lib/pillarView";
 import { reportClientError } from "@/components/yeopjeon/useYeopjeon";
 import type { SajuJson } from "saju-engine";
-import { TENANT } from "@/tenants";
 import { SajuPillarsCard } from "@/components/SajuPillarsCard";
 import { DaeunTimeline, ElementBalance, NeededEnergySection, RelationsTable } from "@/components/ManseSections";
 import { SaleNote } from "@/components/SaleNote";
+import { WritingOverlay } from "@/components/yeopjeon/WritingOverlay";
 import { neededEnergy } from "@/lib/neededEnergy";
 import { daeunCells, elementShares, kstDateString, relationRows, yinYangCount } from "@/lib/manseView";
 
 /**
- * 수능운 무료 미리보기 (2026-10-30 유샘) - 수능운 랜딩 영상 바로 아래.
+ * 수능대박운 무료 미리보기 (2026-10-30 유샘) - 수능대박운 랜딩 영상 바로 아래.
  *   ① 로그인 없이 이름·성별·생년월일(·시간)을 넣으면
  *   ② 무료로: 만세력 여덟 글자·오행 비율 + "시험날 기운이 활짝 열려 있어요" 게이지 + "마지막 한 칸은 ○○ 기운으로 채워요" + 한 줄 요약
  *      (점수는 쓰지 않는다 - 수험생이 숫자로 불안해하지 않게. 마지막 한 칸 = 가장 모자란 오행 = 행운 꾸러미의 기운)
- *   ③ 나머지 풀이는 흐리게 → 카카오로 가입하면 선물 990냥으로 가볍게 보기가 바로 열린다 (/continue 가 사람을 만들고 수능운으로).
+ *   ③ 나머지 풀이는 흐리게 → 카카오로 가입하면 선물 990냥으로 가볍게 보기가 바로 열린다 (/continue 가 사람을 만들고 수능대박운으로).
  *   2026-10-30 유샘 2차 순서: ① 만세력 전부(무료 만세력 화면과 같은 칸) → ② 수능대박운을 사주와 엮어 (게이지·일간과 시험날 일진·공부 체질·시험날 기운)
  *   → ③ 부족한 기운 채우기 (카카오 가입 · 오픈 행사 990냥 선물로 가볍게 보기) → ④ 깊게 보기 5,500냥 (오픈 특가)
  */
+
+const WAIT_MS = 21000;
+const WAIT_STEPS = ["만세력 여덟 글자를 펼치고 있어요", "오행의 많고 적음을 헤아리고 있어요", "시험날 일진과 견주고 있어요", "공부 체질과 시험날 기운을 쓰고 있어요", "마지막 한 칸의 기운을 고르고 있어요"];
 
 type Pillar = { label: string; empty: boolean; stem: Glyph | null; branch: Glyph | null };
 type Glyph = { hanja: string; hangul: string; element: ElementKo };
@@ -96,6 +99,7 @@ export function ExamFreeStart() {
     if (errs.length) return setIssues(errs);
     setIssues([]);
     setBusy(true);
+    const started = Date.now();
     const pad = (n: number) => String(n).padStart(2, "0");
     try {
       const res = await fetch("/api/saju/analyze", {
@@ -131,17 +135,20 @@ export function ExamFreeStart() {
         setBusy(false);
         return;
       }
+      // 2026-10-30 유샘: 결과는 최소 21초 기다린 뒤 보여 준다 (계산하고 쓰는 시간 - 다른 풀이 화면과 같은 연출)
+      const wait = WAIT_MS - (Date.now() - started);
+      if (wait > 0) await new Promise((r) => window.setTimeout(r, wait));
       setResultId(a.id);
       setPv(b as Preview);
       window.setTimeout(() => document.getElementById("exam-free-result")?.scrollIntoView({ behavior: "smooth", block: "start" }), 80);
     } catch (err) {
-      reportClientError("수능운 무료 미리보기", String(err));
+      reportClientError("수능대박운 무료 미리보기", String(err));
       setIssues(["연결이 끊겼어요. 잠시 후 다시 시도해 주세요."]);
     }
     setBusy(false);
   }
 
-  /** 로그인·약관 동의 뒤 /continue 가 이 결과로 사람을 만들고 수능운 화면으로 보낸다 */
+  /** 로그인·약관 동의 뒤 /continue 가 이 결과로 사람을 만들고 수능대박운 화면으로 보낸다 */
   const remember = () => {
     if (resultId) savePendingIntent(resultId, { kind: "exam" });
   };
@@ -155,6 +162,7 @@ export function ExamFreeStart() {
 
   return (
     <div>
+      {busy && <WritingOverlay title={`${name.trim() || "수험생"}님의 수능대박운을 풀고 있어요`} steps={WAIT_STEPS} durationMs={WAIT_MS} />}
       {!pv && (
         <form onSubmit={submit} className="rounded-2xl p-5" style={CARD} noValidate>
           <p className="text-center text-[18px] font-bold" style={{ fontFamily: "var(--font-serif)" }}>
@@ -335,7 +343,7 @@ export function ExamFreeStart() {
             <div className="mt-5">
               <p className="mb-3 text-center">
                 <span className="inline-block rounded-full px-3 py-1 text-[12.5px] font-bold" style={{ backgroundColor: "var(--color-danger)", color: "#fff" }}>
-                  {TENANT.openSale?.label ?? "오픈 행사"} · 가입하면 {CURRENCY_NAME} {formatNyang(WELCOME_GIFT)} 선물
+                  오픈 행사 · 가입하면 {CURRENCY_NAME} {formatNyang(WELCOME_GIFT)} 선물
                 </span>
               </p>
               {me === "loading" ? (
@@ -386,7 +394,7 @@ export function ExamFreeStart() {
               ))}
             </ul>
             <p className="mt-3 text-center text-[12.5px] leading-relaxed" style={{ color: "var(--color-ink-soft)", wordBreak: "keep-all" }}>
-              가입 뒤 수능운 화면에서 과목(계열·수학·탐구)을 고르면 그에 맞춰 풀어 드려요. 결제는 보호자께 부탁할 수 있어요.
+              가입 뒤 수능대박운 화면에서 과목(계열·수학·탐구)을 고르면 그에 맞춰 풀어 드려요. 결제는 보호자께 부탁할 수 있어요.
             </p>
           </section>
 

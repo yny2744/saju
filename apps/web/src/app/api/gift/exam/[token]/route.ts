@@ -33,7 +33,7 @@ export async function GET(request: NextRequest, { params }: { params: { token: s
       { headers: { "Cache-Control": "private, no-store" } }
     );
   } catch (e) {
-    notifyError("수능운 선물 보기", e);
+    notifyError("수능대박운 선물 보기", e);
     return NextResponse.json({ error: { code: "SERVER_ERROR", message: "잠시 후 다시 시도해 주세요." } }, { status: 500 });
   }
 }

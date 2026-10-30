@@ -12,7 +12,7 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
 
-/** 수능운 깊게 보기 쓰기 (산 사람만, 한 번 쓰면 저장한 것을 돌려준다) */
+/** 수능대박운 깊게 보기 쓰기 (산 사람만, 한 번 쓰면 저장한 것을 돌려준다) */
 export async function POST(request: NextRequest, { params }: { params: { id: string } }) {
   if (!isSuneungOn()) return NextResponse.json({ error: { code: "NOT_FOUND", message: "준비 중이에요." } }, { status: 404 });
   const blocked = blockIfAuthOff();
@@ -30,7 +30,7 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
     const deep = await saveExamDeep(row.id, await generateExamDeep(row.saju, row.nickname, profile));
     return NextResponse.json({ deep });
   } catch (e) {
-    notifyError("수능운 깊게 보기", e);
+    notifyError("수능대박운 깊게 보기", e);
     return NextResponse.json({ error: { code: "AI_FAILED", message: "풀이를 쓰는 중에 문제가 생겼어요. 잠시 후 다시 눌러 주세요. 엽전은 그대로예요." } }, { status: 502 });
   }
 }

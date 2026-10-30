@@ -113,7 +113,7 @@ export async function checkout(userId: string, personId: string, mode: PurchaseM
 }
 
 /**
- * 2026-10-30 수능운 깊게 보기 부모님 선물: 결제하는 사람(부모)의 엽전이 모자랄 때 주문.
+ * 2026-10-30 수능대박운 깊게 보기 부모님 선물: 결제하는 사람(부모)의 엽전이 모자랄 때 주문.
  * 주문의 person_id 는 수험생의 사람, gift_token 이 있으면 승인 뒤 purchase 대신 선물로 처리한다.
  */
 export async function giftCheckout(payerId: string, token: string): Promise<CheckoutResult> {

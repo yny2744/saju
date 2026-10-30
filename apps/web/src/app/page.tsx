@@ -120,7 +120,7 @@ function InviteSection({ suneung }: { suneung: boolean }) {
           ))}
         </div>
         <p className="mt-3 text-center text-[13px]" style={{ color: "var(--color-ink-faint)" }}>
-          {suneung ? `${formatNyang(INVITE_REWARD)}이면 수능운 가볍게 보기 한 번 · 인원 제한 없이 계속 쌓여요` : "인원 제한 없이 한 명마다 계속 쌓여요"}
+          {suneung ? `${formatNyang(INVITE_REWARD)}이면 수능대박운 가볍게 보기 한 번 · 인원 제한 없이 계속 쌓여요` : "인원 제한 없이 한 명마다 계속 쌓여요"}
         </p>
         <a href="/mypage" className="mt-5 block rounded-2xl py-4 text-center text-[16px] font-bold" style={{ backgroundColor: "#16213a", color: "#f3e7c6", border: "1px solid var(--color-gold-line)", fontFamily: "var(--font-serif)" }}>
           내 초대 링크 받기
@@ -199,7 +199,7 @@ export default function LandingPage() {
           <h1 className="sr-only">{`${TENANT.brand.heroTagline} · ${BRAND}`}</h1>
         )}
 
-        {/* 2026-10-17 수정안 17: 대문 순서 - 수능운 → 인연(관상·궁합) → 20대→70대 영상 → 무료로 시작하기 */}
+        {/* 2026-10-17 수정안 17: 대문 순서 - 수능대박운 → 인연(관상·궁합) → 20대→70대 영상 → 무료로 시작하기 */}
         <section className={suneung ? "pb-6" : "pb-6 pt-5"}>
           <a href="/face" className="block overflow-hidden rounded-2xl transition-transform active:scale-[0.98]" style={CARD}>
             {/* eslint-disable-next-line @next/next/no-img-element -- 정적 그림 */}

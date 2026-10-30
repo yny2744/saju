@@ -8,17 +8,17 @@ import { ExamFreeStart } from "@/components/suneung/ExamFreeStart";
 import { CURRENCY_NAME, PRICE, formatNyang } from "@/lib/yeopjeon";
 
 /**
- * 콘텐츠별 입구 ① 수능운 (2026-10-27 유샘 요청: 홍보 영상 주제에 맞춰 첫 화면이 그 콘텐츠로 시작하는 입구).
+ * 콘텐츠별 입구 ① 수능대박운 (2026-10-27 유샘 요청: 홍보 영상 주제에 맞춰 첫 화면이 그 콘텐츠로 시작하는 입구).
  *   주소: /suneung  - 릴스·틱톡·네이버 클립 수능 영상의 프로필 링크로 건다.
- *   이름: 로고 큰 글자 + "수능운" (류결사주 → "류결수능운", 고객사마다 자동).
- *   첫 화면에는 수능운 하나만 (영상 · D-day · 버튼 하나), 아래쪽에만 본 사이트의 다른 운세로 잇는다.
+ *   이름: 로고 큰 글자 + "수능대박운" (류결사주 → "류결수능대박운", 고객사마다 자동).
+ *   첫 화면에는 수능대박운 하나만 (영상 · D-day · 버튼 하나), 아래쪽에만 본 사이트의 다른 운세로 잇는다.
  *   수능 스위치(NEXT_PUBLIC_SUNEUNG)가 꺼져 있으면 대문으로 보낸다 - 옛 영상 링크를 눌러도 빈 화면이 나오지 않게.
  *   수능이 끝나면(11/20~) SuneungHero 가 합격운 → 새 출발운 카드로 바뀌고, 제목·공유 문구도 따라 바뀐다.
  */
 
 export const revalidate = 3600;
 
-const SUB_BRAND = `${TENANT.brand.logoText}수능운`;
+const SUB_BRAND = `${TENANT.brand.logoText}수능대박운`;
 /** 화면에 내세우는 이름 - 대문이 있는 고객사(명견만리)는 대문 이름 (2026-10-30) */
 const SITE_NAME = TENANT.gate?.title ?? BRAND;
 
@@ -51,7 +51,7 @@ const CARD = {
   boxShadow: "inset 0 0 0 3px var(--color-card), inset 0 0 0 4px var(--color-gold-soft)",
 } as const;
 
-/** 수능운 풀이에 실제로 들어 있는 것 (lib/suneung.ts composeExam 의 칸 그대로) */
+/** 수능대박운 풀이에 실제로 들어 있는 것 (lib/suneung.ts composeExam 의 칸 그대로) */
 const INSIDE: Array<{ mark: string; title: string; desc: string }> = [
   { mark: "一", title: "나의 공부 체질", desc: "타고난 일간으로 보는 집중 방식과 조심할 점" },
   { mark: "二", title: "시험날 11월 19일의 기운", desc: "정유(丁酉)일 하늘의 기운이 나에게 어떻게 들어오는지" },
@@ -104,7 +104,7 @@ export default function SuneungLanding() {
         {season === "suneung" && (
           <section className="pb-8">
             <h2 className="mb-4 text-center text-[20px] font-bold" style={{ fontFamily: "var(--font-serif)" }}>
-              수능운에서 볼 수 있는 것
+              수능대박운에서 볼 수 있는 것
             </h2>
             <ol className="space-y-2.5">
               {INSIDE.map((it) => (
@@ -127,7 +127,7 @@ export default function SuneungLanding() {
           </section>
         )}
 
-        {/* 결제는 보호자 (2026-10-26 수능운 정책) */}
+        {/* 결제는 보호자 (2026-10-26 수능대박운 정책) */}
         <section className="pb-10">
           <div className="rounded-2xl px-4 py-4 text-[14px] leading-relaxed" style={{ backgroundColor: "var(--color-paper-soft)", wordBreak: "keep-all" }}>
             <p className="font-bold">이렇게 보세요</p>

@@ -97,7 +97,7 @@ export const GATE_CSS = `
 .gh-hero{container-type:inline-size}
 .gh-door-on .gh-stage{top:var(--gh-door-shift,54px);height:calc(100% - var(--gh-door-shift,54px))}
 .gh-door-wrap{position:absolute;left:50%;top:calc(62px + env(safe-area-inset-top,0px));z-index:4;width:min(48cqw,280px);transform:translateX(-50%);perspective:900px;
-  animation:gh-fade .5s ease .4s both,gh-door-bob 3.2s ease-in-out 1s infinite}
+  animation:gh-fade 1.4s ease 2s both,gh-door-bob 3.2s ease-in-out 3.4s infinite}
 @keyframes gh-door-bob{0%,100%{translate:0 0}50%{translate:0 -4px}}
 .gh-door{position:relative;display:flex;width:100%;aspect-ratio:256/70;cursor:pointer;border:0;padding:0;background:none;color:inherit;font:inherit}
 .gh-door:focus-visible{outline:2px solid var(--gh-gold-hi);outline-offset:5px;border-radius:999px}

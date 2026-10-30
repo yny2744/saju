@@ -228,7 +228,7 @@ async function ensureSchema(): Promise<void> {
   `);
   // 2026-10-28 결제 주문에 유입 경로 꼬리표
   await db.query(`ALTER TABLE pay_orders ADD COLUMN IF NOT EXISTS src TEXT;`);
-  // 2026-10-30 수능운 깊게 보기 부모님 선물 - 수험생이 만든 선물 부탁 링크, 결제는 부모님 계정에서
+  // 2026-10-30 수능대박운 깊게 보기 부모님 선물 - 수험생이 만든 선물 부탁 링크, 결제는 부모님 계정에서
   await db.query(`ALTER TABLE pay_orders ADD COLUMN IF NOT EXISTS gift_token TEXT;`);
   await db.query(`
     CREATE TABLE IF NOT EXISTS exam_gifts (

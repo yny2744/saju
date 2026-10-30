@@ -47,7 +47,7 @@
 | `RESULT_TOKEN_SECRET` · `FACE_RESULT_TOKEN_SECRET` · `PAYMENT_TOKEN_SECRET` | 고객사마다 새로 만든 무작위 값 |
 | `ADMIN_USER_IDS` | 고객사 관리자 회원 번호 |
 | `ERROR_ALERT_WEBHOOK_URL` | (선택) 오류 알림 |
-| `NEXT_PUBLIC_SUNEUNG` | (선택) 수능운 켜기 |
+| `NEXT_PUBLIC_SUNEUNG` | (선택) 수능대박운 켜기 |
 
 5. Vercel 프로젝트의 Production 브랜치는 `main`. 베이직을 main 에 올리면 모든 고객사가 함께 배포된다.
 
