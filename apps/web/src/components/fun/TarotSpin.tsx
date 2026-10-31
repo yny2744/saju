@@ -16,8 +16,8 @@ const SEG = 360 / N;
 
 export const SPIN_CSS = `
 .tw-wrap{position:relative;width:min(100%,320px);margin:0 auto;aspect-ratio:1}
-.tw-wrap svg{width:100%;height:100%;display:block}
-.tw-pointer{position:absolute;left:50%;top:-2%;width:9%;transform:translateX(-50%);filter:drop-shadow(0 2px 3px rgba(0,0,0,.5))}
+.tw-wrap svg.tw-main{width:100%;height:100%;display:block}
+.tw-wrap svg.tw-pointer{position:absolute;left:50%;top:-3%;width:9%;height:auto;transform:translateX(-50%);filter:drop-shadow(0 2px 3px rgba(0,0,0,.5))}
 .tr-row{display:flex;justify-content:center;gap:8px}
 .tr-col{display:flex;flex-direction:column;align-items:center;width:31%}
 .tr-lab{font-size:13px;letter-spacing:.3em;padding-left:.3em;margin-bottom:6px}
@@ -114,7 +114,7 @@ export function TarotWheel({
   const emblem = TENANT.gate?.emblem;
   return (
     <div className="tw-wrap">
-      <svg viewBox="0 0 340 340" aria-label="운명의 수레바퀴">
+      <svg className="tw-main" viewBox="0 0 340 340" aria-label="운명의 수레바퀴">
         <defs>
           <linearGradient id="twGold" x1="0" y1="0" x2="1" y2="1">
             <stop offset="0" stopColor="#fbeec1" />
