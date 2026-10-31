@@ -23,6 +23,15 @@ export const FILL_COLOR: Record<ElementKo, string> = {
   수: "#3d8fd8",
 };
 
+/** 밝은 바탕용 - 은백·황토가 금빛 칸과 섞여 보이지 않게 조금 짙게 */
+export const FILL_COLOR_ON_LIGHT: Record<ElementKo, string> = {
+  목: "#23845c",
+  화: "#d9531f",
+  토: "#a8711a",
+  금: "#7f8b98",
+  수: "#2f7cc4",
+};
+
 /** 문자열 → 32비트 해시 (FNV-1a) - 같은 글자면 어느 기기에서나 같은 값 */
 export function hash32(s: string): number {
   let h = 0x811c9dc5;
