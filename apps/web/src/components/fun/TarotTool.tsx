@@ -97,7 +97,7 @@ export function TarotTool() {
 
   return (
     <main className="mx-auto min-h-screen max-w-xl px-5 pb-16 pt-10">
-      <style>{CSS}</style>
+      <style dangerouslySetInnerHTML={{ __html: CSS }} />
       <p className="text-center text-[13px]" style={{ color: GOLD }}>
         {`${BRAND} · 무료`}
       </p>
