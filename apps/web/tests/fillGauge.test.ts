@@ -1,5 +1,5 @@
 import { calculateSaju } from "saju-engine";
-import { fillGapPercent, fillGapFromKey, fillLine, FILL_COLOR, FILL_GAP_MIN, FILL_GAP_MAX } from "../src/lib/fillGauge";
+import { fillGapPercent, fillGapFromKey, fillLine, FILL_GAP_MIN, FILL_GAP_MAX } from "../src/lib/fillGauge";
 import { neededEnergy } from "../src/lib/neededEnergy";
 
 /** "남은 작은 빈자리" 게이지 (2026-10-31 유샘) */
@@ -25,9 +25,8 @@ describe("남은 작은 빈자리 게이지", () => {
     expect(fillGapFromKey("x")).toBe(fillGapFromKey("x"));
   });
 
-  it("문구는 유샘이 고른 2번, 기운 색은 다섯 가지 모두", () => {
+  it("문구는 유샘이 고른 2번 (기운은 색이 아니라 문구로만 알린다)", () => {
     expect(fillLine(["화"])).toBe("남은 작은 빈자리는 불(火)의 기운으로 채워요");
     expect(fillLine(["수", "목"])).toBe("남은 작은 빈자리는 물(水)·나무(木)의 기운으로 채워요");
-    expect(Object.keys(FILL_COLOR).sort()).toEqual(["금", "목", "수", "토", "화"]);
   });
 });
