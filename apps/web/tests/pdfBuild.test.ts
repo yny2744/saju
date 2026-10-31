@@ -1,4 +1,6 @@
 import fs from "fs";
+import os from "os";
+import path from "path";
 import { calculateSaju } from "saju-engine";
 import { buildPdf, pdfTitle } from "@/server/pdf/buildPdf";
 import { TOPICS, TOPIC_KEYS, EXTRA_KEYS } from "@/lib/topics";
@@ -19,7 +21,7 @@ describe("수정안 38 - 사주 책자 PDF", () => {
     const buf = await buildPdf({ nickname: "유남영", header: readingHeader(saju, "유남영", "柳南榮"), saju, readings, issuedAt: new Date("2026-10-12T00:00:00Z") });
     expect(buf.slice(0, 4).toString()).toBe("%PDF");
     expect(buf.length).toBeGreaterThan(50_000);
-    fs.writeFileSync("/tmp/claude-0/-home-claude/b7ce53b4-0040-5eda-8b75-0a53ef7f4b81/scratchpad/sample.pdf", buf);
+    fs.writeFileSync(path.join(os.tmpdir(), "sample.pdf"), buf);
   }, 60000);
   it("깊게 보기 하나만 산 손님은 얇은 책자", async () => {
     const saju = calculateSaju({ calendarType: "solar", date: "1967-04-03", time: "04:50", gender: "male" } as never, 2026);

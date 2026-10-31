@@ -1,4 +1,5 @@
 import fs from "fs";
+import os from "os";
 import path from "path";
 import { recommendNames, templateStory, goodHanjaFor, type MeaningDict } from "@/lib/naming";
 import type { NameHanjaDict } from "@/lib/nameReading";
@@ -51,13 +52,13 @@ describe("수정안 46 - 작명 후보", () => {
     expect(report.candidates.length).toBe(7);
     const buf = await buildNamePdf({ report, nickname: "김○○", header: readingHeader(saju, "김○○", "金"), saju });
     expect(buf.slice(0, 4).toString()).toBe("%PDF");
-    fs.writeFileSync("/tmp/claude-0/-home-claude/b7ce53b4-0040-5eda-8b75-0a53ef7f4b81/scratchpad/naming.pdf", buf);
+    fs.writeFileSync(path.join(os.tmpdir(), "naming.pdf"), buf);
     const sajuR = calculateSaju({ calendarType: "solar", date: "1967-04-03", time: "04:50", gender: "male" }, 2026);
     const rr = await buildReport({ kind: "rename", saju: sajuR, nickname: "유남영", surname: "유", surnameHanja: "柳", savedHanja: "柳南榮", dollim: null, exclude: [], round: 1 });
     expect(rr.candidates.length).toBe(5);
     expect(rr.current?.reading?.complete).toBe(true);
     expect(rr.candidates.some((c: { hangul: string }) => c.hangul === "남영")).toBe(false);
     const b2 = await buildNamePdf({ report: rr, nickname: "유남영", header: readingHeader(sajuR, "유남영", "柳南榮"), saju: sajuR });
-    fs.writeFileSync("/tmp/claude-0/-home-claude/b7ce53b4-0040-5eda-8b75-0a53ef7f4b81/scratchpad/rename.pdf", b2);
+    fs.writeFileSync(path.join(os.tmpdir(), "rename.pdf"), b2);
   }, 60000);
 });

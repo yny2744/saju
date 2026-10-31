@@ -4,16 +4,17 @@ import { numerologyResult } from "@/lib/fun/numerology";
 import { zodiacResult } from "@/lib/fun/zodiac";
 import { bloodResult } from "@/lib/fun/blood";
 import { flowerResult } from "@/lib/fun/flower";
+import { birthstoneResult } from "@/lib/fun/birthstone";
 import { buildOverlay, type OverlayView } from "@/lib/fun/overlay";
 import { isBloodType, isFunKind, type FunKind, type FunResult } from "@/lib/fun/types";
 
 /**
- * 무료 묶음 (2026-10-26) - 수비학·별자리·혈액형·탄생화 + 사주 겹쳐 보기. AI 없음, 저장 없음.
+ * 무료 묶음 (2026-10-26) - 수비학·별자리·혈액형·탄생화(+ 2026-10-31 탄생석) + 사주 겹쳐 보기. AI 없음, 저장 없음.
  *
  *   요청: { kind, calendarType: "solar"|"lunar", date: "YYYY-MM-DD", isLeapMonth?, time?: "HH:mm", blood? }
  *   응답: { kind, solarDate, result: FunResult, overlay: OverlayView }
  *
- * 음력 생일도 받는다 - 별자리·탄생화·인생 수는 양력 날짜로 보므로, 엔진이 계산한 양력 날짜(resolvedSolarDateTime)로 바꿔 쓴다.
+ * 음력 생일도 받는다 - 별자리·탄생화·탄생석·인생 수는 양력 날짜로 보므로, 엔진이 계산한 양력 생일(solarBirthDate)로 바꿔 쓴다.
  * 성별: 일간과 오행 균형(부족한 기운)은 성별과 상관이 없다 (성별은 대운 방향에만 쓰임). 그래서 묻지 않고 엔진에는 정해진 값을 넘긴다.
  * 입력한 생년월일은 저장하지 않는다 (응답만 돌려준다).
  */
@@ -62,7 +63,9 @@ export function handleFun(raw: unknown, clientKey: string): Out {
     return bad("없는 날짜예요. 생년월일(양력·음력·윤달)을 다시 확인해 주세요.", "SAJU_CALCULATION_FAILED");
   }
 
-  const solarDate = calendarType === "solar" ? date : saju.calculationMeta.resolvedSolarDateTime.slice(0, 10);
+  // 2026-10-31: 엔진이 서머타임 등 시각 보정을 하면 resolvedSolarDateTime 날짜가 하루 바뀔 수 있어, 달력상 양력 생일(solarBirthDate)을 먼저 쓴다
+  const meta = saju.calculationMeta;
+  const solarDate = calendarType === "solar" ? date : meta.solarBirthDate ?? meta.resolvedSolarDateTime.slice(0, 10);
   const result =
     kind === "numerology"
       ? numerologyResult(solarDate)
@@ -70,7 +73,9 @@ export function handleFun(raw: unknown, clientKey: string): Out {
         ? zodiacResult(solarDate)
         : kind === "flower"
           ? flowerResult(solarDate)
-          : bloodResult(b.blood as Parameters<typeof bloodResult>[0]);
+          : kind === "birthstone"
+            ? birthstoneResult(solarDate)
+            : bloodResult(b.blood as Parameters<typeof bloodResult>[0]);
 
   return { status: 200, body: { kind, solarDate, result, overlay: buildOverlay(kind, saju, result) } };
 }

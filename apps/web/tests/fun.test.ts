@@ -2,6 +2,7 @@ import { lifePathNumber, lifePathElement, numerologyResult } from "../src/lib/fu
 import { zodiacSign, zodiacResult, ZODIAC_SIGNS } from "../src/lib/fun/zodiac";
 import { flowerResult, monthFlower, FILL_FLOWER } from "../src/lib/fun/flower";
 import { bloodResult } from "../src/lib/fun/blood";
+import { birthstoneResult, monthStone, FILL_STONE, STONE_NOTE } from "../src/lib/fun/birthstone";
 import { relationOfElements } from "../src/lib/fun/overlay";
 import { handleFun } from "../src/server/fun/funService";
 import { goodsFor } from "../src/lib/goods";
@@ -58,6 +59,18 @@ describe("탄생화 · 혈액형", () => {
     expect(flowerResult("1967-11-03").title).toContain("국화");
     expect(Object.keys(FILL_FLOWER).sort()).toEqual(["금", "목", "수", "토", "화"]);
   });
+  it("탄생석 (2026-10-31): 달마다 돌 하나, 채우는 돌은 오행마다 하나, 효능을 약속하지 않는다", () => {
+    for (let m = 1; m <= 12; m++) {
+      const s = monthStone(`2000-${String(m).padStart(2, "0")}-15`);
+      expect(s.name.length).toBeGreaterThan(0);
+      expect(s.body.join(" ")).not.toMatch(/건강해|병을|낫|치유|효능|부자가 된/);
+    }
+    expect(birthstoneResult("1967-04-03").title).toBe("4월의 탄생석 · 다이아몬드");
+    expect(birthstoneResult("2000-06-10").subtitle).toContain("문스톤");
+    expect(birthstoneResult("2000-06-10").element).toBe("금");
+    expect(Object.keys(FILL_STONE).sort()).toEqual(["금", "목", "수", "토", "화"]);
+    expect(STONE_NOTE).toContain("상징");
+  });
   it("혈액형은 재미로 보는 이야기라고 밝히고, 오행은 붙이지 않는다", () => {
     const r = bloodResult("AB");
     expect(r.subtitle).toContain("재미로");
@@ -93,6 +106,16 @@ describe("사주 겹쳐 보기", () => {
     expect(body.solarDate).not.toBe("1967-04-03");
     expect(body.solarDate.startsWith("1967-05")).toBe(true);
     expect(body.overlay.fillFlowers?.length).toBeGreaterThan(0);
+  });
+
+  it("API: 탄생석 - 채우는 돌만 나오고 채우는 꽃은 없다, 이어지는 운세는 재물", () => {
+    const { status, body } = handleFun({ kind: "birthstone", calendarType: "solar", date: "1990-12-25" }, "t4");
+    expect(status).toBe(200);
+    if (!("result" in body)) throw new Error("no result");
+    expect(body.result.short).toBe("터키석");
+    expect(body.overlay.fillStones?.length).toBeGreaterThan(0);
+    expect(body.overlay.fillFlowers).toBeUndefined();
+    expect(body.overlay.next.href).toBe("/go?topic=money");
   });
 
   it("API: 혈액형은 오행 비교 없이 일간만", () => {

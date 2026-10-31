@@ -69,7 +69,7 @@ const mgml: TenantConfig = {
               { name: "별자리관", desc: "태어난 날의 별자리와 사주의 만남", href: "/fun/zodiac" },
               { name: "탄생화관", desc: "나를 닮은 꽃 한 송이", href: "/fun/flower" },
               { name: "수비학관", desc: "생일 숫자로 보는 인생 수", href: "/fun/numerology" },
-              { name: "탄생석관", desc: "나를 지키는 돌" },
+              { name: "탄생석관", desc: "태어난 달의 보석과 나를 채우는 돌", href: "/fun/birthstone" },
             ],
             landing: { headline: "나를 닮은 별, 꽃, 숫자", lead: "별자리·탄생화·인생 수로 가볍게 나를 보고, 사주와 겹쳐 한 번 더 깊이 봅니다." },
           },

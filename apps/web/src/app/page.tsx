@@ -42,7 +42,7 @@ const FREE: Array<{ icon: Kind; name: string; desc: string; href: string }> = [
 ];
 
 /** 무료 묶음 카드 동그라미 글자 (2026-10-26) */
-const FUN_BADGE: Record<FunKind, string> = { numerology: "數", zodiac: "★", blood: "AB", flower: "花" };
+const FUN_BADGE: Record<FunKind, string> = { numerology: "數", zodiac: "★", blood: "AB", flower: "花", birthstone: "石" };
 
 const GOLD = "var(--color-gold)";
 /** 금색 이중 테두리 카드 */
