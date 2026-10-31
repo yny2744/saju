@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { BRAND } from "@/tenants";
-import { ELEMENT_HANJA, ELEMENT_NATURE } from "@/lib/manseView";
+import { ELEMENT_HANJA } from "@/lib/manseView";
 import {
   TAROT_CARDS,
   TAROT_MODES,
@@ -365,7 +365,7 @@ export function TarotTool() {
                 ))}
               </div>
               <p className="mt-3 text-[13px]" style={{ color: "var(--color-ink-soft)" }}>
-                <b>{ELEMENT_HANJA[card.element]}</b> {`${card.name} 카드는 ${card.elementWhy}, ${ELEMENT_NATURE[card.element]}의 기운이에요.`}
+                <b>{ELEMENT_HANJA[card.element]}</b> {`${card.name} 카드는 ${card.elementWhy}의 기운이에요.`}
               </p>
             </>
           )}
