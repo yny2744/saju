@@ -293,7 +293,7 @@ export function ExamFreeStart() {
             <p className="mt-4 text-[19px] font-bold" style={{ color: GOLD_L, fontFamily: "var(--font-serif)" }}>
               {pv.season === "suneung" ? "시험날 기운이 활짝 열려 있어요" : "나아갈 기운이 활짝 열려 있어요"}
             </p>
-            <p className="mt-1.5 text-[16px]" style={{ color: GOLD_L }}>
+            <p className="mt-1.5 text-[16px]" style={{ color: GOLD_L, wordBreak: "keep-all" }}>
               남은 작은 빈자리는{" "}
               <b style={{ color: "#fff" }}>
                 {pv.fill.nature}({pv.fill.hanja})의 기운
