@@ -85,9 +85,11 @@ export function GateHero({ gate, brand }: { gate: TenantGate; brand: string }) {
 
   // 2026-10-31 유샘: 카카오톡 안 브라우저처럼 글자 크기를 키워 보여 주는 곳에서는 대문 글자(머리줄·문 문구·건너뛰기)가
   //   커져 문이 머리줄 위로 넘친다. 실제로 그려진 글자 폭을 재서 키운 만큼 되돌린다 (--gh-tz). 보통 브라우저에서는 1.
+  // 2026-10-31 유샘: PC 브라우저에서는 글꼴에 따라 한글 폭이 넓게 재져 대문 글자·카드가 작아지는 일이 있어,
+  //   글자를 키워 보여 주는 카카오톡 안 브라우저에서만 잰다.
   useEffect(() => {
     const hero = heroRef.current;
-    if (!hero) return;
+    if (!hero || !/KAKAOTALK/i.test(navigator.userAgent)) return;
     const probe = document.createElement("span");
     probe.textContent = "가가가가가";
     probe.setAttribute("aria-hidden", "true");
