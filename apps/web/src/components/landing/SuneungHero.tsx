@@ -18,6 +18,9 @@ import {
  *   수능이 끝나면(11/20~) 영상 대신 합격운·새 출발운 카드로 바뀐다.
  */
 
+/** 무료 보기에서 사주 보기를 누를 때 보내는 신호 - 받으면 나레이션을 끈다 */
+export const NARRATION_OFF = "suneung-narration-off";
+
 /** 나레이션 시간표 (영상 소리 분석 + 유샘이 준 문장, 2026-10-17) */
 const CAPTIONS: Array<{ start: number; end: number; text: string }> = [
   { start: 0.1, end: 2.4, text: "당신의 꿈이 반드시 이루어지길" },
@@ -93,6 +96,19 @@ export function SuneungHero({
         }, 300);
       })
       .catch(fallback);
+  }, []);
+
+  // 2026-10-31 유샘: 무료 보기에서 "사주 보기"를 누르면 나레이션은 끄고 배경음악을 다시 잔잔히 (ExamFreeStart 가 알린다)
+  useEffect(() => {
+    const off = () => {
+      const v = ref.current;
+      if (v) v.muted = true;
+      setSound(false);
+      setHint(false);
+      bgm().pauseForHidden(false);
+    };
+    window.addEventListener(NARRATION_OFF, off);
+    return () => window.removeEventListener(NARRATION_OFF, off);
   }, []);
 
   // 화면을 떠나면 배경음을 돌려놓는다

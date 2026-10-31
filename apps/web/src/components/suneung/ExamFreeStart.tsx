@@ -11,6 +11,7 @@ import { SajuPillarsCard } from "@/components/SajuPillarsCard";
 import { DaeunTimeline, ElementBalance, NeededEnergySection, RelationsTable } from "@/components/ManseSections";
 import { SaleNote } from "@/components/SaleNote";
 import { WritingOverlay } from "@/components/yeopjeon/WritingOverlay";
+import { NARRATION_OFF } from "@/components/landing/SuneungHero";
 import { neededEnergy } from "@/lib/neededEnergy";
 import { daeunCells, elementShares, kstDateString, relationRows, yinYangCount } from "@/lib/manseView";
 
@@ -98,6 +99,8 @@ export function ExamFreeStart() {
     if (!(dd >= 1 && dd <= 31)) errs.push("태어난 날을 1~31로 넣어 주세요.");
     if (errs.length) return setIssues(errs);
     setIssues([]);
+    // 사주 보기를 누르면 영상 나레이션은 끄고 배경음악은 잔잔히 이어진다
+    window.dispatchEvent(new Event(NARRATION_OFF));
     setBusy(true);
     const started = Date.now();
     const pad = (n: number) => String(n).padStart(2, "0");
