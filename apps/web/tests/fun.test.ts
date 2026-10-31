@@ -3,7 +3,7 @@ import { zodiacSign, zodiacResult, ZODIAC_SIGNS } from "../src/lib/fun/zodiac";
 import { flowerResult, monthFlower, FILL_FLOWER } from "../src/lib/fun/flower";
 import { bloodResult } from "../src/lib/fun/blood";
 import { birthstoneResult, monthStone, FILL_STONE, STONE_NOTE } from "../src/lib/fun/birthstone";
-import { TAROT_CARDS, TAROT_QUESTIONS, shuffleDeck, isTarotSaved, kstToday, tarotResult } from "../src/lib/fun/tarot";
+import { TAROT_CARDS, TAROT_QUESTIONS, TAROT_MODES, REEL_SLOTS, shuffleDeck, isTarotSaved, normalizeTarotSaved, kstToday, tarotResult, spreadLine } from "../src/lib/fun/tarot";
 import { relationOfElements } from "../src/lib/fun/overlay";
 import { handleFun } from "../src/server/fun/funService";
 import { goodsFor } from "../src/lib/goods";
@@ -182,6 +182,34 @@ describe("타로관 (2026-10-31)", () => {
     expect(isTarotSaved({ date: today, question: "love", deck: [...deck.slice(1), 0], picked: 3 }, today)).toBe(false);
     expect(isTarotSaved({ date: today, question: "x", deck, picked: 3 }, today)).toBe(false);
     expect(isTarotSaved({ date: today, question: "love", deck, picked: 22 }, today)).toBe(false);
+  });
+
+  it("2차 (2026-10-31): 방식 세 가지, 처음은 수레바퀴", () => {
+    expect(TAROT_MODES.map((m) => m.key)).toEqual(["wheel", "pick", "reels"]);
+  });
+
+  it("세 줄 두루마리: 22장을 8·7·7장으로 겹치지 않게 나눠 담는다", () => {
+    expect(REEL_SLOTS.map((r) => r.length)).toEqual([8, 7, 7]);
+    expect(REEL_SLOTS.flat().sort((a, b) => a - b)).toEqual(TAROT_CARDS.map((c) => c.no));
+  });
+
+  it("세 장 풀이: 과거는 카드 뜻, 현재·미래는 질문 풀이", () => {
+    expect(spreadLine(19, 0, "love").body).toContain(TAROT_CARDS[19].core);
+    expect(spreadLine(19, 1, "love").body).toContain(TAROT_CARDS[19].reading.love);
+    expect(spreadLine(19, 2, "money").head).toBe("미래 · 태양 (日)");
+  });
+
+  it("저장 형식: 방식·세 줄 자리를 검사하고, 첫 판(방식 없음) 저장값은 카드 고르기로 본다", () => {
+    const today = "2026-11-01";
+    const deck = TAROT_CARDS.map((c) => c.no);
+    expect(isTarotSaved({ date: today, mode: "wheel", question: "today", deck, picked: 5 }, today)).toBe(true);
+    expect(isTarotSaved({ date: today, mode: "spin", question: "today", deck, picked: 5 }, today)).toBe(false);
+    expect(isTarotSaved({ date: today, mode: "reels", question: "today", deck, picked: 9, spread: [2, 9, 17] }, today)).toBe(true);
+    expect(isTarotSaved({ date: today, mode: "reels", question: "today", deck, picked: 9, spread: [9, 2, 17] }, today)).toBe(false); // 줄 밖의 자리
+    expect(isTarotSaved({ date: today, mode: "reels", question: "today", deck, picked: 3, spread: [2, 9, 17] }, today)).toBe(false); // 결과는 현재 줄
+    const old = { date: today, question: "love", deck, picked: 1 };
+    expect(isTarotSaved(old, today)).toBe(true);
+    if (isTarotSaved(old, today)) expect(normalizeTarotSaved(old).mode).toBe("pick");
   });
 
   it("API: 고른 카드와 사주를 겹쳐 보고, 이어지는 운세는 질문을 따른다", () => {

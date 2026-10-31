@@ -320,26 +320,100 @@ export function shuffleDeck(rand: () => number): number[] {
   return deck;
 }
 
-/** 한 번 뽑은 결과는 기기에 저장한다 - 하루 한 번 (한국 날짜 기준) */
+/**
+ * 뽑는 방식 (2026-10-31 유샘: 고객이 고른다, 처음엔 수레바퀴).
+ *   wheel 수레바퀴: 22장이 새겨진 바퀴가 돌고, 내가 멈춘 순간 금빛 화살표가 가리킨 카드
+ *   pick 카드 고르기: 엎어 둔 22장 중 한 장
+ *   reels 세 줄 두루마리: 과거·현재·미래 세 줄을 하나씩 멈춰 세 장
+ * 어느 방식이든 섞인 순서는 기기 안 암호 난수로 정해지고, 멈추거나 고른 뒤에는 22장을 모두 보여 준다.
+ */
+export type TarotMode = "wheel" | "pick" | "reels";
+
+export const TAROT_MODES: Array<{ key: TarotMode; label: string; desc: string }> = [
+  { key: "wheel", label: "수레바퀴", desc: "돌아가는 바퀴를 내가 멈춰 한 장" },
+  { key: "pick", label: "카드 고르기", desc: "엎어 둔 22장 중 마음 가는 한 장" },
+  { key: "reels", label: "세 줄 두루마리", desc: "과거 · 현재 · 미래 세 줄을 멈춰 세 장" },
+];
+
+export function isTarotMode(v: unknown): v is TarotMode {
+  return v === "wheel" || v === "pick" || v === "reels";
+}
+
+/**
+ * 세 줄 두루마리: 섞인 22장을 세 줄로 나눠 담는다 (8 · 7 · 7장). 줄마다 다른 카드라 세 장이 겹치지 않고,
+ * 22장이 한 번씩만 들어 있어 멈춘 뒤 줄마다 들어 있던 카드를 그대로 보여 줄 수 있다.
+ * 반환값은 줄마다 deck 의 자리 번호 목록.
+ */
+export const REEL_SLOTS: number[][] = [
+  [0, 1, 2, 3, 4, 5, 6, 7],
+  [8, 9, 10, 11, 12, 13, 14],
+  [15, 16, 17, 18, 19, 20, 21],
+];
+
+/**
+ * 수레바퀴: 바퀴를 θ도(시계 방향) 돌렸을 때 위쪽 금빛 화살표 아래 칸.
+ * 칸 i 의 가운데는 바퀴 위 i × (360/22) 도. 멈출 때는 늘 이 각도의 배수에 서므로 화면의 칸과 결과가 같다.
+ */
+export function slotUnderPointer(theta: number): number {
+  const n = TAROT_CARDS.length;
+  return ((Math.round(-theta / (360 / n)) % n) + n) % n;
+}
+
+export const SPREAD_POSITIONS = [
+  { key: "past", label: "과거", lead: "지나온 시간에는" },
+  { key: "present", label: "현재", lead: "지금 당신 곁에는" },
+  { key: "future", label: "미래", lead: "앞으로는" },
+] as const;
+
+/** 세 장 펼치기 한 자리의 풀이 - 자리 뜻 + 카드 낱말 + (현재·미래는) 고른 질문의 풀이, (과거는) 카드 뜻 */
+export function spreadLine(no: number, position: 0 | 1 | 2, question: TarotQuestion): { head: string; body: string } {
+  const c = TAROT_CARDS[no];
+  const pos = SPREAD_POSITIONS[position];
+  const kw = c.keywords.slice(0, 2).join(" · ");
+  const flow = position === 2 ? `「${kw}」의 기운이 다가와요.` : position === 1 ? `「${kw}」의 기운이 있어요.` : `「${kw}」의 기운이 흐르고 있었어요.`;
+  return {
+    head: `${pos.label} · ${c.name} (${c.hanja})`,
+    body: `${pos.lead} ${flow} ${position === 0 ? c.core : c.reading[question]}`,
+  };
+}
+
+/** 한 번 뽑은 결과는 기기에 저장한다 - 하루 한 번 (한국 날짜 기준, 방식과 상관없이 하루 한 번) */
 export const TAROT_STORAGE_KEY = "ryugyeol_tarot";
 
 export interface TarotSaved {
   /** 한국 날짜 YYYY-MM-DD */
   date: string;
+  /** 뽑은 방식 - 2026-10-31 첫 판(카드 고르기만)에는 없었다 → 없으면 pick */
+  mode: TarotMode;
   question: TarotQuestion;
   /** 섞인 22장 순서 (자리 → 카드 번호) */
   deck: number[];
-  /** 고른 자리 */
+  /** 고른 자리 (수레바퀴는 화살표가 멈춘 자리, 세 줄은 현재 줄의 자리) */
   picked: number;
+  /** 세 줄 두루마리만: 과거·현재·미래 줄마다 멈춘 자리 */
+  spread?: number[];
 }
 
 export function isTarotSaved(v: unknown, today: string): v is TarotSaved {
   if (typeof v !== "object" || v === null) return false;
   const s = v as Record<string, unknown>;
   if (s.date !== today || !isTarotQuestion(s.question)) return false;
+  if (s.mode !== undefined && !isTarotMode(s.mode)) return false;
   if (!Array.isArray(s.deck) || s.deck.length !== TAROT_CARDS.length) return false;
   if ([...(s.deck as number[])].sort((a, b) => a - b).some((n, i) => n !== i)) return false;
-  return Number.isInteger(s.picked) && (s.picked as number) >= 0 && (s.picked as number) < TAROT_CARDS.length;
+  if (!(Number.isInteger(s.picked) && (s.picked as number) >= 0 && (s.picked as number) < TAROT_CARDS.length)) return false;
+  if (s.mode === "reels") {
+    const sp = s.spread;
+    if (!Array.isArray(sp) || sp.length !== 3) return false;
+    if (!sp.every((slot, i) => REEL_SLOTS[i].includes(slot as number))) return false;
+    if (s.picked !== sp[1]) return false;
+  }
+  return true;
+}
+
+/** 저장된 값을 지금 형식으로 (첫 판 저장값에는 mode 가 없다) */
+export function normalizeTarotSaved(s: TarotSaved): TarotSaved {
+  return { ...s, mode: s.mode ?? "pick" };
 }
 
 export function kstToday(now: Date = new Date()): string {
