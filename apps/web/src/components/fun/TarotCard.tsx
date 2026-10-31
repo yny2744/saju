@@ -22,8 +22,8 @@ export const TAROT_CARD_CSS = `
 .tc-motto{position:absolute;left:0;right:0;bottom:12%;text-align:center;font-family:var(--font-serif);color:#d9bd7a;font-size:calc(var(--tc-fs,16px) * .5);letter-spacing:.35em;padding-left:.35em}
 .tc-num{position:absolute;left:0;right:0;top:6%;text-align:center;font-family:var(--font-serif);color:#d9bd7a;font-size:calc(var(--tc-fs,16px) * .55);letter-spacing:.25em}
 .tc-han{position:absolute;left:0;right:0;top:22%;text-align:center;font-family:var(--font-serif);font-weight:700;color:#f1d48a;font-size:calc(var(--tc-fs,16px) * 2.6);line-height:1;text-shadow:0 0 14px rgba(241,212,138,.4)}
-.tc-name{position:absolute;left:0;right:0;bottom:15%;text-align:center;font-family:var(--font-serif);font-weight:700;font-size:calc(var(--tc-fs,16px) * .8)}
-.tc-el{position:absolute;left:0;right:0;bottom:7%;text-align:center;color:#d9bd7a;font-size:calc(var(--tc-fs,16px) * .5);letter-spacing:.2em}
+.tc-name{position:absolute;left:0;right:0;bottom:15%;text-align:center;font-family:var(--font-serif);font-weight:700;font-size:calc(var(--tc-fs,16px) * .8);white-space:nowrap}
+.tc-el{position:absolute;left:0;right:0;bottom:7%;text-align:center;color:#d9bd7a;font-size:calc(var(--tc-fs,16px) * .5);letter-spacing:.2em;white-space:nowrap;overflow:hidden}
 .tc-img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
 .tc-img-cap{position:absolute;left:0;right:0;bottom:0;padding:18% 0 6%;text-align:center;background:linear-gradient(to top,rgba(8,16,36,.9),transparent);font-family:var(--font-serif);font-weight:700;font-size:calc(var(--tc-fs,16px) * .8)}
 .tc.picked .tc-face{box-shadow:0 0 0 2px #f1d48a,0 0 22px rgba(241,212,138,.75),inset 0 0 0 1.5px #c9a75a}
@@ -49,7 +49,10 @@ export function TarotCardFront({ no }: { no: number }) {
     <>
       <div className="tc-num">{c.roman}</div>
       <div className="tc-han">{c.hanja}</div>
-      <div className="tc-name">{c.name}</div>
+      {/* 긴 이름(운명의 수레바퀴 등)은 한 줄에 들어가게 줄인다 */}
+      <div className="tc-name" style={{ fontSize: `calc(var(--tc-fs, 16px) * ${Math.min(0.8, 3.6 / c.name.length).toFixed(2)})` }}>
+        {c.name}
+      </div>
       <div className="tc-el">{`${ELEMENT_HANJA[c.element]} · ${c.keywords[0]}`}</div>
     </>
   );
