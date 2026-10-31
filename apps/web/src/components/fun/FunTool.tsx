@@ -7,6 +7,7 @@ import { ELEMENT_HANJA, ELEMENT_NATURE } from "@/lib/manseView";
 import { BLOOD_TYPES, FUN_KINDS, FUN_META, type BloodType, type FunKind, type FunResult } from "@/lib/fun/types";
 import type { OverlayView } from "@/lib/fun/overlay";
 import { GoodsPicks } from "@/components/GoodsPicks";
+import { STONE_NOTE } from "@/lib/fun/birthstone";
 
 /**
  * 무료 묶음 화면 (2026-10-26) - 수비학·별자리·혈액형·탄생화.
@@ -311,12 +312,17 @@ function FunAnswer({ kind, answer }: { kind: FunKind; answer: Answer }) {
 
         <p className="mt-4 text-[14px] leading-relaxed">{o.needLine}</p>
 
-        {o.fillFlowers && o.fillFlowers.length > 0 && (
+        {/* 나를 채우는 꽃(탄생화) · 나를 채우는 돌(탄생석, 2026-10-31) */}
+        {(() => {
+          const fills = o.fillFlowers ?? o.fillStones;
+          if (!fills || fills.length === 0) return null;
+          const label = o.fillStones ? "돌" : "꽃";
+          return (
           <div className="mt-3 space-y-2">
-            {o.fillFlowers.map((f) => (
+            {fills.map((f) => (
               <div key={f.element} className="rounded-xl p-3" style={{ backgroundColor: "rgba(246,236,210,0.06)", border: "1px solid rgba(212,178,101,0.35)" }}>
                 <p className="text-[12px]" style={{ color: "var(--color-gold-light)" }}>
-                  나를 채우는 꽃 · {ELEMENT_NATURE[f.element]}({ELEMENT_HANJA[f.element]})
+                  나를 채우는 {label} · {ELEMENT_NATURE[f.element]}({ELEMENT_HANJA[f.element]})
                 </p>
                 <p className="mt-0.5 text-[17px] font-bold" style={{ fontFamily: "var(--font-serif)" }}>
                   {f.name}
@@ -327,8 +333,14 @@ function FunAnswer({ kind, answer }: { kind: FunKind; answer: Answer }) {
                 </p>
               </div>
             ))}
+            {o.fillStones && (
+              <p className="text-[12px] leading-relaxed" style={{ color: "rgba(246,236,210,0.7)" }}>
+                {STONE_NOTE}
+              </p>
+            )}
           </div>
-        )}
+          );
+        })()}
 
         {/* 2026-10-26 굿즈 추천 - 탄생화(나를 채우는 꽃)에서만, 고객사 설정에 링크가 있을 때만 */}
         {kind === "flower" && <GoodsPicks elements={o.need.elements} tone="dark" />}

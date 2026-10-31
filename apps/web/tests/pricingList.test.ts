@@ -18,13 +18,13 @@ describe("상품·가격 안내 목록 (2026-10-19 결제 심사용)", () => {
     expect(byName["연인 궁합"]).toBe(PRICE.COUPLE);
   });
 
-  it("팔지 않는 것(프리미엄 작명 꺼짐, 수능운 숨김)은 목록에 없다", () => {
+  it("팔지 않는 것(프리미엄 작명 꺼짐, 수능대박운 숨김)은 목록에 없다", () => {
     delete process.env.NEXT_PUBLIC_SUNEUNG;
     const names = paidProducts().map((p) => p.name).join("|");
     if (!PREMIUM_ON) expect(names).not.toContain("프리미엄");
-    expect(names).not.toContain("수능운");
+    expect(names).not.toContain("수능"); // 2026-10-31 이름이 수능대박운으로 바뀜
     process.env.NEXT_PUBLIC_SUNEUNG = "on";
-    expect(paidProducts().map((p) => p.name).join("|")).toContain("수능운");
+    expect(paidProducts().map((p) => p.name).join("|")).toContain("수능대박운");
   });
 
   it("무료 항목·원 표기·전화번호", () => {

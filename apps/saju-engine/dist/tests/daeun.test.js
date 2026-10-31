@@ -34,10 +34,10 @@ describe("대운 - 독립 기준값 검증 (구현 코드와 무관하게 직접
         expect(result.boundaryJie.name).toBe("입하");
         // 아래 두 시각은 daeun.ts 내부 로직을 전혀 호출하지 않고, 이 테스트 파일에서
         // 독립적으로(리터럴 값으로) 직접 밀리초 차이를 구해 기대값을 만든다.
-        // - 출생시각: 1990-05-20 14:30:00
-        // - 절입시각(입하): 1990-05-06 02:35:26 (라이브러리 출력을 별도로 1회 확인해 리터럴로 고정)
+        // - 출생시각: 1990-05-20 14:30:00 (KST)
+        // - 절입시각(입하): 1990-05-06 03:35:26 (KST) - 라이브러리 출력(베이징 시간 02:35:26)에 1시간을 더한 값 (2026-10-31)
         const birthMsIndependent = Date.UTC(1990, 4, 20, 14, 30, 0); // month는 0-indexed(4=5월)
-        const jieMsIndependent = Date.UTC(1990, 4, 6, 2, 35, 26);
+        const jieMsIndependent = Date.UTC(1990, 4, 6, 3, 35, 26);
         const expectedDays = (birthMsIndependent - jieMsIndependent) / (1000 * 60 * 60 * 24);
         const expectedStartAgePrecise = expectedDays / 3;
         expect(result.daysToBoundaryJie).toBeCloseTo(expectedDays, 5);
@@ -50,7 +50,7 @@ describe("대운 - 독립 기준값 검증 (구현 코드와 무관하게 직접
         const result = (0, daeun_1.calculateDaeun)(pillars, meta, "male");
         expect(result.boundaryJie.name).toBe("망종");
         const birthMsIndependent = Date.UTC(1990, 4, 20, 14, 30, 0);
-        const jieMsIndependent = Date.UTC(1990, 5, 6, 6, 46, 18); // 망종 1990-06-06 06:46:18 (5=6월, 0-indexed)
+        const jieMsIndependent = Date.UTC(1990, 5, 6, 7, 46, 18); // 망종 1990-06-06 07:46:18 KST (베이징 06:46:18 + 1시간, 5=6월)
         const expectedDays = (jieMsIndependent - birthMsIndependent) / (1000 * 60 * 60 * 24);
         const expectedStartAgePrecise = expectedDays / 3;
         expect(result.daysToBoundaryJie).toBeCloseTo(expectedDays, 5);
@@ -103,14 +103,14 @@ describe("대운 - endAgePrecise 구조 (다음 대운 시작값 기준, 임의 
 });
 describe("대운 - 절기 근접 경계 (순행/역행이 '가까운 절기'가 아니라 '정해진 방향의 절기'를 쓰는지)", () => {
     test("역행: 절입 26초 전에 태어나도 방금 지나갈 뻔한 절기가 아니라 '이전' 절기를 기준으로 삼는다", () => {
-        // 1990-05-06 02:35:26이 정확한 입하 절입 시각. 그 26초 전(02:35:00)에 태어나면
+        // 1990-05-06 03:35:26(KST)이 정확한 입하 절입 시각. 그 26초 전(03:35:00)에 태어나면
         // "입하가 코앞"이지만, 역행은 반드시 '이전' 절(청명, 4/5)을 기준으로 해야 한다.
         // 실행 결과를 직접 확인해 검증된 값이며, "가장 가까운 절기"를 쓰는 식의 오류가
         // 없는지 확인하는 회귀 테스트다.
         const { pillars, meta } = (0, pillars_1.calculateFourPillars)({
             calendarType: "solar",
             date: "1990-05-06",
-            time: "02:35",
+            time: "03:35", // 입하(KST 03:35:26) 26초 전
             gender: "female", // 1990=경오년(양간), 여성 -> 역행
         });
         const result = (0, daeun_1.calculateDaeun)(pillars, meta, "female");
@@ -122,7 +122,7 @@ describe("대운 - 절기 근접 경계 (순행/역행이 '가까운 절기'가 
         const { pillars, meta } = (0, pillars_1.calculateFourPillars)({
             calendarType: "solar",
             date: "1990-05-06",
-            time: "02:36", // 입하(02:35:26) 34초 후
+            time: "03:36", // 입하(KST 03:35:26) 34초 후 - 2026-10-31: 절입 시각을 베이징 시간이 아닌 KST로 바로잡음
             gender: "male", // 경오년(양간), 남성 -> 순행
         });
         const result = (0, daeun_1.calculateDaeun)(pillars, meta, "male");

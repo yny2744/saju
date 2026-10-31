@@ -52,8 +52,7 @@ npm install
 npm test
 ```
 
-8개 테스트 스위트, 125개 테스트 모두 통과 확인됨
-(pillars, elements, tenGods, relations, twelveStages, daeun, seun, 통합 테스트 포함).
+20개 테스트 스위트, 220개 테스트 모두 통과 확인됨 (2026-10-31, 한국 시각 보정 테스트 `tests/koreaTime.test.ts` 포함).
 
 ## 수동 실행 (CLI)
 
@@ -118,19 +117,22 @@ calculateSaju(input: SajuInput, year: number): SajuJson
 
 ### 그 외 정책/규칙 확정 필요 항목
 
-3. **출생지 경도 테이블** (`src/solarTime.ts`) — 현재 주요 도시 15곳만 근사 좌표로
+3. ~~한국 표준시 변경·서머타임·절기 시간대~~ → **2026-10-31 해결** (`src/koreaTime.ts`):
+   1954~1961 등 UTC+8:30 시절과 서머타임(1948~51, 1955~60, 1987~88) 기록 시각을 KST로 자동 보정하고,
+   lunar-javascript의 절기 시각(베이징 시간)을 KST 기준으로 맞춰 연주·월주·대운수를 판정한다.
+4. **출생지 경도 테이블** (`src/solarTime.ts`) — 현재 주요 도시 15곳만 근사 좌표로
    하드코딩되어 있음. 시/군/구 단위 정밀 좌표 DB 또는 지오코딩 API 도입 검토 필요.
-4. **음력 입력 + 자시/태양시 보정 결합 케이스** (`src/pillars.ts`) — 음력 그믐/초하루
+5. **음력 입력 + 자시/태양시 보정 결합 케이스** (`src/pillars.ts`) — 음력 그믐/초하루
    근처에서 자시 보정으로 날짜가 넘어가는 경우 정밀 검증 필요.
-5. **calculationMeta에 `dayShifted`(자시 보정으로 날짜가 실제로 넘어갔는지) 노출 여부**
+6. **calculationMeta에 `dayShifted`(자시 보정으로 날짜가 실제로 넘어갔는지) 노출 여부**
    — 현재 내부적으로만 계산하고 출력 스키마에는 없음.
-6. **절기 절입일시 노출** (`calculationMeta.monthPillarSolarTermBoundary`) — 현재 항상 `null`.
-7. **오행 가중치 계산 기준** (`src/elements.ts`) — 지장간 가중 방식(weight/30) 채택.
-8. **지지 십신 대표값** (`src/tenGods.ts`) — 지지의 십신을 무엇으로 대표할지 유파 차이.
-9. **무토/기토 12운성 장생 위치** (`src/rules/twelveStageTables.ts`) — 화토동법 채택.
-10. **오미합(午未合) 화기(火氣) 여부** (`src/rules/relationTables.ts`).
-11. **형벌 성립 조건 / 파(破) 판정 기준** (`src/rules/relationTables.ts`) — 유파 간 이견 큰 항목.
-12. **대운수 환산 규칙(3일=1년) 및 반올림 표시 방식** (`src/daeun.ts`).
+7. **절기 절입일시 노출** (`calculationMeta.monthPillarSolarTermBoundary`) — 현재 항상 `null`.
+8. **오행 가중치 계산 기준** (`src/elements.ts`) — 지장간 가중 방식(weight/30) 채택.
+9. **지지 십신 대표값** (`src/tenGods.ts`) — 지지의 십신을 무엇으로 대표할지 유파 차이.
+10. **무토/기토 12운성 장생 위치** (`src/rules/twelveStageTables.ts`) — 화토동법 채택.
+11. **오미합(午未合) 화기(火氣) 여부** (`src/rules/relationTables.ts`).
+12. **형벌 성립 조건 / 파(破) 판정 기준** (`src/rules/relationTables.ts`) — 유파 간 이견 큰 항목.
+13. **대운수 환산 규칙(3일=1년) 및 반올림 표시 방식** (`src/daeun.ts`).
 
-이 12개 항목은 Phase 2 코드에서 임의로 결정하지 않았으며, 현재 구현된 규칙을 그대로
+3번을 뺀 12개 항목은 Phase 2 코드에서 임의로 결정하지 않았으며, 현재 구현된 규칙을 그대로
 유지한 채 서비스 정책 결정 사항으로 남겨둔다.

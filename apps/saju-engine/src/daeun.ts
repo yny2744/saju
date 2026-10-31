@@ -113,8 +113,9 @@ export function calculateDaeun(
   const forward = (isYangYear && isMale) || (!isYangYear && !isMale);
   const direction: "forward" | "backward" = forward ? "forward" : "backward";
 
-  // resolvedSolarDateTime을 그대로 재사용해서 사주 원국 계산과 동일한 기준 시각 확보
-  const dt = meta.resolvedSolarDateTime;
+  // 절기까지의 거리는 연주·월주 판정과 같은 기준 시각(베이징 시간으로 바꾼 실제 시각)으로 잰다 (2026-10-31).
+  // 이전에 만든 결과처럼 그 값이 없으면 예전대로 resolvedSolarDateTime 을 쓴다.
+  const dt = meta.solarTermReferenceDateTime ?? meta.resolvedSolarDateTime;
   const match = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})$/.exec(dt);
   if (!match) {
     throw new Error(`resolvedSolarDateTime 형식 오류: ${dt}`);

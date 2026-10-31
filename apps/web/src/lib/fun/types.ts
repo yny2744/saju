@@ -2,14 +2,14 @@ import type { ElementKo } from "@/lib/pillarView";
 import type { TopicKey } from "@/lib/topics";
 
 /**
- * 무료 묶음 (2026-10-26) - 수비학·별자리·혈액형·탄생화.
+ * 무료 묶음 (2026-10-26) - 수비학·별자리·혈액형·탄생화 (+ 2026-10-31 탄생석).
  * 모두 AI 없이 정해 둔 문장으로 만든다 ("무료에는 AI를 쓰지 않는다" 원칙).
  * 흐름: 무료 결과 → 사주와 겹쳐 보기(일간·부족한 기운) → 이어지는 12가지 운세로.
  */
 
-export type FunKind = "numerology" | "zodiac" | "blood" | "flower";
+export type FunKind = "numerology" | "zodiac" | "blood" | "flower" | "birthstone";
 
-export const FUN_KINDS: FunKind[] = ["numerology", "zodiac", "blood", "flower"];
+export const FUN_KINDS: FunKind[] = ["numerology", "zodiac", "blood", "flower", "birthstone"];
 
 export function isFunKind(v: unknown): v is FunKind {
   return typeof v === "string" && (FUN_KINDS as string[]).includes(v);
@@ -73,5 +73,11 @@ export const FUN_META: Record<FunKind, FunMeta> = {
     desc: "내가 태어난 달의 꽃, 그리고 나를 채워 주는 꽃",
     topic: "nature",
     overlayLead: "내 탄생화와, 내 사주에 부족한 기운을 채워 주는 꽃은 다를 수 있어요.",
+  },
+  birthstone: {
+    title: "탄생석 · 보석말",
+    desc: "내가 태어난 달의 보석, 그리고 나를 채워 주는 돌",
+    topic: "money",
+    overlayLead: "내 탄생석과, 내 사주에 부족한 기운을 채워 주는 돌은 다를 수 있어요.",
   },
 };

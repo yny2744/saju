@@ -1,6 +1,7 @@
 import { Solar, Lunar } from "lunar-javascript";
 import { hanjaStemToHangul, hanjaBranchToHangul } from "./hanjaMap";
 import { resolveSolarTimeCorrection } from "./solarTime";
+import { resolveKoreanClock, KST_TO_SOLAR_TERM_LIBRARY_MINUTES } from "./koreaTime";
 import type {
   SajuInput,
   FourPillars,
@@ -169,6 +170,19 @@ export function calculateFourPillars(input: SajuInput): {
   }
 
   let wc: SolarWallClock = { y: solarY, m: solarM, d: solarD, h, mi, s };
+  const solarBirthDate = formatDate(wc);
+
+  // 1-2) 한국 시계 역사 보정 (2026-10-31 유샘 승인) - 서머타임·UTC+8:30 시절에 기록된 시각을 지금의 KST로.
+  //      사실관계라서 선택 없이 항상 적용한다. 출생시간을 모르면 보정할 시각이 없으므로 건너뛴다.
+  const clock = hasTime
+    ? resolveKoreanClock(Date.UTC(wc.y, wc.m - 1, wc.d, wc.h, wc.mi, wc.s))
+    : null;
+  if (clock && clock.correctionMinutes !== 0) {
+    wc = addMinutesToSolarWallClock(wc, clock.correctionMinutes);
+  }
+  // 절기(연주·월주) 판정 기준 시각: KST를 lunar-javascript의 절기 시간대(베이징 시간)로 바꾼 값.
+  // 절입은 천문 현상(한순간)이라 진태양시 보정과 무관하게 실제 시각으로 비교한다 - koreaTime.ts 설명 참고.
+  const termWc = addMinutesToSolarWallClock(wc, KST_TO_SOLAR_TERM_LIBRARY_MINUTES);
 
   // 2) 태양시 보정 - 이제 wc는 항상 "양력" 값이므로 그레고리력 날짜 산술이 안전하다.
   const correction = resolveSolarTimeCorrection({
@@ -189,9 +203,14 @@ export function calculateFourPillars(input: SajuInput): {
   //    이전 버전에서 직접 +1일 계산하던 로직을 완전히 제거했다 (중복 적용 리스크 원천 차단).
   eightChar.setSect(ziHourMethodToSect(ziHourMethod));
 
+  // 연주·월주는 절기로 정해지므로 베이징 시간으로 바꾼 시각으로 판정한다 (일주·시주는 위 eightChar 그대로)
+  const termEightChar = Solar.fromYmdHms(termWc.y, termWc.m, termWc.d, termWc.h, termWc.mi, termWc.s)
+    .getLunar()
+    .getEightChar();
+
   const pillars: FourPillars = {
-    year: toPillar(eightChar.getYearGan(), eightChar.getYearZhi()),
-    month: toPillar(eightChar.getMonthGan(), eightChar.getMonthZhi()),
+    year: toPillar(termEightChar.getYearGan(), termEightChar.getYearZhi()),
+    month: toPillar(termEightChar.getMonthGan(), termEightChar.getMonthZhi()),
     day: toPillar(eightChar.getDayGan(), eightChar.getDayZhi()),
     hour: hasTime ? toPillar(eightChar.getTimeGan(), eightChar.getTimeZhi()) : null,
   };
@@ -204,12 +223,22 @@ export function calculateFourPillars(input: SajuInput): {
     ziHourMethod,
     monthPillarSolarTermBoundary: null, // Phase 2: 절기 절입일시 노출 예정
     hourPillarSkipped: !hasTime,
-    resolvedSolarDateTime: `${String(wc.y).padStart(4, "0")}-${String(wc.m).padStart(2, "0")}-${String(
-      wc.d
-    ).padStart(2, "0")}T${String(wc.h).padStart(2, "0")}:${String(wc.mi).padStart(2, "0")}:${String(
-      wc.s
-    ).padStart(2, "0")}`,
+    resolvedSolarDateTime: formatDateTime(wc),
+    solarBirthDate,
+    koreanClockCorrectionMinutes: clock ? clock.correctionMinutes : 0,
+    koreanClockReason: clock ? clock.reason : null,
+    solarTermReferenceDateTime: formatDateTime(termWc),
   };
 
   return { pillars, meta };
+}
+
+function formatDate(wc: SolarWallClock): string {
+  return `${String(wc.y).padStart(4, "0")}-${String(wc.m).padStart(2, "0")}-${String(wc.d).padStart(2, "0")}`;
+}
+
+function formatDateTime(wc: SolarWallClock): string {
+  return `${formatDate(wc)}T${String(wc.h).padStart(2, "0")}:${String(wc.mi).padStart(2, "0")}:${String(
+    wc.s
+  ).padStart(2, "0")}`;
 }

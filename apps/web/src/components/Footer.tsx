@@ -39,6 +39,13 @@ export function Footer() {
           <span aria-hidden style={{ color: "var(--color-line)" }}>
             |
           </span>
+          {/* 2026-10-31 오픈소스 고지 */}
+          <a href="/licenses" className="underline-offset-2 hover:underline">
+            오픈소스 고지
+          </a>
+          <span aria-hidden style={{ color: "var(--color-line)" }}>
+            |
+          </span>
           <a href={mail} className="font-semibold underline-offset-2 hover:underline" style={{ color: "var(--color-accent)" }}>
             문의하기
           </a>

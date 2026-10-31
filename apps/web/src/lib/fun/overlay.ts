@@ -6,6 +6,7 @@ import { DAY_MASTER } from "@/lib/basic/common";
 import { neededEnergy, type NeededEnergy } from "@/lib/neededEnergy";
 import { TOPICS } from "@/lib/topics";
 import { FILL_FLOWER } from "./flower";
+import { FILL_STONE } from "./birthstone";
 import { FUN_META, type FunKind, type FunResult } from "./types";
 
 /**
@@ -66,6 +67,8 @@ export interface OverlayView {
   needLine: string;
   /** 탄생화에서만: 나를 채우는 꽃 */
   fillFlowers?: Array<{ element: ElementKo; name: string; why: string; tip: string }>;
+  /** 탄생석에서만: 나를 채우는 돌 (2026-10-31) */
+  fillStones?: Array<{ element: ElementKo; name: string; why: string; tip: string }>;
   next: { topic: string; title: string; href: string; line: string };
 }
 
@@ -107,6 +110,7 @@ export function buildOverlay(kind: FunKind, saju: SajuJson, fun: FunResult): Ove
     need,
     needLine,
     fillFlowers: kind === "flower" ? need.elements.map((el) => ({ element: el, ...FILL_FLOWER[el] })) : undefined,
+    fillStones: kind === "birthstone" ? need.elements.map((el) => ({ element: el, ...FILL_STONE[el] })) : undefined,
     next: {
       topic,
       title: t.title,
