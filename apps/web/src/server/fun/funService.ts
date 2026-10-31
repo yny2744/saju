@@ -5,13 +5,15 @@ import { zodiacResult } from "@/lib/fun/zodiac";
 import { bloodResult } from "@/lib/fun/blood";
 import { flowerResult } from "@/lib/fun/flower";
 import { birthstoneResult } from "@/lib/fun/birthstone";
+import { tarotResult, isTarotQuestion, TAROT_CARDS, TAROT_QUESTIONS } from "@/lib/fun/tarot";
 import { buildOverlay, type OverlayView } from "@/lib/fun/overlay";
 import { isBloodType, isFunKind, type FunKind, type FunResult } from "@/lib/fun/types";
 
 /**
- * 무료 묶음 (2026-10-26) - 수비학·별자리·혈액형·탄생화(+ 2026-10-31 탄생석) + 사주 겹쳐 보기. AI 없음, 저장 없음.
+ * 무료 묶음 (2026-10-26) - 수비학·별자리·혈액형·탄생화(+ 2026-10-31 탄생석·타로) + 사주 겹쳐 보기. AI 없음, 저장 없음.
  *
- *   요청: { kind, calendarType: "solar"|"lunar", date: "YYYY-MM-DD", isLeapMonth?, time?: "HH:mm", blood? }
+ *   요청: { kind, calendarType: "solar"|"lunar", date: "YYYY-MM-DD", isLeapMonth?, time?: "HH:mm", blood?, card?, question? }
+ *   타로(kind "tarot")는 카드를 고객 기기에서 이미 골랐다 - card(0~21)와 question 을 받아 그 카드와 사주를 겹쳐 볼 뿐, 서버가 카드를 고르지 않는다.
  *   응답: { kind, solarDate, result: FunResult, overlay: OverlayView }
  *
  * 음력 생일도 받는다 - 별자리·탄생화·탄생석·인생 수는 양력 날짜로 보므로, 엔진이 계산한 양력 생일(solarBirthDate)로 바꿔 쓴다.
@@ -52,6 +54,9 @@ export function handleFun(raw: unknown, clientKey: string): Out {
   if (calendarType === "solar" ? !validSolar(date) : !(Number(date.slice(8, 10)) <= 30 && Number(date.slice(0, 4)) >= 1900)) return bad("생년월일을 확인해 주세요.");
   const time = typeof b.time === "string" && TIME_RE.test(b.time) ? b.time : undefined;
   if (kind === "blood" && !isBloodType(b.blood)) return bad("혈액형을 골라 주세요.");
+  const card = Number(b.card);
+  if (kind === "tarot" && (!Number.isInteger(card) || card < 0 || card >= TAROT_CARDS.length || !isTarotQuestion(b.question)))
+    return bad("카드를 먼저 골라 주세요.");
 
   let saju;
   try {
@@ -75,7 +80,10 @@ export function handleFun(raw: unknown, clientKey: string): Out {
           ? flowerResult(solarDate)
           : kind === "birthstone"
             ? birthstoneResult(solarDate)
-            : bloodResult(b.blood as Parameters<typeof bloodResult>[0]);
+            : kind === "tarot"
+              ? tarotResult(card, b.question as Parameters<typeof tarotResult>[1])
+              : bloodResult(b.blood as Parameters<typeof bloodResult>[0]);
+  const topic = kind === "tarot" ? TAROT_QUESTIONS.find((q) => q.key === b.question)?.topic : undefined;
 
-  return { status: 200, body: { kind, solarDate, result, overlay: buildOverlay(kind, saju, result) } };
+  return { status: 200, body: { kind, solarDate, result, overlay: buildOverlay(kind, saju, result, topic) } };
 }

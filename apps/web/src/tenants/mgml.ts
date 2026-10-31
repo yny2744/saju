@@ -22,6 +22,7 @@ const mgml: TenantConfig = {
     title: "류결의 명견만리",
     sideLeft: "三道",
     sideRight: "七運",
+    tarotMotto: "明見萬里",
     emblem: "/gate/mgml/emblem.png",
     media: {
       landscape: "/gate/mgml/hero-pc.mp4",
@@ -101,7 +102,7 @@ const mgml: TenantConfig = {
             rooms: [
               { name: "오늘의 운세관", desc: "내 사주와 오늘 기운의 만남", href: "/start?next=fortune" },
               { name: "띠별 운세관", desc: "생년월일 없이 띠로 보는 오늘·내일", href: "/tti" },
-              { name: "타로관", desc: "지금 마음에 걸린 물음 하나" },
+              { name: "타로관", desc: "지금 마음에 걸린 물음 하나", href: "/fun/tarot" },
             ],
             landing: { headline: "요즘 내 마음은 왜 이럴까", lead: "오늘의 기운과 내 사주를 겹쳐, 지금 마음이 머무는 자리를 살펴봅니다." },
           },

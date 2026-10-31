@@ -159,6 +159,8 @@ export interface TenantGate {
    * 아무것도 맞지 않으면 fallback. needs: "suneung" 인 문은 수능 스위치가 꺼져 있으면 건너뛴다.
    */
   doors?: { list: GateDoor[]; fallback?: Omit<GateDoor, "match" | "needs"> };
+  /** 타로 카드 뒷면 엠블럼 아래 글자 (2026-10-31, 예: "明見萬里") - 없으면 엠블럼만 */
+  tarotMotto?: string;
   /** 계절 랜딩 (/l/<key>) - 예: 신년운세 */
   seasonal: Array<{ key: string; glyph: string; name: string; headline: string; lead: string; rooms: GateRoom[] }>;
 }

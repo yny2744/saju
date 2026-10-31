@@ -4,7 +4,7 @@ import { STEM_HANJA } from "@/lib/pillarView";
 import { ELEMENT_HANJA, ELEMENT_NATURE } from "@/lib/manseView";
 import { DAY_MASTER } from "@/lib/basic/common";
 import { neededEnergy, type NeededEnergy } from "@/lib/neededEnergy";
-import { TOPICS } from "@/lib/topics";
+import { TOPICS, type TopicKey } from "@/lib/topics";
 import { FILL_FLOWER } from "./flower";
 import { FILL_STONE } from "./birthstone";
 import { FUN_META, type FunKind, type FunResult } from "./types";
@@ -76,7 +76,8 @@ function elName(el: ElementKo): string {
   return `${ELEMENT_NATURE[el]}(${ELEMENT_HANJA[el]})`;
 }
 
-export function buildOverlay(kind: FunKind, saju: SajuJson, fun: FunResult): OverlayView {
+/** topic: 이어지는 운세를 바꿀 때 (타로는 고른 질문에 따라) - 없으면 FUN_META 의 주제 */
+export function buildOverlay(kind: FunKind, saju: SajuJson, fun: FunResult, topicOverride?: TopicKey): OverlayView {
   const stem = saju.pillars.day.heavenlyStem;
   const dayElement = (saju.elements.heavenlyStems as Record<string, ElementKo>).day;
   const dm = DAY_MASTER[stem];
@@ -98,7 +99,7 @@ export function buildOverlay(kind: FunKind, saju: SajuJson, fun: FunResult): Ove
     };
   }
 
-  const topic = FUN_META[kind].topic;
+  const topic = topicOverride ?? FUN_META[kind].topic;
   const t = TOPICS[topic];
   return {
     dayStem: stem,

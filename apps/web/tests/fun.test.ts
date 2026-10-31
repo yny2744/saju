@@ -3,6 +3,7 @@ import { zodiacSign, zodiacResult, ZODIAC_SIGNS } from "../src/lib/fun/zodiac";
 import { flowerResult, monthFlower, FILL_FLOWER } from "../src/lib/fun/flower";
 import { bloodResult } from "../src/lib/fun/blood";
 import { birthstoneResult, monthStone, FILL_STONE, STONE_NOTE } from "../src/lib/fun/birthstone";
+import { TAROT_CARDS, TAROT_QUESTIONS, shuffleDeck, isTarotSaved, kstToday, tarotResult } from "../src/lib/fun/tarot";
 import { relationOfElements } from "../src/lib/fun/overlay";
 import { handleFun } from "../src/server/fun/funService";
 import { goodsFor } from "../src/lib/goods";
@@ -148,5 +149,55 @@ describe("굿즈 칸 (고객사 설정)", () => {
       for (const links of Object.values(t.goods.coupang)) for (const l of links ?? []) expect(l.url).toMatch(/^https:\/\/(link\.coupang\.com|coupa\.ng|www\.coupang\.com)\//);
       if (t.id === "injasaju") expect(Object.values(t.goods.coupang).flat()).toHaveLength(0);
     }
+  });
+});
+
+describe("타로관 (2026-10-31)", () => {
+  it("메이저 22장 - 번호·한자가 겹치지 않고, 카드마다 질문 4가지 풀이가 있다", () => {
+    expect(TAROT_CARDS).toHaveLength(22);
+    TAROT_CARDS.forEach((c, i) => expect(c.no).toBe(i));
+    expect(new Set(TAROT_CARDS.map((c) => c.hanja)).size).toBe(22);
+    for (const c of TAROT_CARDS) {
+      for (const q of TAROT_QUESTIONS) expect(c.reading[q.key].length).toBeGreaterThan(10);
+      // 겁주거나 단정하는 말은 쓰지 않는다
+      expect([c.core, ...Object.values(c.reading)].join(" ")).not.toMatch(/죽는다|반드시 망|불행해진다|해골/);
+    }
+  });
+
+  it("섞기는 22장을 빠짐없이 한 번씩 담고, 난수에 따라 순서가 바뀐다", () => {
+    let seed = 7;
+    const rand = () => ((seed = (seed * 9301 + 49297) % 233280) / 233280);
+    const a = shuffleDeck(rand);
+    const b = shuffleDeck(rand);
+    expect([...a].sort((x, y) => x - y)).toEqual(TAROT_CARDS.map((c) => c.no));
+    expect(a).not.toEqual(b);
+  });
+
+  it("오늘 뽑은 결과만 다시 보여 준다 (날짜·순서·자리 검사)", () => {
+    const today = kstToday(new Date("2026-10-31T15:30:00Z")); // 한국 11/1 00:30
+    expect(today).toBe("2026-11-01");
+    const deck = TAROT_CARDS.map((c) => c.no).reverse();
+    expect(isTarotSaved({ date: today, question: "love", deck, picked: 3 }, today)).toBe(true);
+    expect(isTarotSaved({ date: "2026-10-31", question: "love", deck, picked: 3 }, today)).toBe(false);
+    expect(isTarotSaved({ date: today, question: "love", deck: [...deck.slice(1), 0], picked: 3 }, today)).toBe(false);
+    expect(isTarotSaved({ date: today, question: "x", deck, picked: 3 }, today)).toBe(false);
+    expect(isTarotSaved({ date: today, question: "love", deck, picked: 22 }, today)).toBe(false);
+  });
+
+  it("API: 고른 카드와 사주를 겹쳐 보고, 이어지는 운세는 질문을 따른다", () => {
+    const { status, body } = handleFun({ kind: "tarot", calendarType: "solar", date: "1990-12-25", card: 19, question: "money" }, "t5");
+    expect(status).toBe(200);
+    if (!("result" in body)) throw new Error("no result");
+    expect(body.result.title).toContain("태양");
+    expect(body.result.element).toBe("화");
+    expect(body.overlay.relation).toBeDefined();
+    expect(body.overlay.next.href).toBe("/go?topic=money");
+    expect(tarotResult(19, "love").body[1]).toBe(TAROT_CARDS[19].reading.love);
+  });
+
+  it("API: 카드를 고르지 않았거나 이상한 번호면 받지 않는다 (서버가 카드를 고르지 않는다)", () => {
+    expect(handleFun({ kind: "tarot", calendarType: "solar", date: "1990-12-25", question: "love" }, "t6").status).toBe(400);
+    expect(handleFun({ kind: "tarot", calendarType: "solar", date: "1990-12-25", card: 22, question: "love" }, "t7").status).toBe(400);
+    expect(handleFun({ kind: "tarot", calendarType: "solar", date: "1990-12-25", card: 3, question: "health" }, "t8").status).toBe(400);
   });
 });

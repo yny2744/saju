@@ -8,6 +8,7 @@ import { BLOOD_TYPES, FUN_KINDS, FUN_META, type BloodType, type FunKind, type Fu
 import type { OverlayView } from "@/lib/fun/overlay";
 import { GoodsPicks } from "@/components/GoodsPicks";
 import { STONE_NOTE } from "@/lib/fun/birthstone";
+import type { TarotQuestion } from "@/lib/fun/tarot";
 
 /**
  * 무료 묶음 화면 (2026-10-26) - 수비학·별자리·혈액형·탄생화.
@@ -84,7 +85,11 @@ function Toggle<T extends string>({ value, onChange, items }: { value: T; onChan
   );
 }
 
-export function FunTool({ kind }: { kind: FunKind }) {
+/**
+ * tarot: 타로관(TarotTool) 아래에 붙을 때 (2026-10-31) - 고른 카드·질문을 함께 보내 사주와 겹쳐 보기만 한다.
+ *   이때는 제목·무료 결과 카드를 그리지 않는다 (타로 풀이는 위에서 이미 보여 줌).
+ */
+export function FunTool({ kind, tarot }: { kind: FunKind; tarot?: { card: number; question: TarotQuestion } }) {
   const meta = FUN_META[kind];
   const [form, setForm] = useState<Saved>({ calendar: "solar", leap: false, y: "", m: "", d: "", hour: "" });
   const [busy, setBusy] = useState(false);
@@ -127,6 +132,8 @@ export function FunTool({ kind }: { kind: FunKind }) {
           date: `${form.y}-${pad(form.m)}-${pad(form.d)}`,
           time: form.hour === "" ? undefined : `${pad(form.hour)}:00`,
           blood: form.blood,
+          card: tarot?.card,
+          question: tarot?.question,
         }),
       });
       const body = await r.json().catch(() => ({}));
@@ -146,17 +153,26 @@ export function FunTool({ kind }: { kind: FunKind }) {
   const days = Array.from({ length: form.calendar === "lunar" ? 30 : 31 }, (_, i) => String(i + 1));
   const hours = Array.from({ length: 24 }, (_, i) => String(i));
 
+  const Wrap = tarot ? "section" : "main";
   return (
-    <main className="mx-auto min-h-screen max-w-xl px-5 pb-16 pt-10">
-      <p className="text-center text-[13px]" style={{ color: GOLD }}>
-        {`${BRAND} · 무료`}
-      </p>
-      <h1 className="mt-1 text-center text-[26px] font-bold" style={{ fontFamily: "var(--font-serif)" }}>
-        {meta.title}
-      </h1>
-      <p className="mt-2 text-center text-[14px]" style={{ color: "var(--color-ink-soft)", wordBreak: "keep-all" }}>
-        {meta.desc}
-      </p>
+    <Wrap className={tarot ? "mt-8" : "mx-auto min-h-screen max-w-xl px-5 pb-16 pt-10"}>
+      {tarot ? (
+        <h2 className="text-center text-[20px] font-bold" style={{ fontFamily: "var(--font-serif)" }}>
+          내 사주와 겹쳐 보기
+        </h2>
+      ) : (
+        <>
+          <p className="text-center text-[13px]" style={{ color: GOLD }}>
+            {`${BRAND} · 무료`}
+          </p>
+          <h1 className="mt-1 text-center text-[26px] font-bold" style={{ fontFamily: "var(--font-serif)" }}>
+            {meta.title}
+          </h1>
+          <p className="mt-2 text-center text-[14px]" style={{ color: "var(--color-ink-soft)", wordBreak: "keep-all" }}>
+            {meta.desc}
+          </p>
+        </>
+      )}
 
       <form onSubmit={submit} className="mt-7 space-y-4 rounded-2xl p-5" style={CARD}>
         {kind === "blood" && (
@@ -210,7 +226,7 @@ export function FunTool({ kind }: { kind: FunKind }) {
         </div>
 
         <button type="submit" disabled={busy} className="btn-band block w-full rounded-xl py-4 text-[17px] font-bold disabled:opacity-60" style={{ fontFamily: "var(--font-serif)" }}>
-          {busy ? "살펴보는 중..." : `무료로 ${meta.title.split(" · ")[0]} 보기`}
+          {busy ? "살펴보는 중..." : tarot ? "고른 카드와 내 사주 겹쳐 보기" : `무료로 ${meta.title.split(" · ")[0]} 보기`}
         </button>
         {error && (
           <p className="rounded-xl px-4 py-3 text-center text-[14px]" style={{ backgroundColor: "var(--color-danger-soft)", color: "var(--color-danger)" }}>
@@ -222,7 +238,7 @@ export function FunTool({ kind }: { kind: FunKind }) {
         </p>
       </form>
 
-      {answer && <FunAnswer kind={kind} answer={answer} />}
+      {answer && <FunAnswer kind={kind} answer={answer} hideResult={!!tarot} />}
 
       <nav className="mt-12">
         <p className="mb-3 text-center text-[14px] font-semibold">다른 것도 무료로 보기</p>
@@ -237,16 +253,16 @@ export function FunTool({ kind }: { kind: FunKind }) {
           </a>
         </div>
       </nav>
-    </main>
+    </Wrap>
   );
 }
 
-function FunAnswer({ kind, answer }: { kind: FunKind; answer: Answer }) {
+function FunAnswer({ kind, answer, hideResult }: { kind: FunKind; answer: Answer; hideResult?: boolean }) {
   const { result: r, overlay: o } = answer;
   return (
     <div id="fun-result" className="scroll-mt-6">
-      {/* 무료 결과 */}
-      <section className="mt-8 rounded-2xl p-5" style={CARD}>
+      {/* 무료 결과 (타로는 위에서 이미 보여 줘서 뺀다) */}
+      <section className="mt-8 rounded-2xl p-5" style={hideResult ? { display: "none" } : CARD}>
         <div className="flex items-center gap-4">
           <span
             className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full text-[26px] font-bold"
