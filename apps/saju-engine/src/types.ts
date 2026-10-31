@@ -71,6 +71,23 @@ export interface CalculationMeta {
    * 사주 원국 계산과 완전히 동일한 기준 시각으로 대운수를 계산하도록 보장한다.
    */
   resolvedSolarDateTime: string;
+  /**
+   * 양력 생일 (음력 입력이면 양력으로 바꾼 날짜, 시각 보정 전) - 별자리·탄생화처럼 "달력상 생일"이 필요한 곳에 쓴다.
+   * (2026-10-31) 이전에 만든 결과에는 없을 수 있다.
+   */
+  solarBirthDate?: string;
+  /**
+   * 한국 시계 역사 보정 분 (서머타임 -60, UTC+8:30 시절 +30, 둘이 겹치면 -30, 보정 없으면 0) - koreaTime.ts 참고.
+   * (2026-10-31) 이전에 만든 결과에는 없을 수 있다.
+   */
+  koreanClockCorrectionMinutes?: number;
+  /** 위 보정의 이유: "summer_time" | "utc_plus_8_30" | "summer_time_utc_plus_8_30" | null */
+  koreanClockReason?: "summer_time" | "utc_plus_8_30" | "summer_time_utc_plus_8_30" | null;
+  /**
+   * 연주·월주(절기) 판정과 대운수 계산에 쓴 기준 시각 - KST를 lunar-javascript 절기 시간대(베이징, UTC+8)로 바꾼 값.
+   * (2026-10-31) 이전에 만든 결과에는 없을 수 있다 (그때는 resolvedSolarDateTime 을 쓴다).
+   */
+  solarTermReferenceDateTime?: string;
 }
 
 export interface SajuJson {
