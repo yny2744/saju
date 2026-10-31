@@ -72,13 +72,13 @@ export const FUN_META: Record<FunKind, FunMeta> = {
     title: "탄생화 · 꽃말",
     desc: "내가 태어난 달의 꽃, 그리고 나를 채워 주는 꽃",
     topic: "nature",
-    overlayLead: "내 탄생화와, 내 사주에 부족한 기운을 채워 주는 꽃은 다를 수 있어요.",
+    overlayLead: "내 탄생화와, 내 사주의 남은 작은 빈자리를 채워 주는 꽃은 다를 수 있어요.",
   },
   birthstone: {
     title: "탄생석 · 보석말",
     desc: "내가 태어난 달의 보석, 그리고 나를 채워 주는 돌",
     topic: "money",
-    overlayLead: "내 탄생석과, 내 사주에 부족한 기운을 채워 주는 돌은 다를 수 있어요.",
+    overlayLead: "내 탄생석과, 내 사주의 남은 작은 빈자리를 채워 주는 돌은 다를 수 있어요.",
   },
   // 2026-10-31 타로관 - 이어지는 운세는 고른 질문에 따라 바뀐다 (tarot.ts TAROT_QUESTIONS)
   tarot: {

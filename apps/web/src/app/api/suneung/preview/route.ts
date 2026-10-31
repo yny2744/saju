@@ -39,7 +39,7 @@ export async function POST(request: NextRequest) {
         title: r.title,
         dday: r.dday,
         summary: r.summary,
-        fill: { element: r.kit.element, hanja: r.kit.hanja, nature: r.kit.nature, reason: need.reason },
+        fill: { element: r.kit.element, hanja: r.kit.hanja, nature: r.kit.nature, reason: need.reason, gap: need.gap },
         headings: r.sections.map((s) => s.heading),
         freeSections: r.sections.slice(0, 2),
         lockedHeadings: r.sections.slice(2).map((s) => s.heading),

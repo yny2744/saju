@@ -154,6 +154,8 @@ export interface ExamKit {
   direction: string;
   pocket: string;
   snack: string;
+  /** "남은 작은 빈자리" 게이지의 빈 곳 40~60% (2026-10-31) - 예전에 쓴 풀이에는 없다 */
+  gap?: number;
 }
 
 export interface ExamReading {
@@ -172,9 +174,9 @@ export interface ExamReading {
 const fill = (s: string, name: string) => s.replace(/\{이름\}/g, name);
 
 export const EXAM_DEEP_POINTS: Record<ExamSeason, string[]> = {
-  suneung: ["남은 날 과목별 공부 리듬", "시험날 교시마다 기운의 흐름", "긴장이 올라올 때 나에게 맞는 처방", "시험 뒤 원서 고를 때 나에게 맞는 방향", "꼭 채워야 할 하나"],
-  pass: ["원서 고를 때 나에게 맞는 방향", "면접·실기에서 나를 보여 주는 법", "기다리는 동안 마음 다스리기", "올해 하반기까지의 흐름", "꼭 채워야 할 하나"],
-  start: ["새 자리에서 나의 강점", "사람과 관계를 넓히는 법", "공부·일의 방향 잡기", "올 한 해 달마다 흐름", "꼭 채워야 할 하나"],
+  suneung: ["남은 날 과목별 공부 리듬", "시험날 교시마다 기운의 흐름", "긴장이 올라올 때 나에게 맞는 처방", "시험 뒤 원서 고를 때 나에게 맞는 방향", "남은 작은 빈자리 채우기"],
+  pass: ["원서 고를 때 나에게 맞는 방향", "면접·실기에서 나를 보여 주는 법", "기다리는 동안 마음 다스리기", "올해 하반기까지의 흐름", "남은 작은 빈자리 채우기"],
+  start: ["새 자리에서 나의 강점", "사람과 관계를 넓히는 법", "공부·일의 방향 잡기", "올 한 해 달마다 흐름", "남은 작은 빈자리 채우기"],
 };
 
 export function composeExam(saju: SajuJson, nickname: string, today: string = kstDateString()): ExamReading {
@@ -184,7 +186,7 @@ export function composeExam(saju: SajuJson, nickname: string, today: string = ks
   const need = f.needed.elements[0];
   const F = FILL[need];
   const obj = KIT_OBJECT[need];
-  const kit: ExamKit = { element: need, hanja: ELEMENT_HANJA[need], nature: ELEMENT_NATURE[need], colors: F.colors, numbers: F.numbers, direction: F.direction, pocket: obj.pocket, snack: obj.snack };
+  const kit: ExamKit = { element: need, hanja: ELEMENT_HANJA[need], nature: ELEMENT_NATURE[need], colors: F.colors, numbers: F.numbers, direction: F.direction, pocket: obj.pocket, snack: obj.snack, gap: f.needed.gap };
   const study = STUDY[f.dayStem] ?? "";
   const kitLine = `${f.needed.reason === "lacking" ? "사주에 비어 있는" : "사주에서 가장 약한"} ${need}(${ELEMENT_HANJA[need]})의 기운을 곁에 두면 마음이 한결 단단해져요. 색은 ${F.colors}, 숫자는 ${F.numbers}, 방위는 ${F.direction}이에요. 주머니 속에는 ${obj.pocket}, 쉬는 시간 간식으로는 ${obj.snack} 어떠세요?`;
 

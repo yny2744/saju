@@ -1,6 +1,7 @@
 import type { SajuJson } from "saju-engine";
 import type { ElementKo } from "@/lib/pillarView";
 import { ELEMENTS } from "@/lib/manseView";
+import { fillGapPercent } from "@/lib/fillGauge";
 
 /**
  * 무료 만세력 "나에게 필요한 기운" (수정안 1번, AI 없음).
@@ -73,14 +74,17 @@ export interface NeededEnergy {
   elements: ElementKo[];
   /** lacking = 원국에 비어 있음, weakest = 비어 있진 않지만 가장 약함 */
   reason: "lacking" | "weakest";
+  /** "남은 작은 빈자리" 게이지의 빈 곳 크기 40~60% - 여덟 글자로 정해져 늘 같다 (2026-10-31, lib/fillGauge.ts) */
+  gap: number;
 }
 
 export function neededEnergy(saju: SajuJson): NeededEnergy {
   const lacking = (saju.elements.summary.lacking as ElementKo[]).filter((e) => ELEMENTS.includes(e));
-  if (lacking.length > 0) return { elements: lacking, reason: "lacking" };
+  const gap = fillGapPercent(saju);
+  if (lacking.length > 0) return { elements: lacking, reason: "lacking", gap };
 
   const counts = saju.elements.summary.counts as Record<ElementKo, number>;
   let weakest: ElementKo = ELEMENTS[0];
   for (const e of ELEMENTS) if (counts[e] < counts[weakest]) weakest = e;
-  return { elements: [weakest], reason: "weakest" };
+  return { elements: [weakest], reason: "weakest", gap };
 }

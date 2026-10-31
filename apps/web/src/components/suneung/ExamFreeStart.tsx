@@ -9,6 +9,7 @@ import { reportClientError } from "@/components/yeopjeon/useYeopjeon";
 import type { SajuJson } from "saju-engine";
 import { SajuPillarsCard } from "@/components/SajuPillarsCard";
 import { DaeunTimeline, ElementBalance, NeededEnergySection, RelationsTable } from "@/components/ManseSections";
+import { FillGauge } from "@/components/FillGauge";
 import { SaleNote } from "@/components/SaleNote";
 import { WritingOverlay } from "@/components/yeopjeon/WritingOverlay";
 import { NARRATION_OFF } from "@/components/landing/SuneungHero";
@@ -26,7 +27,7 @@ import { daeunCells, elementShares, kstDateString, relationRows, yinYangCount } 
  */
 
 const WAIT_MS = 21000;
-const WAIT_STEPS = ["만세력 여덟 글자를 펼치고 있어요", "오행의 많고 적음을 헤아리고 있어요", "시험날 일진과 견주고 있어요", "공부 체질과 시험날 기운을 쓰고 있어요", "마지막 한 칸의 기운을 고르고 있어요"];
+const WAIT_STEPS = ["만세력 여덟 글자를 펼치고 있어요", "오행의 많고 적음을 헤아리고 있어요", "시험날 일진과 견주고 있어요", "공부 체질과 시험날 기운을 쓰고 있어요", "남은 작은 빈자리의 기운을 고르고 있어요"];
 
 type Pillar = { label: string; empty: boolean; stem: Glyph | null; branch: Glyph | null };
 type Glyph = { hanja: string; hangul: string; element: ElementKo };
@@ -36,7 +37,7 @@ type Preview = {
   title: string;
   dday: number | null;
   summary: string;
-  fill: { element: ElementKo; hanja: string; nature: string; reason: "lacking" | "weakest" };
+  fill: { element: ElementKo; hanja: string; nature: string; reason: "lacking" | "weakest"; gap?: number };
   headings: string[];
   freeSections: Array<{ heading: string; body: string }>;
   lockedHeadings: string[];
@@ -285,20 +286,15 @@ export function ExamFreeStart() {
             <h2 className="mt-1 text-[24px] font-bold" style={{ fontFamily: "var(--font-serif)", color: GOLD_L }}>
               {pv.nickname}님의 {pv.season === "suneung" ? "시험날 기운" : pv.title}
             </h2>
-            <div className="mx-auto mt-5 flex max-w-[300px] gap-1.5" role="img" aria-label={`일곱 칸 중 여섯 칸이 금빛으로 차 있고, 마지막 한 칸은 ${pv.fill.nature}의 기운`}>
-              {Array.from({ length: 7 }, (_, i) =>
-                i < 6 ? (
-                  <span key={i} className="h-4 flex-1 rounded-sm" style={{ background: `linear-gradient(180deg,#f4e2b8,${GOLD})`, boxShadow: "0 0 8px rgba(244,226,184,.45)" }} />
-                ) : (
-                  <span key={i} className="h-4 flex-1 animate-pulse rounded-sm" style={{ border: `1.5px dashed ${EL(pv.fill.element)}`, backgroundColor: "rgba(255,255,255,.06)" }} />
-                )
-              )}
+            {/* 2026-10-31 유샘: "남은 작은 빈자리" 게이지 - 여섯 칸이 차오르고 마지막 칸은 절반쯤, 빈 곳은 필요한 기운 색으로 숨 쉰다 */}
+            <div className="mt-5">
+              <FillGauge elements={[pv.fill.element]} gap={pv.fill.gap} tone="dark" showLine={false} />
             </div>
             <p className="mt-4 text-[19px] font-bold" style={{ color: GOLD_L, fontFamily: "var(--font-serif)" }}>
               {pv.season === "suneung" ? "시험날 기운이 활짝 열려 있어요" : "나아갈 기운이 활짝 열려 있어요"}
             </p>
             <p className="mt-1.5 text-[16px]" style={{ color: GOLD_L }}>
-              마지막 한 칸은{" "}
+              남은 작은 빈자리는{" "}
               <b style={{ color: "#fff" }}>
                 {pv.fill.nature}({pv.fill.hanja})의 기운
               </b>
@@ -324,13 +320,13 @@ export function ExamFreeStart() {
             ))}
           </div>
 
-          {/* ③ 부족한 기운 채우기 - 가입하면 오픈 행사 선물 990냥으로 */}
+          {/* ③ 남은 작은 빈자리 채우기 - 가입하면 오픈 행사 선물 990냥으로 (2026-10-31 말투 통일) */}
           <section className="mt-4 rounded-2xl p-5" style={{ ...CARD, boxShadow: `0 0 0 2px ${GOLD} inset` }}>
             <p className="text-center text-[12px] tracking-[0.2em]" style={{ color: GOLD }}>
               가볍게 보기
             </p>
             <p className="mt-1 text-center text-[19px] font-bold" style={{ fontFamily: "var(--font-serif)" }}>
-              부족한 기운 채우기 · {pv.fill.nature}({pv.fill.hanja})
+              남은 작은 빈자리 채우기 · {pv.fill.nature}({pv.fill.hanja})
             </p>
             <ul className="mt-4 space-y-3">
               {[...pv.lockedHeadings, "마음 한 줄"].map((h) => (
@@ -373,7 +369,7 @@ export function ExamFreeStart() {
                 </a>
               ) : (
                 <a href={CONTINUE_PATH} onClick={remember} className="btn-primary block text-center">
-                  부족한 기운 채우기 · 가볍게 보기 {formatNyang(PRICE.EXAM)}
+                  남은 작은 빈자리 채우기 · 가볍게 보기 {formatNyang(PRICE.EXAM)}
                 </a>
               )}
             </div>

@@ -7,6 +7,7 @@ import { ELEMENT_HANJA, ELEMENT_NATURE } from "@/lib/manseView";
 import { BLOOD_TYPES, FUN_KINDS, FUN_META, type BloodType, type FunKind, type FunResult } from "@/lib/fun/types";
 import type { OverlayView } from "@/lib/fun/overlay";
 import { GoodsPicks } from "@/components/GoodsPicks";
+import { FillGauge } from "@/components/FillGauge";
 import { STONE_NOTE } from "@/lib/fun/birthstone";
 import type { TarotQuestion } from "@/lib/fun/tarot";
 
@@ -326,7 +327,11 @@ function FunAnswer({ kind, answer, hideResult }: { kind: FunKind; answer: Answer
           </div>
         )}
 
-        <p className="mt-4 text-[14px] leading-relaxed">{o.needLine}</p>
+        {/* 2026-10-31 "남은 작은 빈자리" 게이지 */}
+        <div className="mt-5">
+          <FillGauge elements={o.need.elements} gap={o.need.gap} tone="dark" lineColor="var(--color-gold-light)" />
+        </div>
+        <p className="mt-3 text-[14px] leading-relaxed">{o.needLine}</p>
 
         {/* 나를 채우는 꽃(탄생화) · 나를 채우는 돌(탄생석, 2026-10-31) */}
         {(() => {

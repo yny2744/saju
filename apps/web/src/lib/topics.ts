@@ -84,7 +84,7 @@ export const TOPICS: Record<AnyTopicKey, TopicInfo> = {
     title: "건강",
     hanja: "康",
     blurb: "약한 기운과 몸 돌보기",
-    deepPoints: ["오행으로 본 약한 곳 (의학적 진단 아님)", "기운이 떨어지기 쉬운 시기", "생활 습관과 마음가짐", "부족한 기운을 채우는 생활"],
+    deepPoints: ["오행으로 본 약한 곳 (의학적 진단 아님)", "기운이 떨어지기 쉬운 시기", "생활 습관과 마음가짐", "남은 작은 빈자리를 채우는 생활"],
   },
   relationship: {
     title: "인간관계",
@@ -120,7 +120,7 @@ export const TOPICS: Record<AnyTopicKey, TopicInfo> = {
     title: "개운법",
     hanja: "開",
     blurb: "운을 여는 생활 처방",
-    deepPoints: ["부족한 기운을 채우는 색·방향·숫자", "가까이하면 좋은 것", "피하면 좋은 습관", "마음가짐"],
+    deepPoints: ["남은 작은 빈자리를 채우는 색·방향·숫자", "가까이하면 좋은 것", "피하면 좋은 습관", "마음가짐"],
   },
 };
 

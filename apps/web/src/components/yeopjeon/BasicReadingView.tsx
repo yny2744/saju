@@ -1,4 +1,5 @@
 import { ELEMENT_TOKEN, type ElementKo } from "@/lib/pillarView";
+import { FillGauge } from "@/components/FillGauge";
 import { ENERGY_GUIDE } from "@/lib/neededEnergy";
 import { GoodsPicks } from "@/components/GoodsPicks";
 import { TOPICS } from "@/lib/topics";
@@ -60,7 +61,7 @@ export function BasicReadingView({ content }: { content: BasicReadingV2 }) {
         </section>
       ))}
 
-      {/* 결론: 꼭 채워야 할 하나 */}
+      {/* 결론: 남은 작은 빈자리 채우기 (2026-10-31 말투 통일) */}
       <section className="gold-card rounded-2xl p-5">
         <div className="flex items-center gap-3">
           <span
@@ -75,6 +76,11 @@ export function BasicReadingView({ content }: { content: BasicReadingV2 }) {
         </div>
 
         <ElementBars elements={content.chart.elements} />
+
+        {/* 2026-10-31 "남은 작은 빈자리" 게이지 - 결론이 정리되는 자리 */}
+        <div className="mt-5">
+          <FillGauge elements={[need.element]} gap={need.gap} lineColor="var(--color-accent)" />
+        </div>
 
         <p className="mt-4 text-[15.5px] leading-[1.9]">{content.lack.body}</p>
 
@@ -209,7 +215,7 @@ export function ElementBars({ elements }: { elements: Chart["elements"] }) {
   );
 }
 
-/** 행운 카드 - 부족한 기운을 채우는 색·방위·숫자·동물·식물·물건·생활·사람 */
+/** 행운 카드 - 남은 작은 빈자리를 채우는 색·방위·숫자·동물·식물·물건·생활·사람 */
 export function LuckCard({ fill: need, person }: { fill: FillCard; person: string }) {
   const guide = ENERGY_GUIDE[need.element];
   return (

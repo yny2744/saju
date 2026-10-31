@@ -107,6 +107,6 @@ export const HOUR_RANGE: Record<string, string> = {
 /** 오늘 채우면 좋은 기운 - 오늘 그 기운이 들어오는지에 따라 */
 export function fillTodayLine(need: ElementKo, todayElements: ElementKo[], dayWord: string): string {
   return todayElements.includes(need)
-    ? `${dayWord}은 마침 부족한 ${need}의 기운이 들어오는 날이에요. 이 기운을 곁에 두기 좋은 때라, 아래 색과 물건을 가까이하면 하루가 한결 부드러워져요.`
-    : `${dayWord}은 부족한 ${need}의 기운이 저절로 들어오지 않는 날이에요. 그래서 더더욱 아래 색과 물건으로 살며시 채워 주면 좋아요.`;
+    ? `${dayWord}은 마침 남은 작은 빈자리인 ${need}의 기운이 들어오는 날이에요. 이 기운을 곁에 두기 좋은 때라, 아래 색과 물건을 가까이하면 하루가 한결 부드러워져요.`
+    : `${dayWord}은 남은 작은 빈자리인 ${need}의 기운이 저절로 들어오지 않는 날이에요. 그래서 더더욱 아래 색과 물건으로 살며시 채워 주면 좋아요.`;
 }

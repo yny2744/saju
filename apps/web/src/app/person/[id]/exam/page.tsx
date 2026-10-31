@@ -2,6 +2,7 @@
 
 
 import { BRAND } from "@/tenants";
+import { FillGauge } from "@/components/FillGauge";
 import { Suspense, useCallback, useEffect, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { isAuthEnabled, isSuneungOn } from "@/lib/launchMode";
@@ -246,8 +247,12 @@ function Body({ id }: { id: string }) {
           {kit && (
             <section className="mt-4 rounded-2xl p-5" style={{ backgroundColor: NAVY, border: `1px solid ${GOLD}` }}>
               <p className="text-center text-[17px] font-bold" style={{ fontFamily: "var(--font-serif)", color: GOLD_L }}>
-                마지막 한 칸 채우기 · {kit.nature}({kit.hanja})의 기운
+                남은 작은 빈자리 채우기 · {kit.nature}({kit.hanja})의 기운
               </p>
+              {/* 2026-10-31 "남은 작은 빈자리" 게이지 */}
+              <div className="mt-4">
+                <FillGauge elements={[kit.element]} gap={kit.gap} tone="dark" showLine={false} />
+              </div>
               <div className="mt-4 grid grid-cols-2 gap-2 text-center text-[13.5px]">
                 {[
                   ["색", kit.colors],

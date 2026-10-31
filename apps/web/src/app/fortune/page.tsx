@@ -1,6 +1,7 @@
 "use client";
 
 import { Suspense, useEffect, useState } from "react";
+import { FillGauge } from "@/components/FillGauge";
 import { useSearchParams } from "next/navigation";
 import type { SajuJson } from "saju-engine";
 import type { FortuneResultResponse, ApiErrorResponse, AnalyzeResultResponse } from "@/server/types";
@@ -229,7 +230,7 @@ function FortuneContent({ nickname, view, dayWord }: { nickname: string; view: F
         </section>
       )}
 
-      {/* 오늘 채우면 좋은 기운 (수정안 39 · 핵심: 부족한 하나) */}
+      {/* 오늘 채우면 좋은 기운 (수정안 39 · 핵심: 남은 작은 빈자리) */}
       <section className="gold-card mb-6 rounded-2xl p-4">
         <div className="flex items-center gap-3">
           <span
@@ -241,6 +242,10 @@ function FortuneContent({ nickname, view, dayWord }: { nickname: string; view: F
           <h2 className="text-[16px] font-bold" style={{ fontFamily: "var(--font-serif)", color: "var(--color-accent)" }}>
             {dayWord} 채우면 좋은 기운
           </h2>
+        </div>
+        {/* 2026-10-31 "남은 작은 빈자리" 게이지 */}
+        <div className="mt-4">
+          <FillGauge elements={[view.fill.element]} gap={view.fill.gap} lineColor="var(--color-accent)" />
         </div>
         <p className="mt-3 text-[14.5px] leading-[1.8]">{fillTodayLine(view.fill.element, view.fill.todayElements, dayWord)}</p>
         <dl className="mt-3 grid grid-cols-2 gap-x-3 gap-y-2 text-[13px]">

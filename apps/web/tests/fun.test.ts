@@ -184,8 +184,8 @@ describe("타로관 (2026-10-31)", () => {
     expect(isTarotSaved({ date: today, question: "love", deck, picked: 22 }, today)).toBe(false);
   });
 
-  it("2차 (2026-10-31): 방식 세 가지, 처음은 수레바퀴", () => {
-    expect(TAROT_MODES.map((m) => m.key)).toEqual(["wheel", "pick", "reels"]);
+  it("2차 (2026-10-31): 방식 세 가지, 처음은 세 줄 두루마리", () => {
+    expect(TAROT_MODES.map((m) => m.key)).toEqual(["reels", "wheel", "pick"]);
   });
 
   it("세 줄 두루마리: 22장을 8·7·7장으로 겹치지 않게 나눠 담는다", () => {

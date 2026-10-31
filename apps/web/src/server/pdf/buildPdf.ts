@@ -511,7 +511,7 @@ function fillDetailPages(ctx: Ctx) {
   pageTitle(doc, `딱 하나 아쉬운 것 — ${need}(${ELEMENT_HANJA[need]})`);
   para(doc, `${input.nickname}님, 참 좋은 사주예요. 다만 다섯 기운 가운데 ${need}(${ELEMENT_HANJA[need]})의 기운이 ${f.needed.reason === "lacking" ? "원국에 비어 있어요" : "가장 약해요"}.`);
   para(doc, LACK_CORE[need]);
-  para(doc, "부족한 기운은 탓할 일이 아니라 채울 수 있는 빈자리예요. 색과 방위, 곁에 두는 동물·식물·물건, 그리고 하루의 습관과 곁에 있는 사람으로 조금씩 채워 가면 흐름이 한결 부드러워져요.");
+  para(doc, "남은 작은 빈자리는 탓할 일이 아니라 채우면 되는 자리예요. 색과 방위, 곁에 두는 동물·식물·물건, 그리고 하루의 습관과 곁에 있는 사람으로 조금씩 채워 가면 흐름이 한결 부드러워져요.");
   const d = FILL_DETAIL[need];
   for (const k of Object.keys(FILL_LABEL) as Array<keyof typeof FILL_LABEL>) {
     subhead(doc, `${FILL_LABEL[k]} — ${FILL[need][k]}`);

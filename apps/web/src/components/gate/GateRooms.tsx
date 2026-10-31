@@ -116,7 +116,7 @@ export function GateRooms({ gate }: { gate: TenantGate }) {
             {gate.fruit.desc}
           </p>
           <a href="/start" className="mx-auto mt-5 block max-w-[260px] rounded-xl py-3 text-[15px] font-bold" style={{ background: "linear-gradient(180deg,#e2c47e,#c9a55a)", color: "#16213a" }}>
-            내 사주로 부족한 기운 보기
+            내 사주의 남은 작은 빈자리 보기
           </a>
         </div>
       </div>

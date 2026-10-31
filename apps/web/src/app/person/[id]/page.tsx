@@ -386,7 +386,7 @@ function PersonBody({ id }: { id: string }) {
             나를 채우는 행운 배경화면
           </span>
           <span className="block text-[12.5px]" style={{ color: "#c9cfda" }}>
-            {person.wallpaper ? "내 배경화면 다시 받기" : "부족한 기운을 담은 나만의 폰 배경화면"}
+            {person.wallpaper ? "내 배경화면 다시 받기" : "남은 작은 빈자리의 기운을 담은 나만의 폰 배경화면"}
           </span>
         </span>
         <span style={{ color: "#d4b265" }}>›</span>

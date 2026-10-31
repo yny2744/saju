@@ -321,7 +321,7 @@ export function shuffleDeck(rand: () => number): number[] {
 }
 
 /**
- * 뽑는 방식 (2026-10-31 유샘: 고객이 고른다, 처음엔 수레바퀴).
+ * 뽑는 방식 (2026-10-31 유샘: 고객이 고른다, 처음엔 세 줄 두루마리 - 같은 날 오후 수레바퀴에서 바꿈).
  *   wheel 수레바퀴: 22장이 새겨진 바퀴가 돌고, 내가 멈춘 순간 금빛 화살표가 가리킨 카드
  *   pick 카드 고르기: 엎어 둔 22장 중 한 장
  *   reels 세 줄 두루마리: 과거·현재·미래 세 줄을 하나씩 멈춰 세 장
@@ -329,10 +329,11 @@ export function shuffleDeck(rand: () => number): number[] {
  */
 export type TarotMode = "wheel" | "pick" | "reels";
 
+/** 첫 번째가 처음 들어왔을 때 고른 방식이다 */
 export const TAROT_MODES: Array<{ key: TarotMode; label: string; desc: string }> = [
+  { key: "reels", label: "세 줄 두루마리", desc: "과거 · 현재 · 미래 세 줄을 멈춰 세 장" },
   { key: "wheel", label: "수레바퀴", desc: "돌아가는 바퀴를 내가 멈춰 한 장" },
   { key: "pick", label: "카드 고르기", desc: "엎어 둔 22장 중 마음 가는 한 장" },
-  { key: "reels", label: "세 줄 두루마리", desc: "과거 · 현재 · 미래 세 줄을 멈춰 세 장" },
 ];
 
 export function isTarotMode(v: unknown): v is TarotMode {

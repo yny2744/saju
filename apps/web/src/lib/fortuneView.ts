@@ -96,7 +96,7 @@ export interface FortuneView {
   /** 수정안 39 */
   overallDetail: string;
   luckyTime: { branch: string; hanja: string; range: string } | null;
-  fill: { element: ElementKo; todayElements: ElementKo[]; colors: string; direction: string; numbers: string; animal: string; object: string };
+  fill: { element: ElementKo; todayElements: ElementKo[]; colors: string; direction: string; numbers: string; animal: string; object: string; gap: number };
 }
 
 const REL_TEXT = {
@@ -177,14 +177,15 @@ export function buildFortuneView(saju: SajuJson, fortune: FortuneJson, result: F
         : "내 사주와 오늘 일진이 서로 손을 잡는 자리가 있어, 도움과 화합이 따르기 쉬워요.";
   const overallDetail = [DAY_TEN_GOD[tenGodOfDay] ?? "", stage.phase ? `하루의 흐름은 ${stage.phase}이에요.` : "", relLine].filter(Boolean).join(" ");
   const harmony = SIX_HARMONY[dayBranch];
-  const need = neededEnergy(saju).elements[0];
+  const needed = neededEnergy(saju);
+  const need = needed.elements[0];
   const F = FILL[need];
   const todayElements = [STEM_ELEMENT[dayStem], BRANCH_ELEMENT[dayBranch]] as ElementKo[];
 
   return {
     overallDetail,
     luckyTime: harmony ? { branch: harmony, hanja: BRANCH_HANJA[harmony], range: HOUR_RANGE[harmony] } : null,
-    fill: { element: need, todayElements, colors: F.colors, direction: F.direction, numbers: F.numbers, animal: F.animal, object: F.object },
+    fill: { element: need, todayElements, colors: F.colors, direction: F.direction, numbers: F.numbers, animal: F.animal, object: F.object, gap: needed.gap },
     dateLabel: dateLabel(fortune.date),
     day: { stem: dayStem, branch: dayBranch, hanja: `${STEM_HANJA[dayStem]}${BRANCH_HANJA[dayBranch]}` },
     me: {

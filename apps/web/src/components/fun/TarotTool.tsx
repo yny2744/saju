@@ -22,7 +22,7 @@ import { TarotWheel, TarotReels, SPIN_CSS } from "./TarotSpin";
 import { FunTool } from "./FunTool";
 
 /**
- * 타로관 화면 (2026-10-31 유샘) - 질문 → 뽑는 방식(수레바퀴·카드 고르기·세 줄 두루마리, 처음엔 수레바퀴) → 결과 → 사주와 겹쳐 보기.
+ * 타로관 화면 (2026-10-31 유샘) - 질문 → 뽑는 방식(세 줄 두루마리·수레바퀴·카드 고르기, 처음엔 세 줄 두루마리) → 결과 → 사주와 겹쳐 보기.
  * 신뢰 원칙: 섞는 순간(기기 안의 암호 난수) 순서가 정해지고, 내가 멈추거나 고른 칸의 카드가 그대로 나오며, 22장을 모두 보여 준다.
  * 하루 한 번: 뽑은 결과(방식·섞인 순서·자리)를 이 기기에 저장해 두고 오늘 다시 오면 그대로 보여 준다. 서버에는 저장하지 않는다.
  * 색: 옻칠 · 금박 · 자개 (TarotCard.tsx TAROT_LUX_CSS).
@@ -56,7 +56,7 @@ const UNSHUFFLED = TAROT_CARDS.map((c) => c.no);
 const POSITION_LABELS = ["과거", "현재", "미래"];
 
 export function TarotTool() {
-  const [mode, setMode] = useState<TarotMode>("wheel");
+  const [mode, setMode] = useState<TarotMode>(TAROT_MODES[0].key);
   const [question, setQuestion] = useState<TarotQuestion | null>(null);
   const [deck, setDeck] = useState<number[] | null>(null);
   const [shuffles, setShuffles] = useState(0);
@@ -213,7 +213,7 @@ export function TarotTool() {
 
       {question && (
         <>
-          {/* ② 뽑는 방식 - 고객이 고른다 (처음엔 수레바퀴) */}
+          {/* ② 뽑는 방식 - 고객이 고른다 (처음엔 세 줄 두루마리) */}
           {!already && (
             <div className="mt-5 grid grid-cols-3 gap-1.5" role="group" aria-label="뽑는 방식">
               {TAROT_MODES.map((m) => (

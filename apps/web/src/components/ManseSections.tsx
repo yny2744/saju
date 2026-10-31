@@ -1,4 +1,5 @@
 import { ELEMENT_TOKEN, STEM_HANJA, BRANCH_HANJA, type ElementKo } from "@/lib/pillarView";
+import { FillGauge } from "@/components/FillGauge";
 import {
   ELEMENT_HANJA,
   ELEMENT_NATURE,
@@ -212,10 +213,14 @@ export function NeededEnergySection({ need, highlight }: { need: NeededEnergy; h
       <h2 className="mb-1 text-lg font-bold">
         {names}의 기운을 곁에 두면 좋아요
       </h2>
+      {/* 2026-10-31 "남은 작은 빈자리" 게이지 */}
+      <div className="my-4">
+        <FillGauge elements={need.elements} gap={need.gap} lineColor="var(--color-ink)" />
+      </div>
       <p className="mb-3 text-sm leading-relaxed" style={{ color: "var(--color-ink-soft)" }}>
         {need.reason === "lacking"
-          ? `내 사주에는 ${lead}의 기운이 비어 있어요. 일상에서 이 기운을 조금씩 채우면 균형에 도움이 된다고 봐요.`
-          : `내 사주에서 ${lead}의 기운이 가장 옅어요. 일상에서 이 기운을 조금씩 채우면 균형에 도움이 된다고 봐요.`}
+          ? `내 사주에 남은 작은 빈자리는 ${lead}의 기운이에요. 일상에서 이 기운을 조금씩 채우면 균형에 도움이 된다고 봐요.`
+          : `내 사주에서 ${lead}의 기운이 가장 옅어, 그 자리가 남은 작은 빈자리예요. 일상에서 이 기운을 조금씩 채우면 균형에 도움이 된다고 봐요.`}
         {highlight && " 사주에서는 오행이 고르게 어울리는지를 몸과 마음의 균형과 이어서 살펴봐요."}
       </p>
       <div className="space-y-2.5">

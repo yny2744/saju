@@ -34,7 +34,7 @@ describe("수정안 33 - 990냥 엔진 풀이", () => {
         expect(r.body).not.toMatch(/undefined|null|NaN/);
         expect(r.body.length).toBeGreaterThan(1300);
         expect(r.sections).toHaveLength(4);
-        expect(r.lack.body).toContain("딱 하나");
+        expect(r.lack.body).toContain("남은 작은 빈자리"); // 2026-10-31 말투 통일 ("딱 하나" → "남은 작은 빈자리")
         expect(composeBasic(saju, "홍길동", t, "2026-10-10").body).toBe(r.body);
       }
     }

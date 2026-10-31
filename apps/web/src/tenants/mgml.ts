@@ -150,7 +150,7 @@ const mgml: TenantConfig = {
               { name: "상호 작명관", desc: "대표자 사주로 짓는 가게·회사 이름", href: "/name/business" },
               { name: "택일관", desc: "이사·결혼·개업에 좋은 날" },
             ],
-            landing: { headline: "좋은 이름, 좋은 날", lead: "사주에 부족한 기운을 채우는 이름을 짓고, 중요한 날을 고르는 길을 안내합니다." },
+            landing: { headline: "좋은 이름, 좋은 날", lead: "사주의 남은 작은 빈자리를 채우는 이름을 짓고, 중요한 날을 고르는 길을 안내합니다." },
           },
         ],
       },
@@ -158,8 +158,8 @@ const mgml: TenantConfig = {
     fruit: {
       glyph: "結",
       title: "채움",
-      sub: "부족한 기운을 채우는 길",
-      desc: "풀이에서 드러난 부족한 기운을 일상의 실천과 곁에 두는 물건으로 보완해, 아는 데서 그치지 않고 삶으로 이어지게 합니다.",
+      sub: "남은 작은 빈자리를 채우는 길",
+      desc: "풀이에서 드러난 남은 작은 빈자리를 일상의 실천과 곁에 두는 물건으로 채워, 아는 데서 그치지 않고 삶으로 이어지게 합니다.",
     },
     // 2026-10-30 광고별 홀로그램 대문 - 광고 주소 예: /?utm_source=youtube&utm_campaign=suneung01 또는 /?door=suneung
     doors: {

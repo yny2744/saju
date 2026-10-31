@@ -63,10 +63,10 @@ export const TOPIC_WORD: Record<TopicKey, string> = {
 /** 소제목 (운세마다 같은 틀, 단어만 바뀜) */
 export function headings(topic: TopicKey): [string, string, string, string, string] {
   const w = TOPIC_WORD[topic];
-  if (topic === "year") return ["타고난 바탕", "올해 나를 움직이는 기운", "올해의 흐름", "눈여겨볼 점", "올해 꼭 채워야 할 하나"];
-  if (topic === "daeun") return ["타고난 바탕", "평생을 관통하는 기운", "지금 지나는 10년", "눈여겨볼 점", "인생에 꼭 채워야 할 하나"];
-  if (topic === "nature") return ["타고난 바탕", "내 사주에서 두드러진 기운", "지금의 흐름", "눈여겨볼 점", "꼭 채워야 할 하나"];
-  return [`${w}에서 드러나는 나`, `${w}${eulReul(w)} 움직이는 기운`, "지금의 흐름", "눈여겨볼 점", `${w}에 꼭 채워야 할 하나`];
+  if (topic === "year") return ["타고난 바탕", "올해 나를 움직이는 기운", "올해의 흐름", "눈여겨볼 점", "올해 남은 작은 빈자리 채우기"];
+  if (topic === "daeun") return ["타고난 바탕", "평생을 관통하는 기운", "지금 지나는 10년", "눈여겨볼 점", "인생의 남은 작은 빈자리 채우기"];
+  if (topic === "nature") return ["타고난 바탕", "내 사주에서 두드러진 기운", "지금의 흐름", "눈여겨볼 점", "남은 작은 빈자리 채우기"];
+  return [`${w}에서 드러나는 나`, `${w}${eulReul(w)} 움직이는 기운`, "지금의 흐름", "눈여겨볼 점", `${w}의 남은 작은 빈자리 채우기`];
 }
 
 /** 받침 여부로 을/를 */

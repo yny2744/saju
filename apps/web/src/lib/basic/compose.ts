@@ -37,6 +37,8 @@ export interface FillCard {
   plant: string;
   object: string;
   habit: string;
+  /** "남은 작은 빈자리" 게이지의 빈 곳 40~60% (2026-10-31) - 예전에 쓴 풀이에는 없다 */
+  gap?: number;
 }
 
 export interface BasicReadingV2 {
@@ -193,13 +195,13 @@ export function composeBasic(saju: SajuJson, nickname: string, topic: TopicKey, 
   // ④ 눈여겨볼 점
   const s4 = relationsParagraph(f, topic);
 
-  // ⑤ 꼭 채워야 할 하나 (결론)
+  // ⑤ 남은 작은 빈자리 채우기 (결론, 2026-10-31 말투 통일)
   const needEl = f.needed.elements[0];
   const needHanja = f.needed.elements.map((e) => ELEMENT_HANJA[e]).join("·");
   const needNames = f.needed.elements.map((e) => `${e}(${ELEMENT_HANJA[e]})`).join("·");
   const F = FILL[needEl];
   const lackBody = [
-    `{이름}님은 참 좋은 바탕을 가졌어요. 그런데 딱 하나, ${needNames} 기운이 ${f.needed.reason === "lacking" ? "사주에 비어 있어요" : "가장 약해요"}.`,
+    `{이름}님은 참 좋은 바탕을 가졌어요. 거의 다 찬 사주에 남은 작은 빈자리 하나가 ${needNames}의 기운이에요.`,
     LACK_CORE[needEl],
     lib.lack[needEl],
     `이 하나만 채우면 ${TOPIC_WORD[topic]}의 흐름이 한결 부드러워져요. 가까이 두면 좋은 색은 ${F.colors}, 방위는 ${F.direction}, 숫자는 ${F.numbers} — 모두 ${ELEMENT_NATURE[needEl]}의 기운을 담고 있어요. 동물로는 ${F.animal}, 식물로는 ${F.plant}, 곁에 두는 물건으로는 ${F.object}에 이 기운이 담겨 있어요. 생활에서는 ${F.habit} 같은 작은 습관이 빈자리를 채워 줘요.`,
@@ -241,7 +243,7 @@ export function composeBasic(saju: SajuJson, nickname: string, topic: TopicKey, 
   const lack = {
     heading: h5,
     body: fill(lackBody, nickname),
-    fill: { element: needEl, hanja: ELEMENT_HANJA[needEl], ...F },
+    fill: { element: needEl, hanja: ELEMENT_HANJA[needEl], ...F, gap: f.needed.gap },
     person: PERSON_FILL[f.weakestGroup],
   };
   const body = [summary, ...sections.map((s) => `${s.heading}\n${s.body}`), `${lack.heading}\n${lack.body}`].join("\n\n");
@@ -307,7 +309,7 @@ export function topicVisual(saju: SajuJson, nickname: string, topic: AnyTopicKey
       : null;
   return {
     chart,
-    fill: { element: needEl, hanja: ELEMENT_HANJA[needEl], ...FILL[needEl] },
+    fill: { element: needEl, hanja: ELEMENT_HANJA[needEl], ...FILL[needEl], gap: f.needed.gap },
     person: PERSON_FILL[f.weakestGroup],
     needReason: f.needed.reason,
     months,

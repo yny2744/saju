@@ -86,8 +86,8 @@ export function buildOverlay(kind: FunKind, saju: SajuJson, fun: FunResult, topi
   const needNames = need.elements.map(elName).join("·");
   const needLine =
     need.reason === "lacking"
-      ? `그리고 당신의 사주에는 ${needNames}의 기운이 비어 있어요. 이 하나가 채워지면 흐름이 한결 고르게 돌아가요.`
-      : `그리고 당신의 사주에서는 ${needNames}의 기운이 가장 옅어요. 이 하나를 곁에 두면 흐름이 한결 고르게 돌아가요.`;
+      ? `그리고 당신의 사주에 남은 작은 빈자리는 ${needNames}의 기운이에요. 이 빈자리가 채워지면 흐름이 한결 고르게 돌아가요.`
+      : `그리고 당신의 사주에서는 ${needNames}의 기운이 가장 옅어, 그 자리가 남은 작은 빈자리예요. 이 기운을 곁에 두면 흐름이 한결 고르게 돌아가요.`;
 
   let relation: OverlayView["relation"];
   if (fun.element) {

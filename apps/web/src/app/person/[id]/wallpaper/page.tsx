@@ -105,7 +105,7 @@ function Body({ id }: { id: string }) {
             행운 배경화면 · {CURRENCY_NAME} {formatNyang(state.price)}
           </p>
           <ul className="mx-auto mt-3 max-w-xs space-y-1 text-left text-[14px]" style={{ color: "var(--color-ink-soft)" }}>
-            <li>◆ 부족한 기운의 색과 문양, 금박 한자</li>
+            <li>◆ 남은 작은 빈자리를 채우는 기운의 색과 문양, 금박 한자</li>
             <li>◆ 내 사주 여덟 글자 · 띠 · 행운 숫자 · 방위</li>
             <li>◆ 내 이름이 새겨진 고화질 그림 (내 복주머니에서 언제든 다시)</li>
           </ul>

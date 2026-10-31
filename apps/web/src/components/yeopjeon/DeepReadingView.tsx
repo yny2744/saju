@@ -1,4 +1,5 @@
 import { ELEMENT_TOKEN } from "@/lib/pillarView";
+import { FillGauge } from "@/components/FillGauge";
 import { TOPICS, isAnyTopicKey } from "@/lib/topics";
 import type { DeepVisual } from "@/lib/basic/compose";
 import type { DeepContent } from "@/server/readings/generateReading";
@@ -93,10 +94,14 @@ export function DeepReadingView({ content, visual }: { content: DeepContent; vis
               {visual.fill.hanja}
             </span>
             <h2 className="text-[19px] font-bold leading-snug" style={{ fontFamily: "var(--font-serif)", color: "var(--color-accent)" }}>
-              {fillPart?.heading ?? "꼭 채워야 할 하나"}
+              {fillPart?.heading ?? "남은 작은 빈자리 채우기"}
             </h2>
           </div>
           <ElementBars elements={visual.chart.elements} />
+          {/* 2026-10-31 "남은 작은 빈자리" 게이지 */}
+          <div className="mt-5">
+            <FillGauge elements={[visual.fill.element]} gap={visual.fill.gap} lineColor="var(--color-accent)" />
+          </div>
           {fillPart ? (
             <div className="mt-4 space-y-3 text-[15.5px] leading-[1.9]">
               {fillPart.body.split(/\n+/).map((para, j) => (
@@ -105,7 +110,7 @@ export function DeepReadingView({ content, visual }: { content: DeepContent; vis
             </div>
           ) : (
             <p className="mt-4 text-[15.5px] leading-[1.9]">
-              참 좋은 바탕인데, 딱 하나 {visual.fill.element}({visual.fill.hanja})의 기운이 {visual.needReason === "lacking" ? "비어 있어요" : "가장 약해요"}. 이 하나만 채우면 흐름이 한결 부드러워져요.
+              참 좋은 바탕인데, {visual.fill.element}({visual.fill.hanja})의 기운이 남은 작은 빈자리예요. 이 빈자리만 채우면 흐름이 한결 부드러워져요.
             </p>
           )}
           <LuckCard fill={visual.fill} person={visual.person} />

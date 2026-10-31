@@ -52,7 +52,7 @@ export interface SajuFacts {
   weakestGroup: TenGodGroup;
   elementPercents: Array<{ element: ElementKo; percent: number }>;
   /** 부족한 기운 (비어 있으면 lacking, 아니면 가장 약한 것) */
-  needed: { elements: ElementKo[]; reason: "lacking" | "weakest" };
+  needed: { elements: ElementKo[]; reason: "lacking" | "weakest"; gap: number };
   relations: RelationRow[];
   age: number | null;
   currentDaeun: DaeunFact | null;
@@ -128,7 +128,7 @@ export function factsForPrompt(f: SajuFacts): string {
   lines.push(`- 십신 묶음 비율(높은 순): ${f.groups.map((g) => `${g.group} ${g.percent}%`).join(", ")} → 가장 두드러진 기운: ${f.strongest}, 가장 약한 기운: ${f.weakestGroup}`);
   lines.push(`- 오행 비율: ${f.elementPercents.map((e) => `${e.element} ${e.percent}%`).join(", ")}`);
   lines.push(
-    `- 부족한 기운: ${f.needed.elements.map((e) => `${e}(${ELEMENT_HANJA[e]})`).join("·")} ${f.needed.reason === "lacking" ? "(원국에 비어 있음)" : "(가장 약함)"}`
+    `- 남은 작은 빈자리(가장 약한 기운): ${f.needed.elements.map((e) => `${e}(${ELEMENT_HANJA[e]})`).join("·")} ${f.needed.reason === "lacking" ? "(원국에 비어 있음)" : "(가장 약함)"}`
   );
   if (f.relations.length === 0) lines.push("- 원국 안의 합·충·형·파·해: 없음");
   for (const r of f.relations) lines.push(`- ${r.label}: ${r.chars} (${r.where})`);

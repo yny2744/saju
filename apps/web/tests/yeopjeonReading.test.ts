@@ -236,7 +236,7 @@ describe("AI 요청문·응답 처리", () => {
     expect(taste.sections).toHaveLength(12);
     expect(taste.sections[0].key).toBe("health");
     const monthly = await generateDeep(saju, "유남영", "monthly", 2026);
-    expect(monthly.parts).toHaveLength(13); // 열두 달 + 꼭 채워야 할 하나
+    expect(monthly.parts).toHaveLength(13); // 열두 달 + 남은 작은 빈자리 채우기
   });
 });
 
@@ -276,13 +276,13 @@ describe("수정안 30 - 깊게 보기는 확정 사실만", () => {
   // eslint-disable-next-line @typescript-eslint/no-var-requires
   const { calculateSaju: calc } = require("saju-engine");
   const s = calc({ calendarType: "solar", date: "1967-04-03", time: "04:50", gender: "male" }, 2026);
-  it("요청문에 확정 사실 목록·분량·꼭 채워야 할 하나", () => {
+  it("요청문에 확정 사실 목록·분량·남은 작은 빈자리 채우기", () => {
     const p = buildDeepPrompt(s, "love", 2026, "2026-10-10");
     expect(p).toContain("# 확정 사실");
     expect(p).toContain("지금 지나는 대운: 정유(丁酉) 대운");
     expect(p).toContain("5,000~6,000자");
-    expect(p).toContain("꼭 채워야 할 하나");
-    expect(p).toContain("부족한 기운: 토(土)");
+    expect(p).toContain("남은 작은 빈자리 채우기");
+    expect(p).toContain("남은 작은 빈자리(가장 약한 기운): 토(土)");
   });
   it("목록에 없는 대운 이름을 지어내면 거절", () => {
     expect(inventedDaeun("무술 대운에는 …", ["정유", "병신"])).toBe("무술");
