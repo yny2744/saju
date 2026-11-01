@@ -39,6 +39,13 @@ export function Footer() {
           <span aria-hidden style={{ color: "var(--color-line)" }}>
             |
           </span>
+          {/* 2026-11-01 휴대폰 앱(PWA) 설치 */}
+          <a href="/app" className="font-semibold underline-offset-2 hover:underline" style={{ color: "var(--color-accent)" }}>
+            앱으로 설치
+          </a>
+          <span aria-hidden style={{ color: "var(--color-line)" }}>
+            |
+          </span>
           {/* 2026-10-31 오픈소스 고지 */}
           <a href="/licenses" className="underline-offset-2 hover:underline">
             오픈소스 고지

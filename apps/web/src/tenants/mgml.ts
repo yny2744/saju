@@ -16,6 +16,8 @@ const mgml: TenantConfig = {
     ...ryugyeol.brand,
     description: "류결의 명견만리 — 천 년의 명리학과 오늘의 AI가 만나는 곳. 나를 알고, 마음을 보고, 만 리 앞을 내다본다.",
   },
+  /** 2026-11-01 휴대폰 앱(PWA) 이름 - 홈 화면 아이콘 아래에는 짧은 이름 */
+  app: { name: "류결의 명견만리", shortName: "명견만리" },
   /** 정식 주소가 정해지기 전에는 Vercel 환경변수 SITE_URL 이 먼저 쓰인다 */
   siteUrl: "https://saju-web-git-mgml-yny2744.vercel.app",
   gate: {

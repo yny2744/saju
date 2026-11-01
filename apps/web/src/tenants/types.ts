@@ -189,4 +189,9 @@ export interface TenantConfig {
   openSale?: TenantOpenSale;
   /** 세 길·일곱 운 대문 - 없으면 기존 대문 */
   gate?: TenantGate;
+  /**
+   * 휴대폰 앱(PWA)으로 설치했을 때 이름 (2026-11-01 유샘) - 없으면 brand.name.
+   * 아이콘은 public/icons/<id>/ (scripts/make-app-icons.js 로 만든다).
+   */
+  app?: { name: string; shortName: string };
 }
