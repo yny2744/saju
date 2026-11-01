@@ -1,5 +1,7 @@
 import { calculateSaju, getCurrentKstYear } from "saju-engine";
 import { isRateLimited } from "@/server/rateLimit";
+import { TENANT } from "@/tenants";
+import { PRICE } from "@/lib/yeopjeon";
 import { numerologyResult } from "@/lib/fun/numerology";
 import { zodiacResult } from "@/lib/fun/zodiac";
 import { bloodResult } from "@/lib/fun/blood";
@@ -29,6 +31,9 @@ export interface FunResponse {
   solarDate: string;
   result: FunResult;
   overlay: OverlayView;
+  /** 2026-11-01 겹쳐 보기가 잠겨 있으면 true - price 엽전으로 연다 */
+  locked?: boolean;
+  price?: number;
 }
 
 type Out = { status: number; body: FunResponse | { error: { code: string; message: string } } };
@@ -43,8 +48,31 @@ function validSolar(date: string): boolean {
   return d <= new Date(Date.UTC(y, m, 0)).getUTCDate();
 }
 
+/**
+ * 무료 결과 + 겹쳐 보기 (2026-11-01: 유료 겹쳐 보기 관은 풀이 문장을 빼고 보낸다 - 화면 코드를 열어 봐도 안 보이게).
+ * 잠긴 응답에는 locked: true 와 price 가 붙는다. 여는 것은 funUnlock.ts (엽전 차감 후 같은 계산으로 전체를 돌려준다).
+ */
 export function handleFun(raw: unknown, clientKey: string): Out {
   if (isRateLimited(`fun:${clientKey}`)) return { status: 429, body: { error: { code: "RATE_LIMITED", message: "잠시 후 다시 시도해 주세요." } } };
+  const out = computeFun(raw);
+  if (out.status !== 200 || !("overlay" in out.body) || !isOverlayPaid(out.body.kind)) return out;
+  return { status: 200, body: { ...out.body, overlay: lockOverlay(out.body.overlay), locked: true, price: OVERLAY_PRICE } };
+}
+
+/** 이 재미관의 겹쳐 보기가 유료인가 (고객사 설정 features.paidOverlay) */
+export function isOverlayPaid(kind: FunKind): boolean {
+  return (TENANT.features.paidOverlay ?? []).includes(kind) && OVERLAY_PRICE > 0;
+}
+
+export const OVERLAY_PRICE = PRICE.OVERLAY ?? 0;
+
+/** 잠긴 겹쳐 보기: 일간 이름·그림과 게이지(남은 작은 빈자리 기운)만 남기고 풀이 문장은 비운다 */
+export function lockOverlay(o: OverlayView): OverlayView {
+  return { ...o, dayCore: "", relation: undefined, needLine: "", fillFlowers: undefined, fillStones: undefined };
+}
+
+/** 계산만 (요청 횟수 제한·잠금 없음) - 무료 보기와 유료 열기가 같이 쓴다 */
+export function computeFun(raw: unknown): Out {
   const b = (typeof raw === "object" && raw !== null ? raw : {}) as Record<string, unknown>;
   if (!isFunKind(b.kind)) return bad("무엇을 볼지 골라 주세요.");
   const kind = b.kind;

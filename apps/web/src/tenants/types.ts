@@ -62,6 +62,8 @@ export interface TenantPrices {
   WALLPAPER: number;
   EXAM: number;
   EXAM_DEEP: number;
+  /** 사주 겹쳐 보기 열기 (2026-11-01, features.paidOverlay 가 있는 고객사만) */
+  OVERLAY?: number;
 }
 
 /** 기능 켜기·끄기 - 베이직에 새 기능을 붙여도 준비 안 된 고객사는 꺼 둔다 */
@@ -73,6 +75,11 @@ export interface TenantFeatures {
    * 웹에서 가입한 회원도 나중에 앱으로 열면 그때 받는다. 없거나 false 면 예전처럼 가입하면 바로.
    */
   appWelcomeGift?: boolean;
+  /**
+   * 사주 겹쳐 보기를 유료로 여는 재미관 (2026-11-01 유샘: 겹쳐 보기는 유료, 판독은 무료).
+   * 여기 든 관(예: "tarot")은 일간·게이지까지만 무료로 보이고, 겹쳐 본 풀이 문장은 prices.OVERLAY 엽전을 내야 열린다.
+   */
+  paidOverlay?: string[];
 }
 
 /** 오행 이름 (목·화·토·금·수) */

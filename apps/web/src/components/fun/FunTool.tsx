@@ -6,6 +6,7 @@ import { ELEMENT_TOKEN, type ElementKo } from "@/lib/pillarView";
 import { ELEMENT_HANJA, ELEMENT_NATURE } from "@/lib/manseView";
 import { BLOOD_TYPES, FUN_KINDS, FUN_META, type BloodType, type FunKind, type FunResult } from "@/lib/fun/types";
 import type { OverlayView } from "@/lib/fun/overlay";
+import { OverlayLock } from "./OverlayLock";
 import { GoodsPicks } from "@/components/GoodsPicks";
 import { FillGauge } from "@/components/FillGauge";
 import { STONE_NOTE } from "@/lib/fun/birthstone";
@@ -40,6 +41,9 @@ interface Answer {
   solarDate: string;
   result: FunResult;
   overlay: OverlayView;
+  /** 2026-11-01 겹쳐 보기가 잠겨 있으면 true (엽전 price 로 연다) */
+  locked?: boolean;
+  price?: number;
 }
 
 const NOW_YEAR = new Date().getFullYear();
@@ -96,6 +100,8 @@ export function FunTool({ kind, tarot }: { kind: FunKind; tarot?: { card: number
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [answer, setAnswer] = useState<Answer | null>(null);
+  // 2026-11-01 잠긴 겹쳐 보기를 열 때 같은 입력을 다시 보낸다
+  const [req, setReq] = useState<unknown>(null);
 
   useEffect(() => {
     try {
@@ -123,19 +129,21 @@ export function FunTool({ kind, tarot }: { kind: FunKind; tarot?: { card: number
       /* 무시 */
     }
     try {
+      const reqBody = {
+        kind,
+        calendarType: form.calendar,
+        isLeapMonth: form.calendar === "lunar" && form.leap,
+        date: `${form.y}-${pad(form.m)}-${pad(form.d)}`,
+        time: form.hour === "" ? undefined : `${pad(form.hour)}:00`,
+        blood: form.blood,
+        card: tarot?.card,
+        question: tarot?.question,
+      };
+      setReq(reqBody);
       const r = await fetch("/api/fun", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          kind,
-          calendarType: form.calendar,
-          isLeapMonth: form.calendar === "lunar" && form.leap,
-          date: `${form.y}-${pad(form.m)}-${pad(form.d)}`,
-          time: form.hour === "" ? undefined : `${pad(form.hour)}:00`,
-          blood: form.blood,
-          card: tarot?.card,
-          question: tarot?.question,
-        }),
+        body: JSON.stringify(reqBody),
       });
       const body = await r.json().catch(() => ({}));
       if (!r.ok) {
@@ -239,7 +247,7 @@ export function FunTool({ kind, tarot }: { kind: FunKind; tarot?: { card: number
         </p>
       </form>
 
-      {answer && <FunAnswer kind={kind} answer={answer} hideResult={!!tarot} />}
+      {answer && <FunAnswer kind={kind} answer={answer} hideResult={!!tarot} req={req} onOpen={setAnswer} />}
 
       <nav className="mt-12">
         <p className="mb-3 text-center text-[14px] font-semibold">다른 것도 무료로 보기</p>
@@ -258,8 +266,9 @@ export function FunTool({ kind, tarot }: { kind: FunKind; tarot?: { card: number
   );
 }
 
-function FunAnswer({ kind, answer, hideResult }: { kind: FunKind; answer: Answer; hideResult?: boolean }) {
+function FunAnswer({ kind, answer, hideResult, req, onOpen }: { kind: FunKind; answer: Answer; hideResult?: boolean; req?: unknown; onOpen?: (a: Answer) => void }) {
   const { result: r, overlay: o } = answer;
+  const locked = answer.locked === true;
   return (
     <div id="fun-result" className="scroll-mt-6">
       {/* 무료 결과 (타로는 위에서 이미 보여 줘서 뺀다) */}
@@ -316,9 +325,9 @@ function FunAnswer({ kind, answer, hideResult }: { kind: FunKind; answer: Answer
             나의 일간 <b>{`${o.dayStem}${o.dayElement}`}</b> · {o.dayImage}
           </span>
         </div>
-        <p className="mt-2 text-[14px] leading-relaxed">{o.dayCore}</p>
+        {!locked && <p className="mt-2 text-[14px] leading-relaxed">{o.dayCore}</p>}
 
-        {o.relation && (
+        {!locked && o.relation && (
           <div className="mt-4 rounded-xl p-3" style={{ backgroundColor: "rgba(246,236,210,0.06)", border: "1px solid rgba(212,178,101,0.35)" }}>
             <p className="text-[13px] font-bold" style={{ color: "var(--color-gold-light)", wordBreak: "keep-all" }}>
               {o.relation.head}
@@ -331,7 +340,12 @@ function FunAnswer({ kind, answer, hideResult }: { kind: FunKind; answer: Answer
         <div className="mt-5">
           <FillGauge elements={o.need.elements} gap={o.need.gap} tone="dark" lineColor="var(--color-gold-light)" />
         </div>
-        <p className="mt-3 text-[14px] leading-relaxed">{o.needLine}</p>
+        {/* 2026-11-01 겹쳐 보기 유료: 일간·게이지까지 무료, 풀이 문장은 엽전으로 */}
+        {locked ? (
+          <OverlayLock<Answer> req={req} price={answer.price ?? 0} onOpen={(a) => onOpen?.(a)} />
+        ) : (
+          <p className="mt-3 text-[14px] leading-relaxed">{o.needLine}</p>
+        )}
 
         {/* 나를 채우는 꽃(탄생화) · 나를 채우는 돌(탄생석, 2026-10-31) */}
         {(() => {
