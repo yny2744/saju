@@ -151,7 +151,7 @@ export function InstallGuide() {
         지금 {APP_SHORT_NAME} 앱으로 보고 계세요. 홈 화면의 아이콘으로 매일 들어오시면 돼요.
         {guest && (
           <a href="/login" className="btn-band mt-4 block rounded-xl py-3.5 text-[16px] font-bold">
-            가입하고 선물 {formatNyang(WELCOME_GIFT)} 받기
+            로그인하고 선물 {formatNyang(WELCOME_GIFT)} 받기
           </a>
         )}
       </p>
@@ -274,7 +274,7 @@ export function InstallBar() {
           {josa(APP_SHORT_NAME, "을/를")} <span className="whitespace-nowrap">홈 화면에</span>
         </b>
         <br />
-        {WELCOME_GIFT_APP_ONLY ? `앱으로 가입하면 ${formatNyang(WELCOME_GIFT)} 선물` : "매일 아침 오늘의 운세로 하루 시작"}
+        {WELCOME_GIFT_APP_ONLY ? `앱 설치하고 로그인하면 ${formatNyang(WELCOME_GIFT)} 선물` : "매일 아침 오늘의 운세로 하루 시작"}
       </a>
       <a href="/app" className="shrink-0 rounded-full px-3 py-1.5 text-[13px] font-bold" style={{ background: "linear-gradient(180deg,#fff1c4,#d9b25a 45%,#a77b25)", color: "#1a1408" }}>
         설치

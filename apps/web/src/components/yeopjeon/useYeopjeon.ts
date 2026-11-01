@@ -69,7 +69,7 @@ export function inviteUrl(refCode: string): string {
 export async function shareInvite(refCode: string): Promise<"shared" | "copied" | "failed"> {
   const url = inviteUrl(refCode);
   // 2026-11-01: 금액은 설정에서 (가입 선물 + 초대 선물), 앱 전용 고객사는 "앱으로 가입하면"
-  const text = `${BRAND}에서 내 사주를 무료로 봤어요. 이 링크로 ${WELCOME_GIFT_APP_ONLY ? "들어와 앱으로 가입하면" : "가입하면"} 엽전 ${formatNyang(WELCOME_GIFT + INVITEE_GIFT)}(가입 선물 ${formatNyang(WELCOME_GIFT)} + 초대 선물 ${formatNyang(INVITEE_GIFT)})을 받아서 운세 두 가지를 무료로 볼 수 있어요!`;
+  const text = `${BRAND}에서 내 사주를 무료로 봤어요. 이 링크로 ${WELCOME_GIFT_APP_ONLY ? "들어와 앱 설치하고 로그인하면" : "가입하면"} 엽전 ${formatNyang(WELCOME_GIFT + INVITEE_GIFT)}(가입 선물 ${formatNyang(WELCOME_GIFT)} + 초대 선물 ${formatNyang(INVITEE_GIFT)})을 받아서 운세 두 가지를 무료로 볼 수 있어요!`;
   try {
     if (navigator.share) {
       await navigator.share({ title: BRAND, text, url });

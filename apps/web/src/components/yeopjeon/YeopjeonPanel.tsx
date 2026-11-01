@@ -39,7 +39,7 @@ export function YeopjeonPanel() {
           </span>
           <span className="min-w-0 flex-1 text-[14px] leading-snug" style={{ wordBreak: "keep-all" }}>
             <b className="block text-[15px]">가입 선물 {formatNyang(WELCOME_GIFT)}이 기다려요</b>
-            앱으로 설치해서 열면 바로 들어와요
+            앱 설치하고 로그인하면 바로 들어와요
           </span>
           <span className="shrink-0 text-[13px] font-bold" aria-hidden>
             설치 ›
@@ -48,7 +48,7 @@ export function YeopjeonPanel() {
       )}
       {data.welcomeJustGranted && (
         <p className="mb-4 rounded-2xl px-4 py-3 text-center text-[15px] font-bold" style={{ backgroundColor: "var(--color-accent-soft)", color: "var(--color-accent)" }}>
-          앱 가입 선물 {CURRENCY_NAME} {formatNyang(WELCOME_GIFT)}이 들어왔어요
+          앱 로그인 선물 {CURRENCY_NAME} {formatNyang(WELCOME_GIFT)}이 들어왔어요
         </p>
       )}
 

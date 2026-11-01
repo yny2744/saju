@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { GATE_DOOR_JUST_OPENED_KEY } from "./StartDoor";
 import type { GateDoor as Door, TenantGate } from "@/tenants/types";
 import { SRC_COOKIE_NAME } from "@/lib/source";
 import { isSuneungOn } from "@/lib/launchMode";
@@ -112,12 +111,6 @@ export function GateDoor({ doors, onShown }: { doors: NonNullable<TenantGate["do
 
   const enter = () => {
     if (stage !== "closed") return;
-    // 2026-11-01: 이 문으로 들어가면 입력 화면의 문 열림 전환은 건너뛴다 (문이 두 번 열리지 않게)
-    try {
-      if (door.href.startsWith("/start")) sessionStorage.setItem(GATE_DOOR_JUST_OPENED_KEY, "1");
-    } catch {
-      /* 무시 */
-    }
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
       window.location.href = door.href;
       return;

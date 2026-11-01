@@ -67,8 +67,8 @@ export const WELCOME_GIFT = 990;
  */
 export const WELCOME_GIFT_APP_ONLY = TENANT.features.appWelcomeGift === true;
 
-/** 가입 선물 문구 앞머리 - "가입하면 990냥" / 앱 전용 고객사는 "앱으로 가입하면 990냥" (앱에서도 웹에서도 맞는 말) */
-export const JOIN_GIFT = WELCOME_GIFT_APP_ONLY ? "앱으로 가입하면" : "가입하면";
+/** 가입 선물 문구 앞머리 - "가입하면 990냥" / 앱 전용 고객사는 "앱 설치하고 로그인하면 990냥" (2026-11-01 유샘 통합 지시서) */
+export const JOIN_GIFT = WELCOME_GIFT_APP_ONLY ? "앱 설치하고 로그인하면" : "가입하면";
 
 /** 이번 요청이 선물을 받을 수 있는 자리인가 (앱 전용이 아니면 늘 true) */
 export function welcomeAllowed(fromApp: boolean): boolean {

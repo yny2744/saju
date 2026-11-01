@@ -52,7 +52,7 @@ export function HeaderAuth() {
         className="fixed left-1/2 top-16 z-50 -translate-x-1/2 whitespace-nowrap rounded-full px-4 py-2 text-[14px] font-bold shadow-lg"
         style={{ background: "linear-gradient(180deg,#fff1c4,#d9b25a 45%,#a77b25)", color: "#1a1408" }}
       >
-        앱 가입 선물 {formatNyang(WELCOME_GIFT)}이 들어왔어요
+        앱 로그인 선물 {formatNyang(WELCOME_GIFT)}이 들어왔어요
       </span>
     )}
     <a href="/mypage" className="text-right leading-tight">

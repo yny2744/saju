@@ -361,7 +361,7 @@ export function ExamFreeStart() {
                     {giftHere ? "카카오로 가입하고 무료로 채우기" : "카카오로 가입하고 채우기"}
                   </a>
                   <p className="mt-2 text-center text-[13px]" style={{ color: "var(--color-ink-soft)", wordBreak: "keep-all" }}>
-                    {giftHere ? "" : "앱으로 가입하면 "}선물 {formatNyang(WELCOME_GIFT)}으로 가볍게 보기({formatNyang(PRICE.EXAM)})가 바로 열려요
+                    {giftHere ? "" : "앱 설치하고 로그인하면 "}선물 {formatNyang(WELCOME_GIFT)}으로 가볍게 보기({formatNyang(PRICE.EXAM)})가 바로 열려요
                   </p>
                   <AppGiftLink />
                   <a href={`/login?next=${encodeURIComponent(CONTINUE_PATH)}`} onClick={remember} className="mt-1 block text-center text-[12px] underline underline-offset-4" style={{ color: "var(--color-ink-faint)" }}>

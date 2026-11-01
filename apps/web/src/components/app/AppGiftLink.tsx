@@ -16,7 +16,7 @@ export function AppGiftLink({ className, color }: { className?: string; color?: 
       className={className ?? "mt-2 block text-center text-[13.5px] font-bold underline underline-offset-4"}
       style={{ color: color ?? "var(--color-accent)", wordBreak: "keep-all" }}
     >
-      앱으로 설치해서 가입하면 선물 {CURRENCY_NAME} {formatNyang(WELCOME_GIFT)} ›
+      앱 설치하고 로그인하면 {CURRENCY_NAME} {formatNyang(WELCOME_GIFT)} 선물 ›
     </a>
   );
 }
@@ -27,7 +27,7 @@ export function JoinBannerButton({ style }: { style: React.CSSProperties }) {
   const toApp = here === false;
   return (
     <a href={toApp ? "/app" : "/login"} className="mx-auto mt-4 block max-w-[260px] rounded-xl py-3 text-center text-[15px] font-bold" style={style}>
-      {toApp ? "앱으로 설치하고 선물 받기" : "가입하고 운세 보기"}
+      {toApp ? `앱 설치하고 ${formatNyang(WELCOME_GIFT)} 받기` : "가입하고 운세 보기"}
     </a>
   );
 }

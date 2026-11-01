@@ -1,8 +1,7 @@
 "use client";
 
 
-import { BRAND, TENANT } from "@/tenants";
-import { StartDoor } from "@/components/gate/StartDoor";
+import { BRAND } from "@/tenants";
 import { isLoginRequired } from "@/lib/launchMode";
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -73,13 +72,7 @@ const pad = (n: number | string) => String(n).padStart(2, "0");
  * 지시서 10조: 출생정보를 URL에 넣지 않는다 - fetch body로만 보내고, 서버가 발급한 id로만 이동한다.
  */
 export default function StartPage() {
-  return (
-    <>
-      {/* 2026-11-01 유샘: 입력 화면에 들어올 때만 문이 열리는 전환 (대문이 있는 고객사만) */}
-      {TENANT.gate && <StartDoor />}
-      <MemberGate>{(member) => <StartForm member={member} />}</MemberGate>
-    </>
-  );
+  return <MemberGate>{(member) => <StartForm member={member} />}</MemberGate>;
 }
 
 function StartForm({ member }: { member: MemberInfo | null }) {

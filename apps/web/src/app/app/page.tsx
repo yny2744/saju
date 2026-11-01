@@ -27,7 +27,7 @@ export default function AppInstallPage() {
         {/* 2026-11-01 유샘: 가입 선물은 앱으로 열었을 때만 (고객사 설정 features.appWelcomeGift) */}
         {WELCOME_GIFT_APP_ONLY && (
           <p className="mx-auto mt-4 inline-block rounded-full px-4 py-1.5 text-[14px] font-bold" style={{ backgroundColor: "var(--color-danger)", color: "#fff" }}>
-            앱으로 열어서 가입하면 {CURRENCY_NAME} {formatNyang(WELCOME_GIFT)} 선물
+            앱 설치하고 로그인하면 {CURRENCY_NAME} {formatNyang(WELCOME_GIFT)} 선물
           </p>
         )}
       </div>

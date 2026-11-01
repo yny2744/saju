@@ -19,7 +19,7 @@ describe("앱 가입 선물", () => {
     expect(WELCOME_GIFT_APP_ONLY).toBe(TENANT.features.appWelcomeGift === true);
     expect(welcomeAllowed(true)).toBe(WELCOME_GIFT > 0);
     expect(welcomeAllowed(false)).toBe(WELCOME_GIFT > 0 && !WELCOME_GIFT_APP_ONLY);
-    expect(JOIN_GIFT).toBe(WELCOME_GIFT_APP_ONLY ? "앱으로 가입하면" : "가입하면");
+    expect(JOIN_GIFT).toBe(WELCOME_GIFT_APP_ONLY ? "앱 설치하고 로그인하면" : "가입하면");
   });
 
   it("앱 쿠키는 값이 1일 때만 앱으로 본다", () => {

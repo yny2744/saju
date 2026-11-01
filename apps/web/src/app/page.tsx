@@ -83,7 +83,7 @@ function JoinBanner() {
         <span className="mx-auto flex h-12 w-12 items-center justify-center rounded-full text-[19px] font-bold" style={{ border: "1.5px solid #d4b265", color: "#d4b265", fontFamily: "var(--font-serif)" }}>
           錢
         </span>
-        <span className="mt-3 block text-[19px] font-bold" style={{ color: "#f3e7c6", fontFamily: "var(--font-serif)" }}>
+        <span className="mt-3 block text-[19px] font-bold" style={{ color: "#f3e7c6", fontFamily: "var(--font-serif)", wordBreak: "keep-all", textWrap: "balance" }}>
           {JOIN_GIFT} 운세 하나가 무료
         </span>
         <span className="mt-1 block text-[14px]" style={{ color: "#c9cfda", wordBreak: "keep-all" }}>
