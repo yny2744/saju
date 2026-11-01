@@ -37,6 +37,17 @@ declare module "lunar-javascript" {
     /** 다음/이전 절기 (절+기 24개 전체 대상) */
     getNextJieQi(): JieQi;
     getPrevJieQi(): JieQi;
+    /** 음력 날짜 (1~30) - 택일 손 없는 날 (2026-11-01) */
+    getDay(): number;
+    /** 음력 달 (윤달은 음수) */
+    getMonth(): number;
+    /** 건제12신 (간체 한 글자: 建除满平定执破危成收开闭) */
+    getZhiXing(): string;
+    /** 황도·흑도 길흉 ("吉" / "凶") */
+    getDayTianShenLuck(): string;
+    /** 그날 좋다는 일(宜)·꺼리는 일(忌) - 간체 (예: "嫁娶", "开市", "移徙") */
+    getDayYi(): string[];
+    getDayJi(): string[];
   }
 
   export class JieQi {
@@ -46,6 +57,7 @@ declare module "lunar-javascript" {
   }
 
   export class Solar {
+    static fromYmd(year: number, month: number, day: number): Solar;
     static fromYmdHms(
       year: number,
       month: number,

@@ -14,7 +14,7 @@ var __exportStar = (this && this.__exportStar) || function(m, exports) {
     for (var p in m) if (p !== "default" && !Object.prototype.hasOwnProperty.call(exports, p)) __createBinding(exports, m, p);
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.generateSajuFreeInterpretation = exports.KST_TIME_ZONE = exports.assertValidDateString = exports.getCurrentKstYear = exports.getTodayKstDateString = exports.interpretFortune = exports.calculateFortuneRelations = exports.calculateDailyGanzhi = exports.calculateFortune = exports.PRODUCT_TEMPLATES = exports.buildSajuPrompt = exports.calculateSeun = exports.calculateDaeun = exports.calculateTwelveStages = exports.calculateRelations = exports.calculateTenGods = exports.calculateElements = exports.calculateFourPillars = void 0;
+exports.generateSajuFreeInterpretation = exports.ZHI_XING = exports.TAEKIL_PURPOSES = exports.judgeDay = exports.recommendDays = exports.KST_TIME_ZONE = exports.assertValidDateString = exports.getCurrentKstYear = exports.getTodayKstDateString = exports.interpretFortune = exports.calculateFortuneRelations = exports.calculateDailyGanzhi = exports.calculateFortune = exports.PRODUCT_TEMPLATES = exports.buildSajuPrompt = exports.calculateSeun = exports.calculateDaeun = exports.calculateTwelveStages = exports.calculateRelations = exports.calculateTenGods = exports.calculateElements = exports.calculateFourPillars = void 0;
 exports.calculateSaju = calculateSaju;
 const pillars_1 = require("./pillars");
 const elements_1 = require("./elements");
@@ -58,6 +58,12 @@ Object.defineProperty(exports, "getTodayKstDateString", { enumerable: true, get:
 Object.defineProperty(exports, "getCurrentKstYear", { enumerable: true, get: function () { return kstDate_1.getCurrentKstYear; } });
 Object.defineProperty(exports, "assertValidDateString", { enumerable: true, get: function () { return kstDate_1.assertValidDateString; } });
 Object.defineProperty(exports, "KST_TIME_ZONE", { enumerable: true, get: function () { return kstDate_1.KST_TIME_ZONE; } });
+// 2026-11-01 택일 (유샘 승인 기준)
+var taekil_1 = require("./taekil");
+Object.defineProperty(exports, "recommendDays", { enumerable: true, get: function () { return taekil_1.recommendDays; } });
+Object.defineProperty(exports, "judgeDay", { enumerable: true, get: function () { return taekil_1.judgeDay; } });
+Object.defineProperty(exports, "TAEKIL_PURPOSES", { enumerable: true, get: function () { return taekil_1.TAEKIL_PURPOSES; } });
+Object.defineProperty(exports, "ZHI_XING", { enumerable: true, get: function () { return taekil_1.ZHI_XING; } });
 // 무료 사주(FREE_BASIC) 규칙 기반 해석 - AI 미사용. fortuneRuleEngine과 같은 설계 원칙.
 var sajuFreeRuleEngine_1 = require("./freeInterpretation/sajuFreeRuleEngine");
 Object.defineProperty(exports, "generateSajuFreeInterpretation", { enumerable: true, get: function () { return sajuFreeRuleEngine_1.generateSajuFreeInterpretation; } });

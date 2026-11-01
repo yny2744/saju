@@ -5,6 +5,7 @@ import { BRAND } from "@/tenants";
 import { ELEMENT_TOKEN, type ElementKo } from "@/lib/pillarView";
 import { ELEMENT_HANJA, ELEMENT_NATURE } from "@/lib/manseView";
 import { BLOOD_TYPES, FUN_KINDS, FUN_META, type BloodType, type FunKind, type FunResult } from "@/lib/fun/types";
+import { MBTI_TYPES, type MbtiType } from "@/lib/fun/mbti";
 import type { OverlayView } from "@/lib/fun/overlay";
 import { OverlayLock, takeOverlayPending } from "./OverlayLock";
 import { GoodsPicks } from "@/components/GoodsPicks";
@@ -19,8 +20,8 @@ import type { TarotQuestion } from "@/lib/fun/tarot";
  */
 
 const GOLD = "var(--color-gold)";
-const SAVED_KEY = "ryugyeol_fun_birth";
-const CARD = {
+export const SAVED_KEY = "ryugyeol_fun_birth";
+export const CARD = {
   border: "1px solid var(--color-gold-line)",
   backgroundColor: "var(--color-card)",
   boxShadow: "inset 0 0 0 3px var(--color-card), inset 0 0 0 4px var(--color-gold-soft)",
@@ -35,6 +36,8 @@ interface Saved {
   d: string;
   hour: string;
   blood?: BloodType;
+  /** 2026-11-01 MBTI관 */
+  mbti?: MbtiType;
 }
 
 interface Answer {
@@ -47,10 +50,10 @@ interface Answer {
 }
 
 const NOW_YEAR = new Date().getFullYear();
-const YEARS = Array.from({ length: NOW_YEAR - 1920 + 1 }, (_, i) => String(NOW_YEAR - i));
+export const YEARS = Array.from({ length: NOW_YEAR - 1920 + 1 }, (_, i) => String(NOW_YEAR - i));
 const pad = (n: number | string) => String(n).padStart(2, "0");
 
-function Select({ value, onChange, options, label, placeholder }: { value: string; onChange: (v: string) => void; options: string[]; label: string; placeholder: string }) {
+export function Select({ value, onChange, options, label, placeholder }: { value: string; onChange: (v: string) => void; options: string[]; label: string; placeholder: string }) {
   return (
     <label className="block">
       <span className="sr-only">{label}</span>
@@ -71,7 +74,7 @@ function Select({ value, onChange, options, label, placeholder }: { value: strin
   );
 }
 
-function Toggle<T extends string>({ value, onChange, items }: { value: T; onChange: (v: T) => void; items: Array<{ v: T; label: string }> }) {
+export function Toggle<T extends string>({ value, onChange, items }: { value: T; onChange: (v: T) => void; items: Array<{ v: T; label: string }> }) {
   return (
     <div className="grid gap-2 rounded-2xl p-1" style={{ gridTemplateColumns: `repeat(${items.length}, minmax(0, 1fr))`, backgroundColor: "var(--color-paper-soft)" }}>
       {items.map((it) => (
@@ -137,6 +140,7 @@ export function FunTool({ kind, tarot }: { kind: FunKind; tarot?: { card: number
     if (busy) return;
     if (!form.y || !form.m || !form.d) return setError("생년월일을 모두 골라 주세요.");
     if (kind === "blood" && !form.blood) return setError("혈액형을 골라 주세요.");
+    if (kind === "mbti" && !form.mbti) return setError("MBTI 유형을 골라 주세요.");
     setBusy(true);
     setError(null);
     try {
@@ -152,6 +156,7 @@ export function FunTool({ kind, tarot }: { kind: FunKind; tarot?: { card: number
         date: `${form.y}-${pad(form.m)}-${pad(form.d)}`,
         time: form.hour === "" ? undefined : `${pad(form.hour)}:00`,
         blood: form.blood,
+        mbti: kind === "mbti" ? form.mbti : undefined,
         card: tarot?.card,
         question: tarot?.question,
       };
@@ -217,6 +222,29 @@ export function FunTool({ kind, tarot }: { kind: FunKind; tarot?: { card: number
                 </button>
               ))}
             </div>
+          </div>
+        )}
+
+        {kind === "mbti" && (
+          <div>
+            <p className="mb-2 text-[14px] font-semibold">내 MBTI</p>
+            <div className="grid grid-cols-4 gap-2">
+              {MBTI_TYPES.map((t) => (
+                <button
+                  key={t}
+                  type="button"
+                  aria-pressed={form.mbti === t}
+                  onClick={() => set("mbti", t)}
+                  className="rounded-xl py-2.5 text-[15px] font-bold tracking-wide"
+                  style={form.mbti === t ? { backgroundColor: "var(--color-band)", color: "#fff", border: `1px solid ${GOLD}` } : { border: "1px solid var(--color-line)", backgroundColor: "var(--color-card)" }}
+                >
+                  {t}
+                </button>
+              ))}
+            </div>
+            <p className="mt-1.5 text-[12px]" style={{ color: "var(--color-ink-faint)" }}>
+              검사는 하지 않아요. 알고 계신 유형을 골라 주세요.
+            </p>
           </div>
         )}
 
@@ -291,7 +319,7 @@ function FunAnswer({ kind, answer, hideResult, req, onOpen }: { kind: FunKind; a
       <section className="mt-8 rounded-2xl p-5" style={hideResult ? { display: "none" } : CARD}>
         <div className="flex items-center gap-4">
           <span
-            className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full text-[26px] font-bold"
+            className={`flex h-16 w-16 shrink-0 items-center justify-center rounded-full font-bold ${r.badge.length > 2 ? "text-[16px] tracking-tight" : "text-[26px]"}`}
             style={{ backgroundColor: "var(--color-band)", color: "var(--color-gold-light)", boxShadow: `0 0 0 2px ${GOLD}`, fontFamily: "var(--font-serif)" }}
           >
             {r.badge}

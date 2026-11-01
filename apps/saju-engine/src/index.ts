@@ -45,6 +45,9 @@ export { interpretFortune } from "./fortune/rules/fortuneRuleEngine";
 export type { FortuneResultJson } from "./fortune/rules/fortuneRuleEngine";
 export type { FortuneCategory } from "./fortune/rules/types";
 export { getTodayKstDateString, getCurrentKstYear, assertValidDateString, KST_TIME_ZONE } from "./kstDate";
+// 2026-11-01 택일 (유샘 승인 기준)
+export { recommendDays, judgeDay, TAEKIL_PURPOSES, ZHI_XING } from "./taekil";
+export type { TaekilPurpose, TaekilInput, TaekilDay, TaekilResult } from "./taekil";
 
 // 무료 사주(FREE_BASIC) 규칙 기반 해석 - AI 미사용. fortuneRuleEngine과 같은 설계 원칙.
 export { generateSajuFreeInterpretation } from "./freeInterpretation/sajuFreeRuleEngine";

@@ -43,7 +43,7 @@ const FREE: Array<{ icon: Kind; name: string; desc: string; href: string }> = [
 ];
 
 /** 무료 묶음 카드 동그라미 글자 (2026-10-26) */
-const FUN_BADGE: Record<FunKind, string> = { numerology: "數", zodiac: "★", blood: "AB", flower: "花", birthstone: "石", tarot: "牌" };
+const FUN_BADGE: Record<FunKind, string> = { numerology: "數", zodiac: "★", blood: "AB", flower: "花", birthstone: "石", tarot: "牌", mbti: "型" };
 
 const GOLD = "var(--color-gold)";
 /** 금색 이중 테두리 카드 */
@@ -275,7 +275,8 @@ export default function LandingPage() {
             재미로 보고, 사주와 겹쳐 보기
           </p>
           <div className="grid grid-cols-2 gap-2.5">
-            {FUN_KINDS.map((k) => (
+            {/* 2026-11-01: MBTI관은 명견만리 대문에서만 (심사 중인 류결사주 대문은 그대로) */}
+            {FUN_KINDS.filter((k) => k !== "mbti").map((k) => (
               <a key={k} href={`/fun/${k}`} className="flex items-center gap-3 rounded-2xl px-3 py-3 transition-transform active:scale-[0.98]" style={CARD}>
                 <span
                   aria-hidden

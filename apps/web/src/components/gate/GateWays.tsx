@@ -1,13 +1,17 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
+
+// 서버에서 그릴 때 경고가 나지 않게
+const useIsoLayoutEffect = typeof window !== "undefined" ? useLayoutEffect : useEffect;
 import type { GateRoom } from "@/tenants/types";
 import { RoomCard } from "./RoomCard";
 
 /**
  * 세 길 → 일곱 운 → 관, 세 단계 접기 (2026-11-01 유샘 지시서) - 첫 화면에 보이는 선택지를 세 개로 줄인다.
- *   1단계: 세 길(이름 + 한 줄 설명)만 / 2단계: 길을 누르면 그 길의 운만 (다른 길은 접힘)
+ *   1단계: 세 길(이름 + 한 줄 설명 + 안쪽 관 칩 + "펼쳐 보기") / 2단계: 길을 누르면 그 길의 운만 (다른 길은 접힘)
  *   3단계: 운을 누르면 그 운의 관 카드 (같은 길의 다른 운은 접힘)
+ *   칩(관 이름 단추, 같은 날 수정 지시서): 누르면 그 길과 운이 함께 열리고 그 관 카드로 이동. 두 줄을 넘으면 "+N".
  *   펼칠 때마다 그 자리로 부드럽게 이동. 뒤로가기(브라우저·안드로이드)를 누르면 한 단계씩 접힌다 (펼칠 때 기록을 한 칸씩 쌓는다).
  *   관에 들어갔다가 돌아오면 열어 둔 길·운이 그대로 열려 있다 (기록에 남긴 상태를 다시 읽는다).
  */
@@ -20,6 +24,7 @@ export interface WayView {
 }
 
 type Open = { gw: string | null; gu: string | null };
+type Target = Open & { scroll?: string };
 type HistState = { gw?: string | null; gu?: string | null; gd?: number } | null;
 
 function readHist(): Open & { d: number } {
@@ -29,93 +34,147 @@ function readHist(): Open & { d: number } {
 
 function smooth(id: string) {
   const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-  requestAnimationFrame(() => document.getElementById(id)?.scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "start" }));
+  // 펼친 내용이 그려진 다음에 이동
+  setTimeout(() => document.getElementById(id)?.scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "start" }), 30);
+}
+
+const roomId = (unKey: string, i: number) => `room-${unKey}-${i}`;
+const chipName = (name: string) => name.replace(/관$/, "");
+
+const CHIP: React.CSSProperties = {
+  border: "1px solid rgba(217,178,90,.7)",
+  backgroundColor: "rgba(244,226,184,.08)",
+  color: "#f4e2b8",
+};
+const CHIP_CLS = "inline-flex h-[28px] items-center rounded-full px-2.5 text-[13px] leading-none";
+
+/** 길 카드의 관 칩 - 실제로 두 줄에 들어가는 만큼만 보이고 나머지는 "+N" */
+function ChipRow({ chips, onPick }: { chips: Array<{ label: string; unKey: string; i: number }>; onPick: (unKey: string, i: number) => void }) {
+  const measure = useRef<HTMLDivElement>(null);
+  const [shown, setShown] = useState(Math.min(7, chips.length));
+
+  useIsoLayoutEffect(() => {
+    const calc = () => {
+      const box = measure.current;
+      if (!box) return;
+      const kids = Array.from(box.children) as HTMLElement[]; // 칩들 + 맨 끝 "+99"
+      const tops = [...new Set(kids.map((k) => k.offsetTop))].sort((a, b) => a - b);
+      const second = tops[1] ?? tops[0];
+      const fit = kids.slice(0, chips.length).filter((k) => k.offsetTop <= second).length;
+      if (fit >= chips.length) return setShown(chips.length);
+      // "+N" 칩이 들어갈 자리를 남긴다
+      setShown(Math.max(1, fit - 1));
+    };
+    calc();
+    window.addEventListener("resize", calc);
+    return () => window.removeEventListener("resize", calc);
+  }, [chips.length]);
+
+  const rest = chips.length - shown;
+  return (
+    <div className="relative mt-3">
+      {/* 재기용 (보이지 않음) */}
+      <div ref={measure} aria-hidden className="pointer-events-none invisible absolute inset-x-0 top-0 flex flex-wrap justify-center gap-1.5">
+        {chips.map((c) => (
+          <span key={`m-${c.unKey}-${c.i}`} className={CHIP_CLS} style={CHIP}>
+            {c.label}
+          </span>
+        ))}
+        <span className={CHIP_CLS} style={CHIP}>
+          +99
+        </span>
+      </div>
+      <div className="flex min-h-[62px] flex-wrap content-center justify-center gap-1.5">
+        {chips.slice(0, shown).map((c) => (
+          <button key={`${c.unKey}-${c.i}`} type="button" onClick={() => onPick(c.unKey, c.i)} className={CHIP_CLS} style={CHIP}>
+            {c.label}
+          </button>
+        ))}
+        {rest > 0 && (
+          <span className={CHIP_CLS} style={{ ...CHIP, color: "var(--color-gold-light)" }} aria-label={`관 ${rest}곳 더`}>
+            +{rest}
+          </span>
+        )}
+      </div>
+    </div>
+  );
 }
 
 export function GateWays({ ways }: { ways: WayView[] }) {
   const [open, setOpen] = useState<Open>({ gw: null, gu: null });
-  // 운이 열린 채 다른 길을 누르면: 운 칸을 뒤로 걷은 다음(popstate) 그 길로 바꾼다 - 기록이 한 단계씩 맞게 남도록
-  const switchTo = useRef<string | null>(null);
+  // 다른 길·운으로 옮길 때: 맞지 않는 기록 칸을 뒤로 걷은 다음(popstate) 새로 쌓는다 - 뒤로가기가 늘 한 단계씩 맞게
+  const pending = useRef<Target | null>(null);
+
+  function pushLevels(t: Target) {
+    const base = window.history.state ?? {};
+    if (t.gw && readHist().d < 1) window.history.pushState({ ...base, gw: t.gw, gu: null, gd: 1 }, "");
+    if (t.gw && t.gu && readHist().d < 2) window.history.pushState({ ...base, gw: t.gw, gu: t.gu, gd: 2 }, "");
+    setOpen({ gw: t.gw, gu: t.gu });
+    if (t.scroll) smooth(t.scroll);
+  }
+
+  function goTo(t: Target) {
+    const cur = readHist();
+    const targetD = t.gu ? 2 : t.gw ? 1 : 0;
+    let keep = 0;
+    if (cur.d >= 1 && cur.gw === t.gw) keep = cur.d >= 2 && t.gu && cur.gu === t.gu ? 2 : 1;
+    keep = Math.min(keep, targetD);
+    if (cur.d > keep) {
+      pending.current = t;
+      window.history.go(keep - cur.d);
+      return;
+    }
+    pushLevels(t);
+  }
 
   useEffect(() => {
     const h = readHist();
     if (h.gw) setOpen({ gw: h.gw, gu: h.gu });
     const onPop = () => {
-      const s = readHist();
-      const k = switchTo.current;
-      if (k) {
-        switchTo.current = null;
-        window.history.replaceState({ ...(window.history.state ?? {}), gw: k, gu: null, gd: 1 }, "");
-        setOpen({ gw: k, gu: null });
-        smooth(`way-${k}`);
+      const t = pending.current;
+      if (t) {
+        pending.current = null;
+        pushLevels(t);
         return;
       }
+      const s = readHist();
       setOpen({ gw: s.gw, gu: s.gu });
     };
     window.addEventListener("popstate", onPop);
     return () => window.removeEventListener("popstate", onPop);
   }, []);
 
-  /** 기록에 남기기: 한 단계 더 펼치면 한 칸 쌓고, 같은 단계에서 바꾸면 그 칸을 고친다 */
-  function record(next: Open) {
-    const d = next.gu ? 2 : next.gw ? 1 : 0;
-    const cur = readHist().d;
-    const state = { ...(window.history.state ?? {}), gw: next.gw, gu: next.gu, gd: d };
-    if (d > cur) window.history.pushState(state, "");
-    else window.history.replaceState(state, "");
-    setOpen(next);
-  }
-
-  /** 접기: 쌓아 둔 칸만큼 뒤로 (뒤로가기와 같은 결과) */
-  function collapseTo(level: 0 | 1) {
-    const cur = readHist().d;
-    if (cur > level) window.history.go(level - cur);
-    else setOpen(level === 0 ? { gw: null, gu: null } : { gw: open.gw, gu: null });
-  }
-
-  function onWay(k: string) {
-    if (open.gw === k) return collapseTo(0);
-    const cur = readHist().d;
-    if (cur >= 2) {
-      // 운 칸을 먼저 걷고(뒤로 한 칸) 길을 바꾼다 - onPop 에서 마무리
-      switchTo.current = k;
-      window.history.go(1 - cur);
-      return;
-    }
-    record({ gw: k, gu: null });
-    smooth(`way-${k}`);
-  }
-
-  function onUn(k: string) {
-    if (open.gu === k) return collapseTo(1);
-    record({ gw: open.gw, gu: k });
-    smooth(`un-${k}`);
-  }
+  const onWay = (k: string) => (open.gw === k ? goTo({ gw: null, gu: null }) : goTo({ gw: k, gu: null, scroll: `way-${k}` }));
+  const onUn = (k: string) => (open.gu === k ? goTo({ gw: open.gw, gu: null }) : goTo({ gw: open.gw, gu: k, scroll: `un-${k}` }));
+  const onChip = (wayKey: string, unKey: string, i: number) => goTo({ gw: wayKey, gu: unKey, scroll: roomId(unKey, i) });
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-4">
       {ways.map((way) => {
         const wayOpen = open.gw === way.key;
+        const chips = way.uns.flatMap((u) => u.rooms.map((r, i) => ({ label: chipName(r.name), unKey: u.key, i })));
         return (
           <div key={way.key} id={`way-${way.key}`} className="scroll-mt-3">
-            <button
-              type="button"
-              onClick={() => onWay(way.key)}
-              aria-expanded={wayOpen}
-              aria-controls={`way-body-${way.key}`}
-              className="band-bg block w-full rounded-2xl px-5 py-4 text-center"
-              style={{ color: "#f6ecd2", border: "1px solid var(--color-gold-line)" }}
-            >
-              <span className="block text-[19px] font-bold" style={{ fontFamily: "var(--font-serif)", color: "#f4e2b8" }}>
-                {way.name}
-              </span>
-              <span className="mt-0.5 block text-[13.5px]" style={{ color: "#d8d2c4" }}>
-                {way.question}
-              </span>
-              <span aria-hidden className="mt-1 block text-[13px] leading-none" style={{ color: "var(--color-gold-light)", transform: wayOpen ? "rotate(180deg)" : undefined }}>
-                ▾
-              </span>
-            </button>
+            <div className="band-bg rounded-2xl px-4 pb-2 pt-4 text-center" style={{ color: "#f6ecd2", border: "1px solid var(--color-gold-line)" }}>
+              <button type="button" onClick={() => onWay(way.key)} aria-expanded={wayOpen} aria-controls={`way-body-${way.key}`} className="block w-full">
+                <span className="block text-[19px] font-bold" style={{ fontFamily: "var(--font-serif)", color: "#f4e2b8" }}>
+                  {way.name}
+                </span>
+                <span className="mt-0.5 block text-[13.5px]" style={{ color: "#d8d2c4" }}>
+                  {way.question}
+                </span>
+              </button>
+              <ChipRow chips={chips} onPick={(unKey, i) => onChip(way.key, unKey, i)} />
+              <button
+                type="button"
+                onClick={() => onWay(way.key)}
+                aria-expanded={wayOpen}
+                className="mx-auto mt-1.5 block px-4 py-1.5 text-[12.5px] font-semibold"
+                style={{ color: "var(--color-gold-light)" }}
+              >
+                {wayOpen ? "접기 ⌃" : "펼쳐 보기 ⌄"}
+              </button>
+            </div>
 
             {wayOpen && (
               <div id={`way-body-${way.key}`} className="gw-in mt-3 space-y-2.5">
@@ -140,14 +199,14 @@ export function GateWays({ ways }: { ways: WayView[] }) {
                         <span className="min-w-0 flex-1 text-[18px] font-bold" style={{ fontFamily: "var(--font-serif)" }}>
                           {un.name}
                         </span>
-                        <span aria-hidden className="text-[14px]" style={{ color: "var(--color-accent)", transform: unOpen ? "rotate(180deg)" : undefined }}>
-                          ▾
+                        <span aria-hidden className="text-[14px]" style={{ color: "var(--color-accent)" }}>
+                          {unOpen ? "⌃" : "⌄"}
                         </span>
                       </button>
                       {unOpen && (
                         <ul className="gw-in mt-2.5 grid grid-cols-2 gap-2">
-                          {un.rooms.map((room) => (
-                            <li key={room.name}>
+                          {un.rooms.map((room, i) => (
+                            <li key={room.name} id={roomId(un.key, i)} className="scroll-mt-20">
                               <RoomCard room={room} />
                             </li>
                           ))}

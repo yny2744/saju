@@ -8,6 +8,7 @@ import { TOPICS, type TopicKey } from "@/lib/topics";
 import { FILL_FLOWER } from "./flower";
 import { FILL_STONE } from "./birthstone";
 import { FUN_META, type FunKind, type FunResult } from "./types";
+import { DAY_LINE, isMbtiType, mbtiBlend } from "./mbti";
 
 /**
  * 사주와 겹쳐 보기 (2026-10-26 무료 묶음, AI 없음).
@@ -90,7 +91,10 @@ export function buildOverlay(kind: FunKind, saju: SajuJson, fun: FunResult, topi
       : `그리고 당신의 사주에서는 ${needNames}의 기운이 가장 옅어, 그 자리가 남은 작은 빈자리예요. 이 기운을 곁에 두면 흐름이 한결 고르게 돌아가요.`;
 
   let relation: OverlayView["relation"];
-  if (fun.element) {
+  // 2026-11-01 MBTI관: 오행 관계 대신 네 축을 일간과 엮은 4문장, 일간은 한 줄로
+  if (kind === "mbti" && isMbtiType(fun.key)) {
+    relation = { kind: "same", head: `${fun.key} × 일간 ${stem}${dayElement}(${STEM_HANJA[stem] ?? ""})`, body: mbtiBlend(fun.key, stem, dayElement).join(" ") };
+  } else if (fun.element) {
     const r = relationOfElements(fun.element, dayElement);
     relation = {
       kind: r,
@@ -106,7 +110,7 @@ export function buildOverlay(kind: FunKind, saju: SajuJson, fun: FunResult, topi
     dayStemHanja: STEM_HANJA[stem] ?? "",
     dayElement,
     dayImage: dm?.image ?? "",
-    dayCore,
+    dayCore: kind === "mbti" ? DAY_LINE[stem] ?? dayCore : dayCore,
     relation,
     need,
     needLine,

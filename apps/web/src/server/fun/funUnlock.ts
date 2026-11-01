@@ -19,7 +19,7 @@ const err = (status: number, code: string, message: string): Out => ({ status, b
 
 /** 같은 날·같은 입력이면 같은 값 - 입력 자체는 남기지 않는다 */
 export function overlayRef(kind: string, raw: Record<string, unknown>, today: string): string {
-  const key = JSON.stringify([kind, raw.calendarType, raw.isLeapMonth === true, raw.date, raw.time ?? "", raw.blood ?? "", raw.card ?? "", raw.question ?? ""]);
+  const key = JSON.stringify([kind, raw.calendarType, raw.isLeapMonth === true, raw.date, raw.time ?? "", raw.blood ?? "", raw.card ?? "", raw.question ?? "", ...(raw.mbti ? [raw.mbti] : [])]);
   return `overlay:${kind}:${today}:${createHash("sha256").update(key).digest("hex").slice(0, 20)}`;
 }
 

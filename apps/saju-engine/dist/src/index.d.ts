@@ -26,6 +26,8 @@ export { interpretFortune } from "./fortune/rules/fortuneRuleEngine";
 export type { FortuneResultJson } from "./fortune/rules/fortuneRuleEngine";
 export type { FortuneCategory } from "./fortune/rules/types";
 export { getTodayKstDateString, getCurrentKstYear, assertValidDateString, KST_TIME_ZONE } from "./kstDate";
+export { recommendDays, judgeDay, TAEKIL_PURPOSES, ZHI_XING } from "./taekil";
+export type { TaekilPurpose, TaekilInput, TaekilDay, TaekilResult } from "./taekil";
 export { generateSajuFreeInterpretation } from "./freeInterpretation/sajuFreeRuleEngine";
 /**
  * Phase 1+2-1~2-6 범위: 4기둥 + 오행 + 십신 + 합충형파해 + 12운성 + 대운 + 세운까지

@@ -5,6 +5,7 @@ import { PRICE } from "@/lib/yeopjeon";
 import { numerologyResult } from "@/lib/fun/numerology";
 import { zodiacResult } from "@/lib/fun/zodiac";
 import { bloodResult } from "@/lib/fun/blood";
+import { isMbtiType, mbtiResult } from "@/lib/fun/mbti";
 import { flowerResult } from "@/lib/fun/flower";
 import { birthstoneResult } from "@/lib/fun/birthstone";
 import { tarotResult, isTarotQuestion, TAROT_CARDS, TAROT_QUESTIONS } from "@/lib/fun/tarot";
@@ -82,6 +83,7 @@ export function computeFun(raw: unknown): Out {
   if (calendarType === "solar" ? !validSolar(date) : !(Number(date.slice(8, 10)) <= 30 && Number(date.slice(0, 4)) >= 1900)) return bad("생년월일을 확인해 주세요.");
   const time = typeof b.time === "string" && TIME_RE.test(b.time) ? b.time : undefined;
   if (kind === "blood" && !isBloodType(b.blood)) return bad("혈액형을 골라 주세요.");
+  if (kind === "mbti" && !isMbtiType(b.mbti)) return bad("MBTI 유형을 골라 주세요.");
   const card = Number(b.card);
   if (kind === "tarot" && (!Number.isInteger(card) || card < 0 || card >= TAROT_CARDS.length || !isTarotQuestion(b.question)))
     return bad("카드를 먼저 골라 주세요.");
@@ -110,7 +112,9 @@ export function computeFun(raw: unknown): Out {
             ? birthstoneResult(solarDate)
             : kind === "tarot"
               ? tarotResult(card, b.question as Parameters<typeof tarotResult>[1])
-              : bloodResult(b.blood as Parameters<typeof bloodResult>[0]);
+              : kind === "mbti"
+                ? mbtiResult(b.mbti as Parameters<typeof mbtiResult>[0])
+                : bloodResult(b.blood as Parameters<typeof bloodResult>[0]);
   const topic = kind === "tarot" ? TAROT_QUESTIONS.find((q) => q.key === b.question)?.topic : undefined;
 
   return { status: 200, body: { kind, solarDate, result, overlay: buildOverlay(kind, saju, result, topic) } };

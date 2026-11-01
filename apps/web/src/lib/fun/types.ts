@@ -7,9 +7,9 @@ import type { TopicKey } from "@/lib/topics";
  * 흐름: 무료 결과 → 사주와 겹쳐 보기(일간·부족한 기운) → 이어지는 12가지 운세로.
  */
 
-export type FunKind = "numerology" | "zodiac" | "blood" | "flower" | "birthstone" | "tarot";
+export type FunKind = "numerology" | "zodiac" | "blood" | "flower" | "birthstone" | "tarot" | "mbti";
 
-export const FUN_KINDS: FunKind[] = ["numerology", "zodiac", "blood", "flower", "birthstone", "tarot"];
+export const FUN_KINDS: FunKind[] = ["numerology", "zodiac", "blood", "flower", "birthstone", "tarot", "mbti"];
 
 export function isFunKind(v: unknown): v is FunKind {
   return typeof v === "string" && (FUN_KINDS as string[]).includes(v);
@@ -50,6 +50,13 @@ export interface FunMeta {
 }
 
 export const FUN_META: Record<FunKind, FunMeta> = {
+  /** 2026-11-01 유샘 지시서: MBTI관 (AI 없음, 지금은 무료) */
+  mbti: {
+    title: "MBTI",
+    desc: "내가 고른 MBTI와 사주의 일간을 겹쳐 보는 나",
+    topic: "nature",
+    overlayLead: "MBTI가 요즘의 나를 말한다면, 사주의 일간은 타고난 뿌리예요.",
+  },
   numerology: {
     title: "수비학 · 인생 수",
     desc: "생일 숫자로 보는 나의 인생 수, 그리고 사주와의 만남",

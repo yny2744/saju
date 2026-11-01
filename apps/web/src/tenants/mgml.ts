@@ -89,7 +89,7 @@ const mgml: TenantConfig = {
               { name: "성향관", desc: "나는 어떤 그릇의 사람인가", href: "/go?topic=nature" },
               { name: "적성관", desc: "나에게 맞는 일과 자리", href: "/go?topic=job" },
               { name: "혈액형관", desc: "혈액형으로 보는 나, 사주와 함께", href: "/fun/blood" },
-              { name: "MBTI관", desc: "MBTI와 사주로 보는 나" },
+              { name: "MBTI관", desc: "MBTI와 사주로 보는 나", href: "/fun/mbti" },
             ],
             landing: { headline: "나에게 맞는 일, 나다운 자리", lead: "타고난 성향과 적성을 사주로 읽고, 어떤 일에서 빛나는지 짚어 드립니다." },
           },
@@ -154,7 +154,7 @@ const mgml: TenantConfig = {
             rooms: [
               { name: "작명관", desc: "이름 풀이 · 개명 · 아기 이름", href: "/name" },
               { name: "상호 작명관", desc: "대표자 사주로 짓는 가게·회사 이름", href: "/name/business" },
-              { name: "택일관", desc: "이사·결혼·개업에 좋은 날" },
+              { name: "택일관", desc: "이사·결혼·개업에 좋은 날", href: "/taekil" },
             ],
             landing: { headline: "좋은 이름, 좋은 날", lead: "사주의 남은 작은 빈자리를 채우는 이름을 짓고, 중요한 날을 고르는 길을 안내합니다." },
           },
