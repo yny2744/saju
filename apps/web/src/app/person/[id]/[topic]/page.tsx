@@ -7,7 +7,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { isAuthEnabled } from "@/lib/launchMode";
 import { ComingSoon } from "@/components/ComingSoon";
 import { LoadingState, ErrorState } from "@/components/StatusScreens";
-import { TOPICS, isAnyTopicKey, isTopicKey } from "@/lib/topics";
+import { TOPICS, isAnyTopicKey, isTopicKey, withUnse } from "@/lib/topics";
 import { CURRENCY_NAME, PRICE, formatNyang } from "@/lib/yeopjeon";
 import { PayDialog } from "@/components/yeopjeon/PayDialog";
 import { WonNote } from "@/components/WonNote";
@@ -166,7 +166,7 @@ function TopicBody({ id, topic }: { id: string; topic: string }) {
       <WritingOverlay
         grand={state.grand}
         durationMs={state.minMs}
-        title={state.level === "deep" ? `${title} 운세를 깊게 풀고 있어요` : `${title} 운세를 풀고 있어요`}
+        title={state.level === "deep" ? `${withUnse(title)}를 깊게 풀고 있어요` : `${withUnse(title)}를 풀고 있어요`}
         steps={
           state.level === "deep"
             ? ["여덟 글자를 다시 세우고 있어요", "일간과 격을 살피고 있어요", `${title}의 근거를 찾고 있어요`, "대운과 세운의 흐름을 읽고 있어요", "시기와 처신을 정리하고 있어요", "남은 작은 빈자리를 찾고 있어요", "마지막으로 다듬고 있어요"]
@@ -230,7 +230,7 @@ function TopicBody({ id, topic }: { id: string; topic: string }) {
           깊게 보기
         </p>
         <p className="mt-1 text-center text-[19px] font-bold" style={{ fontFamily: "var(--font-serif)" }}>
-          {title} 운세 깊게 보기
+          {withUnse(title)} 깊게 보기
         </p>
         <p className="mt-2 text-center text-[14px]" style={{ color: "var(--color-ink-soft)" }}>
           {CURRENCY_NAME} {formatNyang(PRICE.DEEP)}이 빠져요{balance !== null ? ` · 남은 ${CURRENCY_NAME} ${formatNyang(balance)}` : ""}
@@ -254,10 +254,10 @@ function TopicBody({ id, topic }: { id: string; topic: string }) {
     return (
       <main className="mx-auto min-h-screen max-w-xl px-5 pb-20 pt-12 sm:pt-16">
         {state.header ? (
-          <PersonHeader header={state.header} kicker={`${BRAND} · 12가지 운세`} title={`${title} 운세`} />
+          <PersonHeader header={state.header} kicker={`${BRAND} · 12가지 운세`} title={`${withUnse(title)}`} />
         ) : (
           <h1 className="mb-8 text-center text-[26px] font-bold" style={{ fontFamily: "var(--font-serif)" }}>
-            {title} 운세
+            {withUnse(title)}
           </h1>
         )}
         <section className="gold-card rounded-2xl px-5 py-6 text-center">
@@ -267,7 +267,7 @@ function TopicBody({ id, topic }: { id: string; topic: string }) {
             </p>
           )}
           <p className="mt-3 text-[18px] font-bold" style={{ fontFamily: "var(--font-serif)" }}>
-            {title} 운세
+            {withUnse(title)}
           </p>
           {info && (
             <p className="mt-1 text-[14px]" style={{ color: "var(--color-ink-soft)" }}>
@@ -281,7 +281,7 @@ function TopicBody({ id, topic }: { id: string; topic: string }) {
           )}
           {canBasic && (
             <button type="button" disabled={buying !== null} onClick={() => buy("basic")} className="btn-band mt-4 block w-full rounded-xl py-4 text-[17px] font-bold disabled:opacity-60" style={{ fontFamily: "var(--font-serif)" }}>
-              {title} 운세 보기 · {formatNyang(PRICE.BASIC)}
+              {withUnse(title)} 보기 · {formatNyang(PRICE.BASIC)}
             </button>
           )}
           <button type="button" disabled={buying !== null} onClick={() => setConfirmDeep(true)} className="btn-secondary mt-2.5">
@@ -297,7 +297,7 @@ function TopicBody({ id, topic }: { id: string; topic: string }) {
         </section>
         {noticeBox}
         {/* 수정안 47: 이 운세를 본 분들의 한마디 (관리자가 올린 것만, 없으면 안 보임) */}
-        {isAnyTopicKey(topic) && <ReviewStrip topic={topic} variant="mini" title={`${title} 운세를 본 분들의 한마디`} />}
+        {isAnyTopicKey(topic) && <ReviewStrip topic={topic} variant="mini" title={`${withUnse(title)}를 본 분들의 한마디`} />}
         <div className="mt-8 space-y-2.5">
           <a href={`/person/${id}`} className="btn-secondary block text-center">
             12가지 운세 모두 보기
@@ -314,7 +314,7 @@ function TopicBody({ id, topic }: { id: string; topic: string }) {
     const { content, header } = state;
     return (
       <main className="mx-auto min-h-screen max-w-xl px-5 pb-20 pt-12 sm:pt-16">
-        <PersonHeader header={header} kicker={`${BRAND} · 운세 보기`} title={`${content.title} 운세`} />
+        <PersonHeader header={header} kicker={`${BRAND} · 운세 보기`} title={`${withUnse(content.title)}`} />
         {"v" in content && content.v === 2 ? (
           // 수정안 33·34: 엔진 풀이 + 그림
           <BasicReadingView content={content} />

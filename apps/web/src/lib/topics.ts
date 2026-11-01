@@ -147,3 +147,11 @@ export const BUNDLE_SUGGESTIONS: Array<{ title: string; topics: [TopicKey, Topic
   { title: "인연과 가정", topics: ["love", "marriage", "year"] },
   { title: "일과 성공", topics: ["job", "promotion", "business"] },
 ];
+
+/**
+ * 운세 이름 (2026-11-01 유샘: "올해의 운세 운세" 오타) - 이름 뒤에 "운세"를 붙이되,
+ * 이미 "운세"·"운"(대운)·"법"(개운법)으로 끝나면 붙이지 않는다. 예: 연애 → "연애 운세", 올해의 운세 → "올해의 운세", 평생 대운 → "평생 대운"
+ */
+export function withUnse(title: string): string {
+  return /(운세|운|법)$/.test(title) ? title : `${title} 운세`;
+}

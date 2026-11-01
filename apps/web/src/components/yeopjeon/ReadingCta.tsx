@@ -7,7 +7,7 @@ import { CURRENCY_NAME, JOIN_GIFT, PENDING_RESULT_KEY, PRICE, WELCOME_GIFT, form
 import { AppGiftLink } from "@/components/app/AppGiftLink";
 import { useWelcomeHere } from "@/components/app/useWelcomeHere";
 import { focusLabel, type Focus } from "@/lib/focus";
-import { FOCUS_TOPICS, TOPICS, TOPIC_KEYS, type TopicKey } from "@/lib/topics";
+import { FOCUS_TOPICS, TOPICS, TOPIC_KEYS, type TopicKey, withUnse } from "@/lib/topics";
 import { CONTINUE_PATH, savePendingIntent } from "@/lib/intent";
 import { reportClientError } from "./useYeopjeon";
 import { WonNote } from "@/components/WonNote";
@@ -91,7 +91,7 @@ export function ReadingCta({ resultId, nickname, focus }: { resultId: string; ni
           className="block rounded-xl py-4 text-center text-[17px] font-bold"
           style={{ backgroundColor: "#fee500", color: "#191600" }}
         >
-          {giftHere ? `카카오로 가입하고 ${title} 운세 무료로 보기` : `카카오로 가입하고 ${title} 운세 보기`}
+          {giftHere ? `카카오로 가입하고 ${withUnse(title)} 무료로 보기` : `카카오로 가입하고 ${withUnse(title)} 보기`}
         </a>
         <p className="mt-2 text-center text-[13px]" style={{ color: "var(--color-ink-soft)" }}>
           {JOIN_GIFT} 선물 {CURRENCY_NAME} {formatNyang(WELCOME_GIFT)}으로 운세 하나를 무료로 볼 수 있어요
@@ -102,7 +102,7 @@ export function ReadingCta({ resultId, nickname, focus }: { resultId: string; ni
         </a>
         {/* 2026-10-23 비회원 결제: 고른 운세를 기억해 두고 이어서 보기 화면(약관 동의 → 결제)으로 */}
         <a href={CONTINUE_PATH} onClick={rememberPick} className="mt-3 block rounded-xl py-3.5 text-center text-[15px] font-bold" style={{ border: "1px solid var(--color-line)" }}>
-          로그인 없이 비회원으로 {title} 운세 보기 · {formatNyang(PRICE.BASIC)}
+          로그인 없이 비회원으로 {withUnse(title)} 보기 · {formatNyang(PRICE.BASIC)}
         </a>
         <WonNote />
       </>
@@ -110,7 +110,7 @@ export function ReadingCta({ resultId, nickname, focus }: { resultId: string; ni
   } else if (!me.termsAgreed) {
     action = (
       <a href={`/consent?next=${next}`} onClick={rememberPick} className="btn-primary block text-center">
-        약관 동의하고 {title} 운세 보기
+        약관 동의하고 {withUnse(title)} 보기
       </a>
     );
   } else {
@@ -123,7 +123,7 @@ export function ReadingCta({ resultId, nickname, focus }: { resultId: string; ni
           className="btn-band block w-full rounded-xl py-4 text-[17px] font-bold disabled:opacity-60"
           style={{ fontFamily: "var(--font-serif)" }}
         >
-          {title} 운세 보기 · {formatNyang(PRICE.BASIC)}
+          {withUnse(title)} 보기 · {formatNyang(PRICE.BASIC)}
         </button>
         <div className="mt-3 grid grid-cols-2 gap-2">
           <button type="button" disabled={busy} onClick={() => go((id) => `/person/${id}?buy=bundle3`)} className="rounded-xl px-2 py-3 text-[13px] font-semibold disabled:opacity-60" style={{ border: "1px solid var(--color-gold-line)" }}>

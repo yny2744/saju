@@ -6,7 +6,7 @@ import { InsufficientYeopjeonError } from "@/server/yeopjeon/ledger";
 import { PREMIUM_ON, PRICE } from "@/lib/yeopjeon";
 import { isSuneungOn } from "@/lib/launchMode";
 import { isFocus, type Focus } from "@/lib/focus";
-import { EXTRA_KEYS, TOPICS, TOPIC_KEYS, isAnyTopicKey, isTopicKey, type AnyTopicKey, type TopicKey } from "@/lib/topics";
+import { EXTRA_KEYS, TOPICS, TOPIC_KEYS, isAnyTopicKey, isTopicKey, type AnyTopicKey, type TopicKey, withUnse } from "@/lib/topics";
 import type { BasicContent, DeepContent, ReadingContent } from "./generateReading";
 import type { BasicReadingV2 } from "@/lib/basic/compose";
 import { examSeason, examUnlockTopic, SEASON_INFO } from "@/lib/suneung";
@@ -538,7 +538,7 @@ export async function planForPerson(
 
 /** 결제 창에 쓰는 상품 이름: "재물 운세 보기" / "재물 깊게 보기" / "3가지 운세 몰아보기" / "12가지 운세 전부 보기" */
 export function productName(mode: PurchaseMode, topics: AnyTopicKey[]): string {
-  if (mode === "basic") return `${TOPICS[topics[0]].title} 운세 보기`;
+  if (mode === "basic") return `${withUnse(TOPICS[topics[0]].title)} 보기`;
   if (mode === "deep") return `${TOPICS[topics[0]].title} 깊게 보기`;
   if (mode === "bundle3") return "3가지 운세 몰아보기";
   if (mode === "naming") return "신생아 작명";

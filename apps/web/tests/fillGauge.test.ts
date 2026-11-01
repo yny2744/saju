@@ -30,3 +30,13 @@ describe("남은 작은 빈자리 게이지", () => {
     expect(fillLine(["수", "목"])).toBe("남은 작은 빈자리는 물(水)·나무(木)의 기운으로 채워요");
   });
 });
+
+import { withUnse, TOPICS } from "@/lib/topics";
+describe("운세 이름 (2026-11-01 오타)", () => {
+  it("이미 운세·운·법으로 끝나면 운세를 또 붙이지 않는다", () => {
+    expect(withUnse("연애")).toBe("연애 운세");
+    expect(withUnse("올해의 운세")).toBe("올해의 운세");
+    expect(withUnse("평생 대운")).toBe("평생 대운");
+    for (const t of Object.values(TOPICS)) expect(withUnse(t.title)).not.toMatch(/운세 운세|대운 운세|법 운세/);
+  });
+});

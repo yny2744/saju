@@ -1,4 +1,4 @@
-import { BUNDLE_SUGGESTIONS, TOPICS, isTopicKey, type TopicKey } from "@/lib/topics";
+import { BUNDLE_SUGGESTIONS, TOPICS, isTopicKey, type TopicKey, withUnse } from "@/lib/topics";
 import { SEASON_INFO, examSeason } from "@/lib/suneung";
 import { isSuneungOn } from "@/lib/launchMode";
 
@@ -36,7 +36,7 @@ export function intentQuery(i: Intent): string {
 
 /** 화면 안내용 이름: "재물 운세" / "든든한 노후 몰아보기" / "12가지 운세 전부 보기" */
 export function intentLabel(i: Intent): string {
-  if (i.kind === "topic") return `${TOPICS[i.topic].title} 운세`;
+  if (i.kind === "topic") return withUnse(TOPICS[i.topic].title);
   if (i.kind === "bundle") return `${BUNDLE_SUGGESTIONS[i.index].title} 몰아보기`;
   if (i.kind === "exam") return SEASON_INFO[examSeason()].title;
   if (i.kind === "name") return { naming: "신생아 작명", rename: "개명 추천", business: "상호 작명", corp: "기업 작명", brand: "브랜딩 작명" }[i.mode];

@@ -1,5 +1,5 @@
 import { BRAND } from "@/tenants";
-import { TOPICS, isAnyTopicKey, isTopicKey } from "@/lib/topics";
+import { TOPICS, isAnyTopicKey, isTopicKey, withUnse } from "@/lib/topics";
 
 /** 1004 천사의 한마디 (2026-10-12 수정안 47) - 화면·서버 공용 */
 export const REVIEW_TITLE = "1004 천사의 한마디";
@@ -28,7 +28,7 @@ export function reviewProductLabel(product: string): string {
   if (product === "brand") return "브랜딩 작명";
   if (product === "face") return "관상 심층 풀이";
   const [k, t] = product.split(":");
-  if (k === "basic" && isTopicKey(t)) return `${TOPICS[t].title} 운세 보기`;
+  if (k === "basic" && isTopicKey(t)) return `${withUnse(TOPICS[t].title)} 보기`;
   if (k === "deep" && isAnyTopicKey(t)) return `${TOPICS[t].title} 깊게 보기`;
   return BRAND;
 }
