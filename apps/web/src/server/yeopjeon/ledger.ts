@@ -1,6 +1,6 @@
 import { randomInt } from "crypto";
 import { db } from "@/server/auth/db";
-import { CURRENCY_NAME, INVITEE_GIFT, REF_CODE_RE, WELCOME_GIFT, displayLedgerLabel, inviteRewardFor } from "@/lib/yeopjeon";
+import { CURRENCY_NAME, INVITEE_GIFT, REF_CODE_RE, WELCOME_GIFT, displayLedgerLabel, inviteRewardFor, welcomeAllowed } from "@/lib/yeopjeon";
 
 /**
  * 엽전 장부 (2026-10-06, 이름은 10-08에 복채→엽전). 잔액 = bokchae_ledger.amount 합계 (테이블 이름은 예전 그대로).
@@ -27,6 +27,13 @@ export async function listLedger(userId: string, limit = 50): Promise<LedgerEntr
     [userId, limit]
   );
   return r.rows.map((row) => ({ amount: row.amount, kind: row.kind, label: displayLedgerLabel(row.label), createdAt: row.created_at.toISOString() }));
+}
+
+/** 이 회원이 이 종류(kind)를 한 번이라도 받았나 */
+export async function hasLedgerKind(userId: string, kind: string): Promise<boolean> {
+  const pool = await db();
+  const r = await pool.query(`SELECT 1 FROM bokchae_ledger WHERE user_id = $1 AND kind = $2 LIMIT 1`, [userId, kind]);
+  return (r.rowCount ?? 0) > 0;
 }
 
 /** 지급(멱등). 이미 같은 (kind, ref)가 있으면 아무것도 하지 않고 false */
@@ -75,13 +82,14 @@ export async function inviteStats(userId: string): Promise<{ invited: number }> 
 
 /**
  * 새 회원이 필수 동의를 처음 마친 순간 한 번 호출된다.
- *  - 가입 선물 990냥 (2026-10-17, 한 번만)
+ *  - 가입 선물 990냥 (2026-10-17, 한 번만) - 앱 전용 고객사는 fromApp 일 때만 (2026-11-01)
  *  - 초대 코드가 있으면(자기 자신 제외) 초대한 사람 990냥 + 초대받은 사람 990냥 (2026-10-17)
  * 초대한 사람의 users 행을 잠가(FOR UPDATE) 동시에 두 명이 가입해도 n번째 계산이 겹치지 않게 한다.
  * 실패해도 가입 자체는 막지 않도록 호출하는 쪽에서 try/catch 한다.
  */
-export async function onNewMember(userId: string, refCode: string | undefined): Promise<void> {
-  if (WELCOME_GIFT > 0) await grant(userId, WELCOME_GIFT, "welcome", `회원가입 축하 ${CURRENCY_NAME}`);
+export async function onNewMember(userId: string, refCode: string | undefined, fromApp = false): Promise<void> {
+  // 2026-11-01 유샘: 앱 전용 고객사(features.appWelcomeGift)는 앱으로 열었을 때만 - 웹 가입자는 나중에 앱으로 열 때 받는다 (handleYeopjeonSummary)
+  if (welcomeAllowed(fromApp)) await grant(userId, WELCOME_GIFT, "welcome", `회원가입 축하 ${CURRENCY_NAME}`);
 
   const code = refCode?.toUpperCase();
   if (!code || !REF_CODE_RE.test(code)) return;

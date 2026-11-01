@@ -2,6 +2,7 @@
 
 
 import { BRAND } from "@/tenants";
+import { INVITEE_GIFT, WELCOME_GIFT, WELCOME_GIFT_APP_ONLY, formatNyang } from "@/lib/yeopjeon";
 import { useEffect, useState } from "react";
 
 export interface PersonListItem {
@@ -23,6 +24,10 @@ export interface YeopjeonSummary {
   /** 연 관상 심층 풀이 (수정안 53) */
   faces?: Array<{ id: string; nickname: string; written: boolean; createdAt: string }>;
   couples?: Array<{ id: string; a: string; b: string; paid: boolean; createdAt: string }>;
+  /** 2026-11-01 앱 전용 가입 선물: 아직 못 받았고 지금 웹으로 보는 중 → "앱으로 열면 990냥" 안내 */
+  welcomeWaiting?: boolean;
+  /** 이번 요청에서 가입 선물이 막 들어왔다 (앱으로 처음 열었을 때) */
+  welcomeJustGranted?: boolean;
 }
 
 /** 로그인한 회원의 엽전 요약. 로그인 안 했으면 null. */
@@ -63,7 +68,8 @@ export function inviteUrl(refCode: string): string {
 /** 휴대폰이면 공유창(카카오톡 등), 아니면 링크 복사 */
 export async function shareInvite(refCode: string): Promise<"shared" | "copied" | "failed"> {
   const url = inviteUrl(refCode);
-  const text = `${BRAND}에서 내 사주를 무료로 봤어요. 이 링크로 가입하면 엽전 1,980냥(가입 선물 990냥 + 초대 선물 990냥)을 받아서 운세 두 가지를 무료로 볼 수 있어요!`;
+  // 2026-11-01: 금액은 설정에서 (가입 선물 + 초대 선물), 앱 전용 고객사는 "앱으로 가입하면"
+  const text = `${BRAND}에서 내 사주를 무료로 봤어요. 이 링크로 ${WELCOME_GIFT_APP_ONLY ? "들어와 앱으로 가입하면" : "가입하면"} 엽전 ${formatNyang(WELCOME_GIFT + INVITEE_GIFT)}(가입 선물 ${formatNyang(WELCOME_GIFT)} + 초대 선물 ${formatNyang(INVITEE_GIFT)})을 받아서 운세 두 가지를 무료로 볼 수 있어요!`;
   try {
     if (navigator.share) {
       await navigator.share({ title: BRAND, text, url });

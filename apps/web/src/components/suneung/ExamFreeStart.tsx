@@ -3,7 +3,9 @@
 import { useEffect, useState } from "react";
 import { isAuthEnabled } from "@/lib/launchMode";
 import { CONTINUE_PATH, savePendingIntent } from "@/lib/intent";
-import { CURRENCY_NAME, PRICE, WELCOME_GIFT, formatNyang } from "@/lib/yeopjeon";
+import { CURRENCY_NAME, JOIN_GIFT, PRICE, WELCOME_GIFT, formatNyang } from "@/lib/yeopjeon";
+import { AppGiftLink } from "@/components/app/AppGiftLink";
+import { useWelcomeHere } from "@/components/app/useWelcomeHere";
 import { ELEMENT_TOKEN, type ElementKo } from "@/lib/pillarView";
 import { reportClientError } from "@/components/yeopjeon/useYeopjeon";
 import type { SajuJson } from "saju-engine";
@@ -64,6 +66,8 @@ function birthLine(saju: SajuJson): string {
 const hourLabel = (h: number) => `${h < 12 ? "오전" : "오후"} ${h % 12 === 0 ? 12 : h % 12}시`;
 
 export function ExamFreeStart() {
+  // 2026-11-01: 앱 전용 고객사에서 웹으로 보면 "무료로" 약속 대신 앱 설치 안내
+  const giftHere = useWelcomeHere() !== false;
   const [name, setName] = useState("");
   const [gender, setGender] = useState<"male" | "female" | "">("");
   const [cal, setCal] = useState<"solar" | "lunar">("solar");
@@ -342,7 +346,7 @@ export function ExamFreeStart() {
             <div className="mt-5">
               <p className="mb-3 text-center">
                 <span className="inline-block rounded-full px-3 py-1 text-[12.5px] font-bold" style={{ backgroundColor: "var(--color-danger)", color: "#fff" }}>
-                  오픈 행사 · 가입하면 {CURRENCY_NAME} {formatNyang(WELCOME_GIFT)} 선물
+                  오픈 행사 · {JOIN_GIFT} {CURRENCY_NAME} {formatNyang(WELCOME_GIFT)} 선물
                 </span>
               </p>
               {me === "loading" ? (
@@ -354,11 +358,12 @@ export function ExamFreeStart() {
               ) : !me ? (
                 <>
                   <a href={`/api/auth/kakao/start?next=${encodeURIComponent(CONTINUE_PATH)}`} onClick={remember} className="block rounded-xl py-4 text-center text-[17px] font-bold" style={{ backgroundColor: "#fee500", color: "#191600" }}>
-                    카카오로 가입하고 무료로 채우기
+                    {giftHere ? "카카오로 가입하고 무료로 채우기" : "카카오로 가입하고 채우기"}
                   </a>
                   <p className="mt-2 text-center text-[13px]" style={{ color: "var(--color-ink-soft)", wordBreak: "keep-all" }}>
-                    선물 {formatNyang(WELCOME_GIFT)}으로 가볍게 보기({formatNyang(PRICE.EXAM)})가 바로 열려요
+                    {giftHere ? "" : "앱으로 가입하면 "}선물 {formatNyang(WELCOME_GIFT)}으로 가볍게 보기({formatNyang(PRICE.EXAM)})가 바로 열려요
                   </p>
+                  <AppGiftLink />
                   <a href={`/login?next=${encodeURIComponent(CONTINUE_PATH)}`} onClick={remember} className="mt-1 block text-center text-[12px] underline underline-offset-4" style={{ color: "var(--color-ink-faint)" }}>
                     이메일로 로그인하기
                   </a>

@@ -1,8 +1,8 @@
 import { getCurrentKstYear } from "saju-engine";
 import { getUserBySessionToken } from "@/server/auth/session";
 import { getResult } from "@/server/resultStore";
-import { ensureRefCode, getBalance, grant, inviteStats, listLedger, InsufficientYeopjeonError } from "@/server/yeopjeon/ledger";
-import { CURRENCY_NAME, PRICE, WELCOME_GIFT } from "@/lib/yeopjeon";
+import { ensureRefCode, getBalance, grant, hasLedgerKind, inviteStats, listLedger, InsufficientYeopjeonError } from "@/server/yeopjeon/ledger";
+import { CURRENCY_NAME, PRICE, WELCOME_GIFT, WELCOME_GIFT_APP_ONLY, welcomeAllowed } from "@/lib/yeopjeon";
 import { isAnyTopicKey, isTopicKey } from "@/lib/topics";
 import { notifyError } from "@/server/alert";
 import { listCouples } from "@/server/couple/couple";
@@ -54,12 +54,22 @@ function resultFrom(rawBody: unknown) {
 }
 
 /** 내 엽전·이용내역·초대 정보·풀이한 사람들 */
-export async function handleYeopjeonSummary(token: string | undefined): Promise<Result<unknown>> {
+export async function handleYeopjeonSummary(token: string | undefined, fromApp = false): Promise<Result<unknown>> {
   const m = await member(token);
   if ("error" in m) return m.error!;
   // 가입 선물 990냥 (2026-10-17) - 예전 가입자도 복주머니를 열 때 한 번 받는다 (장부 kind "welcome"으로 한 번만)
   // 비회원(2026-10-23)은 가입 선물 없음
-  if (WELCOME_GIFT > 0 && !m.user.isGuest) await grant(m.user.id, WELCOME_GIFT, "welcome", `회원가입 축하 ${CURRENCY_NAME}`);
+  // 2026-11-01 유샘: 앱 전용 고객사는 앱으로 열었을 때만 - 웹에서 가입한 회원은 앱으로 처음 열 때 여기서 받는다
+  let welcomeJustGranted = false;
+  let welcomeWaiting = false;
+  if (!m.user.isGuest && WELCOME_GIFT > 0) {
+    if (welcomeAllowed(fromApp)) {
+      welcomeJustGranted = await grant(m.user.id, WELCOME_GIFT, "welcome", `회원가입 축하 ${CURRENCY_NAME}`);
+    } else if (WELCOME_GIFT_APP_ONLY) {
+      // 아직 못 받았으면 화면에 "앱으로 열면 990냥" 안내
+      welcomeWaiting = !(await hasLedgerKind(m.user.id, "welcome"));
+    }
+  }
   const [balance, ledger, refCode, stats, persons, faces, couples] = await Promise.all([
     getBalance(m.user.id),
     listLedger(m.user.id),
@@ -69,7 +79,7 @@ export async function handleYeopjeonSummary(token: string | undefined): Promise<
     listFaceReadings(m.user.id),
     listCouples(m.user.id),
   ]);
-  return { status: 200, body: { balance, ledger, refCode, invited: stats.invited, persons, faces, couples } };
+  return { status: 200, body: { balance, ledger, refCode, invited: stats.invited, persons, faces, couples, welcomeWaiting, welcomeJustGranted } };
 }
 
 /**

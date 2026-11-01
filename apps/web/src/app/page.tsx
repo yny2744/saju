@@ -4,7 +4,8 @@ import { ReviewStrip } from "@/components/reviews/ReviewStrip";
 import { ProductIcon, type Kind } from "@/components/landing/ProductIcon";
 import { BUSINESS_INFO } from "@/lib/businessInfo";
 import { TOPICS, TOPIC_KEYS } from "@/lib/topics";
-import { CURRENCY_NAME, INVITEE_GIFT, INVITE_REWARD, PRICE, formatNyang, saleNote } from "@/lib/yeopjeon";
+import { CURRENCY_NAME, INVITEE_GIFT, INVITE_REWARD, JOIN_GIFT, PRICE, WELCOME_GIFT, formatNyang, saleNote } from "@/lib/yeopjeon";
+import { JoinBannerButton } from "@/components/app/AppGiftLink";
 import { ScrollTopButton } from "@/components/ScrollTop";
 import { SuneungHero } from "@/components/landing/SuneungHero";
 import { isSuneungOn } from "@/lib/launchMode";
@@ -75,8 +76,7 @@ function JoinBanner() {
   return (
     <>
       {/* 로그인 혜택 (2026-10-23: 가입 선물 990냥으로 운세 하나 무료 - 12가지 모두 무료였던 수정안 10을 대체) */}
-      <a
-        href="/login"
+      <div
         className="mt-6 block rounded-2xl px-5 py-6 text-center"
         style={{ backgroundColor: "#16213a", border: "1px solid var(--color-gold-line)", boxShadow: "inset 0 0 0 3px #16213a, inset 0 0 0 4px rgba(212,178,101,0.55)" }}
       >
@@ -84,15 +84,14 @@ function JoinBanner() {
           錢
         </span>
         <span className="mt-3 block text-[19px] font-bold" style={{ color: "#f3e7c6", fontFamily: "var(--font-serif)" }}>
-          가입하면 운세 하나가 무료
+          {JOIN_GIFT} 운세 하나가 무료
         </span>
-        <span className="mt-1 block text-[14px]" style={{ color: "#c9cfda" }}>
-          가입 선물 엽전 990냥으로 위 운세 중 하나를 바로 볼 수 있어요
+        <span className="mt-1 block text-[14px]" style={{ color: "#c9cfda", wordBreak: "keep-all" }}>
+          가입 선물 엽전 {formatNyang(WELCOME_GIFT)}으로 위 운세 중 하나를 바로 볼 수 있어요
         </span>
-        <span className="mx-auto mt-4 block max-w-[240px] rounded-xl py-3 text-[15px] font-bold" style={{ background: "linear-gradient(180deg,#e2c47e,#c9a55a)", color: "#16213a" }}>
-          가입하고 운세 보기
-        </span>
-      </a>
+        {/* 2026-11-01 앱 전용 고객사: 웹이면 앱 설치 안내로 */}
+        <JoinBannerButton style={{ background: "linear-gradient(180deg,#e2c47e,#c9a55a)", color: "#16213a" }} />
+      </div>
     </>
   );
 }
@@ -306,7 +305,7 @@ export default function LandingPage() {
           <SectionTitle title="12가지 운세" sub="궁금한 운세를 골라 보세요" />
           <div className="mb-5 flex justify-center">
             <span className="rounded-full px-3 py-1.5 text-[12.5px] font-semibold" style={{ backgroundColor: "var(--color-accent-soft)", color: "var(--color-accent)" }}>
-              가입하면 운세 하나 무료 · {saleNote("BASIC") ? `${saleNote("BASIC")} ` : ""}하나에 {formatNyang(PRICE.BASIC)} (1냥 = 1원)
+              {JOIN_GIFT} 운세 하나 무료 · {saleNote("BASIC") ? `${saleNote("BASIC")} ` : ""}하나에 {formatNyang(PRICE.BASIC)} (1냥 = 1원)
             </span>
           </div>
           <ul className="grid grid-cols-3 gap-2">

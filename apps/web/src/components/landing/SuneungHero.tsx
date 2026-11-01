@@ -8,6 +8,7 @@ import {
   CURRENCY_NAME,
   PRICE,
   WELCOME_GIFT,
+  WELCOME_GIFT_APP_ONLY,
   formatNyang,
 } from "@/lib/yeopjeon";
 
@@ -252,7 +253,7 @@ export function SuneungHero({
             className="mt-2 text-center text-[13px]"
             style={{ color: "var(--color-ink-soft)" }}
           >
-            가볍게 보기 {formatNyang(PRICE.EXAM)} · 로그인 선물 {CURRENCY_NAME}{" "}
+            가볍게 보기 {formatNyang(PRICE.EXAM)} · {WELCOME_GIFT_APP_ONLY ? "앱 가입" : "로그인"} 선물 {CURRENCY_NAME}{" "}
             {formatNyang(WELCOME_GIFT)}으로 바로 · 깊게 보기{" "}
             {formatNyang(PRICE.EXAM_DEEP)}
           </p>

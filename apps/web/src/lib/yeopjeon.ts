@@ -62,6 +62,20 @@ export function bundleDiscount(count: number, price: number): { list: number; of
 export const WELCOME_GIFT = 990;
 
 /**
+ * 가입 선물은 앱(PWA)으로 열었을 때만 (2026-11-01 유샘) - 고객사 설정 features.appWelcomeGift.
+ * 앱으로 열면 lib/appInfo.ts 의 APP_COOKIE 가 붙고, 서버는 그 쿠키가 있을 때만 선물을 준다.
+ */
+export const WELCOME_GIFT_APP_ONLY = TENANT.features.appWelcomeGift === true;
+
+/** 가입 선물 문구 앞머리 - "가입하면 990냥" / 앱 전용 고객사는 "앱으로 가입하면 990냥" (앱에서도 웹에서도 맞는 말) */
+export const JOIN_GIFT = WELCOME_GIFT_APP_ONLY ? "앱으로 가입하면" : "가입하면";
+
+/** 이번 요청이 선물을 받을 수 있는 자리인가 (앱 전용이 아니면 늘 true) */
+export function welcomeAllowed(fromApp: boolean): boolean {
+  return WELCOME_GIFT > 0 && (!WELCOME_GIFT_APP_ONLY || fromApp);
+}
+
+/**
  * 친구 초대 (2026-10-17 유샘 확정): 단계 없이 한 명마다 초대한 사람 990냥 · 초대받은 친구 990냥.
  * 990냥이면 수능대박운 가볍게 보기·행운 배경화면 등 990냥 상품 하나를 바로 볼 수 있다.
  */

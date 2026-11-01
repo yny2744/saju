@@ -3,7 +3,8 @@
 
 import { BRAND } from "@/tenants";
 import { isAuthEnabled } from "@/lib/launchMode";
-import { CURRENCY_NAME, INVITEE_GIFT, WELCOME_GIFT, formatNyang } from "@/lib/yeopjeon";
+import { CURRENCY_NAME, INVITEE_GIFT, JOIN_GIFT, WELCOME_GIFT, formatNyang } from "@/lib/yeopjeon";
+import { AppGiftLink } from "@/components/app/AppGiftLink";
 import { safeNext } from "@/lib/safeNext";
 import { ConsentChecks, EMPTY_CONSENT, requiredConsentDone, type ConsentState } from "@/components/ConsentChecks";
 import { ComingSoon } from "@/components/ComingSoon";
@@ -75,7 +76,8 @@ function LoginPageBody() {
       <h1 className={`${isAuthEnabled() ? "mb-2" : "mb-7"} text-[24px] font-bold`}>{mode === "login" ? "로그인" : "이메일로 시작하기"}</h1>
       {isAuthEnabled() && (
         <p className="mb-7 text-sm leading-relaxed" style={{ color: "var(--color-ink-soft)" }}>
-          가입하면 선물로 {CURRENCY_NAME} <b>{formatNyang(WELCOME_GIFT)}</b>을 드려요. 12가지 운세 중 하나를 무료로 볼 수 있어요. 친구의 초대 링크로 오셨다면 {formatNyang(INVITEE_GIFT)}을 더 드려요.
+          {JOIN_GIFT} 선물로 {CURRENCY_NAME} <b>{formatNyang(WELCOME_GIFT)}</b>을 드려요. 12가지 운세 중 하나를 무료로 볼 수 있어요. 친구의 초대 링크로 오셨다면 {formatNyang(INVITEE_GIFT)}을 더 드려요.
+          <AppGiftLink className="mt-2 block text-[14px] font-bold underline underline-offset-4" />
         </p>
       )}
 

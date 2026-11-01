@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { APP_ICON_DIR, APP_NAME, APP_SHORT_NAME } from "@/lib/appInfo";
 import { InstallGuide } from "@/components/app/AppInstall";
+import { PushToggle } from "@/components/app/PushToggle";
+import { CURRENCY_NAME, WELCOME_GIFT, WELCOME_GIFT_APP_ONLY, formatNyang } from "@/lib/yeopjeon";
 
 export const metadata: Metadata = { title: `앱으로 설치 · ${APP_NAME}` };
 
@@ -22,13 +24,19 @@ export default function AppInstallPage() {
           <br />
           매일 아침 오늘의 운세로 하루를 시작해 보세요.
         </p>
+        {/* 2026-11-01 유샘: 가입 선물은 앱으로 열었을 때만 (고객사 설정 features.appWelcomeGift) */}
+        {WELCOME_GIFT_APP_ONLY && (
+          <p className="mx-auto mt-4 inline-block rounded-full px-4 py-1.5 text-[14px] font-bold" style={{ backgroundColor: "var(--color-danger)", color: "#fff" }}>
+            앱으로 열어서 가입하면 {CURRENCY_NAME} {formatNyang(WELCOME_GIFT)} 선물
+          </p>
+        )}
       </div>
 
       <ul className="mt-7 grid grid-cols-3 gap-2 text-center text-[13px]">
         {[
           ["☀", "매일 아침", "오늘의 운세"],
           ["◎", "아이콘 하나로", "바로 열기"],
-          ["◇", "설치 비용", "없음"],
+          WELCOME_GIFT_APP_ONLY ? ["錢", "가입 선물", formatNyang(WELCOME_GIFT)] : ["◇", "설치 비용", "없음"],
         ].map(([g, a, b]) => (
           <li key={a} className="rounded-xl px-2 py-3" style={{ backgroundColor: "var(--color-paper-soft)", border: "1px solid var(--color-line)" }}>
             <span className="block text-[20px]" style={{ color: "var(--color-gold)" }} aria-hidden>
@@ -49,8 +57,13 @@ export default function AppInstallPage() {
         <InstallGuide />
       </section>
 
+      {/* 2026-11-01 매일 아침 오늘의 운세 알림 (알림 열쇠가 있을 때만 보인다) */}
+      <div className="mt-5">
+        <PushToggle />
+      </div>
+
       <p className="mt-5 text-center text-[12.5px] leading-relaxed" style={{ color: "var(--color-ink-faint)", wordBreak: "keep-all" }}>
-        앱스토어를 거치지 않고 이 사이트를 그대로 홈 화면에 두는 방식이에요. 지우고 싶으면 다른 앱처럼 아이콘을 길게 눌러 지우면 돼요.
+        앱스토어를 거치지 않고 이 사이트를 그대로 홈 화면에 두는 방식이라 설치 비용이 없어요. 지우고 싶으면 다른 앱처럼 아이콘을 길게 눌러 지우면 돼요.
       </p>
     </main>
   );

@@ -68,6 +68,11 @@ export interface TenantPrices {
 export interface TenantFeatures {
   /** 프리미엄 작명(작명 + 12가지 운세 전부 보기) 판매 */
   premiumNaming: boolean;
+  /**
+   * 가입 선물(WELCOME_GIFT)은 휴대폰 앱(PWA)으로 열었을 때만 (2026-11-01 유샘: 앱 설치를 이끄는 선물).
+   * 웹에서 가입한 회원도 나중에 앱으로 열면 그때 받는다. 없거나 false 면 예전처럼 가입하면 바로.
+   */
+  appWelcomeGift?: boolean;
 }
 
 /** 오행 이름 (목·화·토·금·수) */

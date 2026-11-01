@@ -1,6 +1,6 @@
 "use client";
 
-import { CURRENCY_NAME, PRICE, formatNyang } from "@/lib/yeopjeon";
+import { CURRENCY_NAME, PRICE, WELCOME_GIFT, formatNyang } from "@/lib/yeopjeon";
 import { TOPIC_KEYS } from "@/lib/topics";
 import { InviteCard } from "./InviteCard";
 import { useYeopjeon } from "./useYeopjeon";
@@ -27,6 +27,31 @@ export function YeopjeonPanel() {
 
   return (
     <>
+      {/* 2026-11-01 유샘: 가입 선물은 앱으로 열었을 때만 - 웹에서 아직 못 받은 회원에게 안내 */}
+      {data.welcomeWaiting && (
+        <a
+          href="/app"
+          className="mb-4 flex items-center gap-3 rounded-2xl px-4 py-3.5"
+          style={{ background: "linear-gradient(180deg,#1a1613,#0b0908)", border: "1px solid #c9a04a", color: "#f3dc9a" }}
+        >
+          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-[17px] font-bold" style={{ border: "1.5px solid #d9b25a", fontFamily: "var(--font-serif)" }} aria-hidden>
+            錢
+          </span>
+          <span className="min-w-0 flex-1 text-[14px] leading-snug" style={{ wordBreak: "keep-all" }}>
+            <b className="block text-[15px]">가입 선물 {formatNyang(WELCOME_GIFT)}이 기다려요</b>
+            앱으로 설치해서 열면 바로 들어와요
+          </span>
+          <span className="shrink-0 text-[13px] font-bold" aria-hidden>
+            설치 ›
+          </span>
+        </a>
+      )}
+      {data.welcomeJustGranted && (
+        <p className="mb-4 rounded-2xl px-4 py-3 text-center text-[15px] font-bold" style={{ backgroundColor: "var(--color-accent-soft)", color: "var(--color-accent)" }}>
+          앱 가입 선물 {CURRENCY_NAME} {formatNyang(WELCOME_GIFT)}이 들어왔어요
+        </p>
+      )}
+
       {/* 잔액 */}
       <section className="mb-7 flex items-center justify-between rounded-2xl px-5 py-4" style={{ border: "1px solid var(--color-gold-line)", backgroundColor: "var(--color-card)" }}>
         <div>

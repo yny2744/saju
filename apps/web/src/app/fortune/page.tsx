@@ -2,6 +2,7 @@
 
 import { Suspense, useEffect, useState } from "react";
 import { FillGauge } from "@/components/FillGauge";
+import { PushToggle } from "@/components/app/PushToggle";
 import { useSearchParams } from "next/navigation";
 import type { SajuJson } from "saju-engine";
 import type { FortuneResultResponse, ApiErrorResponse, AnalyzeResultResponse } from "@/server/types";
@@ -111,6 +112,13 @@ function FortuneBody() {
         >
           내 만세력 보기
         </a>
+      )}
+
+      {/* 2026-11-01 유샘: 매일 아침 오늘의 운세 알림 (알림 열쇠가 있을 때만 보인다) */}
+      {state.status === "done" && (
+        <div className="mt-6">
+          <PushToggle />
+        </div>
       )}
     </main>
   );

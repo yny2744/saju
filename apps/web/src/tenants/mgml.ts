@@ -18,6 +18,8 @@ const mgml: TenantConfig = {
   },
   /** 2026-11-01 휴대폰 앱(PWA) 이름 - 홈 화면 아이콘 아래에는 짧은 이름 */
   app: { name: "류결의 명견만리", shortName: "명견만리" },
+  /** 2026-11-01 유샘: 가입 선물 990냥은 앱으로 열어서 가입(또는 가입 뒤 앱으로 열기)할 때 */
+  features: { ...ryugyeol.features, appWelcomeGift: true },
   /** 정식 주소가 정해지기 전에는 Vercel 환경변수 SITE_URL 이 먼저 쓰인다 */
   siteUrl: "https://saju-web-git-mgml-yny2744.vercel.app",
   gate: {

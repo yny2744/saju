@@ -1,6 +1,7 @@
 "use client";
 
 import { isAuthEnabled } from "@/lib/launchMode";
+import { PushToggle } from "@/components/app/PushToggle";
 import { profileSummary, type SavedProfile } from "@/lib/profileView";
 import { ComingSoon } from "@/components/ComingSoon";
 import { useEffect, useState } from "react";
@@ -127,6 +128,11 @@ function MyPageBody() {
         </section>
 
         <YeopjeonPanel />
+
+        {/* 2026-11-01 매일 아침 오늘의 운세 알림 */}
+        <div className="mb-7">
+          <PushToggle />
+        </div>
 
         {/* 저장한 사람 */}
         <section className="mb-7">

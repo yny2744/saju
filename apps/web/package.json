@@ -21,7 +21,8 @@
     "qrcode": "^1.5.4",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
-    "saju-engine": "file:../saju-engine"
+    "saju-engine": "file:../saju-engine",
+    "web-push": "^3.6.7"
   },
   "devDependencies": {
     "@types/bcryptjs": "^2.4.6",
@@ -32,6 +33,7 @@
     "@types/qrcode": "^1.5.6",
     "@types/react": "^18.3.3",
     "@types/react-dom": "^18.3.0",
+    "@types/web-push": "^3.6.4",
     "autoprefixer": "^10.4.19",
     "jest": "^29.7.0",
     "postcss": "^8.4.39",

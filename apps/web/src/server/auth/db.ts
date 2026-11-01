@@ -314,6 +314,19 @@ async function ensureSchema(): Promise<void> {
   await db.query(`CREATE INDEX IF NOT EXISTS pay_orders_user_idx ON pay_orders(user_id, created_at DESC);`);
   // 2026-10-23 비회원 결제: 로그인 없이 약관 동의만 받고 만든 "비회원" 계정 (가입 선물·초대 보상 없음, 이 브라우저 세션으로만 다시 본다)
   await db.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS is_guest BOOLEAN NOT NULL DEFAULT false;`);
+  // 2026-11-01 유샘: 매일 아침 오늘의 운세 알림 - 기기(브라우저)마다 한 줄. 로그인 안 한 손님도 받을 수 있어 user_id 는 비어도 된다.
+  // last_sent_on: 그날 이미 보냈으면 다시 보내지 않는다 (발송이 두 번 불려도 한 번만)
+  await db.query(`
+    CREATE TABLE IF NOT EXISTS push_subscriptions (
+      endpoint TEXT PRIMARY KEY,
+      p256dh TEXT NOT NULL,
+      auth TEXT NOT NULL,
+      user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+      last_sent_on DATE,
+      fail_count INT NOT NULL DEFAULT 0,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+    );
+  `);
   schemaReady = true;
 }
 

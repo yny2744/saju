@@ -1,3 +1,9 @@
 {
-  "installCommand": "cd ../saju-engine && npm install && npm run build && cd ../web && npm install"
+  "installCommand": "cd ../saju-engine && npm install && npm run build && cd ../web && npm install",
+  "crons": [
+    {
+      "path": "/api/push/daily",
+      "schedule": "30 23 * * *"
+    }
+  ]
 }

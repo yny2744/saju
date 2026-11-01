@@ -1,3 +1,4 @@
+import { APP_COOKIE, isAppCookie } from "@/lib/appInfo";
 import { NextRequest, NextResponse } from "next/server";
 import { blockIfAuthOff } from "@/server/launchGuard";
 import { handleSignup } from "@/server/auth/authHandlers";
@@ -12,7 +13,11 @@ export async function POST(request: NextRequest) {
   const blocked = blockIfAuthOff();
   if (blocked) return blocked;
   const rawBody = await request.json().catch(() => null);
-  const { status, body, session } = await handleSignup(rawBody, request.cookies.get(REF_COOKIE_NAME)?.value);
+  const { status, body, session } = await handleSignup(
+    rawBody,
+    request.cookies.get(REF_COOKIE_NAME)?.value,
+    isAppCookie(request.cookies.get(APP_COOKIE)?.value)
+  );
   const res = NextResponse.json(body, { status });
   if (session) {
     res.cookies.set(SESSION_COOKIE_NAME, session.token, {

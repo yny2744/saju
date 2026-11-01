@@ -3,7 +3,8 @@
 import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import { josa } from "@/tenants";
-import { APP_ICON_DIR, APP_SHORT_NAME } from "@/lib/appInfo";
+import { WELCOME_GIFT, WELCOME_GIFT_APP_ONLY, formatNyang } from "@/lib/yeopjeon";
+import { APP_COOKIE, APP_ICON_DIR, APP_SHORT_NAME } from "@/lib/appInfo";
 
 /**
  * 휴대폰 앱(PWA) 설치 (2026-11-01 유샘) - 사이트를 홈 화면에 앱처럼 설치해 매일 오늘의 운세로 하루를 시작하게.
@@ -31,6 +32,21 @@ export function detectAppEnv(): AppEnv {
   if (/Android/i.test(ua)) return "android";
   return "desktop";
 }
+
+/**
+ * 앱으로 열었으면 "앱으로 열었다" 쿠키를 남긴다 (2026-11-01 유샘: 가입 선물 990냥은 앱으로 열었을 때만).
+ * 화면이 그려지기 전(이 파일을 읽는 순간)에 남겨서, 머리줄·복주머니의 첫 요청에도 실리게 한다.
+ */
+function markAppOpen() {
+  try {
+    if (detectAppEnv() !== "standalone") return;
+    if (document.cookie.split("; ").includes(`${APP_COOKIE}=1`)) return;
+    document.cookie = `${APP_COOKIE}=1; path=/; max-age=31536000; samesite=lax${location.protocol === "https:" ? "; secure" : ""}`;
+  } catch {
+    /* 무시 */
+  }
+}
+if (typeof window !== "undefined") markAppOpen();
 
 /** 레이아웃에 한 번 - 서비스 워커 등록 + 설치 창 받아 두기 */
 export function AppInstallInit() {
@@ -118,12 +134,26 @@ function Step({ n, children }: { n: number; children: React.ReactNode }) {
 export function InstallGuide() {
   const { env, canPrompt, install } = useAppInstall();
   const [copied, setCopied] = useState(false);
+  // 앱으로 열었고 아직 가입 전일 때만 "가입하고 선물 받기" (2026-11-01)
+  const [guest, setGuest] = useState(false);
+  useEffect(() => {
+    if (env !== "standalone" || !WELCOME_GIFT_APP_ONLY) return;
+    fetch("/api/auth/me")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => setGuest(!d?.user?.termsAgreed))
+      .catch(() => {});
+  }, [env]);
   if (!env) return <div className="h-40" />;
 
   if (env === "standalone") {
     return (
       <p className="rounded-2xl px-5 py-6 text-center text-[16px] font-semibold" style={{ backgroundColor: "var(--color-paper-soft)" }}>
         지금 {APP_SHORT_NAME} 앱으로 보고 계세요. 홈 화면의 아이콘으로 매일 들어오시면 돼요.
+        {guest && (
+          <a href="/login" className="btn-band mt-4 block rounded-xl py-3.5 text-[16px] font-bold">
+            가입하고 선물 {formatNyang(WELCOME_GIFT)} 받기
+          </a>
+        )}
       </p>
     );
   }
@@ -241,7 +271,7 @@ export function InstallBar() {
       <a href="/app" className="min-w-0 flex-1 text-[13px] leading-snug" style={{ wordBreak: "keep-all" }}>
         <b>{josa(APP_SHORT_NAME, "을/를")} 홈 화면에</b>
         <br />
-        매일 아침 오늘의 운세로 하루 시작
+        {WELCOME_GIFT_APP_ONLY ? `앱으로 가입하면 ${formatNyang(WELCOME_GIFT)} 선물` : "매일 아침 오늘의 운세로 하루 시작"}
       </a>
       <a href="/app" className="shrink-0 rounded-full px-3 py-1.5 text-[13px] font-bold" style={{ background: "linear-gradient(180deg,#fff1c4,#d9b25a 45%,#a77b25)", color: "#1a1408" }}>
         설치

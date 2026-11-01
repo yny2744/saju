@@ -1,3 +1,4 @@
+import { APP_COOKIE, isAppCookie } from "@/lib/appInfo";
 import { NextRequest, NextResponse } from "next/server";
 import { blockIfAuthOff } from "@/server/launchGuard";
 import { handleConsent } from "@/server/auth/authHandlers";
@@ -13,6 +14,11 @@ export async function POST(request: NextRequest) {
   if (blocked) return blocked;
   const rawBody = await request.json().catch(() => null);
   const token = request.cookies.get(SESSION_COOKIE_NAME)?.value;
-  const { status, body } = await handleConsent(token, rawBody, request.cookies.get(REF_COOKIE_NAME)?.value);
+  const { status, body } = await handleConsent(
+    token,
+    rawBody,
+    request.cookies.get(REF_COOKIE_NAME)?.value,
+    isAppCookie(request.cookies.get(APP_COOKIE)?.value)
+  );
   return NextResponse.json(body, { status });
 }
