@@ -269,7 +269,10 @@ export function InstallBar() {
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img src={`${APP_ICON_DIR}/icon-192.png`} alt="" width={36} height={36} className="shrink-0 rounded-lg" />
       <a href="/app" className="min-w-0 flex-1 text-[13px] leading-snug" style={{ wordBreak: "keep-all" }}>
-        <b>{josa(APP_SHORT_NAME, "을/를")} 홈 화면에</b>
+        {/* 2026-11-01 유샘: "홈 화면에"는 한 줄로 (홈과 화면 사이에서 줄이 나뉘지 않게) */}
+        <b>
+          {josa(APP_SHORT_NAME, "을/를")} <span className="whitespace-nowrap">홈 화면에</span>
+        </b>
         <br />
         {WELCOME_GIFT_APP_ONLY ? `앱으로 가입하면 ${formatNyang(WELCOME_GIFT)} 선물` : "매일 아침 오늘의 운세로 하루 시작"}
       </a>
