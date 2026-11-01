@@ -56,7 +56,7 @@ export function HeaderAuth() {
       </span>
     )}
     <a href="/mypage" className="text-right leading-tight">
-      <span className="block text-[14px] font-semibold">{me.nickname}님 복주머니</span>
+      <span className="block max-w-[9rem] truncate text-[14px] font-semibold">{me.nickname}님 복주머니</span>
       {balance !== null && (
         <span className="block text-[12px] font-bold" style={{ color: "var(--color-gold-light)" }}>
           엽전 {formatNyang(balance)}

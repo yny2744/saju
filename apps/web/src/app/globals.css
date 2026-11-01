@@ -299,3 +299,10 @@ html[data-contrast="high"] {
 .sound-hint{animation:sound-hint 1.4s ease-in-out infinite;background-color:#fff8e6}
 @keyframes sound-hint{0%,100%{box-shadow:0 0 0 0 rgba(212,178,101,.0)}50%{box-shadow:0 0 0 6px rgba(212,178,101,.45)}}
 @media (prefers-reduced-motion:reduce){.sound-hint{animation:none}}
+
+/* 2026-11-01 뒤로가기 단추가 있는 화면: 좁은 휴대폰에서는 대문 이름 글자를 빼고 엠블럼만 (머리줄이 두 줄로 깨지지 않게) */
+@media (max-width: 399px) {
+  header:has(.back-btn) .site-title {
+    display: none;
+  }
+}
