@@ -112,6 +112,58 @@ export async function checkout(userId: string, personId: string, mode: PurchaseM
   };
 }
 
+/** 사주 겹쳐 보기 주문의 빈 사람 번호 (pay_orders.person_id 가 비면 안 되어서) */
+export const OVERLAY_PERSON_ID = "00000000-0000-0000-0000-000000000000";
+
+/**
+ * 사주 겹쳐 보기 결제 (2026-11-01 유샘: 엽전이 없으면 결제창이 떠야) - 다른 상품과 같은 결제창(카드·계좌이체).
+ * ref 는 funUnlock.overlayRef (같은 날·같은 입력). 이미 연 것이면 enough 로 돌려 화면이 바로 연다.
+ */
+export async function checkoutOverlay(userId: string, args: { kind: string; ref: string; price: number; name: string }): Promise<CheckoutResult> {
+  const pool = await db();
+  const balance = await getBalance(userId);
+  const paid = await pool.query(`SELECT 1 FROM bokchae_ledger WHERE user_id = $1 AND kind = 'spend' AND ref = $2`, [userId, args.ref]);
+  if ((paid.rowCount ?? 0) > 0 || balance >= args.price) return { status: "enough", price: args.price, balance };
+  const pm = payMode();
+  if (pm === "off") throw new PayError("PAY_NOT_READY", "결제를 준비하고 있어요. 곧 열려요.");
+  const split = splitPayment(args.price, balance);
+  const orderId = newOrderId();
+  await pool.query(
+    `INSERT INTO pay_orders (id, user_id, person_id, mode, topics, price, use_yeopjeon, amount, order_name, src)
+     VALUES ($1, $2, $3, 'overlay', $4, $5, $6, $7, $8, $9)`,
+    [orderId, userId, OVERLAY_PERSON_ID, JSON.stringify([args.ref, args.kind]), args.price, split.useYeopjeon, split.cash, args.name, await requestSource()]
+  );
+  return {
+    status: "pay",
+    orderId,
+    orderName: args.name,
+    price: args.price,
+    useYeopjeon: split.useYeopjeon,
+    amount: split.cash,
+    clientKey: pm === "toss" ? process.env.TOSS_CLIENT_KEY! : null,
+    portone: pm === "portone" ? { storeId: process.env.PORTONE_STORE_ID!, channelKey: process.env.PORTONE_CHANNEL_KEY! } : null,
+    customerKey: userId,
+    mock: pm === "mock",
+  };
+}
+
+/** 결제 승인 뒤 겹쳐 보기 열기 - 장부에 그 ref 로 차감 (이미 있으면 그대로). 잔액이 모자라면 엽전으로 남긴다 */
+async function overlayWithClient(client: import("pg").PoolClient, userId: string, order: Pick<OrderRow, "topics" | "price" | "order_name">): Promise<void> {
+  const ref = String(order.topics[0] ?? "");
+  if (!ref.startsWith("overlay:")) throw new PurchaseError("INVALID_TOPICS", "주문 정보가 올바르지 않아요.");
+  const { lockAndBalance } = await import("@/server/readings/readings");
+  const balance = await lockAndBalance(client, userId);
+  const done = await client.query(`SELECT 1 FROM bokchae_ledger WHERE user_id = $1 AND kind = 'spend' AND ref = $2`, [userId, ref]);
+  if ((done.rowCount ?? 0) > 0) throw new PurchaseError("ALREADY_OWNED", "이미 연 겹쳐 보기예요.");
+  if (balance < order.price) throw new InsufficientYeopjeonError(balance);
+  await client.query(`INSERT INTO bokchae_ledger (user_id, amount, kind, label, ref) VALUES ($1, $2, 'spend', $3, $4)`, [
+    userId,
+    -order.price,
+    `[${order.order_name}]`,
+    ref,
+  ]);
+}
+
 /**
  * 2026-10-30 수능대박운 깊게 보기 부모님 선물: 결제하는 사람(부모)의 엽전이 모자랄 때 주문.
  * 주문의 person_id 는 수험생의 사람, gift_token 이 있으면 승인 뒤 purchase 대신 선물로 처리한다.
@@ -153,7 +205,8 @@ interface OrderRow {
   gift_token: string | null;
   user_id: string;
   person_id: string;
-  mode: PurchaseMode;
+  /** overlay = 사주 겹쳐 보기 (2026-11-01) - person_id 는 빈 번호, topics 는 [장부 ref, 재미관 이름] */
+  mode: PurchaseMode | "overlay";
   topics: AnyTopicKey[];
   price: number;
   amount: number;
@@ -163,6 +216,7 @@ interface OrderRow {
 
 function destination(o: Pick<OrderRow, "person_id" | "mode" | "topics" | "gift_token">): string {
   if (o.gift_token) return `/gift/exam/${o.gift_token}?paid=1`;
+  if (o.mode === "overlay") return `/fun/${encodeURIComponent(String(o.topics[1] ?? "tarot"))}?paid=1`;
   if (o.mode === "face") return `/face/paid/${o.person_id}?paid=1`;
   if (o.mode === "couple") return `/couple/${o.person_id}?paid=1`;
   if (o.mode === "wallpaper") return `/person/${o.person_id}/wallpaper`;
@@ -215,6 +269,7 @@ export async function confirmOrder(userId: string | null, input: { paymentKey: u
     await client.query("SAVEPOINT buy");
     try {
       if (order.gift_token) await giftWithClient(client, uid, order.gift_token);
+      else if (order.mode === "overlay") await overlayWithClient(client, uid, order);
       else await purchaseWithClient(client, { userId: uid, personId: order.person_id, mode: order.mode, topics: order.topics });
     } catch (e) {
       await client.query("ROLLBACK TO SAVEPOINT buy");

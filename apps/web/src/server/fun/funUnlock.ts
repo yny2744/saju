@@ -59,3 +59,27 @@ export async function handleFunUnlock(token: string | undefined, raw: unknown): 
     client.release();
   }
 }
+
+/** 엽전이 모자라면 결제창용 주문 (2026-11-01 유샘: 카드·계좌이체 등 다른 상품과 같은 결제창) */
+export async function handleFunCheckout(token: string | undefined, raw: unknown): Promise<Out> {
+  const user = await getUserBySessionToken(token);
+  if (!user || !user.termsAgreed) return err(401, "NOT_LOGGED_IN", "로그인하면 열 수 있어요.");
+  const req = (raw as { req?: unknown } | null)?.req;
+  const out = computeFun(req);
+  if (out.status !== 200) return out;
+  const body = out.body as FunResponse;
+  if (!isOverlayPaid(body.kind)) return err(400, "NOT_PAID_ITEM", "무료로 볼 수 있어요.");
+  const { checkoutOverlay, PayError } = await import("@/server/pay/payOrders");
+  try {
+    const q = await checkoutOverlay(user.id, {
+      kind: body.kind,
+      ref: overlayRef(body.kind, req as Record<string, unknown>, getTodayKstDateString()),
+      price: OVERLAY_PRICE,
+      name: `사주 겹쳐 보기 · ${FUN_META[body.kind].title.split(" · ")[0]}`,
+    });
+    return { status: 200, body: q };
+  } catch (e) {
+    if (e instanceof PayError) return err(503, e.code, e.message);
+    throw e;
+  }
+}

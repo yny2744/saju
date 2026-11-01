@@ -6,7 +6,7 @@ import { ELEMENT_TOKEN, type ElementKo } from "@/lib/pillarView";
 import { ELEMENT_HANJA, ELEMENT_NATURE } from "@/lib/manseView";
 import { BLOOD_TYPES, FUN_KINDS, FUN_META, type BloodType, type FunKind, type FunResult } from "@/lib/fun/types";
 import type { OverlayView } from "@/lib/fun/overlay";
-import { OverlayLock } from "./OverlayLock";
+import { OverlayLock, takeOverlayPending } from "./OverlayLock";
 import { GoodsPicks } from "@/components/GoodsPicks";
 import { FillGauge } from "@/components/FillGauge";
 import { STONE_NOTE } from "@/lib/fun/birthstone";
@@ -102,6 +102,22 @@ export function FunTool({ kind, tarot }: { kind: FunKind; tarot?: { card: number
   const [answer, setAnswer] = useState<Answer | null>(null);
   // 2026-11-01 잠긴 겹쳐 보기를 열 때 같은 입력을 다시 보낸다
   const [req, setReq] = useState<unknown>(null);
+
+  // 2026-11-01 겹쳐 보기 결제를 마치고 돌아오면(?paid=1) 그 입력으로 바로 연다
+  useEffect(() => {
+    if (!new URLSearchParams(location.search).has("paid")) return;
+    const pending = takeOverlayPending(kind);
+    if (!pending) return;
+    fetch("/api/fun/unlock", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(pending) })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((b) => {
+        if (!b) return;
+        setReq(pending);
+        setAnswer(b as Answer);
+        setTimeout(() => document.getElementById("fun-result")?.scrollIntoView({ behavior: "smooth", block: "start" }), 80);
+      })
+      .catch(() => {});
+  }, [kind]);
 
   useEffect(() => {
     try {

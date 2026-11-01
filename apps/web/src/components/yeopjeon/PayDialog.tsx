@@ -72,12 +72,15 @@ export function PayDialog({
   topics,
   backTo,
   checkoutUrl,
+  checkoutBody,
   onEnough,
   onClose,
 }: {
   personId: string;
-  mode: "basic" | "deep" | "bundle3" | "bundle12" | "naming" | "rename" | "face" | "business" | "corp" | "brand" | "couple" | "p_naming" | "p_business" | "p_corp" | "p_brand" | "wallpaper" | "exam" | "exam_deep";
+  mode: "basic" | "deep" | "bundle3" | "bundle12" | "naming" | "rename" | "face" | "business" | "corp" | "brand" | "couple" | "p_naming" | "p_business" | "p_corp" | "p_brand" | "wallpaper" | "exam" | "exam_deep" | "overlay";
   topics: string[];
+  /** 주문 만들 때 보낼 내용 (기본: { mode, topics }) - 2026-11-01 사주 겹쳐 보기는 입력값({ req }) */
+  checkoutBody?: Record<string, unknown>;
   /** 결제를 그만두면 돌아올 주소 */
   backTo: string;
   /** 주문 만들 주소 (기본: 사주 사람 /api/persons/{id}/checkout, 관상은 /api/face/readings/{id}/checkout) */
@@ -96,7 +99,7 @@ export function PayDialog({
     fetch(checkoutUrl ?? `/api/persons/${encodeURIComponent(personId)}/checkout`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ mode, topics }),
+      body: JSON.stringify(checkoutBody ?? { mode, topics }),
     })
       .then(async (r) => {
         const body = await r.json().catch(() => ({}));

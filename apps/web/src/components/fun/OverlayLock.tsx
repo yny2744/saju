@@ -4,6 +4,30 @@ import { useEffect, useState } from "react";
 import { CURRENCY_NAME, formatNyang } from "@/lib/yeopjeon";
 import { notifyYeopjeonChanged } from "@/components/yeopjeon/useYeopjeon";
 import { AppGiftLink } from "@/components/app/AppGiftLink";
+import { PayDialog } from "@/components/yeopjeon/PayDialog";
+
+/** 결제하러 나갔다 돌아오면 이 입력으로 바로 연다 (2026-11-01) - FunTool 이 ?paid=1 로 돌아왔을 때 읽는다 */
+export const OVERLAY_PENDING_KEY = "ryugyeol_overlay_pending";
+export function saveOverlayPending(req: unknown): void {
+  try {
+    localStorage.setItem(OVERLAY_PENDING_KEY, JSON.stringify({ req, at: Date.now() }));
+  } catch {
+    /* 무시 */
+  }
+}
+/** 1시간 안에 저장한 것만 (그 뒤엔 버린다) */
+export function takeOverlayPending(kind: string): unknown | null {
+  try {
+    const raw = localStorage.getItem(OVERLAY_PENDING_KEY);
+    if (!raw) return null;
+    const p = JSON.parse(raw) as { req?: { kind?: string }; at?: number };
+    if (p.req?.kind !== kind || !p.at || Date.now() - p.at > 3600_000) return null;
+    localStorage.removeItem(OVERLAY_PENDING_KEY);
+    return p.req;
+  } catch {
+    return null;
+  }
+}
 
 /**
  * 잠긴 사주 겹쳐 보기 (2026-11-01 유샘: 겹쳐 보기는 유료, 궁금증이 생기게).
@@ -21,6 +45,8 @@ export function OverlayLock<T>({ req, price, onOpen }: { req: unknown; price: nu
   const [me, setMe] = useState<"loading" | null | { nickname: string }>("loading");
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
+  // 2026-11-01 유샘: 엽전이 모자라면 다른 상품과 같은 결제창(카드·계좌이체)
+  const [paying, setPaying] = useState(false);
 
   useEffect(() => {
     fetch("/api/auth/me")
@@ -41,7 +67,10 @@ export function OverlayLock<T>({ req, price, onOpen }: { req: unknown; price: nu
         onOpen(b as T);
         return;
       }
-      if (r.status === 402) setMsg(`${CURRENCY_NAME}이 부족해요 (지금 ${formatNyang(Number(b?.balance ?? 0))}).`);
+      if (r.status === 402) {
+        saveOverlayPending(req);
+        setPaying(true);
+      }
       else if (r.status === 401) setMe(null);
       else setMsg(b?.error?.message ?? "잠시 후 다시 시도해 주세요.");
     } catch {
@@ -77,7 +106,7 @@ export function OverlayLock<T>({ req, price, onOpen }: { req: unknown; price: nu
           className="mt-3 block w-full rounded-xl py-3.5 text-[16px] font-bold disabled:opacity-60"
           style={{ background: "linear-gradient(180deg,#fff1c4,#d9b25a 45%,#a77b25)", color: "#1a1408", fontFamily: "var(--font-serif)" }}
         >
-          {busy ? "여는 중..." : `${CURRENCY_NAME} ${formatNyang(price)}으로 겹쳐 본 풀이 열기`}
+          {busy ? "여는 중..." : `${formatNyang(price)}으로 겹쳐 본 풀이 열기`}
         </button>
       ) : (
         <>
@@ -97,6 +126,21 @@ export function OverlayLock<T>({ req, price, onOpen }: { req: unknown; price: nu
         <p className="mt-2 text-center text-[13px]" role="status" style={{ color: "#f3dc9a" }}>
           {msg}
         </p>
+      )}
+      {paying && (
+        <PayDialog
+          personId=""
+          mode="overlay"
+          topics={[]}
+          checkoutUrl="/api/fun/checkout"
+          checkoutBody={{ req }}
+          backTo={here}
+          onEnough={() => {
+            setPaying(false);
+            void open();
+          }}
+          onClose={() => setPaying(false)}
+        />
       )}
       <AppGiftLink color="var(--color-gold-light)" />
       <p className="mt-2 text-center text-[11.5px]" style={{ color: "rgba(246,236,210,0.65)" }}>
