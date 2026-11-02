@@ -3,6 +3,7 @@
 import { BRAND } from "@/tenants";
 import { useEffect, useRef, useState } from "react";
 import { bgm } from "@/components/bgm/bgm";
+import { SGATE_DONE, SGATE_UNLOCK, isGateOn } from "@/components/suneung/SuneungGate";
 import { SEASON_INFO, examDday, examSeason } from "@/lib/suneung";
 import {
   CURRENCY_NAME,
@@ -70,6 +71,8 @@ export function SuneungHero({
 
   // 2026-10-31 유샘: 대문 문을 누르고 들어오면 나레이션이 바로 나오게 - 소리를 켠 채 처음부터 재생을 시도한다.
   //   브라우저가 막으면 (아이폰·카카오톡 안 브라우저 등) 영상이 멈추지 않게 소리 없이 다시 재생하고 소리 켜기 단추를 깜빡인다.
+  // 2026-11-02 수능 링크 대문(/go/suneung, SuneungGate): 대문이 덮여 있는 동안은 기다렸다가, 문이 열리는 순간 소리와 함께 시작한다.
+  //   대문 단추를 누른 그 순간(SGATE_UNLOCK)에 이 영상의 소리를 미리 허락받아 둔다 (아이폰은 누른 순간에만 허락).
   useEffect(() => {
     const v = ref.current;
     if (!v || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
@@ -83,20 +86,42 @@ export function SuneungHero({
       setHint(true);
       bgm().pauseForHidden(false);
     };
-    v.muted = false;
-    v.currentTime = 0;
-    v.play()
-      .then(() => {
-        // 소리 켠 재생이 받아들여졌어도 곧바로 멈춰 버리는 브라우저가 있어 한 번 더 본다
-        window.setTimeout(() => {
-          if (done) return;
-          if (v.paused || v.muted) return fallback();
-          done = true;
-          setSound(true);
-          bgm().pauseForHidden(true);
-        }, 300);
-      })
-      .catch(fallback);
+    const start = () => {
+      v.muted = false;
+      v.currentTime = 0;
+      v.play()
+        .then(() => {
+          // 소리 켠 재생이 받아들여졌어도 곧바로 멈춰 버리는 브라우저가 있어 한 번 더 본다
+          window.setTimeout(() => {
+            if (done) return;
+            if (v.paused || v.muted) return fallback();
+            done = true;
+            setSound(true);
+            bgm().pauseForHidden(true);
+          }, 300);
+        })
+        .catch(fallback);
+    };
+    if (!isGateOn()) {
+      start();
+      return;
+    }
+    const unlock = () => {
+      v.muted = false;
+      v.play()
+        .then(() => {
+          v.pause();
+          v.currentTime = 0;
+        })
+        .catch(() => {});
+    };
+    const onDone = () => start();
+    window.addEventListener(SGATE_UNLOCK, unlock);
+    window.addEventListener(SGATE_DONE, onDone);
+    return () => {
+      window.removeEventListener(SGATE_UNLOCK, unlock);
+      window.removeEventListener(SGATE_DONE, onDone);
+    };
   }, []);
 
   // 2026-10-31 유샘: 무료 보기에서 "사주 보기"를 누르면 나레이션은 끄고 배경음악을 다시 잔잔히 (ExamFreeStart 가 알린다)
