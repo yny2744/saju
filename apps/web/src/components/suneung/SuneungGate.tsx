@@ -11,6 +11,9 @@ import { useEffect, useRef, useState } from "react";
  *   - 다른 페이지로 넘어가면 휴대폰 브라우저가 소리를 다시 막기 때문에, 전용 화면 위에 덮었다가 걷어 내는 방식이다.
  *   - 건너뛰는 경우: 매일 아침 알림으로 들어옴(utm_source=push), "움직임 줄이기" 설정, 영상이 3초 안에 재생되지 않음
  *   - 2_loop·3_open 은 1_intro 가 재생되는 동안 미리 불러 둔다 (preload="auto").
+ * 2026-11-02 수정: 버튼은 "무료 보기" 작은 투명 버튼(금빛 테두리·글씨, 옅은 어두운 바탕+흐림, 숨 쉬는 빛), 계단 아래·바닥 원 무늬 위 빈자리에
+ *   (영상 속 위치로 계산 - 화면 비율이 달라도 같은 자리). 카카오톡 인앱(안드로이드 웹뷰)의 회색 재생 단추 깜빡임을 막으려고
+ *   모든 영상에 첫 장면 poster, 짙은 남색 바탕, 실제로 재생('playing')된 뒤에만 보이기, 다음 영상이 재생된 뒤에 앞 영상 숨기기.
  * SuneungHero 와는 아래 신호로 주고받는다: 대문이 덮여 있으면 html[data-sgate="on"] (화면이 그려지기 전에 작은 스크립트가 정함)
  */
 
@@ -18,6 +21,11 @@ export const SGATE_UNLOCK = "suneung-gate-unlock";
 export const SGATE_DONE = "suneung-gate-done";
 
 const GOLD_END = "#FFECC6";
+/** 대문 영상 바탕과 같은 짙은 남색 - poster 를 불러오기 전 순간 */
+const NAVY = "#0a1630";
+/** 버튼 자리 (영상 높이에 대한 비율, 버튼 가운데) - 세로: 계단 아래·바닥 원 무늬 위 빈자리 / 가로: 계단 아래 바닥 (가로 영상은 빈자리가 좁아 화면 아래 끝에 맞춤) */
+const BTN_Y = { portrait: 0.735, landscape: 0.975 } as const;
+const VIDEO_SIZE = { portrait: [1080, 1920], landscape: [1280, 720] } as const;
 const DIR = "/gate/suneung";
 
 // 화면이 그려지기 전에: 건너뛸지 정하고, 덮을 거면 표시 + 스크롤 잠금 (수능 영상이 먼저 소리를 내지 않게)
@@ -41,6 +49,9 @@ export function SuneungGate() {
   const [orient, setOrient] = useState<"portrait" | "landscape">("portrait");
   // 화면 방향을 정한 뒤에만 영상을 붙인다 (가로 기기가 세로 영상을 헛되이 받지 않게)
   const [ready, setReady] = useState(false);
+  // 실제로 재생이 시작된 영상만 보이게 (그 전엔 poster·바탕이 보인다)
+  const [shown, setShown] = useState({ intro: false, loop: false, open: false });
+  const [btnTop, setBtnTop] = useState<number | null>(null);
   const intro = useRef<HTMLVideoElement>(null);
   const loop = useRef<HTMLVideoElement>(null);
   const open = useRef<HTMLVideoElement>(null);
@@ -68,6 +79,22 @@ export function SuneungGate() {
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // 버튼 자리: 영상이 화면을 꽉 채우며(cover) 잘리는 만큼을 계산해, 영상 속 같은 자리에 둔다
+  useEffect(() => {
+    if (!ready) return;
+    const place = () => {
+      const [w, h] = VIDEO_SIZE[orient];
+      const vw = window.innerWidth;
+      const vh = window.innerHeight;
+      const scale = Math.max(vw / w, vh / h);
+      const top = (vh - h * scale) / 2 + BTN_Y[orient] * h * scale;
+      setBtnTop(Math.min(top, vh - 22 - 12)); // 화면 아래로 넘치지 않게
+    };
+    place();
+    window.addEventListener("resize", place);
+    return () => window.removeEventListener("resize", place);
+  }, [ready, orient]);
 
   // 방향이 정해지면 재생 시작 (소리 없이)
   useEffect(() => {
@@ -98,6 +125,7 @@ export function SuneungGate() {
     }
   }
   function onLoopPlaying() {
+    setShown((x) => ({ ...x, loop: true }));
     if (stageRef.current === "intro") go("loop");
   }
   function onIntroEnded() {
@@ -109,6 +137,7 @@ export function SuneungGate() {
     }
   }
   function onIntroPlaying() {
+    setShown((x) => (x.intro ? x : { ...x, intro: true }));
     window.setTimeout(() => setButton(true), 2000);
   }
 
@@ -122,13 +151,12 @@ export function SuneungGate() {
     if (!o) return reveal();
     o.muted = false;
     o.currentTime = 0;
-    o.play()
-      .then(() => go("open"))
-      .catch(() => {
-        // 소리가 막히면 소리 없이라도
-        o.muted = true;
-        o.play().then(() => go("open")).catch(reveal);
-      });
+    go("open");
+    o.play().catch(() => {
+      // 소리가 막히면 소리 없이라도
+      o.muted = true;
+      o.play().catch(reveal);
+    });
     window.setTimeout(() => stageRef.current === "open" && reveal(), 2000); // 끝 신호가 안 오면
   }
 
@@ -146,7 +174,14 @@ export function SuneungGate() {
   }
 
   const src = (n: string) => `${DIR}/${n}_${orient}.mp4`;
-  const layer: React.CSSProperties = { position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" };
+  const poster = (n: string) => `${DIR}/poster_${n}_${orient}.jpg`;
+  const layer: React.CSSProperties = { position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", backgroundColor: "transparent" };
+  // 영상 공통: 컨트롤 없음, 화면 안에서 재생, 미리 받기, 첫 장면 poster
+  const common = { playsInline: true, preload: "auto", controls: false, disablePictureInPicture: true, disableRemotePlayback: true } as const;
+  // 앞 영상은 다음 영상이 실제로 재생된 뒤에 숨긴다
+  const introVisible = shown.intro && !shown.loop;
+  const loopVisible = shown.loop;
+  const openVisible = shown.open && (stage === "open" || stage === "fade");
 
   return (
     <>
@@ -154,10 +189,14 @@ export function SuneungGate() {
       <style
         dangerouslySetInnerHTML={{
           __html: `html[data-sgate="on"] .sg-cover{display:block}.sg-cover{display:none}
-.sg-btn{animation:sg-up .6s ease-out both}@keyframes sg-up{from{opacity:0;transform:translate(-50%,calc(-50% + 14px))}to{opacity:1;transform:translate(-50%,-50%)}}`,
+.sg-cover video::-webkit-media-controls,.sg-cover video::-webkit-media-controls-panel,.sg-cover video::-webkit-media-controls-start-playback-button,.sg-cover video::-webkit-media-controls-overlay-play-button,.sg-cover video::-webkit-media-controls-play-button{display:none!important;-webkit-appearance:none;opacity:0!important}
+.sg-btn{animation:sg-up .6s ease-out both,sg-breath 2.8s ease-in-out .6s infinite}
+@keyframes sg-up{from{opacity:0;transform:translate(-50%,calc(-50% + 12px))}to{opacity:1;transform:translate(-50%,-50%)}}
+@keyframes sg-breath{0%,100%{box-shadow:0 0 0 0 rgba(244,214,140,0),0 0 6px rgba(244,214,140,.25)}50%{box-shadow:0 0 0 1px rgba(244,214,140,.35),0 0 16px rgba(244,214,140,.45)}}
+@media (prefers-reduced-motion:reduce){.sg-btn{animation:none}}`,
         }}
       />
-      {/* 화면이 그려지기 전부터 덮개 (검은 바탕) - 대문을 건너뛰면 스크립트가 표시를 안 해서 보이지 않는다 */}
+      {/* 화면이 그려지기 전부터 덮개 (짙은 남색 + 첫 장면) - 대문을 건너뛰면 스크립트가 표시를 안 해서 보이지 않는다 */}
       {on && (
         <div
           className="sg-cover"
@@ -167,65 +206,74 @@ export function SuneungGate() {
             position: "fixed",
             inset: 0,
             zIndex: 80,
-            background: stage === "fade" ? GOLD_END : "#05070d",
+            backgroundColor: stage === "fade" ? GOLD_END : NAVY,
+            backgroundImage: ready && stage !== "fade" ? `url(${poster("1_intro")})` : undefined,
+            backgroundSize: "cover",
+            backgroundPosition: "center",
             opacity: stage === "fade" ? 0 : 1,
             transition: stage === "fade" ? "opacity .7s ease-out" : undefined,
             overflow: "hidden",
           }}
         >
           {ready && (
-          <>
-          <video
-            ref={intro}
-            key={`i-${orient}`}
-            src={src("1_intro")}
-            muted
-            playsInline
-            preload="auto"
-            onPlaying={onIntroPlaying}
-            onTimeUpdate={onIntroTime}
-            onEnded={onIntroEnded}
-            style={{ ...layer, opacity: stage === "intro" ? 1 : 0 }}
-          />
-          <video
-            ref={loop}
-            key={`l-${orient}`}
-            src={src("2_loop")}
-            muted
-            loop
-            playsInline
-            preload="auto"
-            onPlaying={onLoopPlaying}
-            style={{ ...layer, opacity: stage === "loop" || stage === "open" ? 1 : 0 }}
-          />
-          <video
-            ref={open}
-            key={`o-${orient}`}
-            src={src("3_open")}
-            playsInline
-            preload="auto"
-            onEnded={reveal}
-            style={{ ...layer, opacity: stage === "open" || stage === "fade" ? 1 : 0, transition: "opacity .15s linear" }}
-          />
-          </>
+            <>
+              <video
+                ref={intro}
+                key={`i-${orient}`}
+                src={src("1_intro")}
+                poster={poster("1_intro")}
+                muted
+                {...common}
+                onPlaying={onIntroPlaying}
+                onTimeUpdate={onIntroTime}
+                onEnded={onIntroEnded}
+                style={{ ...layer, opacity: introVisible ? 1 : 0 }}
+              />
+              <video
+                ref={loop}
+                key={`l-${orient}`}
+                src={src("2_loop")}
+                poster={poster("2_loop")}
+                muted
+                loop
+                {...common}
+                onPlaying={onLoopPlaying}
+                style={{ ...layer, opacity: loopVisible ? 1 : 0 }}
+              />
+              <video
+                ref={open}
+                key={`o-${orient}`}
+                src={src("3_open")}
+                poster={poster("3_open")}
+                {...common}
+                onPlaying={() => setShown((x) => ({ ...x, open: true }))}
+                onEnded={reveal}
+                style={{ ...layer, opacity: openVisible ? 1 : 0, transition: "opacity .15s linear" }}
+              />
+            </>
           )}
-          {button && (stage === "intro" || stage === "loop") && (
+          {button && btnTop !== null && (stage === "intro" || stage === "loop") && (
             <button
               type="button"
               onClick={enter}
-              className="sg-btn whitespace-nowrap rounded-full px-8 py-4 text-[18px] font-bold shadow-xl"
+              className="sg-btn whitespace-nowrap rounded-full px-9 text-[17px] font-bold"
               style={{
                 position: "absolute",
                 left: "50%",
-                top: orient === "portrait" ? "70%" : "80%",
+                top: btnTop,
+                height: 44,
                 transform: "translate(-50%,-50%)",
-                background: "linear-gradient(180deg,#fff1c4,#d9b25a 45%,#a77b25)",
-                color: "#1a1408",
+                backgroundColor: "rgba(0,0,0,.25)",
+                backdropFilter: "blur(6px)",
+                WebkitBackdropFilter: "blur(6px)",
+                border: "1.25px solid rgba(232,196,110,.95)",
+                color: "#f6dc94",
                 fontFamily: "var(--font-serif)",
-                boxShadow: "0 0 0 1px rgba(255,241,196,.6), 0 10px 30px rgba(0,0,0,.45), 0 0 24px rgba(244,226,184,.35)",
+                letterSpacing: ".04em",
+                textShadow: "0 1px 6px rgba(0,0,0,.55)",
               }}
             >
-              수능 대박운 무료로 보기
+              무료 보기
             </button>
           )}
         </div>
