@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { RoomHero } from "@/components/gate/RoomHero";
+import { SGATE_DONE, isGateOn } from "@/components/gate/GateOverlay";
 import { isAuthEnabled } from "@/lib/launchMode";
 import { ComingSoon } from "@/components/ComingSoon";
 import { LoadingState } from "@/components/StatusScreens";
@@ -27,7 +29,10 @@ function Body() {
     fetch("/api/profiles")
       .then((r) => {
         if (r.status === 401) {
-          window.location.replace(`/login?next=${encodeURIComponent("/couple")}`);
+          const toLogin = () => window.location.replace(`/login?next=${encodeURIComponent("/couple")}`);
+          // 2026-11-02 링크 대문(/go/gunghap)이 덮여 있으면 문이 열린 뒤에 로그인 화면으로 (대문이 뜨기도 전에 넘어가지 않게)
+          if (isGateOn()) window.addEventListener(SGATE_DONE, toLogin, { once: true });
+          else toLogin();
           return null;
         }
         return r.ok ? r.json() : null;
@@ -171,5 +176,11 @@ function Body() {
 
 export default function CouplePage() {
   if (!isAuthEnabled()) return <ComingSoon title="연인 궁합" />;
-  return <Body />;
+  // 2026-11-02 관 맨 위 자리 (링크 대문 /go/gunghap 과 같은 화면)
+  return (
+    <>
+      <RoomHero room="gunghap" />
+      <Body />
+    </>
+  );
 }

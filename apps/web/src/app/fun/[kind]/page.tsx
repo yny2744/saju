@@ -4,6 +4,7 @@ import { BRAND } from "@/tenants";
 import { FUN_KINDS, FUN_META, isFunKind } from "@/lib/fun/types";
 import { FunTool } from "@/components/fun/FunTool";
 import { TarotTool } from "@/components/fun/TarotTool";
+import { RoomHero } from "@/components/gate/RoomHero";
 
 /** 무료 묶음 (2026-10-26) - /fun/numerology · /fun/zodiac · /fun/blood · /fun/flower · /fun/birthstone · /fun/tarot (로그인 없음, AI 없음) */
 
@@ -20,5 +21,13 @@ export function generateMetadata({ params }: { params: { kind: string } }): Meta
 export default function FunPage({ params }: { params: { kind: string } }) {
   if (!isFunKind(params.kind)) notFound();
   // 2026-10-31 타로관은 카드를 고르는 화면이 따로 있다
-  return params.kind === "tarot" ? <TarotTool /> : <FunTool kind={params.kind} />;
+  // 2026-11-02 타로관 맨 위 자리 (링크 대문 /go/tarot 과 같은 화면)
+  return params.kind === "tarot" ? (
+    <>
+      <RoomHero room="tarot" />
+      <TarotTool />
+    </>
+  ) : (
+    <FunTool kind={params.kind} />
+  );
 }

@@ -4,7 +4,7 @@ import { isSuneungOn } from "@/lib/launchMode";
 /** 갈 곳이 지금 열려 있는지 - 수능대박운은 스위치(NEXT_PUBLIC_SUNEUNG)가 켜졌을 때만 */
 export function roomHref(room: GateRoom): string | null {
   if (!room.href) return null;
-  if (room.href.includes("exam=1") && !isSuneungOn()) return null;
+  if ((room.href.includes("exam=1") || room.href.startsWith("/suneung")) && !isSuneungOn()) return null;
   return room.href;
 }
 

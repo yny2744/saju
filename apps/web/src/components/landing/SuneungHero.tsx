@@ -3,7 +3,7 @@
 import { BRAND } from "@/tenants";
 import { useEffect, useRef, useState } from "react";
 import { bgm } from "@/components/bgm/bgm";
-import { SGATE_DONE, SGATE_UNLOCK, isGateOn } from "@/components/suneung/SuneungGate";
+import { SGATE_DONE, SGATE_UNLOCK, isGateOn } from "@/components/gate/GateOverlay";
 import { SEASON_INFO, examDday, examSeason } from "@/lib/suneung";
 import {
   CURRENCY_NAME,
@@ -61,8 +61,16 @@ export function SuneungHero({
   useEffect(() => {
     const v = ref.current;
     if (!v) return;
+    let last = 0;
     const onTime = () => {
       const t = v.currentTime;
+      // 2026-11-02 유샘: 홍보 영상 소리는 한 번만 - 한 바퀴 돌아 처음으로 돌아오면 소리를 끈다
+      if (t + 0.5 < last && !v.muted) {
+        v.muted = true;
+        setSound(false);
+        bgm().pauseForHidden(false);
+      }
+      last = t;
       setCaption(CAPTIONS.find((c) => t >= c.start && t <= c.end)?.text ?? "");
     };
     v.addEventListener("timeupdate", onTime);
@@ -71,7 +79,7 @@ export function SuneungHero({
 
   // 2026-10-31 유샘: 대문 문을 누르고 들어오면 나레이션이 바로 나오게 - 소리를 켠 채 처음부터 재생을 시도한다.
   //   브라우저가 막으면 (아이폰·카카오톡 안 브라우저 등) 영상이 멈추지 않게 소리 없이 다시 재생하고 소리 켜기 단추를 깜빡인다.
-  // 2026-11-02 수능 링크 대문(/go/suneung, SuneungGate): 대문이 덮여 있는 동안은 기다렸다가, 문이 열리는 순간 소리와 함께 시작한다.
+  // 2026-11-02 수능 링크 대문(/go/suneung, GateOverlay): 대문이 덮여 있는 동안은 기다렸다가, 문이 열리는 순간 소리와 함께 시작한다.
   //   대문 단추를 누른 그 순간(SGATE_UNLOCK)에 이 영상의 소리를 미리 허락받아 둔다 (아이폰은 누른 순간에만 허락).
   useEffect(() => {
     const v = ref.current;
