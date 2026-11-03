@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { RoomShell } from "@/components/room/RoomShell";
 import { BRAND } from "@/tenants";
 import { ELEMENT_HANJA } from "@/lib/manseView";
 import {
@@ -173,21 +174,21 @@ export function TarotTool() {
             : "먼저 카드를 섞어 주세요.";
 
   return (
-    <main className="mx-auto min-h-screen max-w-xl px-5 pb-16 pt-10">
+    // 2026-11-03 관 통일: 수능대박운과 같은 틀 (제목·대표 그림·안내는 lib/rooms.ts), 예전 머리말은 아래로
+    <RoomShell
+      roomKey="tarot"
+      card={false}
+      below={
+        <p className="pb-8 text-center text-[14px]" style={{ color: "var(--color-ink-soft)", wordBreak: "keep-all" }}>
+          타로 · 오늘의 한 장 - 내가 직접 멈추거나 골라서 정하는 카드. 정한 뒤에는 22장을 모두 보여 드려요.
+        </p>
+      }
+    >
       <style dangerouslySetInnerHTML={{ __html: CSS }} />
-      <p className="text-center text-[13px]" style={{ color: GOLD }}>
-        {`${BRAND} · 무료`}
-      </p>
-      <h1 className="mt-1 text-center text-[26px] font-bold" style={{ fontFamily: "var(--font-serif)" }}>
-        타로 · 오늘의 한 장
-      </h1>
-      <p className="mt-2 text-center text-[14px]" style={{ color: "var(--color-ink-soft)", wordBreak: "keep-all" }}>
-        내가 직접 멈추거나 골라서 정하는 카드. 정한 뒤에는 22장을 모두 보여 드려요.
-      </p>
 
       {/* ① 질문 */}
       {!already && (
-        <section className="mt-7 rounded-2xl p-5" style={CARD}>
+        <section className="rounded-2xl p-5" style={CARD}>
           <p className="mb-3 text-[14px] font-semibold">무엇이 궁금하세요?</p>
           <div className="grid grid-cols-2 gap-2">
             {TAROT_QUESTIONS.map((x) => (
@@ -379,6 +380,6 @@ export function TarotTool() {
 
       {/* ⑤ 사주와 겹쳐 보기 - 무료 묶음 화면을 그대로 쓴다 (세 줄은 현재 카드) */}
       {done && card && q && <FunTool kind="tarot" tarot={{ card: card.no, question: q.key }} />}
-    </main>
+    </RoomShell>
   );
 }

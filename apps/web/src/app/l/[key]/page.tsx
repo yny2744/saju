@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import { RoomHero } from "@/components/gate/RoomHero";
 import { notFound } from "next/navigation";
 import { BRAND, TENANT } from "@/tenants";
 import type { GateRoom, TenantGate } from "@/tenants/types";
@@ -55,8 +54,6 @@ export default function GateLandingPage({ params }: { params: { key: string } })
 
   return (
     <main className="min-h-screen pb-12">
-      {/* 2026-11-02 신년 운세 관 맨 위 자리 (링크 대문 /go/newyear2027 과 같은 화면) */}
-      {params.key === "newyear" && <RoomHero room="newyear" />}
       <section className="px-6 pb-10 pt-9 text-center" style={{ background: "linear-gradient(#070b16,#13203d)", color: "#ece6d8", wordBreak: "keep-all" }}>
         <a href="/" className="inline-flex items-center gap-2 text-[13px] tracking-[0.3em]" style={{ color: "#d6bc8a", ...serif }}>
           {/* eslint-disable-next-line @next/next/no-img-element -- 엠블럼 */}

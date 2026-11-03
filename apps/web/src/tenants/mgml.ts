@@ -138,7 +138,7 @@ const mgml: TenantConfig = {
             short: "앞날",
             name: "앞날의 운",
             rooms: [
-              { name: "올해 운세관", desc: "올해 무엇이 들어오고 나가나", href: "/go?topic=year" },
+              { name: "올해 운세관", desc: "올해 무엇이 들어오고 나가나", href: "/start?topic=year" },
               { name: "재물관", desc: "재물 그릇과 돈이 모이는 때", href: "/go?topic=money" },
               { name: "승진관", desc: "자리와 이름이 오르는 때", href: "/go?topic=promotion" },
               { name: "대운관", desc: "10년마다 바뀌는 큰 흐름", href: "/go?topic=daeun" },
@@ -181,7 +181,7 @@ const mgml: TenantConfig = {
         headline: "한 해의 흐름을 미리 읽다",
         lead: "올해의 기운과 열두 달의 흐름, 그리고 10년 큰 흐름까지. 새해를 앞두고 한 번에 살펴보세요.",
         rooms: [
-          { name: "올해 운세관", desc: "올해 무엇이 들어오고 나가나", href: "/go?topic=year" },
+          { name: "올해 운세관", desc: "올해 무엇이 들어오고 나가나", href: "/start?topic=year" },
           { name: "대운관", desc: "10년마다 바뀌는 큰 흐름", href: "/go?topic=daeun" },
           { name: "재물관", desc: "재물 그릇과 돈이 모이는 때", href: "/go?topic=money" },
         ],

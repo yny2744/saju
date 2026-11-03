@@ -9,11 +9,15 @@ import { isSuneungOn } from "@/lib/launchMode";
  *   ?all=1         → 12가지 운세 전부 보기 (29,500냥)
  * 이 값은 주소에 그대로 실려 다니므로 허용된 값만 읽는다(임의 주소로 보내지 못하게).
  */
-export type Intent = { kind: "topic"; topic: TopicKey } | { kind: "bundle"; index: number } | { kind: "all" } | { kind: "name"; mode: "naming" | "rename" | "business" | "corp" | "brand" } | { kind: "exam" };
+export type Intent = { kind: "topic"; topic: TopicKey; year?: number } | { kind: "bundle"; index: number } | { kind: "all" } | { kind: "name"; mode: "naming" | "rename" | "business" | "corp" | "brand" } | { kind: "exam" };
 
 export function parseIntent(q: URLSearchParams): Intent | null {
   const topic = q.get("topic");
-  if (isTopicKey(topic)) return { kind: "topic", topic };
+  if (isTopicKey(topic)) {
+    // 2026-11-03 유샘: 2027 신년 운세 링크(/go/newyear2027)는 올해 운세를 정해진 해(y)로 - 올해 운세에만
+    const y = Number(q.get("y"));
+    return topic === "year" && Number.isInteger(y) && y >= 2000 && y <= 2100 ? { kind: "topic", topic, year: y } : { kind: "topic", topic };
+  }
   const b = q.get("bundle");
   if (b !== null && /^\d$/.test(b) && Number(b) < BUNDLE_SUGGESTIONS.length) return { kind: "bundle", index: Number(b) };
   if (q.get("all") === "1") return { kind: "all" };
@@ -27,7 +31,7 @@ export function parseIntent(q: URLSearchParams): Intent | null {
 }
 
 export function intentQuery(i: Intent): string {
-  if (i.kind === "topic") return `topic=${i.topic}`;
+  if (i.kind === "topic") return `topic=${i.topic}${i.year ? `&y=${i.year}` : ""}`;
   if (i.kind === "bundle") return `bundle=${i.index}`;
   if (i.kind === "name") return `name=${i.mode}`;
   if (i.kind === "exam") return "exam=1";
@@ -36,7 +40,7 @@ export function intentQuery(i: Intent): string {
 
 /** 화면 안내용 이름: "재물 운세" / "든든한 노후 몰아보기" / "12가지 운세 전부 보기" */
 export function intentLabel(i: Intent): string {
-  if (i.kind === "topic") return withUnse(TOPICS[i.topic].title);
+  if (i.kind === "topic") return i.year ? `${i.year} 신년 운세` : withUnse(TOPICS[i.topic].title);
   if (i.kind === "bundle") return `${BUNDLE_SUGGESTIONS[i.index].title} 몰아보기`;
   if (i.kind === "exam") return SEASON_INFO[examSeason()].title;
   if (i.kind === "name") return { naming: "신생아 작명", rename: "개명 추천", business: "상호 작명", corp: "기업 작명", brand: "브랜딩 작명" }[i.mode];

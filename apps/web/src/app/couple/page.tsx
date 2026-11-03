@@ -1,8 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { RoomHero } from "@/components/gate/RoomHero";
-import { SGATE_DONE, isGateOn } from "@/components/gate/GateOverlay";
+import { RoomShell } from "@/components/room/RoomShell";
 import { isAuthEnabled } from "@/lib/launchMode";
 import { ComingSoon } from "@/components/ComingSoon";
 import { LoadingState } from "@/components/StatusScreens";
@@ -24,15 +23,14 @@ function Body() {
   const [consent, setConsent] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [needLogin, setNeedLogin] = useState(false);
 
   useEffect(() => {
     fetch("/api/profiles")
       .then((r) => {
         if (r.status === 401) {
-          const toLogin = () => window.location.replace(`/login?next=${encodeURIComponent("/couple")}`);
-          // 2026-11-02 링크 대문(/go/gunghap)이 덮여 있으면 문이 열린 뒤에 로그인 화면으로 (대문이 뜨기도 전에 넘어가지 않게)
-          if (isGateOn()) window.addEventListener(SGATE_DONE, toLogin, { once: true });
-          else toLogin();
+          // 2026-11-03 관 통일: 로그인 화면으로 바로 넘기지 않고, 관 화면 안 입력 칸 자리에 로그인 단추를 둔다
+          setNeedLogin(true);
           return null;
         }
         return r.ok ? r.json() : null;
@@ -46,6 +44,24 @@ function Body() {
       .catch(() => setProfiles([]));
   }, []);
 
+  // 예전 머리말(설명)은 입력 칸 아래로 (2026-11-03 관 통일)
+  const intro = (
+    <p className="pb-8 text-center text-[14px] leading-relaxed" style={{ color: "var(--color-ink-soft)", wordBreak: "keep-all" }}>
+      두 사람의 사주로 서로 끌리는 힘, 부딪히는 자리, 채워 주는 기운을 풀어 드려요.
+      <br />
+      궁합 점수와 항목별 미리보기는 무료예요.
+    </p>
+  );
+  if (needLogin)
+    return (
+      <RoomShell roomKey="gunghap" card={false} below={intro}>
+        <section className="rounded-2xl p-5 text-center" style={CARD}>
+          <a href={`/login?next=${encodeURIComponent("/couple")}`} className="btn-primary block">
+            로그인하고 두 사람 입력하기
+          </a>
+        </section>
+      </RoomShell>
+    );
   if (profiles === null) return <LoadingState message="불러오고 있어요..." />;
 
   const typing = partner === "new";
@@ -74,20 +90,7 @@ function Body() {
   }
 
   return (
-    <main className="mx-auto min-h-screen max-w-xl px-5 pb-20 pt-12 sm:pt-16">
-      <header className="mb-8 text-center">
-        <div className="gold-ornament" aria-hidden>
-          <i />
-        </div>
-        <h1 className="mt-3 text-[26px] font-bold" style={{ fontFamily: "var(--font-serif)" }}>
-          연인 궁합
-        </h1>
-        <p className="mt-2 text-[14px] leading-relaxed" style={{ color: "var(--color-ink-soft)" }}>
-          두 사람의 사주로 서로 끌리는 힘, 부딪히는 자리, 채워 주는 기운을 풀어 드려요.
-          <br />
-          궁합 점수와 항목별 미리보기는 무료예요.
-        </p>
-      </header>
+    <RoomShell roomKey="gunghap" card={false} below={intro}>
 
       {profiles.length === 0 ? (
         <section className="rounded-2xl p-5 text-center" style={CARD}>
@@ -170,17 +173,12 @@ function Body() {
           </p>
         </section>
       )}
-    </main>
+    </RoomShell>
   );
 }
 
 export default function CouplePage() {
   if (!isAuthEnabled()) return <ComingSoon title="연인 궁합" />;
   // 2026-11-02 관 맨 위 자리 (링크 대문 /go/gunghap 과 같은 화면)
-  return (
-    <>
-      <RoomHero room="gunghap" />
-      <Body />
-    </>
-  );
+  return <Body />;
 }

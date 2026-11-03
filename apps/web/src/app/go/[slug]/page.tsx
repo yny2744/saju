@@ -6,7 +6,7 @@ import { GateOverlay } from "@/components/gate/GateOverlay";
 import SuneungLanding from "@/app/suneung/page";
 import CouplePage from "@/app/couple/page";
 import FunPage from "@/app/fun/[kind]/page";
-import SeasonalPage from "@/app/l/[key]/page";
+import { StartScreen } from "@/components/start/StartScreen";
 
 /**
  * 관별 링크 대문 (2026-11-02 유샘 지시서) - /go/suneung · /go/newyear2027 · /go/gunghap · /go/tarot (설정: lib/gates.ts)
@@ -41,7 +41,8 @@ export default function GoGatePage({ params }: { params: { slug: string } }) {
     ) : g.room === "tarot" ? (
       <FunPage params={{ kind: "tarot" }} />
     ) : (
-      <SeasonalPage params={{ key: "newyear" }} />
+      // 2026-11-03 관 통일: 2027 신년 운세 → 올해 운세관 화면(입력 칸 바로), 2027년 정미년으로 고정
+      <StartScreen preset="topic=year&y=2027" />
     );
   return (
     <>
