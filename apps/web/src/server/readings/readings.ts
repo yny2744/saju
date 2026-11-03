@@ -10,6 +10,7 @@ import { EXTRA_KEYS, TOPICS, TOPIC_KEYS, isAnyTopicKey, isTopicKey, type AnyTopi
 import type { BasicContent, DeepContent, ReadingContent } from "./generateReading";
 import type { BasicReadingV2 } from "@/lib/basic/compose";
 import { examSeason, examUnlockTopic, SEASON_INFO } from "@/lib/suneung";
+import { NY_FULL, NY_LIGHT, NY_PRODUCT, isNyMode, nyFullPrice, nyLightPrice, nyOn, type NyMode } from "@/lib/newyear2027";
 
 /** 운세 보기 저장 내용: 2026-10-10부터 엔진 풀이(v2), 그 전에 산 것은 AI 풀이(BasicContent) */
 export type StoredBasic = BasicContent | BasicReadingV2;
@@ -66,10 +67,12 @@ export interface PersonSummary {
   biz: Array<"business" | "corp" | "brand">;
   /** 지금 시즌 수능대박운(합격운·새 출발운)을 열었는지 (수정안 17) */
   exam: { light: boolean; deep: boolean };
+  /** 2027 신년운 (2026-11-03): 총운 끝까지(990) · 전체 보기(9,900) */
+  ny: { light: boolean; full: boolean };
   createdAt: string;
 }
 
-export type PurchaseMode = "basic" | "deep" | "bundle3" | "bundle12" | NamingMode | "face" | "business" | "corp" | "brand" | "couple" | PremiumMode | "wallpaper" | ExamMode;
+export type PurchaseMode = "basic" | "deep" | "bundle3" | "bundle12" | NamingMode | "face" | "business" | "corp" | "brand" | "couple" | PremiumMode | "wallpaper" | ExamMode | NyMode;
 /** 수능대박운 (수정안 17): exam 가볍게 보기 990 / exam_deep 깊게 보기 4,900 - 시즌마다 topic_unlocks에 exam_<시즌>[_deep] */
 export type ExamMode = "exam" | "exam_deep";
 export function isExamMode(v: unknown): v is ExamMode {
@@ -77,7 +80,7 @@ export function isExamMode(v: unknown): v is ExamMode {
 }
 /** 작명·개명 (수정안 46) - 주제가 아니라 사람 하나에 한 번 여는 상품. topic_unlocks에 topic = 상품 이름으로 남긴다 */
 export type NamingMode = "naming" | "rename";
-export const PURCHASE_MODES: PurchaseMode[] = ["basic", "deep", "bundle3", "bundle12", "naming", "rename", "face", "business", "corp", "brand", "couple", "p_naming", "p_business", "p_corp", "p_brand", "wallpaper", "exam", "exam_deep"];
+export const PURCHASE_MODES: PurchaseMode[] = ["basic", "deep", "bundle3", "bundle12", "naming", "rename", "face", "business", "corp", "brand", "couple", "p_naming", "p_business", "p_corp", "p_brand", "wallpaper", "exam", "exam_deep", NY_LIGHT, NY_FULL];
 /** 프리미엄 작명 (수정안 11): 12가지 운세 전부 보기 + 작명 1건. 심사용 모두 39,900 (PRICE 참고) */
 export type PremiumMode = "p_naming" | "p_business" | "p_corp" | "p_brand";
 export function isPremiumMode(v: unknown): v is PremiumMode {
@@ -112,6 +115,8 @@ export const COUPLE_MODE = "couple" as const;
 export function isPurchaseMode(v: unknown): v is PurchaseMode {
   // 2026-10-19: 수능대박운은 NEXT_PUBLIC_SUNEUNG=on 일 때만 살 수 있다 (심사 동안 숨김) - 주소를 알아도 구매·결제 주문이 안 만들어진다
   if ((v === "exam" || v === "exam_deep") && !isSuneungOn()) return false;
+  // 2026-11-03: 2027 신년운은 가격(prices.NEWYEAR)이 있는 고객사에서만
+  if (isNyMode(v) && !nyOn()) return false;
   return typeof v === "string" && (PURCHASE_MODES as string[]).includes(v);
 }
 export function isNamingMode(v: unknown): v is NamingMode {
@@ -226,6 +231,7 @@ export async function getPersonSummary(userId: string, personId: string): Promis
     naming: unlocks.rows.map((u) => u.topic).filter(isNamingMode),
     business: unlocks.rows.some((u) => u.topic === unlockTopic(BUSINESS_MODE)),
     wallpaper: unlocks.rows.some((u) => u.topic === "wallpaper"),
+    ny: { light: unlocks.rows.some((u) => u.topic === NY_LIGHT), full: unlocks.rows.some((u) => u.topic === NY_FULL) },
     exam: (() => {
       const season = examSeason();
       const has = (deep: boolean) => unlocks.rows.some((u) => u.topic === examUnlockTopic(season, deep));
@@ -385,6 +391,8 @@ export function planPurchase(mode: PurchaseMode, requested: unknown, owned: AnyT
   if (mode === "wallpaper") return { topics: [], price: PRICE.WALLPAPER };
   if (mode === "exam") return { topics: [], price: PRICE.EXAM };
   if (mode === "exam_deep") return { topics: [], price: PRICE.EXAM_DEEP };
+  if (mode === NY_LIGHT) return { topics: [], price: nyLightPrice() };
+  if (mode === NY_FULL) return { topics: [], price: nyFullPrice() };
   const ownedSet = new Set(owned);
   if (isPremiumMode(mode)) {
     if (!PREMIUM_ON) throw new PurchaseError("INVALID_TOPICS", "프리미엄 작명은 잠시 쉬고 있어요. 작명과 12가지 운세 전부 보기를 따로 열어 주세요.");
@@ -414,7 +422,7 @@ export function planPurchase(mode: PurchaseMode, requested: unknown, owned: AnyT
   return { topics, price: mode === "deep" ? PRICE.DEEP : PRICE.BUNDLE3 };
 }
 
-const MODE_LABEL: Record<PurchaseMode, string> = { basic: "운세 보기", deep: "깊게 보기", bundle3: "몰아보기", bundle12: "전부 보기", naming: "신생아 작명", rename: "개명 추천", face: "관상 심층 풀이", business: "상호 작명", corp: "기업 작명", brand: "브랜딩 작명", couple: "연인 궁합", p_naming: "프리미엄 신생아 작명", p_business: "프리미엄 상호 작명", p_corp: "프리미엄 기업 작명", p_brand: "프리미엄 브랜딩 작명", wallpaper: "행운 배경화면", exam: "수능대박운 가볍게 보기", exam_deep: "수능대박운 깊게 보기" };
+const MODE_LABEL: Record<PurchaseMode, string> = { basic: "운세 보기", deep: "깊게 보기", bundle3: "몰아보기", bundle12: "전부 보기", naming: "신생아 작명", rename: "개명 추천", face: "관상 심층 풀이", business: "상호 작명", corp: "기업 작명", brand: "브랜딩 작명", couple: "연인 궁합", p_naming: "프리미엄 신생아 작명", p_business: "프리미엄 상호 작명", p_corp: "프리미엄 기업 작명", p_brand: "프리미엄 브랜딩 작명", wallpaper: "행운 배경화면", exam: "수능대박운 가볍게 보기", exam_deep: "수능대박운 깊게 보기", ...NY_PRODUCT };
 
 export async function purchaseTopics(args: { userId: string; personId: string; mode: PurchaseMode; topics: unknown }): Promise<AnyTopicKey[]> {
   if (!UUID_RE.test(args.personId)) throw new PurchaseError("NOT_FOUND", "풀이 대상을 찾을 수 없어요.");
@@ -458,6 +466,19 @@ export async function purchaseWithClient(
         -plan.price,
         `[${SEASON_INFO[season].title} ${args.mode === "exam_deep" ? "깊게 보기" : "가볍게 보기"}] ${plan.nickname}`,
         `${args.mode}:${args.personId}:${season}`,
+      ]);
+    }
+    return [];
+  }
+  if (isNyMode(args.mode)) {
+    // 2026-11-03 2027 신년운: 열람 표시 하나 + 이용내역 한 줄
+    await client.query(`INSERT INTO topic_unlocks (person_id, topic, via) VALUES ($1, $2, $3)`, [args.personId, args.mode, args.mode]);
+    if (plan.price > 0) {
+      await client.query(`INSERT INTO bokchae_ledger (user_id, amount, kind, label, ref) VALUES ($1, $2, 'spend', $3, $4)`, [
+        args.userId,
+        -plan.price,
+        `[${NY_PRODUCT[args.mode]}] ${plan.nickname}`,
+        `${args.mode}:${args.personId}`,
       ]);
     }
     return [];
@@ -525,6 +546,10 @@ export async function planForPerson(
   if (isExamMode(args.mode) && owned.rows.some((r) => r.topic === examUnlockTopic(examSeason(), args.mode === "exam_deep"))) {
     throw new PurchaseError("ALREADY_OWNED", "이미 열려 있어요. 다시 열어도 엽전은 빠지지 않아요.");
   }
+  // 전체 보기에 총운이 들어 있으므로, 전체 보기를 연 사람은 총운을 따로 사지 않는다
+  if (isNyMode(args.mode) && owned.rows.some((r) => r.topic === args.mode || r.topic === NY_FULL)) {
+    throw new PurchaseError("ALREADY_OWNED", "이미 열려 있어요. 다시 열어도 엽전은 빠지지 않아요.");
+  }
   if (isNameProductMode(args.mode) && owned.rows.some((r) => r.topic === unlockTopic(args.mode))) {
     throw new PurchaseError("ALREADY_OWNED", "이미 열려 있어요. 다시 열어도 엽전은 빠지지 않아요.");
   }
@@ -551,6 +576,7 @@ export function productName(mode: PurchaseMode, topics: AnyTopicKey[]): string {
   if (mode === "wallpaper") return "나를 채우는 행운 배경화면";
   if (isExamMode(mode)) return `${SEASON_INFO[examSeason()].title} ${mode === "exam_deep" ? "깊게 보기" : "가볍게 보기"}`;
   if (mode === "brand") return "브랜딩 작명";
+  if (isNyMode(mode)) return NY_PRODUCT[mode];
   return "12가지 운세 전부 보기";
 }
 

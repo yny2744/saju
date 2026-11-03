@@ -7,6 +7,8 @@ import SuneungLanding from "@/app/suneung/page";
 import CouplePage from "@/app/couple/page";
 import FunPage from "@/app/fun/[kind]/page";
 import { StartScreen } from "@/components/start/StartScreen";
+import { NewYear2027Landing } from "@/components/newyear/NewYear2027Landing";
+import { nyOn } from "@/lib/newyear2027";
 
 /**
  * 관별 링크 대문 (2026-11-02 유샘 지시서) - /go/suneung · /go/newyear2027 · /go/gunghap · /go/tarot (설정: lib/gates.ts)
@@ -31,6 +33,8 @@ export function generateMetadata({ params }: { params: { slug: string } }): Meta
 export default function GoGatePage({ params }: { params: { slug: string } }) {
   const g = gateBySlug(params.slug);
   if (!g) notFound();
+  // 2026-11-03 유샘 지시서: 2027 신년운은 문 영상 대문 대신 신년 영상(멈춘 첫 장면 + "무료로 보기")으로 바로 시작
+  if (g.slug === "newyear2027" && nyOn()) return <NewYear2027Landing />;
   const brand = TENANT.gate?.title ?? BRAND;
   const emblem = TENANT.gate?.emblem ?? `/icons/${TENANT.id}/icon-192.png`;
   const room =

@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { isAuthEnabled } from "@/lib/launchMode";
 import { CONTINUE_PATH, clearPendingIntent, intentDestination, intentLabel, intentQuery, readPendingIntent, type Intent } from "@/lib/intent";
 import { CURRENCY_NAME, JOIN_GIFT, PRICE, WELCOME_GIFT, formatNyang } from "@/lib/yeopjeon";
+import { nyFullPrice, nyLightPrice } from "@/lib/newyear2027";
 import { AppGiftLink } from "@/components/app/AppGiftLink";
 import { useWelcomeHere } from "@/components/app/useWelcomeHere";
 import { LoadingState, ErrorState } from "@/components/StatusScreens";
@@ -62,7 +63,7 @@ export default function ContinuePage() {
       setState({
         status: "error",
         message: body?.error?.message ?? "잠시 후 다시 시도해 주세요.",
-        retry: `/start?${intentQuery(intent)}`,
+        retry: intent.kind === "ny" ? "/go/newyear2027" : `/start?${intentQuery(intent)}`,
       });
     })();
   }, [router]);
@@ -72,7 +73,7 @@ export default function ContinuePage() {
 
   const label = intentLabel(state.intent);
   const i = state.intent;
-  const price = i.kind === "exam" ? PRICE.EXAM : i.kind === "topic" ? PRICE.BASIC : i.kind === "bundle" ? PRICE.BUNDLE3 : i.kind === "name" ? ({ naming: PRICE.NAMING, rename: PRICE.RENAME, business: PRICE.BUSINESS, corp: PRICE.CORP, brand: PRICE.BRAND }[i.mode]) : PRICE.BUNDLE12;
+  const price = i.kind === "ny" ? (i.full ? nyFullPrice() : nyLightPrice()) : i.kind === "exam" ? PRICE.EXAM : i.kind === "topic" ? PRICE.BASIC : i.kind === "bundle" ? PRICE.BUNDLE3 : i.kind === "name" ? ({ naming: PRICE.NAMING, rename: PRICE.RENAME, business: PRICE.BUSINESS, corp: PRICE.CORP, brand: PRICE.BRAND }[i.mode]) : PRICE.BUNDLE12;
   const next = encodeURIComponent(CONTINUE_PATH);
   return (
     <main className="mx-auto min-h-screen max-w-md px-5 pb-16 pt-14 text-center">

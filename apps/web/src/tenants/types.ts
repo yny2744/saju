@@ -64,6 +64,8 @@ export interface TenantPrices {
   EXAM_DEEP: number;
   /** 사주 겹쳐 보기 열기 (2026-11-01, features.paidOverlay 가 있는 고객사만) */
   OVERLAY?: number;
+  /** 2027 신년운 전체 보기 (2026-11-03 유샘 승인, 오픈 특가 9,900원) - 이 값이 있는 고객사만 판다 (lib/newyear2027.ts) */
+  NEWYEAR?: number;
 }
 
 /** 기능 켜기·끄기 - 베이직에 새 기능을 붙여도 준비 안 된 고객사는 꺼 둔다 */
