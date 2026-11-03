@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useStepBack } from "@/components/room/useStepBack";
 import { isAuthEnabled } from "@/lib/launchMode";
 import { CONTINUE_PATH, savePendingIntent } from "@/lib/intent";
 import { CURRENCY_NAME, JOIN_GIFT, PRICE, WELCOME_GIFT, formatNyang } from "@/lib/yeopjeon";
@@ -80,6 +81,11 @@ export function ExamFreeStart() {
   const [busy, setBusy] = useState(false);
   const [resultId, setResultId] = useState<string | null>(null);
   const [pv, setPv] = useState<Preview | null>(null);
+  // 2026-11-03 뒤로가기: 풀이 결과 → 입력 칸 (넣었던 값은 그대로)
+  useStepBack("exam-result", pv !== null, () => {
+    setPv(null);
+    window.setTimeout(() => document.getElementById("exam-free")?.scrollIntoView({ block: "start" }), 30);
+  });
   const [me, setMe] = useState<Me | "loading">("loading");
 
   useEffect(() => {

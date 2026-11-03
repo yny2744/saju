@@ -47,7 +47,8 @@ describe("고객사 설정 (베이직)", () => {
   });
   it("오픈 특가: 행사 후 가격이 지금보다 높고, 부가세가 딱 떨어진다", () => {
     for (const [k, after] of Object.entries(TENANT.openSale?.after ?? {})) {
-      const now = PRICE[k as keyof typeof PRICE];
+      const now = PRICE[k as keyof typeof PRICE] as number; // 행사 가격 표에 있는 항목은 지금 가격도 있어야 한다
+      expect(`${k}:${typeof now}`).toBe(`${k}:number`);
       expect(`${k}:${now % 11}`).toBe(`${k}:0`);
       if (after !== null && after !== undefined) {
         expect(`${k}:${after > now}`).toBe(`${k}:true`);

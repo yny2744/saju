@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
+import { roomHome } from "@/lib/roomHome";
 
 /**
  * 머리줄 뒤로가기 (2026-11-01 유샘: 웹과 앱 모두) - 앱(홈 화면 아이콘)으로 열면 브라우저 단추가 없고, 아이폰은 뒤로 갈 길이 없다.
@@ -27,9 +28,12 @@ export function BackButton() {
   }, [pathname]);
 
   if (pathname === "/") return null;
+  // 2026-11-03 유샘: 뒤로가기는 바로 앞 단계로 - 관 안의 단계(roomStep)·받침 칸(rg)이 있으면 한 칸 뒤로,
+  //   앞 기록이 없으면 메인 첫 화면 맨 위가 아니라 메인에서 그 관이 들어 있는 길·운이 펼쳐진 자리로 (lib/roomHome.ts)
   const back = () => {
-    if (inSite && history.length > 1) history.back();
-    else location.href = "/";
+    const st = (history.state ?? {}) as { roomStep?: string; rg?: string };
+    if (st.roomStep || st.rg === "top" || (inSite && history.length > 1)) history.back();
+    else location.href = roomHome(location.pathname, location.search);
   };
   return (
     <button

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useStepBack } from "@/components/room/useStepBack";
 import { CURRENCY_NAME, formatNyang } from "@/lib/yeopjeon";
 import { PAY_BACK_KEY } from "@/lib/pay";
 import { DEFAULT_PAY_METHOD, PAY_METHODS, PAY_METHODS_TEXT, portonePayMethod, tossPayMethod, type PayMethodId } from "@/lib/payMethod";
@@ -93,6 +94,9 @@ export function PayDialog({
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [method, setMethod] = useState<PayMethodId>(DEFAULT_PAY_METHOD);
+  // 2026-11-03 뒤로가기: 결제 창이 열리면 기록에 한 칸, 뒤로가기를 누르면 결제 전 화면으로 (창 닫기)
+  useStepBack("pay", true, onClose);
+  const close = () => (window.history.state?.roomStep === "pay" ? window.history.back() : onClose());
 
   useEffect(() => {
     let cancelled = false;
@@ -258,7 +262,7 @@ export function PayDialog({
             {error}
           </p>
         )}
-        <button type="button" onClick={onClose} className="btn-secondary mt-3">
+        <button type="button" onClick={close} className="btn-secondary mt-3">
           닫기
         </button>
         <a href="/mypage" className="mt-2 block text-center text-[12px] underline underline-offset-4" style={{ color: "var(--color-ink-faint)" }}>

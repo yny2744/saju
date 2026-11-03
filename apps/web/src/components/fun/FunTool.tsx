@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useStepBack } from "@/components/room/useStepBack";
 import { RoomShell } from "@/components/room/RoomShell";
 import { BRAND } from "@/tenants";
 import { ELEMENT_TOKEN, type ElementKo } from "@/lib/pillarView";
@@ -106,6 +107,11 @@ export function FunTool({ kind, tarot }: { kind: FunKind; tarot?: { card: number
   const [answer, setAnswer] = useState<Answer | null>(null);
   // 2026-11-01 잠긴 겹쳐 보기를 열 때 같은 입력을 다시 보낸다
   const [req, setReq] = useState<unknown>(null);
+  // 2026-11-03 뒤로가기: 결과 → 입력 칸 (넣었던 값은 그대로). 타로 안에 붙을 때는 타로가 단계를 맡는다
+  useStepBack("fun-result", answer !== null && !tarot, () => {
+    setAnswer(null);
+    window.scrollTo({ top: 0 });
+  });
 
   // 2026-11-01 겹쳐 보기 결제를 마치고 돌아오면(?paid=1) 그 입력으로 바로 연다
   useEffect(() => {

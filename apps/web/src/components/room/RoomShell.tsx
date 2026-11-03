@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { room as getRoom, type RoomEntry, type RoomKey } from "@/lib/rooms";
 import { SGATE_DONE, SGATE_UNLOCK, isGateOn } from "@/components/gate/GateOverlay";
+import { useRoomBackGuard } from "./useStepBack";
 
 /**
  * 관 화면 공통 틀 (2026-11-03 유샘 지시서: 모든 관을 수능대박운 방식으로) - 기준은 수능대박운 관 화면.
@@ -67,6 +68,8 @@ export function RoomShell({
   below?: React.ReactNode;
 }) {
   const r = entry ?? (roomKey ? getRoom(roomKey) : undefined);
+  // 2026-11-03 뒤로가기: 링크로 바로 들어왔으면 휴대폰 뒤로 버튼이 메인의 이 관 위치로 가게
+  useRoomBackGuard();
   if (!r) return <>{children}</>;
   return (
     <main className="min-h-screen pb-10">

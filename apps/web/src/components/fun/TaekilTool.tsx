@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useStepBack } from "@/components/room/useStepBack";
 import { RoomShell } from "@/components/room/RoomShell";
 import { BRAND } from "@/tenants";
 import type { TaekilPurpose } from "saju-engine";
@@ -37,6 +38,11 @@ export function TaekilTool() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [answer, setAnswer] = useState<TaekilResponse | null>(null);
+  // 2026-11-03 뒤로가기: 결과 → 입력 칸 (넣었던 값은 그대로)
+  useStepBack("taekil-result", answer !== null, () => {
+    setAnswer(null);
+    window.scrollTo({ top: 0 });
+  });
 
   useEffect(() => {
     try {

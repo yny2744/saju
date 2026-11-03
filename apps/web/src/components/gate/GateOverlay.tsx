@@ -33,7 +33,8 @@ const VIDEO_SIZE = { portrait: [1080, 1920], landscape: [1280, 720] } as const;
 
 
 // 화면이 그려지기 전에: 건너뛸지 정하고, 덮을 거면 표시 + 스크롤 잠금 (수능 영상이 먼저 소리를 내지 않게)
-const DECIDE = `(function(){try{var q=new URLSearchParams(location.search);if(q.get("utm_source")==="push"||matchMedia("(prefers-reduced-motion: reduce)").matches)return;document.documentElement.setAttribute("data-sgate","on");}catch(e){}})();`;
+// 2026-11-03 뒤로가기: 이 창에서 한 번 지나간 대문은 다시 보이지 않게 (sessionStorage ryugyeol_gate_seen)
+const DECIDE = `(function(){try{var q=new URLSearchParams(location.search);if(q.get("utm_source")==="push"||matchMedia("(prefers-reduced-motion: reduce)").matches)return;if(sessionStorage.getItem("ryugyeol_gate_seen:"+location.pathname))return;document.documentElement.setAttribute("data-sgate","on");}catch(e){}})();`;
 
 type Stage = "intro" | "loop" | "open" | "fade" | "done";
 
@@ -43,6 +44,11 @@ export function isGateOn(): boolean {
 
 function finish(sound: boolean) {
   document.documentElement.removeAttribute("data-sgate");
+  try {
+    sessionStorage.setItem(`ryugyeol_gate_seen:${location.pathname}`, "1");
+  } catch {
+    /* 무시 */
+  }
   window.dispatchEvent(new CustomEvent(SGATE_DONE, { detail: { sound } }));
 }
 

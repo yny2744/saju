@@ -41,6 +41,9 @@ interface FormState {
   focus: Focus | null;
 }
 
+/** 뒤로가기로 돌아왔을 때 넣었던 값을 다시 채우는 자리 (2026-11-03, 이 창에서만 - sessionStorage) */
+const FORM_KEY = "ryugyeol_start_form";
+
 const initialState: FormState = {
   nickname: "",
   hanjaName: "",
@@ -108,6 +111,13 @@ function StartForm({ member, preset }: { member: MemberInfo | null; preset?: str
     setForName(q.get("next") === "name");
     const f = q.get("face");
     setForFace(f && /^[0-9a-f-]{36}$/i.test(f) ? f : null);
+    // 2026-11-03 뒤로가기: 풀이 결과에서 돌아오면 넣었던 값을 그대로 채운다 (이 창에서만)
+    try {
+      const saved = sessionStorage.getItem(FORM_KEY);
+      if (saved) setForm((x) => ({ ...x, ...(JSON.parse(saved) as Partial<FormState>) }));
+    } catch {
+      /* 무시 */
+    }
     setReady(true);
   }, []);
 
@@ -199,6 +209,11 @@ function StartForm({ member, preset }: { member: MemberInfo | null; preset?: str
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (submitting) return; // 중복 제출 방지
+    try {
+      sessionStorage.setItem(FORM_KEY, JSON.stringify(form));
+    } catch {
+      /* 무시 */
+    }
     const birth = buildBirth();
     if ("issues" in birth) {
       setIssues(birth.issues);

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useStepBack } from "@/components/room/useStepBack";
 import { RoomShell } from "@/components/room/RoomShell";
 import { BRAND } from "@/tenants";
 import { ELEMENT_HANJA } from "@/lib/manseView";
@@ -68,6 +69,8 @@ export function TarotTool() {
   const [stopSignal, setStopSignal] = useState(0);
   const [revealAll, setRevealAll] = useState(false);
   const [already, setAlready] = useState(false);
+  // 2026-11-03 뒤로가기: 뽑은 카드(결과) → 고르기 화면. 하루 한 번 규칙은 그대로 (다시 뽑지는 않는다)
+  const [showResult, setShowResult] = useState(true);
 
   // 오늘 이미 뽑았으면 그 결과를 그대로 (하루 한 번)
   useEffect(() => {
@@ -145,6 +148,11 @@ export function TarotTool() {
     scrollToResult(1800);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [spread]);
+
+  useStepBack("tarot-result", finished && revealAll && !already && showResult, () => {
+    setShowResult(false);
+    window.scrollTo({ top: 0 });
+  });
 
   const shown = deck ?? UNSHUFFLED;
   const card = deck && picked !== null ? TAROT_CARDS[deck[picked]] : null;
@@ -308,7 +316,13 @@ export function TarotTool() {
       )}
 
       {/* ④ 풀이 */}
-      {done && card && q && deck && (
+      {/* 뒤로가기로 고르기 화면에 왔을 때 - 오늘 뽑은 카드를 다시 보는 단추 */}
+      {done && card && q && deck && !showResult && (
+        <button type="button" onClick={() => { setShowResult(true); scrollToResult(50); }} className="btn-secondary mt-6 block w-full">
+          오늘 뽑은 카드 다시 보기
+        </button>
+      )}
+      {done && card && q && deck && showResult && (
         <section id="tarot-result" className="mt-6 scroll-mt-6 rounded-2xl p-5" style={CARD}>
           {mode === "reels" ? (
             <>
@@ -379,7 +393,7 @@ export function TarotTool() {
       )}
 
       {/* ⑤ 사주와 겹쳐 보기 - 무료 묶음 화면을 그대로 쓴다 (세 줄은 현재 카드) */}
-      {done && card && q && <FunTool kind="tarot" tarot={{ card: card.no, question: q.key }} />}
+      {done && card && q && showResult && <FunTool kind="tarot" tarot={{ card: card.no, question: q.key }} />}
     </RoomShell>
   );
 }

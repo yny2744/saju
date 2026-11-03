@@ -24,6 +24,14 @@ function Body() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [needLogin, setNeedLogin] = useState(false);
+  useEffect(() => {
+    try {
+      const saved = sessionStorage.getItem("ryugyeol_couple_form");
+      if (saved) setInput((x) => ({ ...x, ...JSON.parse(saved) }));
+    } catch {
+      /* 무시 */
+    }
+  }, []);
 
   useEffect(() => {
     fetch("/api/profiles")
@@ -68,6 +76,12 @@ function Body() {
   const ready = me && (typing ? input.nickname.trim() && /^\d{4}-\d{2}-\d{2}$/.test(input.date) : partner) && consent;
 
   async function submit() {
+    // 2026-11-03 뒤로가기: 궁합 결과에서 돌아오면 넣었던 상대 정보를 그대로 (이 창에서만)
+    try {
+      sessionStorage.setItem("ryugyeol_couple_form", JSON.stringify(input));
+    } catch {
+      /* 무시 */
+    }
     setBusy(true);
     setError(null);
     try {

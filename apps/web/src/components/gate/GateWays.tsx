@@ -133,7 +133,14 @@ export function GateWays({ ways }: { ways: WayView[] }) {
 
   useEffect(() => {
     const h = readHist();
-    if (h.gw) setOpen({ gw: h.gw, gu: h.gu });
+    // 2026-11-03 뒤로가기: 관에서 "/#un-<운>" 으로 돌아오면 그 길·운을 펼친 자리로
+    const m = /^#un-([a-z0-9-]+)$/.exec(window.location.hash);
+    const fromHash = m && ways.find((w) => w.uns.some((u) => u.key === m[1]));
+    if (fromHash && m) {
+      setOpen({ gw: fromHash.key, gu: m[1] });
+      window.history.replaceState({ ...(window.history.state ?? {}), gw: fromHash.key, gu: m[1], gd: 0 }, "", window.location.pathname + window.location.search);
+      window.setTimeout(() => document.getElementById(`un-${m[1]}`)?.scrollIntoView({ block: "start" }), 120);
+    } else if (h.gw) setOpen({ gw: h.gw, gu: h.gu });
     const onPop = () => {
       const t = pending.current;
       if (t) {
