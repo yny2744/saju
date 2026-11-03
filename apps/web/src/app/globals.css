@@ -55,6 +55,15 @@
 html[data-font-size="large"] {
   font-size: 19px; /* 기본 16px 대비 확대, rem 단위를 쓰는 모든 요소에 함께 반영됨 */
 }
+/* 2026-11-03 결제·확인 창(아래에서 올라오는 창): 글자를 키우거나 화면이 낮아도 창 위쪽(제목·금액)이 화면 밖으로 밀려나지 않게
+   창 안에서 스크롤. 글자색도 창 바탕(밝은 종이)에 맞춰 둔다 - 어두운 관(타로) 안에서 열려도 연한 금빛을 물려받지 않게 */
+.sheet-panel {
+  max-height: calc(100vh - 24px);
+  max-height: calc(100dvh - 24px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  color: var(--color-ink);
+}
 html[data-contrast="high"] {
   --color-ink: #000000;
   --color-ink-soft: #1a1a1a;

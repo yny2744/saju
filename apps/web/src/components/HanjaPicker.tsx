@@ -185,7 +185,7 @@ function Sheet({ children, onClose }: { children: React.ReactNode; onClose: () =
         if (e.target === e.currentTarget) onClose();
       }}
     >
-      <div className="w-full max-w-sm rounded-2xl p-5" style={{ backgroundColor: "var(--color-paper)" }}>
+      <div className="sheet-panel w-full max-w-sm rounded-2xl p-5" style={{ backgroundColor: "var(--color-paper)" }}>
         {children}
       </div>
     </div>

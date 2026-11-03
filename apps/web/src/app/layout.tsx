@@ -3,6 +3,7 @@ import type { Metadata, Viewport } from "next";
 import { APP_ICON_DIR, APP_SHORT_NAME, APP_THEME_COLOR } from "@/lib/appInfo";
 import "./globals.css";
 import { AccessibilityInit } from "@/components/AccessibilityInit";
+import { TextZoomGuard } from "@/components/TextZoomGuard";
 import { Footer } from "@/components/Footer";
 import { SiteHeader } from "@/components/SiteHeader";
 import { HideOnGateHome } from "@/components/gate/HideOnGateHome";
@@ -27,6 +28,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="ko">
       <body className="min-h-screen">
+        {/* 2026-11-03 유샘: 카카오톡 글자 확대 사이트 전체 보정 - 화면을 그리기 전에 실행되도록 body 맨 앞에 */}
+        <TextZoomGuard />
         <AccessibilityInit />
         <RefCapture />
         <SrcCapture />

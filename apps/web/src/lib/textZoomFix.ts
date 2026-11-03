@@ -7,6 +7,8 @@
 export function fitFontSize(el: HTMLElement | null, px: number): number {
   if (!el || typeof window === "undefined") return 1;
   el.style.fontSize = `${px}px`;
+  // 2026-11-03: 사이트 전체 보정(lib/textZoomGuard.ts)이 켜져 있으면 그쪽이 맞춘다 (두 번 줄이지 않게)
+  if (document.documentElement.hasAttribute("data-tzfix")) return 1;
   const actual = parseFloat(window.getComputedStyle(el).fontSize);
   if (!actual || actual <= px * 1.03) return 1;
   const ratio = actual / px;

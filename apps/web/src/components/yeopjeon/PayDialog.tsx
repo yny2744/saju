@@ -188,7 +188,7 @@ export function PayDialog({
 
   return (
     <div role="dialog" aria-modal="true" className="fixed inset-0 z-50 flex items-end justify-center px-3 pb-3 sm:items-center" style={{ backgroundColor: "rgba(0,0,0,0.45)" }}>
-      <div className="w-full max-w-sm rounded-2xl p-5" style={{ backgroundColor: "var(--color-paper)" }}>
+      <div className="sheet-panel w-full max-w-sm rounded-2xl p-5" style={{ backgroundColor: "var(--color-paper)" }}>
         <p className="text-center text-[13px]" style={{ color: "var(--color-gold)" }}>
           결제
         </p>
