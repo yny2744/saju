@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { RoomShell } from "@/components/room/RoomShell";
 import { useRouter } from "next/navigation";
 import { FaceCapture } from "@/components/FaceCapture";
 import type { FaceFeatureResult } from "@/lib/faceLandmarks";
@@ -81,29 +82,15 @@ function FaceEntryBody() {
   }
 
   return (
-    <main className="mx-auto min-h-screen max-w-md px-5 pb-16 pt-12 sm:pt-16">
-      <header className="mb-8">
-        <div className="mb-3 flex flex-wrap gap-1.5">
-          {(isLoginRequired() ? ["무료", "사진 서버 전송 안 함"] : ["무료", "회원가입 불필요", "사진 서버 전송 안 함"]).map((badge) => (
-            <span
-              key={badge}
-              className="rounded-full px-2.5 py-1 text-[11px] font-medium"
-              style={{ backgroundColor: "var(--color-accent-soft)", color: "var(--color-accent)" }}
-            >
-              {badge}
-            </span>
-          ))}
-        </div>
-        <h1 className="text-[26px] font-bold leading-snug">
-          얼굴로 보는
-          <br />
-          전통 관상 풀이
-        </h1>
-        <p className="mt-2 text-sm leading-relaxed" style={{ color: "var(--color-ink-soft)" }}>
-          정면 사진 한 장으로 얼굴형·이마·눈·코·입·턱을 전통 관상학 관점에서 참고용으로 풀어드려요. 어울리는 인연의
-          특징도 간략히 미리 볼 수 있어요.
+    // 2026-11-03 관 통일: 수능대박운과 같은 틀, 예전 머리말은 아래로
+    <RoomShell
+      roomKey="face"
+      below={
+        <p className="pb-8 text-center text-[14px] leading-relaxed" style={{ color: "var(--color-ink-soft)", wordBreak: "keep-all" }}>
+          얼굴로 보는 전통 관상 풀이 - 정면 사진 한 장으로 얼굴형·이마·눈·코·입·턱을 전통 관상학 관점에서 참고용으로 풀어드려요. 어울리는 인연의 특징도 간략히 미리 볼 수 있어요. (사진은 서버로 보내지 않아요)
         </p>
-      </header>
+      }
+    >
 
       <div className="mb-6 space-y-4">
         <div>
@@ -159,6 +146,6 @@ function FaceEntryBody() {
           ))}
         </ul>
       )}
-    </main>
+    </RoomShell>
   );
 }

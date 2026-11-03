@@ -54,6 +54,7 @@ export type RoomKey =
   | "face"
   | "tti"
   | "name"
+  | "namebiz"
   | "taekil"
   | `fun:${string}`;
 
@@ -69,6 +70,7 @@ const BASE: Record<string, RoomEntry> = {
   face: { title: "관상", image: CARD(2), imagePos: LOWER, line: "정면 사진 한 장으로 얼굴형과 이목구비를 전통 관상학으로 풀어 드려요.", free: true },
   tti: { title: "띠별 운세", image: CARD(4), imagePos: LOWER, line: "생년월일 없이 띠만 고르면 오늘과 내일의 운세를 보여 드려요.", free: true },
   name: { title: "작명", image: CARD(3), imagePos: LOWER, line: "이름 풀이부터 개명·아기 이름·상호 작명까지, 사주에 맞춰 풀어 드려요." },
+  namebiz: { title: "상호 풀이", image: CARD(3), imagePos: LOWER, line: "가게·회사 이름이 업종의 기운과 맞는지 무료로 풀어 드려요.", free: true },
   taekil: { title: "택일", image: CARD(3), imagePos: LOWER, line: "목적과 기간을 고르고 생년월일을 넣어 주세요. 좋은 날을 골라 드려요.", free: true },
 };
 

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { RoomShell } from "@/components/room/RoomShell";
 import { BRAND } from "@/tenants";
 import type { TaekilPurpose } from "saju-engine";
 import type { TaekilResponse } from "@/server/taekil/taekilService";
@@ -89,18 +90,17 @@ export function TaekilTool() {
   const hours = Array.from({ length: 24 }, (_, i) => String(i));
 
   return (
-    <main className="mx-auto min-h-screen max-w-xl px-5 pb-16 pt-10">
-      <p className="text-center text-[13px]" style={{ color: GOLD }}>
-        {`${BRAND} · 무료`}
-      </p>
-      <h1 className="mt-1 text-center text-[26px] font-bold" style={{ fontFamily: "var(--font-serif)" }}>
-        택일 · 좋은 날 고르기
-      </h1>
-      <p className="mt-2 text-center text-[14.5px] leading-relaxed" style={{ color: "var(--color-ink-soft)", wordBreak: "keep-all" }}>
-        이사·결혼·개업·계약에 맞는 날을, 내 띠와 사주에 부딪히지 않는 날 가운데에서 골라 드려요.
-      </p>
-
-      <form onSubmit={submit} className="mt-7 space-y-4 rounded-2xl p-5" style={CARD}>
+    <RoomShell
+      roomKey="taekil"
+      card={false}
+      below={
+        // 2026-11-03 관 통일: 예전 머리말은 아래로
+        <p className="pb-8 text-center text-[14px] leading-relaxed" style={{ color: "var(--color-ink-soft)", wordBreak: "keep-all" }}>
+          택일 · 좋은 날 고르기 - 이사·결혼·개업·계약에 맞는 날을, 내 띠와 사주에 부딪히지 않는 날 가운데에서 골라 드려요.
+        </p>
+      }
+    >
+      <form onSubmit={submit} className="space-y-4 rounded-2xl p-5" style={CARD}>
         <div>
           <p className="mb-2 text-[14px] font-semibold">무엇을 할 날인가요</p>
           <Toggle value={purpose} onChange={setPurpose} items={PURPOSES} />
@@ -190,6 +190,6 @@ export function TaekilTool() {
           </p>
         </section>
       )}
-    </main>
+    </RoomShell>
   );
 }

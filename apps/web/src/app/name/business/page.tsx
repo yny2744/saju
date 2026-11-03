@@ -2,6 +2,7 @@
 
 
 import { BRAND, josa } from "@/tenants";
+import { RoomShell } from "@/components/room/RoomShell";
 import { SaleNote } from "@/components/SaleNote";
 import { useEffect, useState } from "react";
 import { HanjaPicker } from "@/components/HanjaPicker";
@@ -64,18 +65,8 @@ export default function BusinessReadingPage() {
 
   const r = result?.reading;
   return (
-    <main className="mx-auto min-h-screen max-w-xl px-5 pb-20 pt-12 sm:pt-16">
-      <header className="mb-8 text-center">
-        <div className="gold-ornament" aria-hidden>
-          <i />
-        </div>
-        <h1 className="mt-3 text-[26px] font-bold leading-snug" style={{ fontFamily: "var(--font-serif)" }}>
-          상호 풀이
-        </h1>
-        <p className="mt-2 text-[14px] leading-relaxed" style={{ color: "var(--color-ink-soft)" }}>
-          가게·회사 이름이 업종의 기운과 맞는지 무료로 풀어 드려요.
-        </p>
-      </header>
+    // 2026-11-03 관 통일: 수능대박운과 같은 틀
+    <RoomShell roomKey="namebiz" card={false}>
 
       <form onSubmit={submit} className="space-y-5 rounded-2xl p-5" style={CARD}>
         <div>
@@ -206,6 +197,6 @@ export default function BusinessReadingPage() {
           }}
         />
       )}
-    </main>
+    </RoomShell>
   );
 }

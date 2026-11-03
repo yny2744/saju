@@ -1,4 +1,5 @@
 import { BRAND } from "@/tenants";
+import { RoomShell } from "@/components/room/RoomShell";
 import type { Metadata } from "next";
 import { CURRENCY_NAME, PREMIUM_ON, PRICE, formatNyang, saleSuffix } from "@/lib/yeopjeon";
 import { ReviewStrip } from "@/components/reviews/ReviewStrip";
@@ -149,20 +150,16 @@ function Card({ it }: { it: Item }) {
 
 export default function NamePage() {
   return (
-    <main className="mx-auto min-h-screen max-w-xl px-5 pb-20 pt-12 sm:pt-16">
-      <header className="mb-8 text-center">
-        <div className="gold-ornament" aria-hidden>
-          <i />
-        </div>
-        <h1 className="mt-3 text-[26px] font-bold leading-snug" style={{ fontFamily: "var(--font-serif)" }}>
-          이름 풀이 · 개명 · 작명
-        </h1>
-        <p className="mt-2 text-[14px] leading-relaxed" style={{ color: "var(--color-ink-soft)" }}>
-          이름은 평생 가장 많이 불리는 기운이에요.
-          <br />
-          사주에 아쉬운 하나를 이름에 담아 채워 드려요.
+    // 2026-11-03 관 통일: 수능대박운과 같은 틀, 예전 머리말은 아래로
+    <RoomShell
+      roomKey="name"
+      card={false}
+      below={
+        <p className="pb-8 text-center text-[14px] leading-relaxed" style={{ color: "var(--color-ink-soft)", wordBreak: "keep-all" }}>
+          이름 풀이 · 개명 · 작명 - 이름은 평생 가장 많이 불리는 기운이에요. 사주에 아쉬운 하나를 이름에 담아 채워 드려요.
         </p>
-      </header>
+      }
+    >
       <div className="space-y-4">
         {PEOPLE.map((it) => (
           <Card key={it.title} it={it} />
@@ -185,6 +182,6 @@ export default function NamePage() {
         <br />
         가게·회사·브랜드 이름은 같은 이름의 상표가 있는지 특허청 키프리스에서 꼭 확인해 주세요.
       </p>
-    </main>
+    </RoomShell>
   );
 }

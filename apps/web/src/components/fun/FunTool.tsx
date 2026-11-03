@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { RoomShell } from "@/components/room/RoomShell";
 import { BRAND } from "@/tenants";
 import { ELEMENT_TOKEN, type ElementKo } from "@/lib/pillarView";
 import { ELEMENT_HANJA, ELEMENT_NATURE } from "@/lib/manseView";
@@ -183,28 +184,28 @@ export function FunTool({ kind, tarot }: { kind: FunKind; tarot?: { card: number
   const days = Array.from({ length: form.calendar === "lunar" ? 30 : 31 }, (_, i) => String(i + 1));
   const hours = Array.from({ length: 24 }, (_, i) => String(i));
 
-  const Wrap = tarot ? "section" : "main";
+  // 2026-11-03 관 통일: 재미관은 수능대박운과 같은 틀(RoomShell), 타로 안에 붙을 때는 그 아래 칸 그대로
+  const Wrap = tarot
+    ? ({ children }: { children: React.ReactNode; roomKey?: string; card?: boolean; below?: React.ReactNode }) => <section className="mt-8">{children}</section>
+    : RoomShell;
   return (
-    <Wrap className={tarot ? "mt-8" : "mx-auto min-h-screen max-w-xl px-5 pb-16 pt-10"}>
-      {tarot ? (
+    <Wrap
+      roomKey={`fun:${kind}`}
+      card={false}
+      below={
+        // 2026-11-03 관 통일: 예전 머리말은 아래로
+        <p className="pb-8 text-center text-[14px]" style={{ color: "var(--color-ink-soft)", wordBreak: "keep-all" }}>
+          {meta.title} - {meta.desc}
+        </p>
+      }
+    >
+      {tarot && (
         <h2 className="text-center text-[20px] font-bold" style={{ fontFamily: "var(--font-serif)" }}>
           내 사주와 겹쳐 보기
         </h2>
-      ) : (
-        <>
-          <p className="text-center text-[13px]" style={{ color: GOLD }}>
-            {`${BRAND} · 무료`}
-          </p>
-          <h1 className="mt-1 text-center text-[26px] font-bold" style={{ fontFamily: "var(--font-serif)" }}>
-            {meta.title}
-          </h1>
-          <p className="mt-2 text-center text-[14px]" style={{ color: "var(--color-ink-soft)", wordBreak: "keep-all" }}>
-            {meta.desc}
-          </p>
-        </>
       )}
 
-      <form onSubmit={submit} className="mt-7 space-y-4 rounded-2xl p-5" style={CARD}>
+      <form onSubmit={submit} className={`${tarot ? "mt-7 " : ""}space-y-4 rounded-2xl p-5`} style={CARD}>
         {kind === "blood" && (
           <div>
             <p className="mb-2 text-[14px] font-semibold">혈액형</p>

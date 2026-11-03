@@ -2,6 +2,7 @@
 
 
 import { BRAND } from "@/tenants";
+import { RoomShell } from "@/components/room/RoomShell";
 import { useEffect, useState } from "react";
 import type { TtiDay } from "@/server/ttiService";
 import { BRANCHES, TTI, ttiOfYear, type Branch } from "@/lib/tti";
@@ -59,16 +60,10 @@ export function TtiBoard({ today, tomorrow }: { today: TtiDay; tomorrow: TtiDay 
   const yearTti = /^\d{4}$/.test(year) && yearNum >= 1900 && yearNum <= 2100 ? ttiOfYear(yearNum) : null;
 
   return (
-    <main className="mx-auto min-h-screen max-w-xl px-5 pb-16 pt-10">
-      <p className="text-center text-[13px]" style={{ color: GOLD }}>
-        {`${BRAND} · 무료`}
-      </p>
-      <h1 className="mt-1 text-center text-[26px] font-bold" style={{ fontFamily: "var(--font-serif)" }}>
-        띠별 운세
-      </h1>
-
+    // 2026-11-03 관 통일: 수능대박운과 같은 틀
+    <RoomShell roomKey="tti" card={false}>
       {/* 오늘 / 내일 */}
-      <div className="mt-6 grid grid-cols-2 gap-2 rounded-2xl p-1" style={{ backgroundColor: "var(--color-paper-soft)" }}>
+      <div className="grid grid-cols-2 gap-2 rounded-2xl p-1" style={{ backgroundColor: "var(--color-paper-soft)" }}>
         {(["today", "tomorrow"] as const).map((k) => (
           <button
             key={k}
@@ -221,6 +216,6 @@ export function TtiBoard({ today, tomorrow }: { today: TtiDay; tomorrow: TtiDay 
         <br />
         년생별 운세는 만 40~75세 기준이에요.
       </p>
-    </main>
+    </RoomShell>
   );
 }
