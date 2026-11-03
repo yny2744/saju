@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { PRICE } from "@/lib/yeopjeon";
 import { gateDir, type GateEntry } from "@/lib/gates";
 import { GATE_TITLE_CSS, GateTitle, gateFontHref } from "./GateTitle";
+import { fitFontSize } from "@/lib/textZoomFix";
 
 /**
  * 관별 링크 대문 (2026-11-02 유샘 지시서, 처음은 수능 대박운 대문) - /go/<slug> 에서 관 화면 위를 덮는다. 설정은 lib/gates.ts.
@@ -66,6 +67,7 @@ export function GateOverlay({ entry, brand, emblem }: { entry: GateEntry; brand:
   const loop = useRef<HTMLVideoElement>(null);
   const open = useRef<HTMLVideoElement>(null);
   const stageRef = useRef<Stage>("intro");
+  const btnRef = useRef<HTMLButtonElement>(null);
   const go = (s: Stage) => {
     stageRef.current = s;
     setStage(s);
@@ -124,6 +126,11 @@ export function GateOverlay({ entry, brand, emblem }: { entry: GateEntry; brand:
       })
       .catch(() => {});
   }, [entry]);
+
+  // 버튼 글자: 카카오톡 글자 확대가 걸려 있으면 그 비율만큼 줄여 17px 로 맞춘다
+  useEffect(() => {
+    if (button) fitFontSize(btnRef.current, 17);
+  }, [button, label]);
 
   // 방향이 정해지면 재생 시작 (소리 없이)
   useEffect(() => {
@@ -304,14 +311,19 @@ export function GateOverlay({ entry, brand, emblem }: { entry: GateEntry; brand:
           )}
           {button && btnTop !== null && (stage === "intro" || stage === "loop") && (
             <button
+              ref={btnRef}
               type="button"
               onClick={enter}
-              className="sg-btn whitespace-nowrap rounded-full px-9 text-[17px] font-bold"
+              className="sg-btn whitespace-nowrap rounded-full font-bold"
               style={{
                 position: "absolute",
                 left: "50%",
                 top: btnTop,
                 height: 44,
+                // 여백도 px 로 (글자 확대에 rem 여백이 따라 커지지 않게)
+                paddingLeft: 36,
+                paddingRight: 36,
+                fontSize: 17,
                 transform: "translate(-50%,-50%)",
                 backgroundColor: "rgba(0,0,0,.25)",
                 backdropFilter: "blur(6px)",
