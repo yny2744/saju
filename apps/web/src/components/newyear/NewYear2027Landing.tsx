@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import type { SajuJson } from "saju-engine";
 import { isAuthEnabled } from "@/lib/launchMode";
 import { CONTINUE_PATH, savePendingIntent, type Intent } from "@/lib/intent";
-import { NY_GIFT_BUTTON, nyFullButton, nyLightPrice, nySaleLine } from "@/lib/newyear2027";
+import { NY_GIFT_BUTTON, nyFullButton, nyLightPrice, nySaleLine, nySellOn } from "@/lib/newyear2027";
 import type { ElementKo } from "@/lib/pillarView";
 import { neededEnergy } from "@/lib/neededEnergy";
 import { daeunCells, elementShares, kstDateString, relationRows, yinYangCount } from "@/lib/manseView";
@@ -184,8 +184,12 @@ export function NewYear2027Landing() {
 
   // 맛보기 아래 단추 하나 (2026-11-03 지시서 문구 그대로)
   const gift = me !== "loading" && giftHere !== false && me.gift;
-  const cta =
-    me === "loading" || giftHere === null
+  // 2026-11-04 유샘: 판매가 끝나면(2028-01-01) 사는 단추를 두지 않는다
+  const selling = nySellOn();
+  const saleLine = nySaleLine();
+  const cta = !selling
+    ? null
+    : me === "loading" || giftHere === null
       ? null
       : gift
         ? {
@@ -363,11 +367,13 @@ export function NewYear2027Landing() {
                 {cta.label}
               </a>
             ) : (
-              <div className="h-[56px]" />
+              selling && <div className="h-[56px]" />
             )}
-            <p className="mt-2 text-center text-[13px]" style={{ color: "var(--color-ink-soft)" }}>
-              {nySaleLine()}
-            </p>
+            {selling && saleLine && (
+              <p className="mt-2 text-center text-[13px]" style={{ color: "var(--color-ink-soft)" }}>
+                {saleLine}
+              </p>
+            )}
             <a href={CONTINUE_PATH} onClick={() => remember({ kind: "all" })} className="mt-5 block text-center text-[14px] underline underline-offset-4" style={{ color: "var(--color-ink-soft)" }}>
               12가지 전부 보기
             </a>

@@ -10,7 +10,7 @@ import { EXTRA_KEYS, TOPICS, TOPIC_KEYS, isAnyTopicKey, isTopicKey, type AnyTopi
 import type { BasicContent, DeepContent, ReadingContent } from "./generateReading";
 import type { BasicReadingV2 } from "@/lib/basic/compose";
 import { examSeason, examUnlockTopic, SEASON_INFO } from "@/lib/suneung";
-import { NY_FULL, NY_LIGHT, NY_PRODUCT, isNyMode, nyFullPrice, nyLightPrice, nyOn, type NyMode } from "@/lib/newyear2027";
+import { NY_FULL, NY_LIGHT, NY_PRODUCT, isNyMode, nyFullPrice, nyLightPrice, nyOn, nySellOn, type NyMode } from "@/lib/newyear2027";
 
 /** 운세 보기 저장 내용: 2026-10-10부터 엔진 풀이(v2), 그 전에 산 것은 AI 풀이(BasicContent) */
 export type StoredBasic = BasicContent | BasicReadingV2;
@@ -124,7 +124,7 @@ export function isNamingMode(v: unknown): v is NamingMode {
 }
 
 export class PurchaseError extends Error {
-  constructor(readonly code: "INVALID_TOPICS" | "ALREADY_OWNED" | "NOT_FOUND", message: string) {
+  constructor(readonly code: "INVALID_TOPICS" | "ALREADY_OWNED" | "NOT_FOUND" | "SALE_ENDED", message: string) {
     super(message);
     this.name = "PurchaseError";
   }
@@ -515,6 +515,8 @@ export async function planForPerson(
   args: { userId: string; personId: string; mode: PurchaseMode; topics: unknown }
 ): Promise<{ topics: AnyTopicKey[]; price: number; nickname: string }> {
   if (!UUID_RE.test(args.personId)) throw new PurchaseError("NOT_FOUND", "풀이 대상을 찾을 수 없어요.");
+  // 2026-11-04 유샘: 2027 신년운은 2028-01-01 0시(한국 시각)부터 판매 종료 - 엽전 구매·결제 주문 모두 막는다 (이미 산 풀이는 계속 볼 수 있음)
+  if (isNyMode(args.mode) && !nySellOn()) throw new PurchaseError("SALE_ENDED", "2027 신년운 판매가 끝났어요. 이미 연 풀이는 계속 볼 수 있어요.");
   if (args.mode === FACE_MODE) {
     const f = await q.query<{ nickname: string; paid_at: Date | null; person_id: string | null }>(`SELECT nickname, paid_at, person_id FROM face_readings WHERE id = $1 AND user_id = $2`, [
       args.personId,

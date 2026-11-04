@@ -1,8 +1,8 @@
 import { calculateSaju } from "saju-engine";
-import { NY_GIFT_BUTTON, NY_SALE_END, NY_YEAR, nyFullButton, nySaleLine } from "@/lib/newyear2027";
+import { NY_GIFT_BUTTON, NY_SALE_END, NY_SELL_END, NY_YEAR, nyFullButton, nyPromoOn, nySaleLine, nySellOn } from "@/lib/newyear2027";
 import { buildNyFullPrompt, composeNyTotal, nyPreview, parseNyFull, withNyYear } from "@/server/newyear/newyear";
 import { monthPillarsOfYear } from "@/lib/monthPillars";
-import { isPurchaseMode, planPurchase } from "@/server/readings/readings";
+import { PurchaseError, isPurchaseMode, planForPerson, planPurchase } from "@/server/readings/readings";
 import mgml from "@/tenants/mgml";
 import { ryugyeol } from "@/tenants/ryugyeol";
 import { TENANT } from "@/tenants";
@@ -54,10 +54,38 @@ describe("2027 신년운", () => {
   });
 
   it("화면 문구는 지시서 그대로 (줄 그은 정가·할인율 없음)", () => {
-    expect(nySaleLine(9900)).toBe("2027 신년운 오픈 특가 9,900원 · 2월 28일까지");
-    expect(nyFullButton(9900)).toBe("2027 신년운 전체 보기 · 오픈 특가 9,900원");
+    const before = Date.parse("2027-02-28T23:59:59+09:00");
+    expect(nySaleLine(9900, before)).toBe("2027 신년운 오픈 특가 9,900원 · 2월 28일까지");
+    expect(nyFullButton(9900, before)).toBe("2027 신년운 전체 보기 · 오픈 특가 9,900원");
     expect(NY_GIFT_BUTTON).toBe("로그인하고 선물 엽전으로 총운 끝까지 보기");
     expect(NY_SALE_END).toBe("2027-02-28");
+  });
+
+  // 2026-11-04 유샘: 2027-03-01 0시부터 특가 문구만 지우고 9,900원 그대로 판매, 2028-01-01 0시부터 판매 종료
+  it("2027-03-01 0시(한국 시각)부터 \"오픈 특가\"·\"2월 28일까지\" 문구만 지운다", () => {
+    const last = Date.parse("2027-02-28T23:59:59+09:00");
+    const after = Date.parse("2027-03-01T00:00:00+09:00");
+    expect(nyPromoOn(last)).toBe(true);
+    expect(nyPromoOn(after)).toBe(false);
+    expect(nySaleLine(9900, after)).toBeNull();
+    expect(nyFullButton(9900, after)).toBe("2027 신년운 9,900원");
+    expect(nySellOn(after)).toBe(true); // 판매는 계속
+  });
+
+  it("2028-01-01 0시(한국 시각)부터 판매 종료 - 990·9,900 모두 구매·결제 주문을 막는다", async () => {
+    expect(NY_SELL_END).toBe("2027-12-31");
+    expect(nySellOn(Date.parse("2027-12-31T23:59:59+09:00"))).toBe(true);
+    expect(nySellOn(Date.parse("2028-01-01T00:00:00+09:00"))).toBe(false);
+    const q = { query: jest.fn() } as unknown as Parameters<typeof planForPerson>[0];
+    jest.useFakeTimers().setSystemTime(new Date("2028-01-01T00:00:00+09:00"));
+    try {
+      for (const mode of ["ny2027", "ny2027_full"] as const) {
+        await expect(planForPerson(q, { userId: "u", personId: "00000000-0000-4000-8000-000000000000", mode, topics: [] })).rejects.toMatchObject({ code: "SALE_ENDED" });
+      }
+      await expect(planForPerson(q, { userId: "u", personId: "00000000-0000-4000-8000-000000000000", mode: "ny2027", topics: [] })).rejects.toBeInstanceOf(PurchaseError);
+    } finally {
+      jest.useRealTimers();
+    }
   });
 
   it("가격: 명견만리만 9,900원, 류결사주는 이 상품이 없다", () => {

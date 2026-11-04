@@ -11,8 +11,24 @@ import { PRICE } from "@/lib/yeopjeon";
 
 export const NY_YEAR = 2027;
 
-/** 오픈 특가 마감일 (잠정, 2026-11-03 유샘) - 날짜는 여기 한 곳에만 둔다 */
+/**
+ * 날짜는 여기 한 곳에만 둔다 (2026-11-04 유샘). 둘 다 그날이 끝나는 순간(다음 날 0시, 한국 시각)부터 적용.
+ *   NY_SALE_END: 오픈 특가 표시 마감 - 2027-03-01 0시부터 "오픈 특가"·"2월 28일까지" 문구만 지운다. 판매·가격(9,900원)은 그대로.
+ *   NY_SELL_END: 판매 종료 - 2028-01-01 0시부터 990원(총운 끝까지)·9,900원(전체 보기) 판매를 막는다. 이미 산 손님은 계속 본다.
+ */
 export const NY_SALE_END = "2027-02-28";
+export const NY_SELL_END = "2027-12-31";
+
+/** 그날 다음 날 0시(한국 시각) */
+const nextDayKst = (day: string): number => Date.parse(`${day}T00:00:00+09:00`) + 24 * 3600 * 1000;
+/** 오픈 특가 문구를 보여 줄 때인가 */
+export function nyPromoOn(now: number = Date.now()): boolean {
+  return now < nextDayKst(NY_SALE_END);
+}
+/** 아직 파는 때인가 */
+export function nySellOn(now: number = Date.now()): boolean {
+  return now < nextDayKst(NY_SELL_END);
+}
 
 /** 구매·열람 표시 (topic_unlocks.topic · 결제 mode 같은 이름) */
 export const NY_LIGHT = "ny2027";
@@ -38,14 +54,14 @@ const saleDay = () => {
   return `${m}월 ${d}일까지`;
 };
 
-/** "2027 신년운 오픈 특가 9,900원 · 2월 28일까지" (지시서 문구 그대로, 줄 그은 정가·할인율 없음) */
-export function nySaleLine(price: number = nyFullPrice()): string {
-  return `${NY_YEAR} 신년운 오픈 특가 ${won(price)} · ${saleDay()}`;
+/** "2027 신년운 오픈 특가 9,900원 · 2월 28일까지" (지시서 문구 그대로, 줄 그은 정가·할인율 없음) - 특가 표시가 끝나면 null (문구를 지운다) */
+export function nySaleLine(price: number = nyFullPrice(), now: number = Date.now()): string | null {
+  return nyPromoOn(now) ? `${NY_YEAR} 신년운 오픈 특가 ${won(price)} · ${saleDay()}` : null;
 }
 
-/** 이미 선물을 쓴 손님의 단추: "2027 신년운 전체 보기 · 오픈 특가 9,900원" */
-export function nyFullButton(price: number = nyFullPrice()): string {
-  return `${NY_YEAR} 신년운 전체 보기 · 오픈 특가 ${won(price)}`;
+/** 이미 선물을 쓴 손님의 단추: 특가 동안 "2027 신년운 전체 보기 · 오픈 특가 9,900원", 그 뒤 "2027 신년운 9,900원" (2026-11-04 유샘) */
+export function nyFullButton(price: number = nyFullPrice(), now: number = Date.now()): string {
+  return nyPromoOn(now) ? `${NY_YEAR} 신년운 전체 보기 · 오픈 특가 ${won(price)}` : `${NY_YEAR} 신년운 ${won(price)}`;
 }
 
 /** 선물을 아직 안 쓴 손님의 단추 (지시서 문구 그대로) */

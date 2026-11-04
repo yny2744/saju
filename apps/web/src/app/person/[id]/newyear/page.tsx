@@ -9,7 +9,7 @@ import { PayDialog } from "@/components/yeopjeon/PayDialog";
 import { WritingOverlay } from "@/components/yeopjeon/WritingOverlay";
 import { notifyYeopjeonChanged, reportClientError } from "@/components/yeopjeon/useYeopjeon";
 import { CURRENCY_NAME, formatNyang } from "@/lib/yeopjeon";
-import { NY_FULL, NY_LIGHT, NY_YEAR, nyFullButton, nyOn, nySaleLine, type NyMode } from "@/lib/newyear2027";
+import { NY_FULL, NY_LIGHT, NY_YEAR, nyFullButton, nyOn, nySaleLine, nySellOn, type NyMode } from "@/lib/newyear2027";
 import type { BasicReadingV2 } from "@/lib/basic/compose";
 import type { NyFull } from "@/server/newyear/newyear";
 
@@ -101,7 +101,7 @@ function Body({ id }: { id: string }) {
       const d = await load();
       if (q.get("paid") === "1") setNotice("결제가 끝나 열렸어요.");
       const want = q.get("open");
-      if (!d) return;
+      if (!d || !nySellOn()) return;
       if (want === "full" && !d.owned.full) await buy(NY_FULL);
       else if (want === "light" && !d.owned.light && !d.owned.full) await buy(NY_LIGHT);
     })();
@@ -137,6 +137,9 @@ function Body({ id }: { id: string }) {
 
   const t = state.total;
   const p = state.preview;
+  // 2026-11-04 유샘: 판매가 끝나면(2028-01-01) 사는 단추를 두지 않는다 (이미 산 풀이는 그대로 보여 준다)
+  const selling = nySellOn();
+  const saleLine = nySaleLine();
   return (
     <main className="mx-auto min-h-screen max-w-xl px-5 pb-20 pt-10 sm:pt-14">
       {writing && <WritingOverlay title={`${NY_YEAR} 신년운 전체 보기를 쓰고 있어요`} steps={["사주 여덟 글자를 펼치고 있어요", `${NY_YEAR}년 정미년 기운과 견주고 있어요`, "열두 달의 흐름을 살피고 있어요", "재물·연애·건강 흐름을 쓰고 있어요"]} durationMs={28000} />}
@@ -205,13 +208,17 @@ function Body({ id }: { id: string }) {
                       </li>
                     ))}
                   </ul>
-                  <button type="button" disabled={busy} onClick={() => buy(NY_LIGHT)} className="btn-primary mt-5 disabled:opacity-50">
-                    {busy ? "여는 중..." : `총운 끝까지 보기 · ${formatNyang(state.lightPrice)}`}
-                  </button>
-                  <p className="mt-2 text-center text-[13px]" style={{ color: "var(--color-ink-faint)" }}>
-                    내 {CURRENCY_NAME} {formatNyang(state.balance)}
-                    {state.balance >= state.lightPrice ? " · 가진 엽전으로 바로 열려요" : " · 모자란 만큼만 결제해요"}
-                  </p>
+                  {selling && (
+                    <>
+                      <button type="button" disabled={busy} onClick={() => buy(NY_LIGHT)} className="btn-primary mt-5 disabled:opacity-50">
+                        {busy ? "여는 중..." : `총운 끝까지 보기 · ${formatNyang(state.lightPrice)}`}
+                      </button>
+                      <p className="mt-2 text-center text-[13px]" style={{ color: "var(--color-ink-faint)" }}>
+                        내 {CURRENCY_NAME} {formatNyang(state.balance)}
+                        {state.balance >= state.lightPrice ? " · 가진 엽전으로 바로 열려요" : " · 모자란 만큼만 결제해요"}
+                      </p>
+                    </>
+                  )}
                 </section>
               </>
             )
@@ -244,14 +251,17 @@ function Body({ id }: { id: string }) {
           </div>
         </section>
       ) : (
-        !state.owned.full && (
+        !state.owned.full &&
+        selling && (
           <section className="mt-8 rounded-2xl p-5 text-center" style={CARD}>
             <button type="button" disabled={busy} onClick={() => buy(NY_FULL)} className="btn-primary disabled:opacity-50">
               {busy ? "여는 중..." : nyFullButton()}
             </button>
-            <p className="mt-2 text-[13px]" style={{ color: "var(--color-ink-soft)" }}>
-              {nySaleLine()}
-            </p>
+            {saleLine && (
+              <p className="mt-2 text-[13px]" style={{ color: "var(--color-ink-soft)" }}>
+                {saleLine}
+              </p>
+            )}
           </section>
         )
       )}
