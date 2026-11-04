@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import type { GateDoor as Door, TenantGate } from "@/tenants/types";
-import { SRC_COOKIE_NAME } from "@/lib/source";
+import { SRC_COOKIE_NAME, SRC_COOKIE_ON } from "@/lib/source";
 import { isSuneungOn } from "@/lib/launchMode";
 import { bgm } from "@/components/bgm/bgm";
 
@@ -20,7 +20,7 @@ function tagCandidates(): string[] {
     const q = new URLSearchParams(window.location.search);
     out.push(q.get("door") ?? "", q.get("utm_campaign") ?? "");
     out.push(/^\/l\/([a-z0-9-]+)/.exec(window.location.pathname)?.[1] ?? "");
-    const raw = document.cookie.split("; ").find((c) => c.startsWith(`${SRC_COOKIE_NAME}=`));
+    const raw = !SRC_COOKIE_ON ? undefined : document.cookie.split("; ").find((c) => c.startsWith(`${SRC_COOKIE_NAME}=`));
     if (raw) {
       const [, , campaign = "", landing = ""] = decodeURIComponent(raw.slice(SRC_COOKIE_NAME.length + 1)).split("|");
       out.push(campaign, landing);

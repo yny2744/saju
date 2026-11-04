@@ -3,4 +3,6 @@
  * NEXT_PUBLIC_ 값은 빌드할 때 박히므로, Vercel 에 넣은 뒤에는 다시 배포해야 단추가 보인다.
  */
 export const PUSH_PUBLIC_KEY = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY ?? "";
-export const PUSH_ON = PUSH_PUBLIC_KEY.length > 0;
+/** 2026-11-04 유샘: 개인정보처리방침에 적기 전까지 아침 운세 알림을 꺼 둔다 (코드는 그대로, true 로 바꾸면 다시 켜진다) */
+export const PUSH_SWITCH = false;
+export const PUSH_ON = PUSH_SWITCH && PUSH_PUBLIC_KEY.length > 0;

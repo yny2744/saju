@@ -197,8 +197,11 @@ export function GateHero({ gate, brand }: { gate: TenantGate; brand: string }) {
           <a className="gh-brand" href="/">
             {/* eslint-disable-next-line @next/next/no-img-element -- 엠블럼 */}
             <img src={gate.emblem} alt="" />
-            {/* 2026-10-30 유샘: 머리줄은 엠블럼 + 대문 이름 (모든 화면 머리줄과 같게) */}
-            {gate.title}
+            {/* 2026-11-04 유샘: 메인 머리줄은 사이트명(류결사주), 대문 이름(류결의 명견만리)은 그 아래 작은 글씨 */}
+            <span className="gh-brand-name">
+              {brand}
+              <small>{gate.title}</small>
+            </span>
           </a>
           <nav className="gh-nav" aria-label="세 길">
             <BgmToggle />
@@ -223,7 +226,11 @@ export function GateHero({ gate, brand }: { gate: TenantGate; brand: string }) {
             </radialGradient>
           </defs>
           <a href="#intro" onClick={openIntro} aria-label="소개글 보기">
-            <text className="gh-title gh-a-title" x="450" y="240" fontSize="76" textAnchor="middle">
+            {/* 2026-11-04 유샘: 대문 큰 제목은 사이트명(류결사주), 대문 이름은 그 아래 작은 글씨 - 두 줄이 들어가도록 큰 제목을 조금 올렸다 */}
+            <text className="gh-title gh-a-title" x="450" y="222" fontSize="76" textAnchor="middle">
+              {brand}
+            </text>
+            <text className="gh-title-sub gh-a-title" x="450" y="272" fontSize="32" textAnchor="middle">
               {gate.title}
             </text>
           </a>

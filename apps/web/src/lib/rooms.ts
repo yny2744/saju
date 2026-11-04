@@ -17,6 +17,8 @@ export interface RoomEntry {
   image?: string;
   /** 가로 띠로 자를 때 보이는 자리 (object-position) */
   imagePos?: string;
+  /** 가로 띠 안에서 그림을 키우는 배율 (아래쪽 기준) - 글자 박힌 위쪽이 띠에 들어오지 않게 */
+  imageZoom?: number;
   /** 입력 칸 위 안내 한 줄 */
   line: string;
   /** 로그인 없이 볼 수 있는 관이면 "로그인 없이 무료로 보기" 제목 */
@@ -28,6 +30,16 @@ const CARD = (n: number) => `/cards/intro-0${n + 1}.webp`;
 /** 카드 위쪽에 글자가 박혀 있어 가로 띠에서는 맨 아래쪽 그림을 보여 준다 */
 const LOWER = "center 100%";
 
+/**
+ * 2026-11-04 유샘: 글자가 잘려 보이지 않게, 카드마다 글자가 끝나는 아래(1080 기준 세로 위치)부터만 띠에 보이도록 키운다.
+ * 정사각형 카드를 16:9 띠에 꽉 채우면 아래쪽 1080×9/16 = 607.5 만큼 보이므로, 배율 = 607.5 ÷ (1080 - 글자 끝).
+ */
+const CARD_TEXT_END: Record<number, number> = { 1: 790, 2: 705, 3: 640, 4: 745, 5: 575, 6: 700, 7: 640 };
+function cardImage(n: number): Pick<RoomEntry, "image" | "imagePos" | "imageZoom"> {
+  const end = CARD_TEXT_END[n] ?? 0;
+  return { image: CARD(n), imagePos: LOWER, imageZoom: Math.max(1, Math.round((607.5 / (1080 - end)) * 100) / 100) };
+}
+
 /** 12가지 운세 관 - 주제별 대표 그림 */
 const TOPIC_IMAGE: Partial<Record<TopicKey, number>> = {
   nature: 1, job: 1, love: 5, marriage: 5, relationship: 5, family: 5,
@@ -37,8 +49,7 @@ const TOPIC_IMAGE: Partial<Record<TopicKey, number>> = {
 function topicRoom(t: TopicKey): RoomEntry {
   return {
     title: withUnse(TOPICS[t].title),
-    image: CARD(TOPIC_IMAGE[t] ?? 1),
-    imagePos: LOWER,
+    ...cardImage(TOPIC_IMAGE[t] ?? 1),
     line: `이름과 생년월일을 넣어 주세요. ${josa(withUnse(TOPICS[t].title), "을/를")} 사주로 풀어 드려요.`,
     free: true,
   };
@@ -60,18 +71,18 @@ export type RoomKey =
 
 const BASE: Record<string, RoomEntry> = {
   // 사주관 (/start) - 만세력
-  saju: { title: "나의 사주풀이", image: CARD(1), imagePos: LOWER, line: "이름과 생년월일을 넣어 주세요. 만세력과 타고난 기운을 바로 보여 드려요.", free: true },
+  saju: { title: "나의 사주풀이", ...cardImage(1), line: "이름과 생년월일을 넣어 주세요. 만세력과 타고난 기운을 바로 보여 드려요.", free: true },
   // 오늘의 운세관 (/start?next=fortune)
-  fortune: { title: "오늘의 운세", image: CARD(4), imagePos: LOWER, line: "이름과 생년월일을 넣어 주세요. 오늘과 내일의 기운을 풀어 드려요.", free: true },
+  fortune: { title: "오늘의 운세", ...cardImage(4), line: "이름과 생년월일을 넣어 주세요. 오늘과 내일의 기운을 풀어 드려요.", free: true },
   // 2027 신년 운세 (/go/newyear2027) - 올해 운세를 2027년 정미년으로
-  year2027: { title: "2027 신년 운세", image: CARD(7), imagePos: LOWER, line: "이름과 생년월일을 넣어 주세요. 2027년 한 해의 흐름을 풀어 드려요.", free: true },
-  gunghap: { title: "궁합", image: CARD(5), imagePos: LOWER, line: "두 사람의 이름과 생년월일을 넣어 주세요. 사주로 인연을 풀어 드려요." },
-  tarot: { title: "타로", image: CARD(6), imagePos: LOWER, line: "지금 마음에 걸린 물음 하나를 고르고, 카드를 직접 멈추거나 골라 보세요.", free: true },
-  face: { title: "관상", image: CARD(2), imagePos: LOWER, line: "정면 사진 한 장으로 얼굴형과 이목구비를 전통 관상학으로 풀어 드려요.", free: true },
-  tti: { title: "띠별 운세", image: CARD(4), imagePos: LOWER, line: "생년월일 없이 띠만 고르면 오늘과 내일의 운세를 보여 드려요.", free: true },
-  name: { title: "작명", image: CARD(3), imagePos: LOWER, line: "이름 풀이부터 개명·아기 이름·상호 작명까지, 사주에 맞춰 풀어 드려요." },
-  namebiz: { title: "상호 풀이", image: CARD(3), imagePos: LOWER, line: "가게·회사 이름이 업종의 기운과 맞는지 무료로 풀어 드려요.", free: true },
-  taekil: { title: "택일", image: CARD(3), imagePos: LOWER, line: "목적과 기간을 고르고 생년월일을 넣어 주세요. 좋은 날을 골라 드려요.", free: true },
+  year2027: { title: "2027 신년 운세", ...cardImage(7), line: "이름과 생년월일을 넣어 주세요. 2027년 한 해의 흐름을 풀어 드려요.", free: true },
+  gunghap: { title: "궁합", ...cardImage(5), line: "두 사람의 이름과 생년월일을 넣어 주세요. 사주로 인연을 풀어 드려요." },
+  tarot: { title: "타로", ...cardImage(6), line: "지금 마음에 걸린 물음 하나를 고르고, 카드를 직접 멈추거나 골라 보세요.", free: true },
+  face: { title: "관상", ...cardImage(2), line: "정면 사진 한 장으로 얼굴형과 이목구비를 전통 관상학으로 풀어 드려요.", free: true },
+  tti: { title: "띠별 운세", ...cardImage(4), line: "생년월일 없이 띠만 고르면 오늘과 내일의 운세를 보여 드려요.", free: true },
+  name: { title: "작명", ...cardImage(3), line: "이름 풀이부터 개명·아기 이름·상호 작명까지, 사주에 맞춰 풀어 드려요." },
+  namebiz: { title: "상호 풀이", ...cardImage(3), line: "가게·회사 이름이 업종의 기운과 맞는지 무료로 풀어 드려요.", free: true },
+  taekil: { title: "택일", ...cardImage(3), line: "목적과 기간을 고르고 생년월일을 넣어 주세요. 좋은 날을 골라 드려요.", free: true },
 };
 
 /** 재미관 (별자리·탄생화·탄생석·수비학·혈액형·MBTI) */
@@ -91,7 +102,7 @@ export function room(key: RoomKey): RoomEntry | undefined {
   }
   if (key.startsWith("fun:")) {
     const f = FUN[key.slice(4)];
-    return f ? { title: f.title, image: CARD(f.image), imagePos: LOWER, line: f.line, free: true } : undefined;
+    return f ? { title: f.title, ...cardImage(f.image), line: f.line, free: true } : undefined;
   }
   return BASE[key];
 }

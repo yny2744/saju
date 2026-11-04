@@ -23,6 +23,8 @@ export const GATE_CSS = `
 .gh-shade{background:linear-gradient(to bottom,rgba(7,11,22,.62) 0%,rgba(7,11,22,.22) 30%,rgba(7,11,22,.32) 60%,rgba(7,11,22,.55) 100%)}
 .gh-hero a:focus-visible{outline:2px solid var(--gh-gold);outline-offset:3px}
 .gh-title{font-family:var(--gh-serif);font-weight:900;fill:var(--gh-gold-hi);letter-spacing:.06em;paint-order:stroke;stroke:rgba(7,11,22,.6);stroke-width:5px;cursor:pointer}
+.gh-title-sub{font-family:var(--gh-serif);font-weight:700;fill:var(--gh-gold-hi);letter-spacing:.16em;paint-order:stroke;stroke:rgba(7,11,22,.7);stroke-width:4px;cursor:pointer}
+.gh-brand-name{display:flex;flex-direction:column;line-height:1.15;min-width:0}.gh-brand-name small{font-size:.66em;font-weight:500;letter-spacing:.06em;opacity:.85}
 .gh-side{font-family:var(--gh-serif);font-weight:700;fill:var(--gh-gold-hi);letter-spacing:.14em;paint-order:stroke;stroke:rgba(5,8,16,.85);stroke-width:7px;stroke-linejoin:round}
 .gh-disc{fill:#0a1020;stroke:rgba(244,226,184,.55);stroke-width:1.5;filter:drop-shadow(0 0 18px rgba(7,11,22,.9))}
 .gh-a-emblem{cursor:pointer}

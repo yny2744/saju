@@ -2,12 +2,15 @@ import { NextRequest, NextResponse } from "next/server";
 import { SESSION_COOKIE_NAME } from "@/server/auth/session";
 import { handlePushSubscribe, handlePushUnsubscribe } from "@/server/push/push";
 import { notifyError } from "@/server/alert";
+import { PUSH_ON } from "@/lib/pushKey";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 /** 매일 아침 오늘의 운세 알림 켜기 (2026-11-01) - 로그인 안 한 손님도 켤 수 있다 */
 export async function POST(request: NextRequest) {
+  // 2026-11-04 유샘: 알림 기능을 꺼 둔 동안에는 새로 켜지 않는다 (끄기는 그대로 받는다)
+  if (!PUSH_ON) return NextResponse.json({ error: { code: "NOT_FOUND", message: "준비 중이에요." } }, { status: 404 });
   try {
     const raw = await request.json().catch(() => null);
     const { status, body } = await handlePushSubscribe(request.cookies.get(SESSION_COOKIE_NAME)?.value, raw);

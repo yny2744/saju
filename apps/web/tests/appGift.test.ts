@@ -8,7 +8,7 @@ import { APP_COOKIE, isAppCookie } from "@/lib/appInfo";
 /** 2026-11-01 유샘: 가입 선물 990냥은 앱으로 열었을 때만 (명견만리) */
 describe("앱 가입 선물", () => {
   it("명견만리만 앱 전용, 류결사주·인자사주는 예전처럼 가입하면 바로", () => {
-    expect(mgml.features.appWelcomeGift).toBe(true);
+    expect(mgml.features.appWelcomeGift).toBe(false); // 2026-11-04 유샘: 웹 로그인에도 가입 선물
     expect(ryugyeol.features.appWelcomeGift).not.toBe(true);
     expect(injasaju.features.appWelcomeGift).not.toBe(true);
     // 명견만리는 류결사주 설정을 물려받으므로 다른 기능 스위치는 그대로

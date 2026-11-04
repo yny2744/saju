@@ -20,7 +20,8 @@ const mgml: TenantConfig = {
   app: { name: "류결의 명견만리", shortName: "명견만리" },
   /** 2026-11-01 유샘: 가입 선물 990냥은 앱으로 열어서 가입(또는 가입 뒤 앱으로 열기)할 때 */
   /** 2026-11-01 유샘: 겹쳐 보기 유료화 1단계 - 타로관 먼저 (잘 되면 나머지 재미관도) */
-  features: { ...ryugyeol.features, appWelcomeGift: true, paidOverlay: ["tarot"] },
+  // 2026-11-04 유샘 승인: 가입 선물 990냥을 웹으로 로그인해도 준다 (한 사람에게 한 번 규칙은 그대로). true 로 바꾸면 다시 앱으로 열었을 때만.
+  features: { ...ryugyeol.features, appWelcomeGift: false, paidOverlay: ["tarot"] },
   prices: { ...ryugyeol.prices, OVERLAY: 990, NEWYEAR: 9900 }, // NEWYEAR: 2027 신년운 전체 보기 오픈 특가 (2026-11-03 유샘 승인)
   /** 정식 주소가 정해지기 전에는 Vercel 환경변수 SITE_URL 이 먼저 쓰인다 */
   siteUrl: "https://saju-web-git-mgml-yny2744.vercel.app",

@@ -7,6 +7,8 @@
  * 이름·생년월일 같은 개인 정보는 담지 않는다.
  */
 export const SRC_COOKIE_NAME = "ryugyeol_src";
+/** 2026-11-04 유샘: 개인정보처리방침에 적기 전까지 유입 경로 쿠키를 꺼 둔다 (코드는 그대로, true 로 바꾸면 다시 켜진다) - 남기지도, 읽지도 않는다 */
+export const SRC_COOKIE_ON = false;
 export const SRC_MAX_AGE = 60 * 60 * 24 * 30;
 
 /** 한 칸: 한글·영문·숫자·_ . - 만, 40자까지 */

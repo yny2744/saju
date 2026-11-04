@@ -1,5 +1,5 @@
 import { randomBytes } from "crypto";
-import { SRC_COOKIE_NAME, validSource } from "@/lib/source";
+import { SRC_COOKIE_NAME, SRC_COOKIE_ON, validSource } from "@/lib/source";
 import { db } from "@/server/auth/db";
 import { getBalance, InsufficientYeopjeonError } from "@/server/yeopjeon/ledger";
 import { PurchaseError, inTransaction, planForPerson, productName, purchaseWithClient, type PurchaseMode } from "@/server/readings/readings";
@@ -70,6 +70,7 @@ export type CheckoutResult =
 
 /** 2026-10-28 유입 경로 꼬리표 (요청 쿠키에서 - 요청 밖(시험 등)이면 없음) */
 async function requestSource(): Promise<string | null> {
+  if (!SRC_COOKIE_ON) return null; // 2026-11-04 유샘: 유입 경로 쿠키 꺼 둠
   try {
     const { cookies } = await import("next/headers");
     return validSource(cookies().get(SRC_COOKIE_NAME)?.value);

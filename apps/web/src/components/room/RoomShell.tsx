@@ -170,7 +170,7 @@ function RoomMedia({ r }: { r: RoomEntry }) {
         </>
       ) : r.image ? (
         // eslint-disable-next-line @next/next/no-img-element -- 대표 그림 (임시: 메인 소개 카드)
-        <img src={r.image} alt={r.title} className="absolute inset-0 h-full w-full object-cover" style={{ objectPosition: r.imagePos ?? "center" }} />
+        <img src={r.image} alt={r.title} className="absolute inset-0 h-full w-full object-cover" style={{ objectPosition: r.imagePos ?? "center", ...(r.imageZoom && r.imageZoom > 1 ? { transform: `scale(${r.imageZoom})`, transformOrigin: "center bottom" } : {}) }} />
       ) : null}
     </div>
   );

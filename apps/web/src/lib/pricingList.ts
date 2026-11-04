@@ -1,6 +1,8 @@
 import { PREMIUM_ON, PRICE, WELCOME_GIFT_APP_ONLY } from "@/lib/yeopjeon";
 import type { TenantPrices } from "@/tenants/types";
 import { isSuneungOn } from "@/lib/launchMode";
+import { TENANT } from "@/tenants";
+import { nyFullPrice, nyLightPrice, nyOn, nySellOn } from "@/lib/newyear2027";
 
 /**
  * 상품·가격 안내 페이지(/pricing)에 보여 줄 목록 (2026-10-19, 결제 심사용 - 로그인 없이 볼 수 있는 가격표).
@@ -50,6 +52,16 @@ export function paidProducts(): PriceRow[] {
     rows.push(
       { name: "수능대박운 가볍게 보기", desc: "내 사주로 보는 수능 시즌 운세", price: PRICE.EXAM },
       { key: "EXAM_DEEP", name: "수능대박운 깊게 보기", desc: "수능 시즌 운세 긴 풀이", price: PRICE.EXAM_DEEP }
+    );
+  }
+  // 2026-11-04 유샘: 파는 고객사에서만 - 타로 겹쳐 보기, 2027 신년운 (판매 종료 2028-01-01 뒤에는 빠진다)
+  if (PRICE.OVERLAY && TENANT.features.paidOverlay?.includes("tarot")) {
+    rows.push({ name: "타로 겹쳐 보기", desc: "오늘 뽑은 타로 카드에 내 사주를 겹쳐 본 풀이", price: PRICE.OVERLAY });
+  }
+  if (nyOn() && nySellOn()) {
+    rows.push(
+      { name: "2027 신년운 총운", desc: "2027년 정미년 총운 끝까지 보기", price: nyLightPrice() },
+      { name: "2027 신년운 전체 보기", desc: "2027년 정미년 총운 · 1~12월 달별 운세 · 그해 재물·연애·건강 흐름", price: nyFullPrice() }
     );
   }
   return rows;

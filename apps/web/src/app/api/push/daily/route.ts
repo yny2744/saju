@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { cronAuthorized, sendDailyPush } from "@/server/push/push";
 import { notifyError } from "@/server/alert";
+import { PUSH_ON } from "@/lib/pushKey";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -16,6 +17,8 @@ async function run(request: NextRequest) {
   if (!cronAuthorized(request.headers.get("authorization"))) {
     return NextResponse.json({ error: { code: "UNAUTHORIZED", message: "권한이 없어요." } }, { status: 401 });
   }
+  // 2026-11-04 유샘: 알림 기능을 꺼 둔 동안에는 보내지 않는다
+  if (!PUSH_ON) return NextResponse.json({ skipped: "알림 꺼 둠" });
   try {
     const result = await sendDailyPush();
     return NextResponse.json(result);
