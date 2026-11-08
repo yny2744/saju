@@ -158,7 +158,10 @@ function RoomMedia({ r }: { r: RoomEntry }) {
     <div className="relative overflow-hidden rounded-2xl" style={{ aspectRatio: "16 / 9", backgroundColor: "#0a1630", boxShadow: "0 0 0 1px var(--color-gold-line)" }}>
       {r.video ? (
         <>
-          <video ref={vid} src={r.video} poster={r.image} playsInline loop muted preload="auto" className="absolute inset-0 h-full w-full object-cover" />
+          <video ref={vid} poster={r.image} playsInline loop muted preload="auto" className="absolute inset-0 h-full w-full object-cover">
+            {r.videoWebm && <source src={r.videoWebm} type="video/webm" />}
+            <source src={r.video} type="video/mp4" />
+          </video>
           <button
             type="button"
             onClick={toggle}

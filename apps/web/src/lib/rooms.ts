@@ -13,6 +13,8 @@ export interface RoomEntry {
   title: string;
   /** 홍보 영상 (있으면 맨 위) */
   video?: string;
+  /** 같은 영상의 webm (있으면 먼저 쓴다 - 더 가볍다) */
+  videoWebm?: string;
   /** 대표 그림 (영상이 없을 때) */
   image?: string;
   /** 가로 띠로 자를 때 보이는 자리 (object-position) */
@@ -77,7 +79,8 @@ const BASE: Record<string, RoomEntry> = {
   // 2027 신년 운세 (/go/newyear2027) - 올해 운세를 2027년 정미년으로
   year2027: { title: "2027 신년 운세", ...cardImage(7), line: "이름과 생년월일을 넣어 주세요. 2027년 한 해의 흐름을 풀어 드려요.", free: true },
   gunghap: { title: "궁합", ...cardImage(5), line: "두 사람의 이름과 생년월일을 넣어 주세요. 사주로 인연을 풀어 드려요." },
-  tarot: { title: "타로", ...cardImage(6), line: "지금 마음에 걸린 물음 하나를 고르고, 카드를 직접 멈추거나 골라 보세요.", free: true },
+  // 2026-11-08 유샘: 타로 홍보 영상 (첫 장면 그림이 영상을 불러오기 전 자리)
+  tarot: { title: "타로", video: "/rooms/tarot/ryugyeol-tarot.mp4", videoWebm: "/rooms/tarot/ryugyeol-tarot.webm", image: "/rooms/tarot/poster.jpg", line: "지금 마음에 걸린 물음 하나를 고르고, 카드를 직접 멈추거나 골라 보세요.", free: true },
   face: { title: "관상", ...cardImage(2), line: "정면 사진 한 장으로 얼굴형과 이목구비를 전통 관상학으로 풀어 드려요.", free: true },
   tti: { title: "띠별 운세", ...cardImage(4), line: "생년월일 없이 띠만 고르면 오늘과 내일의 운세를 보여 드려요.", free: true },
   name: { title: "작명", ...cardImage(3), line: "이름 풀이부터 개명·아기 이름·상호 작명까지, 사주에 맞춰 풀어 드려요." },
