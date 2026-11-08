@@ -12,13 +12,15 @@ import { useWelcomeHere } from "@/components/app/useWelcomeHere";
 import { useRoomBackGuard, useStepBack } from "@/components/room/useStepBack";
 import { reportClientError } from "@/components/yeopjeon/useYeopjeon";
 import { bgm } from "@/components/bgm/bgm";
+import { SGATE_DONE, SGATE_UNLOCK, isGateOn } from "@/components/gate/GateOverlay";
 import { SajuPillarsCard } from "@/components/SajuPillarsCard";
 import { DaeunTimeline, ElementBalance, NeededEnergySection, RelationsTable } from "@/components/ManseSections";
 
 /**
  * 2027 신년운 링크 대문 (/go/newyear2027, 2026-11-03 유샘 지시서)
- *   1) 신년 영상의 멈춘 첫 장면 + 단추 "무료로 보기"
- *   2) 누르면 영상이 소리와 함께 처음부터 → 3초 뒤 영상 아래에서 "만세력과 무료 맛보기" 단추가 올라온다 (영상을 가리지 않음)
+ *   1) 2026-11-08 유샘: 수능대박운처럼 먼저 대문(GateOverlay) → 대문 버튼으로 문이 열리면 신년 영상이 처음부터 소리와 함께
+ *      (예전의 "멈춘 첫 장면 + 무료로 보기" 단계는 없앰)
+ *   2) 재생 3초 뒤 영상 아래에서 "만세력과 무료 맛보기" 단추가 올라온다 (영상을 가리지 않음)
  *   3) 이름·성별·생년월일·시를 한 번 입력 → 만세력과 2027 총운 맛보기를 함께
  *   4) 맛보기 아래 단추 하나 (선물 안 쓴 손님: 선물 엽전으로 총운 끝까지 / 쓴 손님: 전체 보기 오픈 특가) + "12가지 전부 보기" 링크
  *   처음부터 로그인을 요구하지 않는다: 입력 → 맛보기 → 로그인 또는 결제.
@@ -49,7 +51,8 @@ export function NewYear2027Landing() {
   useRoomBackGuard();
   const giftHere = useWelcomeHere();
   const vid = useRef<HTMLVideoElement>(null);
-  const [stage, setStage] = useState<"poster" | "playing" | "form">("poster");
+  const [stage, setStage] = useState<"playing" | "form">("playing");
+  const started = useRef(false);
   const [rise, setRise] = useState(false);
 
   // 입력
@@ -102,9 +105,34 @@ export function NewYear2027Landing() {
     };
   }, []);
 
-  function play() {
+  // 2026-11-08 유샘: 수능대박운과 같은 대문 방식 - 대문 버튼으로 문이 열리면(SGATE_DONE) 신년 영상이 처음부터 소리와 함께.
+  //   대문이 없으면(이 창에서 이미 봄 등) 화면이 뜨자마자 재생한다 (소리가 막히는 기기는 소리 없이).
+  useEffect(() => {
     const v = vid.current;
-    setStage("playing");
+    if (!v) return;
+    const unlock = () => {
+      v.muted = false;
+      v.play()
+        .then(() => v.pause())
+        .catch(() => {});
+    };
+    const start = () => play();
+    if (isGateOn()) {
+      window.addEventListener(SGATE_UNLOCK, unlock);
+      window.addEventListener(SGATE_DONE, start);
+    } else start();
+    return () => {
+      window.removeEventListener(SGATE_UNLOCK, unlock);
+      window.removeEventListener(SGATE_DONE, start);
+    };
+    // 처음 한 번만
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  function play() {
+    if (started.current) return;
+    started.current = true;
+    const v = vid.current;
     window.setTimeout(() => setRise(true), RISE_MS);
     if (!v) return;
     bgm().pauseForHidden(true);
@@ -223,11 +251,6 @@ export function NewYear2027Landing() {
 
       {/* 영상 아래 단추 자리 - 영상을 가리지 않는다 */}
       <div className="mt-5 flex min-h-[60px] items-start justify-center">
-        {stage === "poster" && (
-          <button type="button" onClick={play} className="btn-primary w-full">
-            무료로 보기
-          </button>
-        )}
         {stage === "playing" && (
           <button
             type="button"

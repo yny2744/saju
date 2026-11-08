@@ -33,8 +33,6 @@ export function generateMetadata({ params }: { params: { slug: string } }): Meta
 export default function GoGatePage({ params }: { params: { slug: string } }) {
   const g = gateBySlug(params.slug);
   if (!g) notFound();
-  // 2026-11-03 유샘 지시서: 2027 신년운은 문 영상 대문 대신 신년 영상(멈춘 첫 장면 + "무료로 보기")으로 바로 시작
-  if (g.slug === "newyear2027" && nyOn()) return <NewYear2027Landing />;
   const brand = TENANT.gate?.title ?? BRAND;
   const emblem = TENANT.gate?.emblem ?? `/icons/${TENANT.id}/icon-192.png`;
   const room =
@@ -44,8 +42,11 @@ export default function GoGatePage({ params }: { params: { slug: string } }) {
       <CouplePage />
     ) : g.room === "tarot" ? (
       <FunPage params={{ kind: "tarot" }} />
+    ) : nyOn() ? (
+      // 2026-11-08 유샘: 2027 신년운도 수능대박운처럼 대문을 먼저 - 문이 열리면 신년 영상이 처음부터 소리와 함께 (NewYear2027Landing)
+      <NewYear2027Landing />
     ) : (
-      // 2026-11-03 관 통일: 2027 신년 운세 → 올해 운세관 화면(입력 칸 바로), 2027년 정미년으로 고정
+      // 2026-11-03 관 통일: 2027 신년 운세 → 올해 운세관 화면(입력 칸 바로), 2027년 정미년으로 고정 (신년운 상품이 없는 고객사)
       <StartScreen preset="topic=year&y=2027" />
     );
   return (
