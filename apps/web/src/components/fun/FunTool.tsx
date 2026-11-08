@@ -13,7 +13,9 @@ import { OverlayLock, takeOverlayPending } from "./OverlayLock";
 import { GoodsPicks } from "@/components/GoodsPicks";
 import { FillGauge } from "@/components/FillGauge";
 import { STONE_NOTE } from "@/lib/fun/birthstone";
-import type { TarotQuestion } from "@/lib/fun/tarot";
+import { TAROT_CARDS, type TarotQuestion } from "@/lib/fun/tarot";
+import { TarotCard } from "./TarotCard";
+import { formatWon } from "@/lib/pricingList";
 
 /**
  * 무료 묶음 화면 (2026-10-26) - 수비학·별자리·혈액형·탄생화.
@@ -49,7 +51,13 @@ interface Answer {
   /** 2026-11-01 겹쳐 보기가 잠겨 있으면 true (엽전 price 로 연다) */
   locked?: boolean;
   price?: number;
+  /** 2026-11-09 타로 세 장 카드 + 사주 겹쳐 보기 (연 뒤에만) */
+  three?: Array<{ position: string; no: number; head: string; body: string; relation?: { head: string; body: string } }> | null;
+  threePrice?: number;
 }
+
+/** 세 장 상품 흐린 자리 안내 (2026-11-09) */
+const THREE_TEASE = ["과거 · 현재 · 미래 세 장이 각각 말하는 것", "세 장의 기운과 내 일간이 어떻게 만나는지", "지금 마음에 걸린 물음의 흐름"];
 
 const NOW_YEAR = new Date().getFullYear();
 export const YEARS = Array.from({ length: NOW_YEAR - 1920 + 1 }, (_, i) => String(NOW_YEAR - i));
@@ -99,7 +107,7 @@ export function Toggle<T extends string>({ value, onChange, items }: { value: T;
  * tarot: 타로관(TarotTool) 아래에 붙을 때 (2026-10-31) - 고른 카드·질문을 함께 보내 사주와 겹쳐 보기만 한다.
  *   이때는 제목·무료 결과 카드를 그리지 않는다 (타로 풀이는 위에서 이미 보여 줌).
  */
-export function FunTool({ kind, tarot }: { kind: FunKind; tarot?: { card: number; question: TarotQuestion } }) {
+export function FunTool({ kind, tarot }: { kind: FunKind; tarot?: { card: number; question: TarotQuestion; three?: number[] } }) {
   const meta = FUN_META[kind];
   const [form, setForm] = useState<Saved>({ calendar: "solar", leap: false, y: "", m: "", d: "", hour: "" });
   const [busy, setBusy] = useState(false);
@@ -294,11 +302,21 @@ export function FunTool({ kind, tarot }: { kind: FunKind; tarot?: { card: number
           </p>
         )}
         <p className="text-center text-[12px]" style={{ color: "var(--color-ink-faint)" }}>
-          로그인 없이 무료 · 입력한 생년월일은 저장하지 않아요
+          무료
         </p>
       </form>
 
-      {answer && <FunAnswer kind={kind} answer={answer} hideResult={!!tarot} req={req} onOpen={setAnswer} />}
+      {answer && (
+        <FunAnswer
+          kind={kind}
+          answer={answer}
+          hideResult={!!tarot}
+          req={req}
+          threeCards={tarot?.three}
+          // 연 뒤에도 세 장 상품 가격은 그대로 남긴다 (한 장 겹쳐 보기를 먼저 연 손님)
+          onOpen={(a) => setAnswer((prev) => ({ ...a, threePrice: a.threePrice ?? prev?.threePrice }))}
+        />
+      )}
 
       <nav className="mt-12">
         <p className="mb-3 text-center text-[14px] font-semibold">다른 것도 무료로 보기</p>
@@ -317,7 +335,7 @@ export function FunTool({ kind, tarot }: { kind: FunKind; tarot?: { card: number
   );
 }
 
-function FunAnswer({ kind, answer, hideResult, req, onOpen }: { kind: FunKind; answer: Answer; hideResult?: boolean; req?: unknown; onOpen?: (a: Answer) => void }) {
+function FunAnswer({ kind, answer, hideResult, req, onOpen, threeCards }: { kind: FunKind; answer: Answer; hideResult?: boolean; req?: unknown; onOpen?: (a: Answer) => void; threeCards?: number[] }) {
   const { result: r, overlay: o } = answer;
   const locked = answer.locked === true;
   return (
@@ -445,6 +463,80 @@ function FunAnswer({ kind, answer, hideResult, req, onOpen }: { kind: FunKind; a
           내 사주 여덟 글자 전체 보기 (무료 만세력)
         </a>
       </section>
+
+      {/* 2026-11-09 유샘: 세 장 카드(과거·현재·미래) + 사주 겹쳐 보기 · 유료 */}
+      {kind === "tarot" && answer.three && answer.three.length === 3 ? (
+        <section className="mt-5 rounded-2xl p-5" style={{ background: "linear-gradient(160deg, #1b2f52, #16294a)", color: "#f6ecd2", boxShadow: "inset 0 0 0 1px var(--color-gold-line)" }}>
+          <p className="text-center text-[12px] tracking-[0.3em]" style={{ color: "var(--color-gold-light)" }}>
+            세 장 카드 + 사주 겹쳐 보기
+          </p>
+          <div className="mt-4 grid grid-cols-3 gap-3">
+            {answer.three.map((t) => (
+              <div key={t.position} className="text-center">
+                <p className="mb-1.5 text-[12.5px] font-bold" style={{ color: "var(--color-gold-light)", letterSpacing: ".2em" }}>
+                  {t.position}
+                </p>
+                <TarotCard no={t.no} size={12} flipped picked={t.position === "현재"} />
+              </div>
+            ))}
+          </div>
+          <div className="mt-5 space-y-4">
+            {answer.three.map((t) => (
+              <div key={t.position} className="rounded-xl p-3" style={{ backgroundColor: "rgba(246,236,210,0.06)", border: "1px solid rgba(212,178,101,0.35)" }}>
+                <p className="text-[15px] font-bold" style={{ fontFamily: "var(--font-serif)" }}>
+                  {t.head}
+                </p>
+                <p className="mt-1 text-[14px] leading-relaxed" style={{ wordBreak: "keep-all" }}>
+                  {t.body}
+                </p>
+                {t.relation && (
+                  <>
+                    <p className="mt-2 text-[13px] font-bold" style={{ color: "var(--color-gold-light)", wordBreak: "keep-all" }}>
+                      {t.relation.head}
+                    </p>
+                    <p className="mt-1 text-[14px] leading-relaxed" style={{ wordBreak: "keep-all" }}>
+                      {t.relation.body}
+                    </p>
+                  </>
+                )}
+              </div>
+            ))}
+          </div>
+        </section>
+      ) : (
+        kind === "tarot" &&
+        !!answer.threePrice &&
+        threeCards &&
+        threeCards.length === 3 &&
+        typeof req === "object" &&
+        req !== null && (
+          <section className="mt-5 rounded-2xl p-5" style={{ background: "linear-gradient(160deg, #1b2f52, #16294a)", color: "#f6ecd2", boxShadow: "inset 0 0 0 1px var(--color-gold-line)" }}>
+            <p className="text-center text-[12px] tracking-[0.3em]" style={{ color: "var(--color-gold-light)" }}>
+              세 장 카드 + 사주 겹쳐 보기
+            </p>
+            <p className="mt-2 text-center text-[17px] font-bold" style={{ fontFamily: "var(--font-serif)" }}>
+              과거 · 현재 · 미래 세 장 · {formatWon(answer.threePrice)}
+            </p>
+            <div className="mt-4 grid grid-cols-3 gap-3">
+              {["과거", "현재", "미래"].map((p, i) => (
+                <div key={p} className="text-center">
+                  <p className="mb-1.5 text-[12.5px] font-bold" style={{ color: "var(--color-gold-light)", letterSpacing: ".2em" }}>
+                    {p}
+                  </p>
+                  <TarotCard no={threeCards[i]} size={12} flipped={i === 1} picked={i === 1} label={i === 1 ? TAROT_CARDS[threeCards[i]].name : `${p} 카드`} />
+                </div>
+              ))}
+            </div>
+            <OverlayLock<Answer>
+              req={{ ...(req as Record<string, unknown>), spread: "three", cards: threeCards }}
+              price={answer.threePrice}
+              tease={THREE_TEASE}
+              label="세 장 카드 + 사주 겹쳐 보기"
+              onOpen={(a) => onOpen?.(a)}
+            />
+          </section>
+        )
+      )}
     </div>
   );
 }

@@ -41,8 +41,9 @@ export async function POST(request: NextRequest) {
         summary: r.summary,
         fill: { element: r.kit.element, hanja: r.kit.hanja, nature: r.kit.nature, reason: need.reason, gap: need.gap },
         headings: r.sections.map((s) => s.heading),
-        freeSections: r.sections.slice(0, 2),
-        lockedHeadings: r.sections.slice(2).map((s) => s.heading),
+        // 2026-11-09 유샘: 비회원 맛보기는 첫 부분(공부 체질)까지만 - 나머지는 카카오 로그인 뒤 /api/suneung/open 에서
+        freeSections: r.sections.slice(0, 1),
+        lockedHeadings: r.sections.slice(1).map((s) => s.heading),
         deeper: r.deeper,
         dayMaster: { stem: f.dayStem, hanja: f.dayStemHanja, element: f.dayElement },
         examDay: r.examDay,

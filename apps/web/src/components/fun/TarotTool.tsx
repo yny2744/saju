@@ -14,7 +14,6 @@ import {
   normalizeTarotSaved,
   kstToday,
   shuffleDeck,
-  spreadLine,
   type TarotMode,
   type TarotQuestion,
   type TarotSaved,
@@ -22,6 +21,7 @@ import {
 import { TarotCard, TAROT_CARD_CSS } from "./TarotCard";
 import { TarotWheel, TarotReels, SPIN_CSS } from "./TarotSpin";
 import { FunTool } from "./FunTool";
+import { isAuthEnabled } from "@/lib/launchMode";
 
 /**
  * 타로관 화면 (2026-10-31 유샘) - 질문 → 뽑는 방식(세 줄 두루마리·수레바퀴·카드 고르기, 처음엔 세 줄 두루마리) → 결과 → 사주와 겹쳐 보기.
@@ -30,7 +30,6 @@ import { FunTool } from "./FunTool";
  * 색: 옻칠 · 금박 · 자개 (TarotCard.tsx TAROT_LUX_CSS).
  */
 
-const GOLD = "var(--color-gold)";
 const CARD = {
   border: "1px solid var(--color-gold-line)",
   backgroundColor: "var(--color-card)",
@@ -55,8 +54,6 @@ function cryptoRand(): number {
 /** 아직 섞기 전 - 순서는 의미가 없다 (섞는 순간 새로 정해진다) */
 const UNSHUFFLED = TAROT_CARDS.map((c) => c.no);
 
-const POSITION_LABELS = ["과거", "현재", "미래"];
-
 export function TarotTool() {
   const [mode, setMode] = useState<TarotMode>(TAROT_MODES[0].key);
   const [question, setQuestion] = useState<TarotQuestion | null>(null);
@@ -71,6 +68,15 @@ export function TarotTool() {
   const [already, setAlready] = useState(false);
   // 2026-11-03 뒤로가기: 뽑은 카드(결과) → 고르기 화면. 하루 한 번 규칙은 그대로 (다시 뽑지는 않는다)
   const [showResult, setShowResult] = useState(true);
+  // 2026-11-09 유샘: 한 장 풀이는 무료 - 비회원은 첫 부분만 보고 카카오 로그인, 회원은 끝까지
+  const [member, setMember] = useState<boolean | null>(null);
+  useEffect(() => {
+    if (!isAuthEnabled()) return setMember(false);
+    fetch("/api/auth/me")
+      .then((r) => (r.ok ? r.json() : { user: null }))
+      .then((b) => setMember(!!b.user && !!b.user.termsAgreed && !b.user.isGuest))
+      .catch(() => setMember(false));
+  }, []);
 
   // 오늘 이미 뽑았으면 그 결과를 그대로 (하루 한 번)
   useEffect(() => {
@@ -158,6 +164,13 @@ export function TarotTool() {
   const card = deck && picked !== null ? TAROT_CARDS[deck[picked]] : null;
   const q = TAROT_QUESTIONS.find((x) => x.key === question);
   const done = finished && revealAll;
+  // 2026-11-09 세 장 카드(과거·현재·미래, 유료): 세 줄 두루마리는 세 줄 그대로, 한 장 방식은 고른 칸의 양옆 카드를 과거·미래로
+  const threeNos =
+    deck && picked !== null
+      ? mode === "reels" && spread.every((v) => v !== null)
+        ? (spread as number[]).map((sl) => deck[sl])
+        : [deck[(picked + deck.length - 1) % deck.length], deck[picked], deck[(picked + 1) % deck.length]]
+      : undefined;
 
   const status = already
     ? "오늘 뽑은 카드예요. 22장이 모두 그대로 보여요."
@@ -324,51 +337,21 @@ export function TarotTool() {
       )}
       {done && card && q && deck && showResult && (
         <section id="tarot-result" className="mt-6 scroll-mt-6 rounded-2xl p-5" style={CARD}>
-          {mode === "reels" ? (
+          {/* 2026-11-09 유샘: 무료는 한 장 (세 줄 두루마리도 「현재」 카드 한 장) - 세 장 풀이는 아래 유료 상품 */}
+          <div className="mx-auto w-[150px]">
+            <TarotCard no={card.no} size={22} flipped picked />
+          </div>
+          <h2 className="mt-4 text-center text-[22px] font-bold" style={{ fontFamily: "var(--font-serif)" }}>
+            {`${card.roman} · ${card.name} (${card.hanja})`}
+          </h2>
+          <p className="mt-1 text-center text-[12.5px]" style={{ color: "var(--color-ink-faint)" }}>
+            {q.label}
+          </p>
+          <p className="mt-4 text-[16px] font-semibold leading-relaxed" style={{ fontFamily: "var(--font-serif)", wordBreak: "keep-all" }}>
+            {card.reading[q.key]}
+          </p>
+          {member ? (
             <>
-              <div className="grid grid-cols-3 gap-3">
-                {spread.map((slot, i) => (
-                  <div key={i} className="text-center">
-                    <p className="mb-1.5 text-[12.5px] font-bold" style={{ color: GOLD, letterSpacing: ".2em" }}>
-                      {POSITION_LABELS[i]}
-                    </p>
-                    <TarotCard no={deck[slot as number]} size={12} flipped picked={i === 1} />
-                  </div>
-                ))}
-              </div>
-              <div className="mt-5 space-y-4">
-                {spread.map((slot, i) => {
-                  const line = spreadLine(deck[slot as number], i as 0 | 1 | 2, q.key);
-                  return (
-                    <div key={i}>
-                      <p className="text-[15px] font-bold" style={{ fontFamily: "var(--font-serif)" }}>
-                        {line.head}
-                      </p>
-                      <p className="mt-1 text-[14px] leading-relaxed" style={{ color: "var(--color-ink-soft)", wordBreak: "keep-all" }}>
-                        {line.body}
-                      </p>
-                    </div>
-                  );
-                })}
-              </div>
-              <p className="mt-4 text-[12.5px]" style={{ color: "var(--color-ink-faint)" }}>
-                {q.label} · 사주와 겹쳐 보기는 「현재」 카드로 봐요.
-              </p>
-            </>
-          ) : (
-            <>
-              <div className="mx-auto w-[150px]">
-                <TarotCard no={card.no} size={22} flipped picked />
-              </div>
-              <h2 className="mt-4 text-center text-[22px] font-bold" style={{ fontFamily: "var(--font-serif)" }}>
-                {`${card.roman} · ${card.name} (${card.hanja})`}
-              </h2>
-              <p className="mt-1 text-center text-[12.5px]" style={{ color: "var(--color-ink-faint)" }}>
-                {q.label}
-              </p>
-              <p className="mt-4 text-[16px] font-semibold leading-relaxed" style={{ fontFamily: "var(--font-serif)", wordBreak: "keep-all" }}>
-                {card.reading[q.key]}
-              </p>
               <p className="mt-3 text-[14px] leading-relaxed" style={{ color: "var(--color-ink-soft)", wordBreak: "keep-all" }}>
                 {card.core}
               </p>
@@ -383,7 +366,20 @@ export function TarotTool() {
                 <b>{ELEMENT_HANJA[card.element]}</b> {`${card.name} 카드는 ${card.elementWhy}의 기운이에요.`}
               </p>
             </>
-          )}
+          ) : member === false ? (
+            <>
+              <p className="mt-3 select-none text-[14px] leading-relaxed" aria-hidden="true" style={{ filter: "blur(5px)", color: "var(--color-ink-soft)" }}>
+                이 카드가 오늘 마음에 걸린 물음에 건네는 이야기와 카드의 기운, 오늘 붙잡을 열쇠말까지 이어서 풀어 드려요.
+              </p>
+              <a
+                href={`/api/auth/kakao/start?next=${encodeURIComponent(typeof window !== "undefined" ? location.pathname : "/fun/tarot")}`}
+                className="mt-4 block rounded-xl py-4 text-center text-[16px] font-bold"
+                style={{ backgroundColor: "#fee500", color: "#191600" }}
+              >
+                카카오로 로그인하고 끝까지 보기
+              </a>
+            </>
+          ) : null}
           <p className="mt-4 rounded-xl px-3 py-2.5 text-center text-[12.5px] leading-relaxed" style={{ backgroundColor: "var(--color-paper-soft)", color: "var(--color-ink-soft)", wordBreak: "keep-all" }}>
             오늘의 카드는 이 기기에 저장돼요. 내일 다시 뽑아 보세요.
             <br />
@@ -393,7 +389,7 @@ export function TarotTool() {
       )}
 
       {/* ⑤ 사주와 겹쳐 보기 - 무료 묶음 화면을 그대로 쓴다 (세 줄은 현재 카드) */}
-      {done && card && q && showResult && <FunTool kind="tarot" tarot={{ card: card.no, question: q.key }} />}
+      {done && card && q && showResult && <FunTool kind="tarot" tarot={{ card: card.no, question: q.key, three: threeNos }} />}
     </RoomShell>
   );
 }

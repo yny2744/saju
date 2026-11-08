@@ -40,7 +40,7 @@ export function RoomLead({ r }: { r: RoomEntry }) {
     <div className="mb-4">
       {r.free && (
         <p className="text-center text-[18px] font-bold" style={{ fontFamily: "var(--font-serif)" }}>
-          로그인 없이 무료로 보기
+          무료로 시작하기
         </p>
       )}
       <p className={`${r.free ? "mt-1 " : ""}text-center text-[13px]`} style={{ color: "var(--color-ink-soft)", wordBreak: "keep-all" }}>

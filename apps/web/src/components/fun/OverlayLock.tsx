@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { CURRENCY_NAME, formatNyang } from "@/lib/yeopjeon";
+import { formatWon } from "@/lib/pricingList";
 import { notifyYeopjeonChanged } from "@/components/yeopjeon/useYeopjeon";
 import { AppGiftLink } from "@/components/app/AppGiftLink";
 import { PayDialog } from "@/components/yeopjeon/PayDialog";
@@ -41,7 +41,11 @@ const TEASE = [
   "남은 작은 빈자리를 무엇으로 채우면 좋은지",
 ];
 
-export function OverlayLock<T>({ req, price, onOpen }: { req: unknown; price: number; onOpen: (full: T) => void }) {
+/**
+ * 2026-11-09 유샘: 화면에는 엽전(냥) 이야기를 꺼내지 않고 원으로 보여 준다 (안에서는 지금처럼 엽전으로 처리).
+ * tease·label 을 주면 다른 상품(타로 세 장 카드 + 사주 겹쳐 보기)에도 같은 틀을 쓴다.
+ */
+export function OverlayLock<T>({ req, price, onOpen, tease = TEASE, label }: { req: unknown; price: number; onOpen: (full: T) => void; tease?: string[]; label?: string }) {
   const [me, setMe] = useState<"loading" | null | { nickname: string }>("loading");
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
@@ -84,7 +88,7 @@ export function OverlayLock<T>({ req, price, onOpen }: { req: unknown; price: nu
   return (
     <div className="mt-4 rounded-xl p-4" style={{ backgroundColor: "rgba(246,236,210,0.06)", border: "1px solid rgba(212,178,101,0.45)" }}>
       <ul className="space-y-1.5 text-[14px]" style={{ wordBreak: "keep-all" }}>
-        {TEASE.map((t) => (
+        {tease.map((t) => (
           <li key={t} className="flex gap-2">
             <span aria-hidden style={{ color: "var(--color-gold-light)" }}>
               ◆
@@ -106,7 +110,7 @@ export function OverlayLock<T>({ req, price, onOpen }: { req: unknown; price: nu
           className="mt-3 block w-full rounded-xl py-3.5 text-[16px] font-bold disabled:opacity-60"
           style={{ background: "linear-gradient(180deg,#fff1c4,#d9b25a 45%,#a77b25)", color: "#1a1408", fontFamily: "var(--font-serif)" }}
         >
-          {busy ? "여는 중..." : `${formatNyang(price)}으로 겹쳐 본 풀이 열기`}
+          {busy ? "여는 중..." : label ? `${label} · ${formatWon(price)}` : `${formatWon(price)}으로 겹쳐 본 풀이 열기`}
         </button>
       ) : (
         <>
@@ -115,7 +119,7 @@ export function OverlayLock<T>({ req, price, onOpen }: { req: unknown; price: nu
             className="mt-3 block rounded-xl py-3.5 text-center text-[16px] font-bold"
             style={{ backgroundColor: "#fee500", color: "#191600" }}
           >
-            카카오로 로그인하고 열기 · {formatNyang(price)}
+            카카오로 로그인하고 열기 · {formatWon(price)}
           </a>
           <a href={`/login?next=${encodeURIComponent(here)}`} className="mt-1.5 block text-center text-[12px] underline underline-offset-4" style={{ color: "var(--color-gold-light)" }}>
             이메일로 로그인하기
@@ -144,7 +148,7 @@ export function OverlayLock<T>({ req, price, onOpen }: { req: unknown; price: nu
       )}
       <AppGiftLink color="var(--color-gold-light)" />
       <p className="mt-2 text-center text-[11.5px]" style={{ color: "rgba(246,236,210,0.65)" }}>
-        오늘 연 풀이는 같은 날 다시 열어도 {CURRENCY_NAME}이 또 나가지 않아요
+        오늘 연 풀이는 같은 날 다시 열어도 또 결제하지 않아요
       </p>
     </div>
   );

@@ -19,3 +19,42 @@ describe("오픈 전 정리", () => {
     expect(names.includes("2027 신년운 전체 보기 9900")).toBe(sellsNy);
   });
 });
+
+// 2026-11-09 유샘: 타로 세 장 카드 + 사주 겹쳐 보기 (5,500원)
+describe("타로 세 장 상품", () => {
+  /* eslint-disable @typescript-eslint/no-var-requires */
+  const { computeFun, handleFun, isThreeRequest } = require("@/server/fun/funService");
+  const { overlayRef } = require("@/server/fun/funUnlock");
+  const mgml = require("@/tenants/mgml").default;
+  const base = { kind: "tarot", calendarType: "solar", date: "1990-05-15", card: 13, question: "today" };
+
+  it("명견만리만 5,500원, 가격표에도 나온다", () => {
+    expect(mgml.prices.TAROT3).toBe(5500);
+    const names = paidProducts().map((r) => `${r.name} ${r.price}`);
+    expect(names.includes("타로 세 장 카드 + 사주 겹쳐 보기 5500")).toBe(TENANT.prices.TAROT3 === 5500 && !!TENANT.features.paidOverlay?.includes("tarot"));
+  });
+  it("세 장 계산: 과거·현재·미래 자리마다 카드 풀이와 일간 겹쳐 보기, 가운데는 오늘 뽑은 카드", () => {
+    const out = computeFun({ ...base, spread: "three", cards: [3, 13, 20] });
+    expect(out.status).toBe(200);
+    const three = out.body.three;
+    expect(three.map((t: { position: string }) => t.position)).toEqual(["과거", "현재", "미래"]);
+    expect(three.map((t: { no: number }) => t.no)).toEqual([3, 13, 20]);
+    expect(three.every((t: { head: string; body: string }) => t.head && t.body)).toBe(true);
+  });
+  it("잘못된 세 장(겹침·가운데가 다름)은 거절", () => {
+    expect(computeFun({ ...base, spread: "three", cards: [3, 3, 20] }).status).toBe(400);
+    expect(computeFun({ ...base, spread: "three", cards: [3, 14, 20] }).status).toBe(400);
+  });
+  it("무료 보기에서는 세 장 풀이를 만들지 않는다", () => {
+    const out = handleFun({ ...base, spread: "three", cards: [3, 13, 20] }, "test-three");
+    expect(out.status).toBe(200);
+    expect(out.body.three).toBeUndefined();
+  });
+  it("세 장 상품은 한 장 겹쳐 보기와 다른 장부 표시로 센다", () => {
+    expect(isThreeRequest({ ...base, spread: "three" })).toBe(true);
+    const one = overlayRef("tarot", base, "2026-11-09");
+    const three = overlayRef("tarot", { ...base, spread: "three", cards: [3, 13, 20] }, "2026-11-09");
+    expect(one).not.toBe(three);
+    expect(overlayRef("tarot", base, "2026-11-09")).toBe(one);
+  });
+});

@@ -83,7 +83,7 @@ function LoginPageBody() {
 
       {/* 2026-10-23 비회원 결제: 회원가입 없이 약관 동의만으로 바로 이어서 (카드사 심사 반려 대응) */}
       <section className="mb-6 rounded-2xl p-4" style={{ border: "1px solid var(--color-line)" }}>
-        <h2 className="mb-1 text-[16px] font-bold">로그인 없이 비회원으로 이용</h2>
+        <h2 className="mb-1 text-[16px] font-bold">비회원으로 이용하기</h2>
         <p className="mb-3 text-[13px]" style={{ color: "var(--color-ink-soft)" }}>
           약관에 동의하시면 바로 결제하고 풀이를 볼 수 있어요.
         </p>

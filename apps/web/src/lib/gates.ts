@@ -51,14 +51,16 @@ export const GATES: GateEntry[] = [
   },
   {
     slug: "gunghap",
-    title: "궁합",
+    // 2026-11-09 유샘: 크리스마스 연애운 (주소 /go/gunghap 은 그대로)
+    title: "크리스마스 연애운",
     button: { free: "무료 보기", paid: "문 열기" },
     room: "gunghap",
     imageLine: "두 사람의 사주로 보는 끌림과 인연",
   },
   {
     slug: "tarot",
-    title: "타로",
+    // 2026-11-09 유샘: 오늘의 타로
+    title: "오늘의 타로",
     button: { free: "무료 보기", paid: "문 열기" },
     room: "tarot",
     imageLine: "지금 마음에 걸린 물음 하나",

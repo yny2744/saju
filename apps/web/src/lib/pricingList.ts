@@ -57,6 +57,8 @@ export function paidProducts(): PriceRow[] {
   // 2026-11-04 유샘: 파는 고객사에서만 - 타로 겹쳐 보기, 2027 신년운 (판매 종료 2028-01-01 뒤에는 빠진다)
   if (PRICE.OVERLAY && TENANT.features.paidOverlay?.includes("tarot")) {
     rows.push({ name: "타로 겹쳐 보기", desc: "오늘 뽑은 타로 카드에 내 사주를 겹쳐 본 풀이", price: PRICE.OVERLAY });
+    // 2026-11-09 유샘: 세 장 카드(과거·현재·미래) + 사주 겹쳐 보기
+    if (PRICE.TAROT3) rows.push({ name: "타로 세 장 카드 + 사주 겹쳐 보기", desc: "과거·현재·미래 세 장 카드에 내 사주를 겹쳐 본 풀이", price: PRICE.TAROT3 });
   }
   if (nyOn() && nySellOn()) {
     rows.push(

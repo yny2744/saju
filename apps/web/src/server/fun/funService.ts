@@ -8,7 +8,7 @@ import { bloodResult } from "@/lib/fun/blood";
 import { isMbtiType, mbtiResult } from "@/lib/fun/mbti";
 import { flowerResult } from "@/lib/fun/flower";
 import { birthstoneResult } from "@/lib/fun/birthstone";
-import { tarotResult, isTarotQuestion, TAROT_CARDS, TAROT_QUESTIONS } from "@/lib/fun/tarot";
+import { tarotResult, isTarotQuestion, spreadLine, TAROT_CARDS, TAROT_QUESTIONS } from "@/lib/fun/tarot";
 import { buildOverlay, type OverlayView } from "@/lib/fun/overlay";
 import { isBloodType, isFunKind, type FunKind, type FunResult } from "@/lib/fun/types";
 
@@ -35,6 +35,10 @@ export interface FunResponse {
   /** 2026-11-01 겹쳐 보기가 잠겨 있으면 true - price 엽전으로 연다 */
   locked?: boolean;
   price?: number;
+  /** 2026-11-09 타로 세 장 카드(과거·현재·미래) + 사주 겹쳐 보기 - 연 뒤에만 채운다 */
+  three?: TarotThree[] | null;
+  /** 세 장 상품 가격 (파는 고객사의 타로에만) */
+  threePrice?: number;
 }
 
 type Out = { status: number; body: FunResponse | { error: { code: string; message: string } } };
@@ -55,9 +59,37 @@ function validSolar(date: string): boolean {
  */
 export function handleFun(raw: unknown, clientKey: string): Out {
   if (isRateLimited(`fun:${clientKey}`)) return { status: 429, body: { error: { code: "RATE_LIMITED", message: "잠시 후 다시 시도해 주세요." } } };
-  const out = computeFun(raw);
+  // 무료 보기에서는 세 장 풀이를 만들지 않는다 (세 장은 유료 열기에서만)
+  const out = computeFun(stripThree(raw));
   if (out.status !== 200 || !("overlay" in out.body) || !isOverlayPaid(out.body.kind)) return out;
-  return { status: 200, body: { ...out.body, overlay: lockOverlay(out.body.overlay), locked: true, price: OVERLAY_PRICE } };
+  const b = out.body as FunResponse;
+  return {
+    status: 200,
+    body: { ...b, overlay: lockOverlay(b.overlay), locked: true, price: OVERLAY_PRICE, ...(b.kind === "tarot" && TAROT3_PRICE > 0 ? { threePrice: TAROT3_PRICE } : {}) },
+  };
+}
+
+/** 2026-11-09: 타로 세 장 상품 가격 (고객사 설정 prices.TAROT3, 없으면 0 = 팔지 않음) */
+export const TAROT3_PRICE = PRICE.TAROT3 ?? 0;
+
+/** 세 장 요청인가: spread "three" + 서로 다른 카드 세 장, 가운데(현재)가 card */
+export function isThreeRequest(raw: unknown): boolean {
+  const b = (typeof raw === "object" && raw !== null ? raw : {}) as Record<string, unknown>;
+  return b.kind === "tarot" && b.spread === "three";
+}
+function stripThree(raw: unknown): unknown {
+  if (typeof raw !== "object" || raw === null) return raw;
+  const { spread: _s, cards: _c, ...rest } = raw as Record<string, unknown>;
+  return rest;
+}
+
+/** 세 장 카드 한 자리 */
+export interface TarotThree {
+  position: string;
+  no: number;
+  head: string;
+  body: string;
+  relation?: { head: string; body: string };
 }
 
 /** 이 재미관의 겹쳐 보기가 유료인가 (고객사 설정 features.paidOverlay) */
@@ -87,6 +119,13 @@ export function computeFun(raw: unknown): Out {
   const card = Number(b.card);
   if (kind === "tarot" && (!Number.isInteger(card) || card < 0 || card >= TAROT_CARDS.length || !isTarotQuestion(b.question)))
     return bad("카드를 먼저 골라 주세요.");
+  // 2026-11-09 세 장: 과거·현재·미래 서로 다른 카드, 가운데가 오늘 뽑은 카드
+  const threeCards = kind === "tarot" && b.spread === "three" ? (Array.isArray(b.cards) ? b.cards.map(Number) : []) : null;
+  if (
+    threeCards &&
+    (threeCards.length !== 3 || threeCards.some((n) => !Number.isInteger(n) || n < 0 || n >= TAROT_CARDS.length) || new Set(threeCards).size !== 3 || threeCards[1] !== card)
+  )
+    return bad("세 장 카드를 다시 골라 주세요.");
 
   let saju;
   try {
@@ -117,5 +156,14 @@ export function computeFun(raw: unknown): Out {
                 : bloodResult(b.blood as Parameters<typeof bloodResult>[0]);
   const topic = kind === "tarot" ? TAROT_QUESTIONS.find((q) => q.key === b.question)?.topic : undefined;
 
-  return { status: 200, body: { kind, solarDate, result, overlay: buildOverlay(kind, saju, result, topic) } };
+  // 2026-11-09 세 장 카드 + 사주 겹쳐 보기: 자리마다 카드 풀이 한 줄과 그 카드의 기운 × 나의 일간 (엔진 값, AI 없음)
+  const three: TarotThree[] | null = threeCards
+    ? threeCards.map((no, i) => {
+        const line = spreadLine(no, i as 0 | 1 | 2, b.question as Parameters<typeof spreadLine>[2]);
+        const rel = buildOverlay(kind, saju, tarotResult(no, b.question as Parameters<typeof tarotResult>[1]), topic).relation;
+        return { position: ["과거", "현재", "미래"][i], no, head: line.head, body: line.body, ...(rel ? { relation: { head: rel.head, body: rel.body } } : {}) };
+      })
+    : null;
+
+  return { status: 200, body: { kind, solarDate, result, overlay: buildOverlay(kind, saju, result, topic), ...(three ? { three } : {}) } };
 }

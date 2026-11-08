@@ -248,7 +248,7 @@ export default function LandingPage() {
 
         {/* 무료로 시작하기 - 첫 화면에 바로 보이게 */}
         <section className="pb-12">
-          <SectionTitle title="무료로 시작하기" sub="로그인 없이 바로 볼 수 있어요" />
+          <SectionTitle title="무료로 시작하기" sub="바로 볼 수 있어요" />
           <div className="space-y-3">
             {FREE.map((p) => (
               <a key={p.name} href={p.href} className="flex items-center gap-4 rounded-2xl px-4 py-4 transition-transform active:scale-[0.98]" style={CARD}>

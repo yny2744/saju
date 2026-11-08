@@ -1,7 +1,7 @@
 "use client";
 
 
-import { BRAND, josa } from "@/tenants";
+import { BRAND } from "@/tenants";
 import { Suspense, useCallback, useEffect, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { isAuthEnabled } from "@/lib/launchMode";
@@ -363,7 +363,7 @@ function FaceBody({ id }: { id: string }) {
               <label className="mt-4 flex items-start gap-2 rounded-xl px-3 py-3 text-[13px] leading-relaxed" style={{ backgroundColor: "var(--color-paper-soft)" }}>
                 <input type="checkbox" checked={consent} onChange={(e) => setConsent(e.target.checked)} className="mt-0.5 h-4 w-4 shrink-0" />
                 <span>
-                  찍은 사진을 AI 풀이에 쓰는 데 동의해요. 사진은 풀이를 쓰는 동안 AI(Google Gemini)에 한 번 보내지고, {josa(BRAND, "은/는")} 사진을 <b>저장하지 않아요</b>. 체크하지 않으면 얼굴
+                  찍은 사진을 AI 풀이에 쓰는 데 동의해요. 사진은 풀이를 쓰는 동안 AI(Google Gemini)에 한 번 보내져요. <b>사진은 풀이에만 쓰고 바로 지워요</b>. 체크하지 않으면 얼굴
                   비율로만 풀어 드려요.
                 </span>
               </label>
@@ -418,7 +418,7 @@ function FaceBody({ id }: { id: string }) {
             <label className="flex items-start gap-2 rounded-xl px-3 py-3 text-[13px] leading-relaxed" style={{ backgroundColor: "var(--color-paper-soft)" }}>
               <input type="checkbox" checked={consent} onChange={(e) => setConsent(e.target.checked)} className="mt-0.5 h-4 w-4 shrink-0" />
               <span>
-                이 사진을 관상 풀이에 쓰는 데 동의해요. 사진은 풀이를 쓰는 동안 AI(Google Gemini)에 한 번 보내지고, {josa(BRAND, "은/는")} 사진을 <b>저장하지 않아요</b>.
+                이 사진을 관상 풀이에 쓰는 데 동의해요. 사진은 풀이를 쓰는 동안 AI(Google Gemini)에 한 번 보내져요. <b>사진은 풀이에만 쓰고 바로 지워요</b>.
               </span>
             </label>
           )}

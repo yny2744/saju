@@ -145,7 +145,7 @@ export function TaekilTool() {
           </p>
         )}
         <p className="text-center text-[12px]" style={{ color: "var(--color-ink-faint)" }}>
-          로그인 없이 무료 · 입력한 생년월일은 저장하지 않아요
+          무료
         </p>
       </form>
 
