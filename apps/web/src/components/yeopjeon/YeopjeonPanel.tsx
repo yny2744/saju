@@ -148,6 +148,30 @@ export function YeopjeonPanel() {
         </section>
       )}
 
+      {/* 2026-11-09 유샘: 짧은 궁합은 상대 이름으로 쌓인다 */}
+      {(data.lovePairs?.length ?? 0) > 0 && (
+        <section className="mb-7">
+          <h2 className="section-label mb-3">짧은 궁합</h2>
+          <ul className="overflow-hidden rounded-xl" style={{ border: "1px solid var(--color-line)" }}>
+            {data.lovePairs!.map((c, i) => (
+              <li key={`${c.personId}-${c.partnerId}`} style={i > 0 ? { borderTop: "1px solid var(--color-line)" } : undefined}>
+                <a href={`/person/${c.personId}/love?show=pair&partner=${c.partnerId}`} className="flex items-center justify-between gap-2 px-4 py-3">
+                  <span className="min-w-0">
+                    <span className="block text-[15px] font-semibold">{c.partner}</span>
+                    <span className="block text-[12px]" style={{ color: "var(--color-ink-faint)" }}>
+                      {c.me}님과 짧은 궁합 · {fmtDate(c.createdAt).slice(0, 8)}
+                    </span>
+                  </span>
+                  <span className="shrink-0 text-[12px]" style={{ color: "var(--color-ink-soft)" }}>
+                    다시 보기 ›
+                  </span>
+                </a>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+
       {/* 친구 초대 */}
       <section className="mb-7">
         <InviteCard refCode={data.refCode} invited={data.invited} />

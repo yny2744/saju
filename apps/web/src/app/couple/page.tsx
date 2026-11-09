@@ -4,6 +4,8 @@ import { useEffect, useState } from "react";
 import { RoomShell } from "@/components/room/RoomShell";
 import { isAuthEnabled } from "@/lib/launchMode";
 import { ComingSoon } from "@/components/ComingSoon";
+import { XmasLanding } from "@/components/love/XmasLanding";
+import { loveOn } from "@/lib/love/loveProducts";
 import { LoadingState } from "@/components/StatusScreens";
 import { CURRENCY_NAME, PRICE, formatNyang } from "@/lib/yeopjeon";
 
@@ -192,6 +194,8 @@ function Body() {
 }
 
 export default function CouplePage() {
+  // 2026-11-09 유샘: 크리스마스 연애운 - 영상 바로 아래 두 갈래(솔로·커플). 연애 상품을 파는 고객사만 (/go/gunghap 대문도 이 화면)
+  if (loveOn()) return <XmasLanding />;
   if (!isAuthEnabled()) return <ComingSoon title="연인 궁합" />;
   // 2026-11-02 관 맨 위 자리 (링크 대문 /go/gunghap 과 같은 화면)
   return <Body />;

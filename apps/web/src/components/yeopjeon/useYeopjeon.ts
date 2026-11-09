@@ -24,6 +24,8 @@ export interface YeopjeonSummary {
   /** 연 관상 심층 풀이 (수정안 53) */
   faces?: Array<{ id: string; nickname: string; written: boolean; createdAt: string }>;
   couples?: Array<{ id: string; a: string; b: string; paid: boolean; createdAt: string }>;
+  /** 2026-11-09 크리스마스 연애운 짧은 궁합 (산 것, 상대 이름으로) */
+  lovePairs?: Array<{ personId: string; partnerId: string; me: string; partner: string; createdAt: string }>;
   /** 2026-11-01 앱 전용 가입 선물: 아직 못 받았고 지금 웹으로 보는 중 → "앱으로 열면 990냥" 안내 */
   welcomeWaiting?: boolean;
   /** 이번 요청에서 가입 선물이 막 들어왔다 (앱으로 처음 열었을 때) */

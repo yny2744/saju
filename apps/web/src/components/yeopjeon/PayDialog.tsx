@@ -78,7 +78,7 @@ export function PayDialog({
   onClose,
 }: {
   personId: string;
-  mode: "basic" | "deep" | "bundle3" | "bundle12" | "naming" | "rename" | "face" | "business" | "corp" | "brand" | "couple" | "p_naming" | "p_business" | "p_corp" | "p_brand" | "wallpaper" | "exam" | "exam_deep" | "ny2027" | "ny2027_full" | "overlay";
+  mode: "basic" | "deep" | "bundle3" | "bundle12" | "naming" | "rename" | "face" | "business" | "corp" | "brand" | "couple" | "p_naming" | "p_business" | "p_corp" | "p_brand" | "wallpaper" | "exam" | "exam_deep" | "ny2027" | "ny2027_full" | "love_pair" | "love_cal" | "love_cal_pair" | "overlay";
   topics: string[];
   /** 주문 만들 때 보낼 내용 (기본: { mode, topics }) - 2026-11-01 사주 겹쳐 보기는 입력값({ req }) */
   checkoutBody?: Record<string, unknown>;

@@ -10,6 +10,7 @@ import { EXTRA_KEYS, TOPICS, TOPIC_KEYS, isAnyTopicKey, isTopicKey, type AnyTopi
 import type { BasicContent, DeepContent, ReadingContent } from "./generateReading";
 import type { BasicReadingV2 } from "@/lib/basic/compose";
 import { examSeason, examUnlockTopic, SEASON_INFO } from "@/lib/suneung";
+import { LOVE_CAL, LOVE_MODES, LOVE_PAIR, LOVE_PRODUCT, isLoveMode, loveCalTopic, loveOn, lovePrice, type LoveMode } from "@/lib/love/loveProducts";
 import { NY_FULL, NY_LIGHT, NY_PRODUCT, isNyMode, nyFullPrice, nyLightPrice, nyOn, nySellOn, type NyMode } from "@/lib/newyear2027";
 
 /** 운세 보기 저장 내용: 2026-10-10부터 엔진 풀이(v2), 그 전에 산 것은 AI 풀이(BasicContent) */
@@ -72,7 +73,7 @@ export interface PersonSummary {
   createdAt: string;
 }
 
-export type PurchaseMode = "basic" | "deep" | "bundle3" | "bundle12" | NamingMode | "face" | "business" | "corp" | "brand" | "couple" | PremiumMode | "wallpaper" | ExamMode | NyMode;
+export type PurchaseMode = "basic" | "deep" | "bundle3" | "bundle12" | NamingMode | "face" | "business" | "corp" | "brand" | "couple" | PremiumMode | "wallpaper" | ExamMode | NyMode | LoveMode;
 /** 수능대박운 (수정안 17): exam 가볍게 보기 990 / exam_deep 깊게 보기 4,900 - 시즌마다 topic_unlocks에 exam_<시즌>[_deep] */
 export type ExamMode = "exam" | "exam_deep";
 export function isExamMode(v: unknown): v is ExamMode {
@@ -80,7 +81,7 @@ export function isExamMode(v: unknown): v is ExamMode {
 }
 /** 작명·개명 (수정안 46) - 주제가 아니라 사람 하나에 한 번 여는 상품. topic_unlocks에 topic = 상품 이름으로 남긴다 */
 export type NamingMode = "naming" | "rename";
-export const PURCHASE_MODES: PurchaseMode[] = ["basic", "deep", "bundle3", "bundle12", "naming", "rename", "face", "business", "corp", "brand", "couple", "p_naming", "p_business", "p_corp", "p_brand", "wallpaper", "exam", "exam_deep", NY_LIGHT, NY_FULL];
+export const PURCHASE_MODES: PurchaseMode[] = ["basic", "deep", "bundle3", "bundle12", "naming", "rename", "face", "business", "corp", "brand", "couple", "p_naming", "p_business", "p_corp", "p_brand", "wallpaper", "exam", "exam_deep", NY_LIGHT, NY_FULL, ...LOVE_MODES];
 /** 프리미엄 작명 (수정안 11): 12가지 운세 전부 보기 + 작명 1건. 심사용 모두 39,900 (PRICE 참고) */
 export type PremiumMode = "p_naming" | "p_business" | "p_corp" | "p_brand";
 export function isPremiumMode(v: unknown): v is PremiumMode {
@@ -117,6 +118,8 @@ export function isPurchaseMode(v: unknown): v is PurchaseMode {
   if ((v === "exam" || v === "exam_deep") && !isSuneungOn()) return false;
   // 2026-11-03: 2027 신년운은 가격(prices.NEWYEAR)이 있는 고객사에서만
   if (isNyMode(v) && !nyOn()) return false;
+  // 2026-11-09: 짧은 궁합·2027 연애 달력은 가격(prices.LOVE_PAIR·LOVE_CAL)이 있는 고객사에서만
+  if (isLoveMode(v) && !loveOn()) return false;
   return typeof v === "string" && (PURCHASE_MODES as string[]).includes(v);
 }
 export function isNamingMode(v: unknown): v is NamingMode {
@@ -393,6 +396,7 @@ export function planPurchase(mode: PurchaseMode, requested: unknown, owned: AnyT
   if (mode === "exam_deep") return { topics: [], price: PRICE.EXAM_DEEP };
   if (mode === NY_LIGHT) return { topics: [], price: nyLightPrice() };
   if (mode === NY_FULL) return { topics: [], price: nyFullPrice() };
+  if (isLoveMode(mode)) return { topics: [], price: lovePrice(mode) };
   const ownedSet = new Set(owned);
   if (isPremiumMode(mode)) {
     if (!PREMIUM_ON) throw new PurchaseError("INVALID_TOPICS", "프리미엄 작명은 잠시 쉬고 있어요. 작명과 12가지 운세 전부 보기를 따로 열어 주세요.");
@@ -422,7 +426,7 @@ export function planPurchase(mode: PurchaseMode, requested: unknown, owned: AnyT
   return { topics, price: mode === "deep" ? PRICE.DEEP : PRICE.BUNDLE3 };
 }
 
-const MODE_LABEL: Record<PurchaseMode, string> = { basic: "운세 보기", deep: "깊게 보기", bundle3: "몰아보기", bundle12: "전부 보기", naming: "신생아 작명", rename: "개명 추천", face: "관상 심층 풀이", business: "상호 작명", corp: "기업 작명", brand: "브랜딩 작명", couple: "연인 궁합", p_naming: "프리미엄 신생아 작명", p_business: "프리미엄 상호 작명", p_corp: "프리미엄 기업 작명", p_brand: "프리미엄 브랜딩 작명", wallpaper: "행운 배경화면", exam: "수능대박운 가볍게 보기", exam_deep: "수능대박운 깊게 보기", ...NY_PRODUCT };
+const MODE_LABEL: Record<PurchaseMode, string> = { basic: "운세 보기", deep: "깊게 보기", bundle3: "몰아보기", bundle12: "전부 보기", naming: "신생아 작명", rename: "개명 추천", face: "관상 심층 풀이", business: "상호 작명", corp: "기업 작명", brand: "브랜딩 작명", couple: "연인 궁합", p_naming: "프리미엄 신생아 작명", p_business: "프리미엄 상호 작명", p_corp: "프리미엄 기업 작명", p_brand: "프리미엄 브랜딩 작명", wallpaper: "행운 배경화면", exam: "수능대박운 가볍게 보기", exam_deep: "수능대박운 깊게 보기", ...NY_PRODUCT, ...LOVE_PRODUCT };
 
 export async function purchaseTopics(args: { userId: string; personId: string; mode: PurchaseMode; topics: unknown }): Promise<AnyTopicKey[]> {
   if (!UUID_RE.test(args.personId)) throw new PurchaseError("NOT_FOUND", "풀이 대상을 찾을 수 없어요.");
@@ -479,6 +483,24 @@ export async function purchaseWithClient(
         -plan.price,
         `[${NY_PRODUCT[args.mode]}] ${plan.nickname}`,
         `${args.mode}:${args.personId}`,
+      ]);
+    }
+    return [];
+  }
+  if (isLoveMode(args.mode)) {
+    // 2026-11-09 크리스마스 연애운: 짧은 궁합은 (나, 상대) 한 줄씩 쌓이고, 연애 달력은 열람 표시 하나
+    const partner = plan.topics[0] as string | undefined;
+    if (args.mode === LOVE_PAIR) {
+      await client.query(`INSERT INTO love_pairs (user_id, person_id, partner_person_id) VALUES ($1, $2, $3)`, [args.userId, args.personId, partner]);
+    } else {
+      await client.query(`INSERT INTO topic_unlocks (person_id, topic, via) VALUES ($1, $2, $3)`, [args.personId, loveCalTopic(partner), args.mode]);
+    }
+    if (plan.price > 0) {
+      await client.query(`INSERT INTO bokchae_ledger (user_id, amount, kind, label, ref) VALUES ($1, $2, 'spend', $3, $4)`, [
+        args.userId,
+        -plan.price,
+        `[${LOVE_PRODUCT[args.mode]}] ${plan.nickname}`,
+        `${args.mode}:${args.personId}${partner ? `:${partner}` : ""}`,
       ]);
     }
     return [];
@@ -541,6 +563,7 @@ export async function planForPerson(
   }
   const person = await q.query<{ nickname: string }>(`SELECT nickname FROM persons WHERE id = $1 AND user_id = $2`, [args.personId, args.userId]);
   if (!person.rows[0]) throw new PurchaseError("NOT_FOUND", "풀이 대상을 찾을 수 없어요.");
+  if (isLoveMode(args.mode)) return planLove(q, { ...args, mode: args.mode }, person.rows[0].nickname);
   const owned = await q.query<{ topic: string }>(`SELECT topic FROM topic_unlocks WHERE person_id = $1`, [args.personId]);
   if (isPremiumMode(args.mode) && owned.rows.some((r) => r.topic === unlockTopic(premiumBase(args.mode as PremiumMode)))) {
     throw new PurchaseError("ALREADY_OWNED", "이 작명은 이미 열려 있어요. 12가지 운세 전부 보기는 따로 열 수 있어요.");
@@ -563,6 +586,34 @@ export async function planForPerson(
   return { ...plan, nickname: person.rows[0].nickname };
 }
 
+/**
+ * 크리스마스 연애운 상품 (2026-11-09 유샘 승인): 짧은 궁합 990 · 2027 연애 달력 9,900.
+ * 상대 번호는 topics[0] 으로 받아 그대로 돌려준다 (카드 결제 주문에 저장 → 승인 때 같은 상대로 연다).
+ */
+async function planLove(
+  q: Pick<PoolClient, "query">,
+  args: { userId: string; personId: string; mode: LoveMode; topics: unknown },
+  nickname: string
+): Promise<{ topics: AnyTopicKey[]; price: number; nickname: string }> {
+  if (!loveOn()) throw new PurchaseError("SALE_ENDED", "지금은 팔지 않는 상품이에요.");
+  const price = lovePrice(args.mode);
+  if (args.mode === LOVE_CAL) {
+    const own = await q.query(`SELECT 1 FROM topic_unlocks WHERE person_id = $1 AND topic = $2`, [args.personId, loveCalTopic()]);
+    if ((own.rowCount ?? 0) > 0) throw new PurchaseError("ALREADY_OWNED", "이미 열려 있어요. 다시 열어도 엽전은 빠지지 않아요.");
+    return { topics: [], price, nickname };
+  }
+  const partner = Array.isArray(args.topics) ? args.topics[0] : undefined;
+  if (typeof partner !== "string" || !UUID_RE.test(partner) || partner === args.personId) throw new PurchaseError("INVALID_TOPICS", "상대를 다시 골라 주세요.");
+  const p = await q.query<{ nickname: string }>(`SELECT nickname FROM persons WHERE id = $1 AND user_id = $2`, [partner, args.userId]);
+  if (!p.rows[0]) throw new PurchaseError("NOT_FOUND", "상대를 찾을 수 없어요. 다시 골라 주세요.");
+  const own =
+    args.mode === LOVE_PAIR
+      ? await q.query(`SELECT 1 FROM love_pairs WHERE person_id = $1 AND partner_person_id = $2`, [args.personId, partner])
+      : await q.query(`SELECT 1 FROM topic_unlocks WHERE person_id = $1 AND topic = $2`, [args.personId, loveCalTopic(partner)]);
+  if ((own.rowCount ?? 0) > 0) throw new PurchaseError("ALREADY_OWNED", "이미 열려 있어요. 다시 열어도 엽전은 빠지지 않아요.");
+  return { topics: [partner as AnyTopicKey], price, nickname: `${nickname} · ${p.rows[0].nickname}` };
+}
+
 /** 결제 창에 쓰는 상품 이름: "재물 운세 보기" / "재물 깊게 보기" / "3가지 운세 몰아보기" / "12가지 운세 전부 보기" */
 export function productName(mode: PurchaseMode, topics: AnyTopicKey[]): string {
   if (mode === "basic") return `${withUnse(TOPICS[topics[0]].title)} 보기`;
@@ -579,6 +630,7 @@ export function productName(mode: PurchaseMode, topics: AnyTopicKey[]): string {
   if (isExamMode(mode)) return `${SEASON_INFO[examSeason()].title} ${mode === "exam_deep" ? "깊게 보기" : "가볍게 보기"}`;
   if (mode === "brand") return "브랜딩 작명";
   if (isNyMode(mode)) return NY_PRODUCT[mode];
+  if (isLoveMode(mode)) return LOVE_PRODUCT[mode];
   return "12가지 운세 전부 보기";
 }
 

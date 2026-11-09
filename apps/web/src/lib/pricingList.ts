@@ -2,6 +2,7 @@ import { PREMIUM_ON, PRICE, WELCOME_GIFT_APP_ONLY } from "@/lib/yeopjeon";
 import type { TenantPrices } from "@/tenants/types";
 import { isSuneungOn } from "@/lib/launchMode";
 import { TENANT } from "@/tenants";
+import { LOVE_CAL, LOVE_PAIR, loveOn, lovePrice } from "@/lib/love/loveProducts";
 import { nyFullPrice, nyLightPrice, nyOn, nySellOn } from "@/lib/newyear2027";
 
 /**
@@ -59,6 +60,13 @@ export function paidProducts(): PriceRow[] {
     rows.push({ name: "타로 겹쳐 보기", desc: "오늘 뽑은 타로 카드에 내 사주를 겹쳐 본 풀이", price: PRICE.OVERLAY });
     // 2026-11-09 유샘: 세 장 카드(과거·현재·미래) + 사주 겹쳐 보기
     if (PRICE.TAROT3) rows.push({ name: "타로 세 장 카드 + 사주 겹쳐 보기", desc: "과거·현재·미래 세 장 카드에 내 사주를 겹쳐 본 풀이", price: PRICE.TAROT3 });
+  }
+  // 2026-11-09 유샘: 크리스마스 연애운 상품 (파는 고객사에서만)
+  if (loveOn()) {
+    rows.push(
+      { name: "짧은 궁합", desc: "내 사주와 상대 한 사람의 사주로 보는 짧은 궁합 (상대를 바꿔 여러 번 볼 수 있어요)", price: lovePrice(LOVE_PAIR) },
+      { name: "2027 연애 달력", desc: "2027년 1~12월 인연이 오는 달 (두 사람이면 좋은 달과 조심할 달)", price: lovePrice(LOVE_CAL) }
+    );
   }
   if (nyOn() && nySellOn()) {
     rows.push(

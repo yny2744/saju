@@ -1,5 +1,6 @@
 "use client";
 
+import { HourPicker } from "@/components/form/HourPicker";
 import { useEffect, useState } from "react";
 import { useStepBack } from "@/components/room/useStepBack";
 import { isAuthEnabled } from "@/lib/launchMode";
@@ -67,13 +68,11 @@ const GOLD = "#d4b265";
 const GOLD_L = "#f3e7c6";
 const CARD = { border: "1px solid var(--color-gold-line)", backgroundColor: "var(--color-card)" } as const;
 const EL = (e: ElementKo) => `var(--color-element-${ELEMENT_TOKEN[e]})`;
-const HOURS = Array.from({ length: 24 }, (_, h) => h);
 function birthLine(saju: SajuJson): string {
   const [y, m, d] = saju.birth.date.split("-").map(Number);
   const cal = saju.birth.calendarType === "solar" ? "양력" : "음력";
   return `${cal} ${y}년 ${m}월 ${d}일${saju.birth.time ? ` ${saju.birth.time}` : " · 시간 모름"}`;
 }
-const hourLabel = (h: number) => `${h < 12 ? "오전" : "오후"} ${h % 12 === 0 ? 12 : h % 12}시`;
 
 export function ExamFreeStart() {
   const [name, setName] = useState("");
@@ -289,18 +288,10 @@ export function ExamFreeStart() {
             </label>
           )}
 
-          <label className="mt-4 block text-[14px] font-bold" htmlFor="ef-hour">
-            태어난 시간 <span className="font-normal" style={{ color: "var(--color-ink-faint)" }}>(몰라도 돼요)</span>
-          </label>
-          <select id="ef-hour" value={hour} onChange={(e) => setHour(e.target.value)} className="mt-1.5 w-full rounded-xl px-4 py-3 text-[16px]"
-            style={{ border: "1px solid var(--color-line)", backgroundColor: "var(--color-paper)" }}>
-            <option value="">몰라요</option>
-            {HOURS.map((h) => (
-              <option key={h} value={h}>
-                {hourLabel(h)}
-              </option>
-            ))}
-          </select>
+          {/* 2026-11-09 유샘: 시간은 기본 사주 입력과 같은 버튼 방식 (몰라요/알아요 → 오전/오후 → 시) */}
+          <div className="mt-4">
+            <HourPicker value={hour} onChange={setHour} idPrefix="ef-hour" />
+          </div>
 
           {issues.length > 0 && (
             <ul className="mt-4 space-y-1 rounded-xl px-4 py-3 text-[13.5px]" style={{ backgroundColor: "var(--color-gold-soft)" }} role="alert">

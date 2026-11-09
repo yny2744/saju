@@ -223,6 +223,11 @@ function destination(o: Pick<OrderRow, "person_id" | "mode" | "topics" | "gift_t
   if (o.mode === "wallpaper") return `/person/${o.person_id}/wallpaper`;
   if (o.mode === "exam" || o.mode === "exam_deep") return `/person/${o.person_id}/exam?paid=1`;
   if (o.mode === "ny2027" || o.mode === "ny2027_full") return `/person/${o.person_id}/newyear?paid=1`;
+  // 2026-11-09 크리스마스 연애운: 짧은 궁합·2027 연애 달력
+  if (o.mode === "love_pair" || o.mode === "love_cal" || o.mode === "love_cal_pair") {
+    const partner = o.mode === "love_cal" ? "" : `&partner=${encodeURIComponent(String(o.topics[0] ?? ""))}`;
+    return `/person/${o.person_id}/love?show=${o.mode === "love_pair" ? "pair" : "cal"}${partner}&paid=1`;
+  }
   if (o.mode === "p_naming") return `/person/${o.person_id}/name?kind=naming&paid=1`;
   if (o.mode === "p_business" || o.mode === "p_corp" || o.mode === "p_brand") return `/person/${o.person_id}/business?kind=${o.mode.slice(2)}&paid=1`;
   const base = `/person/${o.person_id}`;

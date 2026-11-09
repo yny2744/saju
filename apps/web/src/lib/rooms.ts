@@ -78,8 +78,8 @@ const BASE: Record<string, RoomEntry> = {
   fortune: { title: "오늘의 운세", ...cardImage(4), line: "이름과 생년월일을 넣어 주세요. 오늘과 내일의 기운을 풀어 드려요.", free: true },
   // 2027 신년 운세 (/go/newyear2027) - 올해 운세를 2027년 정미년으로
   year2027: { title: "2027 신년 운세", ...cardImage(7), line: "이름과 생년월일을 넣어 주세요. 2027년 한 해의 흐름을 풀어 드려요.", free: true },
-  // 2026-11-09 유샘: 크리스마스 연애운 - 홍보 영상 자리는 두되 영상이 오기 전까지 비워 둔다 (video 를 넣으면 나온다)
-  gunghap: { title: "크리스마스 연애운", line: "두 사람의 이름과 생년월일을 넣어 주세요. 사주로 인연을 풀어 드려요." },
+  // 2026-11-09 유샘: 크리스마스 연애운 - 홍보 영상 (자막 포함 6초, 웹용으로 줄임)
+  gunghap: { title: "크리스마스 연애운", video: "/rooms/xmas/ryugyeol-xmas.mp4", image: "/rooms/xmas/poster.jpg", line: "두 사람의 이름과 생년월일을 넣어 주세요. 사주로 인연을 풀어 드려요." },
   // 2026-11-08 유샘: 타로 홍보 영상 (첫 장면 그림이 영상을 불러오기 전 자리)
   tarot: { title: "오늘의 타로", video: "/rooms/tarot/ryugyeol-tarot.mp4", videoWebm: "/rooms/tarot/ryugyeol-tarot.webm", image: "/rooms/tarot/poster.jpg", line: "지금 마음에 걸린 물음 하나를 고르고, 카드를 직접 멈추거나 골라 보세요.", free: true },
   face: { title: "관상", ...cardImage(2), line: "정면 사진 한 장으로 얼굴형과 이목구비를 전통 관상학으로 풀어 드려요.", free: true },

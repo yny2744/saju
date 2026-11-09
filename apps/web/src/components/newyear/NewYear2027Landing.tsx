@@ -1,5 +1,6 @@
 "use client";
 
+import { HourPicker } from "@/components/form/HourPicker";
 import { useEffect, useRef, useState } from "react";
 import type { SajuJson } from "saju-engine";
 import { isAuthEnabled } from "@/lib/launchMode";
@@ -43,8 +44,6 @@ const NAVY = "#16213a";
 const GOLD = "#d4b265";
 const GOLD_L = "#f3e7c6";
 const CARD = { border: "1px solid var(--color-gold-line)", backgroundColor: "var(--color-card)" } as const;
-const HOURS = Array.from({ length: 24 }, (_, h) => h);
-const hourLabel = (h: number) => `${h < 12 ? "오전" : "오후"} ${h % 12 === 0 ? 12 : h % 12}시`;
 const pad = (n: number) => String(n).padStart(2, "0");
 
 export function NewYear2027Landing() {
@@ -306,17 +305,10 @@ export function NewYear2027Landing() {
             </label>
           )}
 
-          <label className="mt-4 block text-[14px] font-bold" htmlFor="ny-hour">
-            태어난 시간 <span className="font-normal" style={{ color: "var(--color-ink-faint)" }}>(몰라도 돼요)</span>
-          </label>
-          <select id="ny-hour" value={hour} onChange={(e) => setHour(e.target.value)} className="mt-1.5 w-full rounded-xl px-4 py-3 text-[16px]" style={field}>
-            <option value="">몰라요</option>
-            {HOURS.map((h) => (
-              <option key={h} value={h}>
-                {hourLabel(h)}
-              </option>
-            ))}
-          </select>
+          {/* 2026-11-09 유샘: 시간은 기본 사주 입력과 같은 버튼 방식 (몰라요/알아요 → 오전/오후 → 시) */}
+          <div className="mt-4">
+            <HourPicker value={hour} onChange={setHour} idPrefix="ny-hour" />
+          </div>
 
           {issues.length > 0 && (
             <ul className="mt-4 space-y-1 rounded-xl px-4 py-3 text-[14px]" role="alert" style={{ backgroundColor: "var(--color-danger-soft)", color: "var(--color-danger)" }}>

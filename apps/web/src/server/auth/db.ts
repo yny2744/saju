@@ -309,6 +309,17 @@ async function ensureSchema(): Promise<void> {
     );
   `);
   await db.query(`CREATE INDEX IF NOT EXISTS couple_readings_user_idx ON couple_readings(user_id, created_at DESC);`);
+  // 2026-11-09 유샘: 크리스마스 연애운 짧은 궁합(990) - 내 정보는 그대로, 상대만 바꿔 몇 번이든 산다. 같은 상대는 한 번만.
+  await db.query(`
+    CREATE TABLE IF NOT EXISTS love_pairs (
+      user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      person_id UUID NOT NULL REFERENCES persons(id) ON DELETE CASCADE,
+      partner_person_id UUID NOT NULL REFERENCES persons(id) ON DELETE CASCADE,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+      PRIMARY KEY (person_id, partner_person_id)
+    );
+  `);
+  await db.query(`CREATE INDEX IF NOT EXISTS love_pairs_user_idx ON love_pairs(user_id, created_at DESC);`);
   // 2026-10-14: 상호 작명 열람권이 12가지 운세 "business"(사업·창업)와 같은 이름으로 남던 것을 바로잡는다 (via 가 상품 이름인 줄만)
   await db.query(`UPDATE topic_unlocks SET topic = 'name_business' WHERE topic = 'business' AND via IN ('business', 'p_business')`);
   await db.query(`CREATE INDEX IF NOT EXISTS pay_orders_user_idx ON pay_orders(user_id, created_at DESC);`);
