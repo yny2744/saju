@@ -220,7 +220,8 @@ export function composeSolo(saju: SajuJson, name: string): SoloReading {
   return {
     sections,
     preview: { heading: "인연이 오는 길", body: fill(pathText(b, paths[0])) },
-    lockedHeadings: ["인연이 오는 길 (이어서)", "다가오는 사람의 모습", "이번 겨울의 인연 기운", "연말부터 내년까지의 흐름"],
+    // 길이 하나뿐이면 맛보기가 그 길 전부라 "(이어서)"는 두지 않는다
+    lockedHeadings: [...(paths.length > 1 ? ["인연이 오는 길 (이어서)"] : []), "다가오는 사람의 모습", "이번 겨울의 인연 기운", "연말부터 내년까지의 흐름"],
   };
 }
 
