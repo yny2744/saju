@@ -156,6 +156,25 @@ export async function loveOwned(personId: string, partnerId: string | null): Pro
   return { pair: (p.rowCount ?? 0) > 0, cal: (c.rowCount ?? 0) > 0 };
 }
 
+/** 내 복주머니: 산 2027 연애 달력 (솔로는 내 이름, 커플은 두 사람 이름) */
+export async function listLoveCals(userId: string): Promise<Array<{ personId: string; partnerId: string | null; me: string; partner: string | null; createdAt: string }>> {
+  const pool = await db();
+  const r = await pool.query<{ person_id: string; topic: string; me: string; partner: string | null; created_at: Date }>(
+    `SELECT u.person_id, u.topic, pa.nickname AS me, pb.nickname AS partner, u.created_at FROM topic_unlocks u
+       JOIN persons pa ON pa.id = u.person_id
+       LEFT JOIN persons pb ON u.topic LIKE 'love2027c:%' AND pb.id::text = substring(u.topic from 11) AND pb.user_id = pa.user_id
+      WHERE pa.user_id = $1 AND (u.topic = 'love2027' OR u.topic LIKE 'love2027c:%') ORDER BY u.created_at DESC LIMIT 100`,
+    [userId]
+  );
+  return r.rows.map((x) => ({
+    personId: x.person_id,
+    partnerId: x.topic.startsWith("love2027c:") ? x.topic.slice(10) : null,
+    me: x.me,
+    partner: x.partner,
+    createdAt: x.created_at.toISOString(),
+  }));
+}
+
 /** 내 복주머니: 산 짧은 궁합 (상대 이름으로 쌓인다) */
 export async function listLovePairs(userId: string): Promise<Array<{ personId: string; partnerId: string; me: string; partner: string; createdAt: string }>> {
   const pool = await db();

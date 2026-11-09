@@ -88,7 +88,9 @@ describe("정식 주소 고정 (카카오 KOE006)", () => {
     const prod = { vercelEnv: "production" };
     expect(shouldRedirectHost("saju-web-git-main-yny2744.vercel.app", prod)).toBe(true);
     expect(shouldRedirectHost("saju-web-abc123-yny2744.vercel.app", prod)).toBe(true);
-    expect(shouldRedirectHost("saju-web-khaki.vercel.app", prod)).toBe(false);
+    expect(shouldRedirectHost("ryugyeol.com", prod)).toBe(false);
+    // 2026-11-09 정식 주소가 ryugyeol.com 이 되어 옛 기본 주소도 정식 주소로 옮긴다
+    expect(shouldRedirectHost("saju-web-khaki.vercel.app", prod)).toBe(true);
     expect(shouldRedirectHost("localhost:3000", prod)).toBe(false);
     expect(shouldRedirectHost("saju-web-git-main-yny2744.vercel.app", { vercelEnv: "preview" })).toBe(false);
   });

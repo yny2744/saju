@@ -26,14 +26,16 @@ export const ryugyeol: TenantConfig = {
     businessRegistrationNumber: "485-16-02724",
     mailOrderSalesNumber: "제2026-서울강남-00670호",
     address: "서울특별시 강남구 양재대로55길 10, 102동 1116호 (일원동, 수서1단지 에스에이치빌)",
-    csEmail: "yny1967@gmail.com",
-    /** 고객센터 전화 (2026-10-19 유샘 제공, 결제 심사 필수 항목) */
-    csPhone: "010-2620-2744",
+    /** 고객센터 이메일 (2026-11-09 유샘 변경) */
+    csEmail: "yny0403@gmail.com",
+    /** 고객센터 전화 (2026-10-19 유샘 제공, 결제 심사 필수 항목 / 2026-11-09 유샘 변경: KCP 고객안내 전화와 같게) */
+    csPhone: "010-9685-2744",
     /** 별도 지정된 개인정보 보호책임자가 없는 소규모 사업자라, 대표자가 겸임한다. */
     privacyOfficer: "유남영",
-    privacyOfficerEmail: "yny1967@gmail.com",
+    privacyOfficerEmail: "yny0403@gmail.com", // 2026-11-09 유샘 변경
   },
-  siteUrl: "https://saju-web-khaki.vercel.app",
+  /** 정식 주소 (2026-11-09 유샘: KCP 대표·서비스 URL ryugyeol.com) */
+  siteUrl: "https://ryugyeol.com",
   /** 2026-10-14 유샘 확정: 만 원 위 상품도 900으로 끝냄. 2026-10-17 포트원 심사용: 작명 29,900, 프리미엄 39,900 */
   /** 2026-10-29 유샘 확정 (오픈 가격): 부가세가 딱 떨어지는 값(11로 나누어 떨어짐)으로 맞춤.
    *  4,900 → 5,500(행사 후 11,000) · 전부 보기 19,800(행사 후 29,700) · 개명·아이 작명 22,000(행사 후 33,000)

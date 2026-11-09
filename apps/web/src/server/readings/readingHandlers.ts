@@ -1,6 +1,6 @@
 import { getCurrentKstYear } from "saju-engine";
 import { loveOn } from "@/lib/love/loveProducts";
-import { listLovePairs } from "@/server/love/love";
+import { listLoveCals, listLovePairs } from "@/server/love/love";
 import { getUserBySessionToken } from "@/server/auth/session";
 import { getResult } from "@/server/resultStore";
 import { ensureRefCode, getBalance, grant, hasLedgerKind, inviteStats, listLedger, InsufficientYeopjeonError } from "@/server/yeopjeon/ledger";
@@ -72,7 +72,7 @@ export async function handleYeopjeonSummary(token: string | undefined, fromApp =
       welcomeWaiting = !(await hasLedgerKind(m.user.id, "welcome"));
     }
   }
-  const [balance, ledger, refCode, stats, persons, faces, couples, lovePairs] = await Promise.all([
+  const [balance, ledger, refCode, stats, persons, faces, couples, lovePairs, loveCals] = await Promise.all([
     getBalance(m.user.id),
     listLedger(m.user.id),
     ensureRefCode(m.user.id),
@@ -82,8 +82,10 @@ export async function handleYeopjeonSummary(token: string | undefined, fromApp =
     listCouples(m.user.id),
     // 2026-11-09 유샘: 크리스마스 연애운 짧은 궁합 - 상대 이름으로 쌓인다
     loveOn() ? listLovePairs(m.user.id) : Promise.resolve([]),
+    // 2026-11-09: 산 2027 연애 달력도 다시 볼 수 있게
+    loveOn() ? listLoveCals(m.user.id) : Promise.resolve([]),
   ]);
-  return { status: 200, body: { balance, ledger, refCode, invited: stats.invited, persons, faces, couples, lovePairs, welcomeWaiting, welcomeJustGranted } };
+  return { status: 200, body: { balance, ledger, refCode, invited: stats.invited, persons, faces, couples, lovePairs, loveCals, welcomeWaiting, welcomeJustGranted } };
 }
 
 /**

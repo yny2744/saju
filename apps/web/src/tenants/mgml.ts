@@ -23,8 +23,8 @@ const mgml: TenantConfig = {
   // 2026-11-04 유샘 승인: 가입 선물 990냥을 웹으로 로그인해도 준다 (한 사람에게 한 번 규칙은 그대로). true 로 바꾸면 다시 앱으로 열었을 때만.
   features: { ...ryugyeol.features, appWelcomeGift: false, paidOverlay: ["tarot"] },
   prices: { ...ryugyeol.prices, OVERLAY: 990, NEWYEAR: 9900, TAROT3: 5500, LOVE_PAIR: 990, LOVE_CAL: 9900, COUPLE: 19800 }, // LOVE_PAIR 짧은 궁합 · LOVE_CAL 2027 연애 달력 · COUPLE 연인 궁합 긴 풀이 19,900→19,800 (2026-11-09 유샘 승인, 부가세 18,000+1,800) // TAROT3: 타로 세 장 + 사주 겹쳐 보기 (2026-11-09 유샘 승인) // NEWYEAR: 2027 신년운 전체 보기 오픈 특가 (2026-11-03 유샘 승인)
-  /** 정식 주소가 정해지기 전에는 Vercel 환경변수 SITE_URL 이 먼저 쓰인다 */
-  siteUrl: "https://saju-web-git-mgml-yny2744.vercel.app",
+  /** 정식 주소 (2026-11-09 유샘: KCP 대표·서비스 URL ryugyeol.com) - Vercel 환경변수 SITE_URL 이 있으면 그쪽이 먼저 */
+  siteUrl: "https://ryugyeol.com",
   gate: {
     title: "류결의 명견만리",
     sideLeft: "三道",

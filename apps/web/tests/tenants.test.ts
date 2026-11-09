@@ -30,8 +30,11 @@ describe("고객사 설정 (베이직)", () => {
   });
   it("류결사주 값은 분리 전과 같다 (카드사 심사 중 - 바뀌면 안 됨)", () => {
     expect(TENANT.business.businessRegistrationNumber).toBe("485-16-02724");
-    expect(TENANT.business.csPhone).toBe("010-2620-2744");
-    expect(TENANT.siteUrl).toBe("https://saju-web-khaki.vercel.app");
+    // 2026-11-09 유샘: 정식 주소·연락처 변경 (KCP 사이트 정보와 같게)
+    expect(TENANT.business.csPhone).toBe("010-9685-2744");
+    expect(TENANT.business.csEmail).toBe("yny0403@gmail.com");
+    expect(TENANT.business.privacyOfficerEmail).toBe("yny0403@gmail.com");
+    expect(TENANT.siteUrl).toBe("https://ryugyeol.com");
     // 2026-10-29 유샘: 오픈 가격 (부가세가 딱 떨어지는 값)
     expect([PRICE.BASIC, PRICE.DEEP, PRICE.BUNDLE3, PRICE.BUNDLE12]).toEqual([990, 5500, 9900, 19800]);
   });

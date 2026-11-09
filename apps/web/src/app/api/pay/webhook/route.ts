@@ -7,7 +7,7 @@ export const dynamic = "force-dynamic";
 
 /**
  * 포트원 웹훅 받는 곳 (2026-10-17). 포트원 관리자 화면 › 결제 연동 › 웹훅에 이 주소를 넣는다:
- *   https://saju-web-khaki.vercel.app/api/pay/webhook
+ *   https://ryugyeol.com/api/pay/webhook
  * Vercel에 PORTONE_WEBHOOK_SECRET이 없으면 받지 않는다(서명 확인 없이 열지 않음).
  */
 export async function POST(request: NextRequest) {

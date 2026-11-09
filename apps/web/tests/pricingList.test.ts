@@ -30,6 +30,6 @@ describe("상품·가격 안내 목록 (2026-10-19 결제 심사용)", () => {
   it("무료 항목·원 표기·전화번호", () => {
     expect(FREE_ITEMS.length).toBeGreaterThan(0);
     expect(formatWon(29900)).toBe("29,900원");
-    expect(BUSINESS_INFO.csPhone).toBe("010-2620-2744");
+    expect(BUSINESS_INFO.csPhone).toBe("010-9685-2744");
   });
 });

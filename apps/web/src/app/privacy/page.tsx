@@ -254,7 +254,7 @@ export default function PrivacyPage() {
             <h2 className="mb-2 text-base font-semibold" style={{ color: "var(--color-ink)" }}>
               부칙
             </h2>
-            <p>이 개인정보처리방침은 2026년 10월 2일부터 시행합니다.</p>
+            <p>이 개인정보처리방침은 2026년 11월 9일부터 시행합니다.</p>
           </section>
         </div>
       </main>

@@ -172,6 +172,30 @@ export function YeopjeonPanel() {
         </section>
       )}
 
+      {/* 2026-11-09: 산 2027 연애 달력 다시 보기 */}
+      {(data.loveCals?.length ?? 0) > 0 && (
+        <section className="mb-7">
+          <h2 className="section-label mb-3">2027 연애 달력</h2>
+          <ul className="overflow-hidden rounded-xl" style={{ border: "1px solid var(--color-line)" }}>
+            {data.loveCals!.map((c, i) => (
+              <li key={`${c.personId}-${c.partnerId ?? ""}`} style={i > 0 ? { borderTop: "1px solid var(--color-line)" } : undefined}>
+                <a href={`/person/${c.personId}/love?show=cal${c.partnerId ? `&partner=${c.partnerId}` : ""}`} className="flex items-center justify-between gap-2 px-4 py-3">
+                  <span className="min-w-0">
+                    <span className="block text-[15px] font-semibold">{c.partner ? `${c.me} ♡ ${c.partner}` : c.me}</span>
+                    <span className="block text-[12px]" style={{ color: "var(--color-ink-faint)" }}>
+                      2027 연애 달력 · {fmtDate(c.createdAt).slice(0, 8)}
+                    </span>
+                  </span>
+                  <span className="shrink-0 text-[12px]" style={{ color: "var(--color-ink-soft)" }}>
+                    다시 보기 ›
+                  </span>
+                </a>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+
       {/* 친구 초대 */}
       <section className="mb-7">
         <InviteCard refCode={data.refCode} invited={data.invited} />

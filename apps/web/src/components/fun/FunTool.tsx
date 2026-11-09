@@ -1,5 +1,6 @@
 "use client";
 
+import { HourPicker } from "@/components/form/HourPicker";
 import { useEffect, useState } from "react";
 import { useStepBack } from "@/components/room/useStepBack";
 import { RoomShell } from "@/components/room/RoomShell";
@@ -196,7 +197,6 @@ export function FunTool({ kind, tarot }: { kind: FunKind; tarot?: { card: number
   }
 
   const days = Array.from({ length: form.calendar === "lunar" ? 30 : 31 }, (_, i) => String(i + 1));
-  const hours = Array.from({ length: 24 }, (_, i) => String(i));
 
   // 2026-11-03 관 통일: 재미관은 수능대박운과 같은 틀(RoomShell), 타로 안에 붙을 때는 그 아래 칸 그대로
   const Wrap = tarot
@@ -287,10 +287,8 @@ export function FunTool({ kind, tarot }: { kind: FunKind; tarot?: { card: number
         </div>
 
         <div>
-          <p className="mb-2 text-[14px] font-semibold">
-            태어난 시 <span className="text-[12px] font-normal" style={{ color: "var(--color-ink-faint)" }}>(몰라도 괜찮아요)</span>
-          </p>
-          <Select label="태어난 시" value={form.hour} onChange={(v) => set("hour", v)} options={hours} placeholder="모름" />
+          {/* 2026-11-09 유샘: 시간은 기본 사주 입력과 같은 버튼 방식 (몰라요/알아요 → 오전/오후 → 시), 값은 그대로 ""·"0"~"23" */}
+          <HourPicker value={form.hour} onChange={(v) => set("hour", v)} idPrefix="fun-hour" />
         </div>
 
         <button type="submit" disabled={busy} className="btn-band block w-full rounded-xl py-4 text-[17px] font-bold disabled:opacity-60" style={{ fontFamily: "var(--font-serif)" }}>
