@@ -56,7 +56,26 @@ export function PromoTop({
     const v = ref.current;
     if (!v) return;
     v.muted = true;
-    v.play().catch(() => {});
+    // 2026-11-11 유샘: 대문 카드를 눌러 왔으면(?sound=1) 나레이션과 함께 처음부터. 휴대폰이 막으면 소리 없이 + 소리 켜기 버튼.
+    const q = new URLSearchParams(location.search);
+    if (q.get("sound") === "1") {
+      q.delete("sound");
+      const rest = q.toString();
+      history.replaceState(history.state, "", location.pathname + (rest ? `?${rest}` : "") + location.hash);
+      v.currentTime = 0;
+      v.muted = false;
+      v.play()
+        .then(() => {
+          setSound(true);
+          bgm().pauseForHidden(true);
+        })
+        .catch(() => {
+          v.muted = true;
+          v.play().catch(() => {});
+        });
+    } else {
+      v.play().catch(() => {});
+    }
     let last = 0;
     const onTime = () => {
       if (v.currentTime + 0.5 < last && !v.muted) {

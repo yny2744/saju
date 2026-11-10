@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import Link from "next/link";
 import { bgm } from "@/components/bgm/bgm";
 
 /**
@@ -199,9 +200,11 @@ function Group({ title, sub, cards, free, preview }: { title: string; sub: strin
           const cls = "gm-card relative block overflow-hidden rounded-[13px]";
           const style = { border: "1px solid #cfa95c" } as const;
           return c.href && !c.soon ? (
-            <a key={c.title} href={c.href} className={`${cls} transition-transform active:scale-[0.98]`} style={style}>
+            // 2026-11-11 유샘: 지금 뜨는 운세를 누르면 랜딩 영상이 나레이션과 함께 바로 나온다.
+            //   같은 창 안에서 넘어가야(Link) 누른 손길이 이어져 휴대폰이 소리를 허락한다 - 랜딩은 ?sound=1 을 보고 소리를 켠다.
+            <Link key={c.title} href={c.video ? `${c.href}?sound=1` : c.href} className={`${cls} transition-transform active:scale-[0.98]`} style={style}>
               {inner}
-            </a>
+            </Link>
           ) : (
             <div key={c.title} className={cls} style={style} aria-disabled>
               {inner}
