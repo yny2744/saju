@@ -10,6 +10,7 @@ import { TENANT } from "@/tenants";
 export function HideOnGateHome({ children }: { children: React.ReactNode }) {
   const path = usePathname();
   // 2026-11-10: 소개 화면(/about)도 대문과 같은 화면이라 대문 머리줄을 쓴다
-  if (TENANT.gate && (path === "/" || path === "/about")) return null;
+  // 2026-11-11: 정문(/)은 새 대문 뒤에 공통 머리줄을 쓴다 - 대문 장면 머리줄은 소개 화면(/about)에만
+  if (TENANT.gate && path === "/about") return null;
   return <>{children}</>;
 }

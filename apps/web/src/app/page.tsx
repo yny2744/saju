@@ -11,7 +11,7 @@ import { SuneungHero } from "@/components/landing/SuneungHero";
 import { isSuneungOn } from "@/lib/launchMode";
 import { FUN_KINDS, FUN_META, type FunKind } from "@/lib/fun/types";
 import type { TenantGate } from "@/tenants/types";
-import { GateHero } from "@/components/gate/GateHero";
+import { GateMain } from "@/components/gate/GateMain";
 import { GateRooms } from "@/components/gate/GateRooms";
 import { IntroCards } from "@/components/landing/IntroCards";
 
@@ -159,8 +159,8 @@ function BottomSection() {
 function GateLanding({ gate, suneung }: { gate: TenantGate; suneung: boolean }) {
   return (
     <main className="min-h-screen pb-10">
-      <GateHero gate={gate} brand={BRAND} />
-      {/* 2026-10-30 대문 아래 카드 칸은 뺌 - 카드 9장은 대문 장면 안에서 돈다 (유샘) */}
+      {/* 2026-11-11 유샘: 정문은 새 대문 영상(꽉 찬 화면) → 카드 여덟 장. 소개 카드 9장은 머리줄 ? (/about) 로 옮겼다 */}
+      <GateMain suneung={suneung} />
       <div className="mx-auto max-w-xl px-5">
         <GateRooms gate={gate} />
         <div className="hairline" />
