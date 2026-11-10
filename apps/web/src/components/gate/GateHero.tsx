@@ -23,7 +23,7 @@ export function GateHero({ gate, brand }: { gate: TenantGate; brand: string }) {
   const heroRef = useRef<HTMLElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const [introOpen, setIntroOpen] = useState(false);
-  const [phase, setPhase] = useState<"intro" | "cards" | "gate">("intro");
+  const [phase, setPhase] = useState<"intro" | "cards" | "gate">("cards"); // 2026-11-10 유샘: 첫 장면 없이 처음부터 소개 카드
   // 광고별 홀로그램 대문이 떠 있으면 대문 그림(제목·엠블럼·길)을 그만큼 아래로 내린다
   const [doorOn, setDoorOn] = useState(false);
   const onDoorShown = useCallback((on: boolean) => setDoorOn(on), []);
@@ -155,8 +155,7 @@ export function GateHero({ gate, brand }: { gate: TenantGate; brand: string }) {
       done = true;
       const b = buildStage(ptRef.current, "pt", gate, [450, 388]);
       builtRef.current = b;
-      // 2026-11-10 유샘: 빛 구슬이 세 길을 차례로 내려가는 첫 장면은 뺐다 - 바로 소개 카드로
-      setPhase("cards");
+      // 2026-11-10 유샘: 빛 구슬이 세 길을 차례로 내려가는 첫 장면은 뺐다 - 카드는 처음부터 떠 있다
     };
     // 글자 바탕 크기를 실제 글꼴로 재야 하므로 글꼴이 준비된 뒤 (최대 1.2초)
     const timer = window.setTimeout(build, 1200);
@@ -186,7 +185,7 @@ export function GateHero({ gate, brand }: { gate: TenantGate; brand: string }) {
       {/* eslint-disable-next-line @next/next/no-page-custom-font -- 대문 명조 글꼴 (한자 포함) */}
       <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@500;700;900&family=Gowun+Dodum&display=swap" />
       <style dangerouslySetInnerHTML={{ __html: GATE_CSS }} />
-      <section ref={heroRef} className={`gh-hero${phase === "cards" ? " gh-cards-on" : ""}${doorOn ? " gh-door-on" : ""}`} aria-labelledby="gh-h1">
+      <section ref={heroRef} className={`gh-hero${phase === "cards" ? " gh-cards-on" : ""}${phase === "gate" ? " gh-gate-on" : ""}${doorOn ? " gh-door-on" : ""}`} aria-labelledby="gh-h1">
         <h1 id="gh-h1" className="sr-only">{`${gate.title} · ${gate.intro.tagline} · ${brand}`}</h1>
         <video ref={videoRef} className="gh-video" muted playsInline autoPlay loop preload="auto" aria-hidden="true" poster={gate.media.posterPortrait} />
         <div className="gh-shade" />

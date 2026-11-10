@@ -31,7 +31,7 @@ export default function AboutPage() {
           </p>
         </div>
         <div className="mt-5">
-          <IntroCards />
+          <IntroCards auto />
         </div>
         <a href="/" className="btn-primary mt-6 block text-center">
           운세 보러 가기

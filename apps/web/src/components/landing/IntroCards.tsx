@@ -19,7 +19,7 @@ export const INTRO_CARDS: Array<{ src: string; alt: string }> = [
 ];
 const CARDS = INTRO_CARDS;
 
-export function IntroCards({ dark = false }: { dark?: boolean }) {
+export function IntroCards({ dark = false, auto = false }: { dark?: boolean; auto?: boolean }) {
   const track = useRef<HTMLDivElement>(null);
   const [idx, setIdx] = useState(0);
 
@@ -30,6 +30,18 @@ export function IntroCards({ dark = false }: { dark?: boolean }) {
     el.addEventListener("scroll", onScroll, { passive: true });
     return () => el.removeEventListener("scroll", onScroll);
   }, []);
+
+  // 2026-11-10 유샘: 소개 화면(/about)에서는 대문처럼 3초마다 다음 장으로 (마지막 다음은 첫 장). 손으로 넘기면 거기서 다시 3초.
+  useEffect(() => {
+    if (!auto || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const t = window.setTimeout(() => {
+      const el = track.current;
+      if (!el) return;
+      const n = idx + 1 >= CARDS.length ? 0 : idx + 1;
+      el.scrollTo({ left: n * el.clientWidth, behavior: n === 0 ? "auto" : "smooth" });
+    }, 3000);
+    return () => window.clearTimeout(t);
+  }, [auto, idx]);
 
   const go = (i: number) => {
     const el = track.current;
