@@ -16,6 +16,7 @@ export function SiteHeader() {
         <BackButton />
         {/* 2026-10-30 유샘: 대문이 있는 고객사(명견만리)는 그 엠블럼과 대문 이름으로 */}
         {TENANT.gate ? (
+          <>
           <a href="/" className="flex items-center gap-2.5">
             {/* eslint-disable-next-line @next/next/no-img-element -- 엠블럼 */}
             <img src={TENANT.gate.emblem} alt="" width={34} height={34} className="h-[34px] w-[34px]" />
@@ -23,6 +24,16 @@ export function SiteHeader() {
               {TENANT.gate.title}
             </span>
           </a>
+          {/* 2026-11-10 유샘: 대문 이름 옆 물음표 - 소개 카드만 모아 보는 화면으로 */}
+          <a
+            href="/about"
+            aria-label={`${TENANT.gate.title}란?`}
+            className="-ml-1 inline-flex h-[18px] w-[18px] shrink-0 items-center justify-center rounded-full text-[11px] font-bold"
+            style={{ border: "1px solid var(--color-gold-line)", color: "#f3e7c6" }}
+          >
+            ?
+          </a>
+          </>
         ) : (
           <a href="/" className="foil-text text-[21px] font-black tracking-wide" style={{ fontFamily: "var(--font-serif)" }}>
             {BRAND}

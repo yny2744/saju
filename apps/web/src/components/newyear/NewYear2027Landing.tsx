@@ -5,7 +5,10 @@ import { useEffect, useRef, useState } from "react";
 import type { SajuJson } from "saju-engine";
 import { isAuthEnabled } from "@/lib/launchMode";
 import { CONTINUE_PATH, savePendingIntent, type Intent } from "@/lib/intent";
-import { NY_GIFT_BUTTON, nyFullButton, nyLightPrice, nySaleLine, nySellOn } from "@/lib/newyear2027";
+import { NY_GIFT_BUTTON, nyFullButton, nyFullPrice, nyLightPrice, nyPromoOn, nySaleLine, nySellOn } from "@/lib/newyear2027";
+import { TENANT } from "@/tenants";
+import { formatWon } from "@/lib/pricingList";
+import { PromoBelow, PromoTop } from "@/components/promo/PromoTop";
 import type { ElementKo } from "@/lib/pillarView";
 import { neededEnergy } from "@/lib/neededEnergy";
 import { daeunCells, elementShares, kstDateString, relationRows, yinYangCount } from "@/lib/manseView";
@@ -30,6 +33,8 @@ import { DaeunTimeline, ElementBalance, NeededEnergySection, RelationsTable } fr
 const VIDEO = "/rooms/newyear2027/ryugyeol-2027";
 const POSTER = "/rooms/newyear2027/poster.jpg";
 const RISE_MS = 3000;
+/** 2026-11-10 유샘: 대문이 있는 고객사(명견만리)는 새 홍보 랜딩 틀 */
+const PROMO = !!TENANT.gate;
 
 type Preview = {
   nickname: string;
@@ -220,7 +225,7 @@ export function NewYear2027Landing() {
       ? null
       : gift
         ? {
-            label: NY_GIFT_BUTTON,
+            label: me.loggedIn ? NY_GIFT_BUTTON : `카카오로 로그인하고 ${NY_GIFT_BUTTON}`,
             href: !me.loggedIn
               ? `/login?next=${encodeURIComponent(CONTINUE_PATH)}`
               : !me.termsAgreed
@@ -239,30 +244,49 @@ export function NewYear2027Landing() {
   const field = { border: "1px solid var(--color-line)", backgroundColor: "var(--color-paper)" } as const;
 
   return (
-    <main className="mx-auto min-h-screen max-w-xl px-5 pb-16 pt-6">
+    <main className={`mx-auto min-h-screen max-w-xl pb-16 ${PROMO ? "px-[14px] pt-0" : "px-5 pt-6"}`}>
+      {PROMO ? (
+        // 2026-11-10 유샘 확정 시안(landing3): 1:1 영상 · 그림 카드 두 장 - 누르면 아래 입력 칸이 열린다
+        <PromoTop
+          title="2027 신년운"
+          video="/promo/newyear2027.mp4"
+          poster="/promo/newyear2027-poster.jpg"
+          question="정미년, 나의 한 해는?"
+          sub="생년월일만 넣으면 만세력과 총운을 함께 보여 드려요"
+          cards={[
+            { img: "/promo/card-ny1.jpg", stamp: "年", title: "2027 총운\n무료로 보기", desc: "만세력과 한 해의 첫 이야기" },
+            { img: "/promo/card-ny2.jpg", stamp: "月", title: "2027 신년운\n전체 보기", desc: "총운 · 달별 운세 · 재물", tag: `${nyPromoOn() ? "오픈 특가 " : ""}${formatWon(nyFullPrice())}` },
+          ]}
+          foot="생년월일만 있으면 돼요"
+          onPick={openForm}
+        />
+      ) : (
+        <>
       {/* 영상: 멈춘 첫 장면 → 누르면 소리와 함께 처음부터 */}
-      <div className="overflow-hidden rounded-2xl" style={{ aspectRatio: "16 / 9", backgroundColor: "#0b1020", boxShadow: "0 8px 28px rgba(22,33,58,.25)" }}>
-        <video ref={vid} className="h-full w-full object-cover" poster={POSTER} playsInline muted preload="auto" controls={false} disablePictureInPicture>
-          <source src={`${VIDEO}.webm`} type="video/webm" />
-          <source src={`${VIDEO}.mp4`} type="video/mp4" />
-        </video>
-      </div>
-
-      {/* 영상 아래 단추 자리 - 영상을 가리지 않는다 */}
-      <div className="mt-5 flex min-h-[60px] items-start justify-center">
-        {stage === "playing" && (
-          <button
-            type="button"
-            onClick={openForm}
-            className="btn-primary w-full"
-            style={{ opacity: rise ? 1 : 0, transform: rise ? "translateY(0)" : "translateY(24px)", transition: "opacity .6s ease, transform .6s ease", pointerEvents: rise ? "auto" : "none" }}
-            aria-hidden={!rise}
-            tabIndex={rise ? 0 : -1}
-          >
-            만세력과 무료 맛보기
-          </button>
-        )}
-      </div>
+        <div className="overflow-hidden rounded-2xl" style={{ aspectRatio: "16 / 9", backgroundColor: "#0b1020", boxShadow: "0 8px 28px rgba(22,33,58,.25)" }}>
+          <video ref={vid} className="h-full w-full object-cover" poster={POSTER} playsInline muted preload="auto" controls={false} disablePictureInPicture>
+            <source src={`${VIDEO}.webm`} type="video/webm" />
+            <source src={`${VIDEO}.mp4`} type="video/mp4" />
+          </video>
+        </div>
+  
+        {/* 영상 아래 단추 자리 - 영상을 가리지 않는다 */}
+        <div className="mt-5 flex min-h-[60px] items-start justify-center">
+          {stage === "playing" && (
+            <button
+              type="button"
+              onClick={openForm}
+              className="btn-primary w-full"
+              style={{ opacity: rise ? 1 : 0, transform: rise ? "translateY(0)" : "translateY(24px)", transition: "opacity .6s ease, transform .6s ease", pointerEvents: rise ? "auto" : "none" }}
+              aria-hidden={!rise}
+              tabIndex={rise ? 0 : -1}
+            >
+              만세력과 무료 맛보기
+            </button>
+          )}
+        </div>
+        </>
+      )}
 
       {stage === "form" && !pv && (
         <form id="ny-form" onSubmit={submit} className="scroll-mt-4 rounded-2xl p-5" style={CARD} noValidate>
@@ -394,6 +418,28 @@ export function NewYear2027Landing() {
             </a>
           </div>
         </div>
+      )}
+      {PROMO && (
+        <PromoBelow
+          see={[
+            ["一", "2027년 총운", "정미년이 나에게 어떤 해인지"],
+            ["二", "1~12월 달별 운세", "달마다 힘을 낼 때와 쉬어 갈 때"],
+            ["三", "재물 · 연애 · 건강", "한 해 동안 살필 세 갈래"],
+            ["四", "나를 단단하게 하는 법", "모자란 기운을 채우는 생활 습관"],
+          ]}
+          prices={[
+            ["만세력 · 총운 맛보기", "무료"],
+            ["2027 총운 끝까지", "무료 · 로그인"],
+            ["2027 신년운 전체 보기", formatWon(nyFullPrice())],
+          ]}
+          fine={nyPromoOn() ? "전체 보기는 지금 오픈 특가예요." : undefined}
+          others={[
+            ["크리스마스 연애운", "이번 겨울 나의 인연", "/go/gunghap"],
+            ["오늘·내일의 운세", "내 사주와 그날 기운 · 무료", "/start?next=fortune"],
+            ["만세력", "여덟 글자 · 오행 · 대운 · 무료", "/start"],
+            ["이름 풀이", "내 이름 풀이는 무료", "/name"],
+          ]}
+        />
       )}
     </main>
   );

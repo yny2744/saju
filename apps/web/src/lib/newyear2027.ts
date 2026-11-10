@@ -65,7 +65,7 @@ export function nyFullButton(price: number = nyFullPrice(), now: number = Date.n
 }
 
 /** 선물을 아직 안 쓴 손님의 단추 (지시서 문구 그대로) */
-export const NY_GIFT_BUTTON = "로그인하고 선물 엽전으로 총운 끝까지 보기";
+export const NY_GIFT_BUTTON = "총운 끝까지 무료로 보기";
 
 /** 결제 창·이용내역 상품 이름 */
 export const NY_PRODUCT = { [NY_LIGHT]: `${NY_YEAR} 신년운 총운`, [NY_FULL]: `${NY_YEAR} 신년운 전체 보기` } as const;

@@ -13,6 +13,7 @@ export const GATE_CSS = `
 .gh-bar{position:absolute;inset:0 0 auto;z-index:3;display:flex;align-items:center;justify-content:space-between;gap:16px;
   padding:calc(14px + env(safe-area-inset-top,0px)) max(24px,env(safe-area-inset-right,0px)) 14px max(24px,env(safe-area-inset-left,0px));
   background:linear-gradient(to bottom,rgba(7,11,22,.78),rgba(7,11,22,0));color:#f6ecd2}
+.gh-brand-wrap{display:flex;align-items:flex-end;gap:6px;min-width:0}.gh-about{flex-shrink:0;display:inline-flex;align-items:center;justify-content:center;width:17px;height:17px;margin-bottom:1px;border-radius:50%;border:1px solid #d4b265;color:#f3e7c6;font-size:11px;font-weight:700;line-height:1;text-decoration:none;background:rgba(19,32,63,.55)}
 .gh-brand{display:flex;align-items:center;gap:10px;font-family:var(--gh-serif);font-weight:700;letter-spacing:.08em;font-size:16px;color:#f6ecd2}
 .gh-brand img{width:30px;height:30px}
 .gh-nav{display:flex;align-items:center;gap:24px;font-size:calc(14px * var(--gh-tz,1));color:var(--gh-dim)}

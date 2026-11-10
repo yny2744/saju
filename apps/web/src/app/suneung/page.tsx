@@ -6,6 +6,8 @@ import { SEASON_INFO, examSeason } from "@/lib/suneung";
 import { SuneungHero } from "@/components/landing/SuneungHero";
 import { ExamFreeStart } from "@/components/suneung/ExamFreeStart";
 import { CURRENCY_NAME, PRICE, formatNyang } from "@/lib/yeopjeon";
+import { formatWon } from "@/lib/pricingList";
+import { PromoBelow, PromoReveal, PromoTop } from "@/components/promo/PromoTop";
 
 /**
  * 콘텐츠별 입구 ① 수능대박운 (2026-10-27 유샘 요청: 홍보 영상 주제에 맞춰 첫 화면이 그 콘텐츠로 시작하는 입구).
@@ -70,6 +72,46 @@ export default function SuneungLanding() {
   if (!isSuneungOn()) redirect("/");
   const season = examSeason();
   const info = SEASON_INFO[season];
+
+  // 2026-11-10 유샘 확정 시안(landing3): 대문이 있는 고객사(명견만리)는 새 홍보 랜딩 틀로 - 1:1 영상 · 그림 카드 두 장 · 아래 세 단
+  if (TENANT.gate && season === "suneung") {
+    return (
+      <main className="min-h-screen pb-10">
+        <div className="mx-auto max-w-xl px-[14px]">
+          <PromoTop
+            title={info.title}
+            video="/promo/suneung.mp4"
+            poster="/promo/suneung-poster.jpg"
+            question="시험날, 나의 기운은?"
+            sub="수험생의 이름과 생년월일을 넣어 주세요"
+            cards={[
+              { img: "/promo/card-sn1.jpg", stamp: "試", title: "시험날 기운\n무료로 보기", desc: "공부 체질 · 시험날 일진 · 행운 꾸러미" },
+              { img: "/promo/card-sn2.jpg", stamp: "深", title: "시험날\n깊게 보기", desc: "교시별 기운 · 긴장 처방 · 원서 방향", tag: formatWon(PRICE.EXAM_DEEP) },
+            ]}
+            foot="생년월일만 있으면 돼요"
+          />
+          <PromoReveal id="exam-free">
+            <ExamFreeStart />
+          </PromoReveal>
+          <PromoBelow
+            see={INSIDE.map((it) => [it.mark, it.title, it.desc] as [string, string, string])}
+            prices={[
+              ["만세력 · 시험날 기운 맛보기", "무료"],
+              ["시험날 기운 보기 (가볍게)", "무료 · 로그인"],
+              ["시험날 깊게 보기", formatWon(PRICE.EXAM_DEEP)],
+            ]}
+            fine="합격·불합격을 점치지 않아요. 깊게 보기 결제는 보호자(만 19세 이상)께 부탁해 주세요."
+            others={[
+              ["2027 신년운", "정미년 한 해의 흐름", "/go/newyear2027"],
+              ["크리스마스 연애운", "이번 겨울 나의 인연", "/go/gunghap"],
+              ["오늘·내일의 운세", "내 사주와 그날 기운 · 무료", "/start?next=fortune"],
+              ["만세력", "여덟 글자 · 오행 · 대운 · 무료", "/start"],
+            ]}
+          />
+        </div>
+      </main>
+    );
+  }
 
   return (
     <main className="min-h-screen pb-10">

@@ -10,6 +10,8 @@ import { reportClientError } from "@/components/yeopjeon/useYeopjeon";
 import { isAuthEnabled } from "@/lib/launchMode";
 import { BirthFields, EMPTY_BIRTH, analyzeBirth, birthFromProfile, birthIssues, type Birth, type SavedProfile } from "./BirthFields";
 import { LoveLadder } from "./LoveLadder";
+import { TENANT } from "@/tenants";
+import { PromoTop } from "@/components/promo/PromoTop";
 
 /**
  * 크리스마스 연애운 (2026-11-09 유샘 지시서) - /go/gunghap 대문을 지나 들어오는 관 화면.
@@ -71,6 +73,23 @@ export function XmasLanding() {
   return (
     <main className="min-h-screen pb-10">
       <div className="mx-auto max-w-xl px-5">
+        {TENANT.gate ? (
+          // 2026-11-10 유샘 확정 시안(landing3): 1:1 영상 · 그림 카드 두 장 (솔로예요 / 커플이에요)
+          <PromoTop
+            title="크리스마스 연애운"
+            video="/promo/xmas.mp4"
+            poster="/promo/xmas-poster.jpg"
+            question="이번 크리스마스, 당신은?"
+            sub="지금 마음에 가까운 쪽을 골라 주세요"
+            cards={[
+              { img: "/promo/card-xm1.jpg", stamp: "緣", title: "솔로예요", desc: "내 인연은 어디서,\n언제 올까요?" },
+              { img: "/promo/card-xm2.jpg", stamp: "合", title: "커플이에요", desc: "이 사람이\n내 인연일까요?" },
+            ]}
+            foot="생년월일만 있으면 돼요"
+            onPick={(i) => pick(i === 0 ? "solo" : "couple")}
+          />
+        ) : (
+        <>
         <RoomHeader roomKey="gunghap" />
         <div className="grid gap-2.5">
           {(
@@ -96,6 +115,8 @@ export function XmasLanding() {
             </button>
           ))}
         </div>
+        </>
+        )}
         <section id="xmas-flow" className="scroll-mt-4 pb-8 pt-6">
           {path === "solo" && <SoloFlow key="solo" me={me} member={member} resume={resume?.kind === "solo" ? resume : null} />}
           {path === "couple" && <CoupleFlow key="couple" me={me} member={member} resume={resume?.kind === "couple" ? resume : null} />}

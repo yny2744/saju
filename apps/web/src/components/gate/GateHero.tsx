@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import type { TenantGate } from "@/tenants/types";
 import { HeaderAuth } from "@/components/landing/HeaderAuth";
 import { BgmToggle } from "@/components/bgm/BgmPlayer";
-import { buildStage, resetFruit, startFlow, startIntro, type Built } from "./gateMotion";
+import { buildStage, resetFruit, startFlow, type Built } from "./gateMotion";
 import { GateCards } from "./GateCards";
 import { GateDoor } from "./GateDoor";
 import { GateIntroDialog } from "./GateIntro";
@@ -149,22 +149,20 @@ export function GateHero({ gate, brand }: { gate: TenantGate; brand: string }) {
 
   // 길·운 그리기 → 첫 장면(빛 구슬이 세 길을 차례로) → 소개 카드
   useEffect(() => {
-    let stopIntro: (() => void) | null = null;
     let done = false;
     const build = () => {
       if (done || !ptRef.current) return;
       done = true;
       const b = buildStage(ptRef.current, "pt", gate, [450, 388]);
       builtRef.current = b;
-      if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) setPhase("cards");
-      else stopIntro = startIntro(b, () => setPhase("cards"));
+      // 2026-11-10 유샘: 빛 구슬이 세 길을 차례로 내려가는 첫 장면은 뺐다 - 바로 소개 카드로
+      setPhase("cards");
     };
     // 글자 바탕 크기를 실제 글꼴로 재야 하므로 글꼴이 준비된 뒤 (최대 1.2초)
     const timer = window.setTimeout(build, 1200);
     document.fonts?.ready.then(build).catch(build);
     return () => {
       window.clearTimeout(timer);
-      stopIntro?.();
       flowStop.current?.();
     };
   }, [gate]);
@@ -194,6 +192,7 @@ export function GateHero({ gate, brand }: { gate: TenantGate; brand: string }) {
         <div className="gh-shade" />
 
         <header className="gh-bar">
+          <div className="gh-brand-wrap">
           <a className="gh-brand" href="/">
             {/* eslint-disable-next-line @next/next/no-img-element -- 엠블럼 */}
             <img src={gate.emblem} alt="" />
@@ -203,6 +202,11 @@ export function GateHero({ gate, brand }: { gate: TenantGate; brand: string }) {
               <small>{gate.title}</small>
             </span>
           </a>
+          {/* 2026-11-10 유샘: 「류결의 명견만리」 옆 물음표 - 누르면 소개 카드만 모아 보는 화면 */}
+          <a className="gh-about" href="/about" aria-label={`${gate.title}란?`}>
+            ?
+          </a>
+          </div>
           <nav className="gh-nav" aria-label="세 길">
             <BgmToggle />
             <HeaderAuth />

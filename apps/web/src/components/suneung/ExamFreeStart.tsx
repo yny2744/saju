@@ -477,11 +477,11 @@ export function ExamFreeStart() {
                     <div className="h-[56px]" />
                   ) : me && !me.isGuest && !me.termsAgreed ? (
                     <a href={`/consent?next=${encodeURIComponent(back)}`} onClick={remember} className="btn-primary block text-center">
-                      카카오로 로그인하면 시험날 기운과 행운 꾸러미까지 무료로 볼 수 있어요
+                      카카오로 로그인하고 끝까지 무료로 보기
                     </a>
                   ) : (
                     <a href={`/api/auth/kakao/start?next=${encodeURIComponent(back)}`} onClick={remember} className="block rounded-xl px-3 py-4 text-center text-[16px] font-bold leading-snug" style={{ backgroundColor: "#fee500", color: "#191600", wordBreak: "keep-all" }}>
-                      카카오로 로그인하면 시험날 기운과 행운 꾸러미까지 무료로 볼 수 있어요
+                      카카오로 로그인하고 끝까지 무료로 보기
                     </a>
                   )}
                 </div>

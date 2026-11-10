@@ -57,7 +57,8 @@ describe("2027 신년운", () => {
     const before = Date.parse("2027-02-28T23:59:59+09:00");
     expect(nySaleLine(9900, before)).toBe("2027 신년운 오픈 특가 9,900원 · 2월 28일까지");
     expect(nyFullButton(9900, before)).toBe("2027 신년운 전체 보기 · 오픈 특가 9,900원");
-    expect(NY_GIFT_BUTTON).toBe("로그인하고 선물 엽전으로 총운 끝까지 보기");
+    // 2026-11-10 유샘: 화면에 엽전 이야기를 하지 않는다 - 로그인 전 손님에게는 앞에 "카카오로 로그인하고"를 붙인다
+    expect(NY_GIFT_BUTTON).toBe("총운 끝까지 무료로 보기");
     expect(NY_SALE_END).toBe("2027-02-28");
   });
 
