@@ -18,7 +18,7 @@ import { GATE_CSS } from "./gateStyles";
  *   - 2026-10-29 첫 장면: 빛 구슬이 세 길을 차례로 내려가고 채움(結)이 피었다 접히면 소개 카드 9장이
  *     3초마다 넘어간다 (9번 다음은 1번 표지로). 오른쪽 화살표는 바로 다음 장, 건너뛰기는 대문으로.
  */
-export function GateHero({ gate, brand }: { gate: TenantGate; brand: string }) {
+export function GateHero({ gate, brand, skipHref }: { gate: TenantGate; brand: string; skipHref?: string }) {
   const ptRef = useRef<SVGSVGElement>(null);
   const heroRef = useRef<HTMLElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -182,6 +182,11 @@ export function GateHero({ gate, brand }: { gate: TenantGate; brand: string }) {
 
   // 건너뛰기 - 카드를 닫고 대문(세 길·일곱 운)으로. 빛 구슬은 그때부터 계속 흐른다.
   const skipCards = () => {
+    // 2026-11-10 유샘: 소개 화면(/about)에서는 건너뛰기가 정문(대문)으로
+    if (skipHref) {
+      window.location.href = skipHref;
+      return;
+    }
     setPhase("gate");
     const b = builtRef.current;
     if (!b || flowStop.current) return;
