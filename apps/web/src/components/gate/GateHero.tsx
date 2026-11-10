@@ -41,9 +41,23 @@ export function GateHero({ gate, brand }: { gate: TenantGate; brand: string }) {
       const h = hero.getBoundingClientRect();
       setDisc({ cx: a.left + a.width / 2 - h.left, cy: a.top + a.height / 2 - h.top, r: a.width / 2 });
     };
+    // 2026-11-10: 카드가 처음부터 뜨게 되면서, 그림 맞춤(slice/meet)·글꼴이 정해지기 전에 재면 엠블럼 자리가 어긋난다 - 자리가 바뀔 때마다 다시 잰다
     measure();
+    const raf = requestAnimationFrame(measure);
+    const timers = [200, 600, 1300, 2500].map((ms) => window.setTimeout(measure, ms));
+    document.fonts?.ready.then(measure).catch(() => {});
+    const ro = typeof ResizeObserver !== "undefined" ? new ResizeObserver(measure) : null;
+    if (heroRef.current) ro?.observe(heroRef.current);
+    const mo = ptRef.current ? new MutationObserver(measure) : null;
+    if (ptRef.current) mo?.observe(ptRef.current, { attributes: true, attributeFilter: ["preserveAspectRatio"] });
     window.addEventListener("resize", measure);
-    return () => window.removeEventListener("resize", measure);
+    return () => {
+      cancelAnimationFrame(raf);
+      timers.forEach((t) => window.clearTimeout(t));
+      ro?.disconnect();
+      mo?.disconnect();
+      window.removeEventListener("resize", measure);
+    };
   }, [phase]);
 
   // 영상: 대문은 사이트 폭(휴대폰 폭) 안에 세로 구도로 들어간다 (2026-10-28 유샘: 아래 화면과 같은 폭)
