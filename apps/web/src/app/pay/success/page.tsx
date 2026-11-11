@@ -66,7 +66,19 @@ function SuccessBody() {
             {amount > 0 ? `${amount.toLocaleString("ko-KR")}원` : ""}
           </p>
         )}
-        <button type="button" onClick={() => window.location.replace(done)} className="btn-band mx-auto mt-7 block w-full max-w-sm rounded-xl py-4 text-[17px] font-bold" style={{ fontFamily: "var(--font-serif)" }}>
+        <button type="button" onClick={() => {
+            // 연 시각을 남기고 연다 - 기록이 실패해도 손님은 그대로 연다
+            const orderId = q.get("orderId");
+            const go = () => window.location.replace(done);
+            if (!orderId) return go();
+            const t = window.setTimeout(go, 1500);
+            fetch("/api/pay/opened", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ orderId }), keepalive: true })
+              .catch(() => {})
+              .finally(() => {
+                window.clearTimeout(t);
+                go();
+              });
+          }} className="btn-band mx-auto mt-7 block w-full max-w-sm rounded-xl py-4 text-[17px] font-bold" style={{ fontFamily: "var(--font-serif)" }}>
           지금 풀이 열기
         </button>
         <p className="mt-3 text-[12.5px] leading-relaxed" style={{ color: "var(--color-ink-faint)", wordBreak: "keep-all" }}>

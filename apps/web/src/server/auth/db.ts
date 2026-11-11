@@ -230,6 +230,8 @@ async function ensureSchema(): Promise<void> {
   await db.query(`ALTER TABLE pay_orders ADD COLUMN IF NOT EXISTS src TEXT;`);
   // 2026-10-30 수능대박운 깊게 보기 부모님 선물 - 수험생이 만든 선물 부탁 링크, 결제는 부모님 계정에서
   await db.query(`ALTER TABLE pay_orders ADD COLUMN IF NOT EXISTS gift_token TEXT;`);
+  // 2026-11-12 유샘: 손님이 결제 완료 화면에서 [지금 풀이 열기]를 누른 시각 (환불 판단 근거)
+  await db.query(`ALTER TABLE pay_orders ADD COLUMN IF NOT EXISTS opened_at TIMESTAMPTZ;`);
   await db.query(`
     CREATE TABLE IF NOT EXISTS exam_gifts (
       token TEXT PRIMARY KEY,

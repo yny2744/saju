@@ -1,6 +1,6 @@
 import { getUserBySessionToken } from "@/server/auth/session";
 import { PurchaseError, isPurchaseMode } from "@/server/readings/readings";
-import { PayError, checkout, confirmOrder } from "./payOrders";
+import { PayError, checkout, confirmOrder, markOrderOpened } from "./payOrders";
 
 type Out = { status: number; body: unknown };
 const err = (status: number, code: string, message: string): Out => ({ status, body: { error: { code, message } } });
@@ -39,4 +39,14 @@ export async function handleConfirm(token: string | undefined, raw: unknown): Pr
     if (e instanceof PayError) return err(e.code === "NOT_FOUND" ? 404 : 400, e.code, e.message);
     throw e;
   }
+}
+
+/** 2026-11-12 유샘: 결제 완료 화면에서 [지금 풀이 열기]를 누른 시각을 남긴다 (처음 한 번만, 본인 주문만) */
+export async function handleOpened(token: string | undefined, raw: unknown): Promise<Out> {
+  const m = await member(token);
+  if ("error" in m) return m.error!;
+  const b = (typeof raw === "object" && raw !== null ? raw : {}) as Record<string, unknown>;
+  if (typeof b.orderId !== "string" || !b.orderId) return err(400, "INVALID_INPUT", "주문 번호가 없어요.");
+  await markOrderOpened(m.user.id, b.orderId);
+  return { status: 200, body: { ok: true } };
 }

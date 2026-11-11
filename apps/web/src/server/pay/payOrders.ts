@@ -366,3 +366,12 @@ export async function recentPayOrders(): Promise<AdminPayOrder[]> {
     paidAt: x.paid_at ? x.paid_at.toISOString() : null,
   }));
 }
+
+/** 2026-11-12 유샘: 손님이 풀이를 처음 연 시각 (환불 판단 근거). 결제된 본인 주문만, 처음 한 번만 남긴다. */
+export async function markOrderOpened(userId: string, orderId: string): Promise<void> {
+  const pool = await db();
+  await pool.query(
+    `UPDATE pay_orders SET opened_at = now() WHERE id = $1 AND user_id = $2 AND opened_at IS NULL AND status IN ('paid', 'paid_credit')`,
+    [orderId, userId],
+  );
+}

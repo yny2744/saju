@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useStepBack } from "@/components/room/useStepBack";
 import { CURRENCY_NAME, formatNyang } from "@/lib/yeopjeon";
 import { PAY_BACK_KEY } from "@/lib/pay";
-import { DEFAULT_PAY_METHOD, PAY_METHODS, PAY_METHODS_TEXT, portonePayMethod, tossPayMethod, type PayMethodId } from "@/lib/payMethod";
+import { DEFAULT_PAY_METHOD, EASY_PAYS, PAY_METHODS, PAY_METHODS_TEXT, isEasyPay, portonePayMethod, tossPayMethod, type PayMethodId } from "@/lib/payMethod";
 import { reportClientError } from "./useYeopjeon";
 import { MinorNotice } from "./MinorNotice";
 
@@ -93,7 +93,7 @@ export function PayDialog({
   const [quote, setQuote] = useState<Quote | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
-  const [method, setMethod] = useState<PayMethodId>(DEFAULT_PAY_METHOD);
+  const [chosen, setMethod] = useState<PayMethodId>(DEFAULT_PAY_METHOD);
   // 2026-11-03 뒤로가기: 결제 창이 열리면 기록에 한 칸, 뒤로가기를 누르면 결제 전 화면으로 (창 닫기)
   useStepBack("pay", true, onClose);
   const close = () => (window.history.state?.roomStep === "pay" ? window.history.back() : onClose());
@@ -120,7 +120,8 @@ export function PayDialog({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  async function pay() {
+  async function pay(pick?: PayMethodId) {
+    const method = pick ?? chosen;
     if (!quote || quote.status !== "pay") return;
     setBusy(true);
     setError(null);
@@ -149,6 +150,7 @@ export function PayDialog({
           totalAmount: quote.amount,
           currency: "CURRENCY_KRW",
           payMethod: portonePayMethod(method),
+          ...(isEasyPay(method) ? { easyPay: { easyPayProvider: method } } : {}),
           customer: { customerId: quote.customerKey },
           redirectUrl: success,
         });
@@ -218,10 +220,34 @@ export function PayDialog({
                 </dd>
               </div>
             </dl>
+            {!quote.mock && quote.portone && (
+              // 2026-11-12 유샘: 간편결제는 누르면 그 결제 화면이 바로 열린다
+              <div className="mt-4">
+                {EASY_PAYS.map((e, i) =>
+                  i === 0 ? (
+                    <button key={e.id} type="button" disabled={busy} onClick={() => pay(e.id)} className="block w-full rounded-xl py-3.5 text-[17px] font-bold disabled:opacity-60" style={{ backgroundColor: e.bg, color: e.fg }}>
+                      {e.label}로 결제
+                    </button>
+                  ) : null,
+                )}
+                <div className="mt-2 grid grid-cols-2 gap-2">
+                  {EASY_PAYS.slice(1).map((e) => (
+                    <button key={e.id} type="button" disabled={busy} onClick={() => pay(e.id)} className="rounded-xl py-3 text-[15px] font-bold disabled:opacity-60" style={{ backgroundColor: e.bg, color: e.fg }}>
+                      {e.label}
+                    </button>
+                  ))}
+                </div>
+                <p className="mt-3 flex items-center gap-2 text-[11.5px]" style={{ color: "var(--color-ink-faint)" }}>
+                  <span className="h-px flex-1" style={{ backgroundColor: "var(--color-line)" }} />
+                  또는
+                  <span className="h-px flex-1" style={{ backgroundColor: "var(--color-line)" }} />
+                </p>
+              </div>
+            )}
             {!quote.mock && (
-              <div role="radiogroup" aria-label="결제수단" className="mt-4 grid grid-cols-2 gap-2">
+              <div role="radiogroup" aria-label="결제수단" className="mt-2 grid grid-cols-2 gap-2">
                 {PAY_METHODS.map((m) => {
-                  const on = method === m.id;
+                  const on = chosen === m.id;
                   return (
                     <button
                       key={m.id}
@@ -245,15 +271,24 @@ export function PayDialog({
                 })}
               </div>
             )}
-            <button type="button" disabled={busy} onClick={pay} className="btn-band mt-3 block w-full rounded-xl py-4 text-[17px] font-bold disabled:opacity-60" style={{ fontFamily: "var(--font-serif)" }}>
-              {busy ? "결제창을 여는 중..." : `${PAY_METHODS.find((m) => m.id === method)?.label ?? "카드"}로 ${quote.amount.toLocaleString("ko-KR")}원 결제`}
+            <button type="button" disabled={busy} onClick={() => pay()} className="btn-band mt-3 block w-full rounded-xl py-4 text-[17px] font-bold disabled:opacity-60" style={{ fontFamily: "var(--font-serif)" }}>
+              {busy ? "결제창을 여는 중..." : `${chosen === "TRANSFER" ? "계좌이체" : "카드"}로 ${quote.amount.toLocaleString("ko-KR")}원 결제`}
             </button>
             <p className="mt-2 text-center text-[12px] leading-relaxed" style={{ color: "var(--color-ink-faint)" }}>
-              {PAY_METHODS_TEXT} · 결제하면 바로 열려요
+              {PAY_METHODS_TEXT}·간편결제 · 결제 후 바로 볼 수 있어요
               <br />
               {/* 2026-11-11 유샘: 결제 전에 환불 기준을 분명히 (디지털 콘텐츠 - 전자상거래법 제17조 제2항·제6항) */}
               <b style={{ color: "var(--color-ink-soft)" }}>풀이를 연 뒤에는 환불되지 않아요</b> · 열기 전이면 7일 안에 전액 환불
             </p>
+            {mode === "exam_deep" && (
+              // 2026-11-12 유샘: 수험생 깊게 보기는 보호자 결제
+              <p className="mt-2 rounded-lg px-3 py-2 text-center text-[12.5px] font-bold" style={{ backgroundColor: "var(--color-paper-soft)", color: "var(--color-ink)", wordBreak: "keep-all" }}>
+                만 19세 미만 수험생은 보호자께 결제를 부탁해 주세요
+                <span className="block text-[11.5px] font-normal" style={{ color: "var(--color-ink-soft)" }}>
+                  풀이 화면의 [부모님께 부탁하기]로 보낼 수 있어요
+                </span>
+              </p>
+            )}
             {/* 2026-10-26 전자상거래법 제13조 제3항 - 미성년자 결제 취소 고지 */}
             <MinorNotice className="mt-1.5" />
           </>
