@@ -1,5 +1,7 @@
 "use client";
 
+import Link from "next/link";
+
 import { HourPicker } from "@/components/form/HourPicker";
 import { useEffect, useState } from "react";
 import { useStepBack } from "@/components/room/useStepBack";
@@ -57,10 +59,10 @@ const RESUME_KEY = "ryugyeol_exam_resume";
 type Resume = { resultId: string; name: string; gender: "male" | "female" | ""; cal: "solar" | "lunar"; leap: boolean; y: string; m: string; d: string; hour: string };
 /** 결과 맨 아래 "다음에 볼 운세" (2026-11-09 유샘 지시서 문구 그대로) */
 const NEXT_UNSE = [
-  // 크리스마스 연애운 영상이 오기 전까지는 소개 카드 그림의 글자 없는 아래쪽만 (카드 글자는 1080 중 575까지)
-  { title: "크리스마스 연애운", href: "/go/gunghap", image: "/cards/intro-06.webp", pos: "center 100%", zoom: 2.1 },
-  { title: "2027 신년운세", href: "/go/newyear2027", image: "/rooms/newyear2027/poster.jpg", pos: "center", zoom: 1 },
-  { title: "오늘의 타로", href: "/go/tarot", image: "/rooms/tarot/poster.jpg", pos: "center", zoom: 1 },
+  // 2026-11-11 유샘: 대문 카드와 같은 그림·같은 글자로 (수능 빼고 나머지 셋). 타로는 그림 22장 전까지 곧 열려요.
+  { title: "2027 신년운", desc: "정미년, 나의 한 해는?", stamp: "年", href: "/go/newyear2027?sound=1", image: "/promo/pv-newyear2027.jpg", soon: false },
+  { title: "크리스마스 연애운", desc: "이번 겨울, 나의 인연은?", stamp: "緣", href: "/go/gunghap?sound=1", image: "/promo/pv-xmas.jpg", soon: false },
+  { title: "오늘의 타로", desc: "곧 열려요", stamp: "卜", href: "", image: "/promo/pv-tarot.jpg", soon: true },
 ];
 
 const NAVY = "#16213a";
@@ -495,17 +497,30 @@ export function ExamFreeStart() {
               다음에 볼 운세
             </h3>
             <div className="mt-3 grid grid-cols-3 gap-2">
-              {NEXT_UNSE.map((n) => (
-                <a key={n.href} href={n.href} className="block overflow-hidden rounded-xl" style={CARD}>
-                  {/* eslint-disable-next-line @next/next/no-img-element -- 다음 운세 카드 그림 */}
-                  <div className="aspect-square w-full overflow-hidden">
-                    <img src={n.image} alt="" className="h-full w-full object-cover" style={{ objectPosition: n.pos, transform: n.zoom > 1 ? `scale(${n.zoom})` : undefined, transformOrigin: "center bottom" }} />
-                  </div>
-                  <p className="px-1 py-2 text-center text-[13px] font-bold leading-snug" style={{ wordBreak: "keep-all" }}>
-                    {n.title}
-                  </p>
-                </a>
-              ))}
+              {NEXT_UNSE.map((n) => {
+                const inner = (
+                  <>
+                    {/* eslint-disable-next-line @next/next/no-img-element -- 다음 운세 카드 그림 */}
+                    <img src={n.image} alt="" className="absolute inset-0 h-full w-full object-cover" style={n.soon ? { filter: "grayscale(.45) brightness(.7)" } : undefined} />
+                    <span aria-hidden className="absolute inset-0" style={{ background: "linear-gradient(to bottom, rgba(0,0,0,0) 34%, rgba(6,10,24,.62) 58%, rgba(6,10,24,.93) 84%)" }} />
+                    <span aria-hidden className="absolute left-[6px] top-[6px] flex h-[24px] w-[24px] items-center justify-center rounded-full text-[12px] font-bold" style={{ backgroundColor: "rgba(16,26,52,.88)", border: "1.5px solid #d6b36a", color: "#f2d48a", fontFamily: "var(--font-serif)" }}>
+                      {n.stamp}
+                    </span>
+                    <span className="absolute bottom-[7px] left-[7px] right-[6px]" style={{ textShadow: "0 2px 5px rgba(0,0,0,.75)" }}>
+                      <span className="block text-[13px] font-bold leading-tight" style={{ color: "#fff", fontFamily: "var(--font-serif)", wordBreak: "keep-all" }}>{n.title}</span>
+                      <span className="mt-0.5 block text-[10.5px] leading-tight" style={{ color: "#f0e2bf", wordBreak: "keep-all" }}>{n.desc}</span>
+                    </span>
+                  </>
+                );
+                const cls = "relative block overflow-hidden rounded-xl";
+                const st = { aspectRatio: "3 / 4", border: "1px solid #cfa95c" } as const;
+                return n.soon ? (
+                  <div key={n.title} className={cls} style={st} aria-disabled>{inner}</div>
+                ) : (
+                  // 같은 창 안에서 넘어가야 랜딩 영상이 나레이션과 함께 나온다
+                  <Link key={n.title} href={n.href} className={`${cls} transition-transform active:scale-[0.98]`} style={st}>{inner}</Link>
+                );
+              })}
             </div>
           </section>
 
