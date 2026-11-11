@@ -138,7 +138,7 @@ export function PayDialog({
     if (quote.portone) {
       // 포트원 V2 (2026-10-17): 결제 ID = 주문 번호. 폰에서는 결제 뒤 redirectUrl로 돌아오고(paymentId·code가 붙어 옴),
       // PC에서는 결제창이 닫히며 결과를 돌려준다.
-      const success = `${origin}/pay/success?orderId=${encodeURIComponent(quote.orderId)}&amount=${quote.amount}`;
+      const success = `${origin}/pay/success?orderId=${encodeURIComponent(quote.orderId)}&amount=${quote.amount}&name=${encodeURIComponent(quote.orderName)}`;
       try {
         const PortOne = await loadPortOne();
         const res = await PortOne.requestPayment({
@@ -251,7 +251,8 @@ export function PayDialog({
             <p className="mt-2 text-center text-[12px] leading-relaxed" style={{ color: "var(--color-ink-faint)" }}>
               {PAY_METHODS_TEXT} · 결제하면 바로 열려요
               <br />
-              풀이를 열어 보기 전이면 7일 안에 전액 환불돼요
+              {/* 2026-11-11 유샘: 결제 전에 환불 기준을 분명히 (디지털 콘텐츠 - 전자상거래법 제17조 제2항·제6항) */}
+              <b style={{ color: "var(--color-ink-soft)" }}>풀이를 연 뒤에는 환불되지 않아요</b> · 열기 전이면 7일 안에 전액 환불
             </p>
             {/* 2026-10-26 전자상거래법 제13조 제3항 - 미성년자 결제 취소 고지 */}
             <MinorNotice className="mt-1.5" />
