@@ -5,7 +5,7 @@ import type { FaceAiResult, FaceFeatureBuckets } from "./types";
 import { validateFaceAiResult } from "./validateFaceAiResult";
 import { getFaceCompletionProvider } from "./faceAiProvider";
 import { interpretFace } from "./faceAiInterpreter";
-import { RETRY, getReadingProvider, isTransientAiError } from "@/server/readings/generateReading";
+import { RETRY, getFaceTextProvider, isTransientAiError } from "@/server/readings/generateReading";
 import { partnerBuckets, partnerSummary } from "@/lib/facePartner";
 
 /**
@@ -193,7 +193,7 @@ export async function writeFaceDeep(
     const base = await interpretFace(dev, buckets, preference);
     return { ...base, photoHighlights: null, sajuLink: saju ? `${saju.name}님의 사주와 관상이 만나는 자리 (개발 환경 - 실제 AI 풀이 아님)` : null, photoUsed: false, model: dev.modelName };
   }
-  const provider = getReadingProvider(6000);
+  const provider = getFaceTextProvider(6000);
   const user = buildFaceDeepPrompt(buckets, preference, false, saju);
   let last: unknown;
   for (let i = 0; ; i++) {

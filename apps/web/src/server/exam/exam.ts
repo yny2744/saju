@@ -42,18 +42,53 @@ ${subjBlock}
 ${EXAM_DEEP_POINTS[season].map((p) => `- ${p}`).join("\n")}
 
 규칙:
-- 소제목 5개, 소제목마다 700~900자, 전체 3,500~4,500자.
+- 소제목 ${EXAM_DEEP_POINTS[season].length}개, 소제목마다 700~900자.
 - 합격·불합격이나 점수를 점치거나 단정하지 마세요. "붙는다/떨어진다" 같은 말은 쓰지 마세요. 응원하고, 할 수 있는 행동으로 말하세요.
 - 소제목마다 위 [확정 사실] 중 근거를 하나 이상 짚으세요. 목록에 없는 합·충·대운 이름은 쓰지 마세요.
 - 마지막 소제목 "남은 작은 빈자리 채우기"는 남은 작은 빈자리(가장 약한 오행)를 행운 꾸러미(색·숫자·방위·물건·간식)로 채우며 마음을 단단히 하는 법을 써 주세요. 겁주지 마세요.
 - "부족한"·"모자란"·"결핍" 같은 말 대신 "남은 작은 빈자리"라고 쓰세요. 거의 다 찼고 조금만 채우면 된다는 희망의 말투로 (2026-10-31 유샘).
+${EXAM_QUALITY_RULES}
 - summary: 맨 위에 놓을 두 문장 응원 요약.
 
 JSON 형식:
 {"summary":"...","parts":[{"heading":"...","body":"..."},...]}`;
 }
 
-export function parseExamDeep(raw: string, allowedDaeun: string[]): { summary: string; parts: Array<{ heading: string; body: string }> } {
+/**
+ * 풀이 품질 규칙 (2026-11-13 유샘 - 검수 원칙: 모델이 달라도 사실은 같다 · 근거·자연스러움·중복 없음 · 무료와 유료의 깊이 구분 · 엔진 계산을 바꾸지 않는다)
+ */
+export const EXAM_QUALITY_RULES = `- 호칭은 늘 "${NAME_TOKEN}님"으로 쓰세요. "님" 한 글자나 "갑목 일간님" 같은 호칭으로 부르지 마세요.
+- 무료 풀이가 이미 주제마다 결론 한 줄을 보여 주었습니다. 그 결론을 되풀이하지 말고 왜 그런지(근거), 언제 그런지(시기), 그래서 무엇을 하면 되는지(실천법)까지 풀어 쓰세요.
+- "가능성이 높다", "좋은 결과를 얻는다", 점수·등급 상승처럼 결과를 내다보는 말은 쓰지 마세요.
+- 확정 사실에 없는 십신·오행·간지 이야기(예: "재성이 드러나지 않는다")는 쓰지 마세요. 간지를 쓸 때는 확정 사실에 적힌 것만 쓰세요.
+- 같은 문장이나 같은 조언을 소제목마다 되풀이하지 마세요.`;
+
+const STEM_H = "甲乙丙丁戊己庚辛壬癸";
+const BRANCH_H = "子丑寅卯辰巳午未申酉戌亥";
+const HANJA_GZ = new RegExp(`[${STEM_H}][${BRANCH_H}]`, "g");
+const HANGUL_GZ = /([갑을병정무기경신임계][자축인묘진사오미신유술해])\s*(?=\(|대운|세운|일진|년)/g;
+
+/** 확정 사실(과 대운 목록)에 나오는 간지만 쓸 수 있다. 다른 간지를 쓰면 그 간지를 돌려준다 */
+export function inventedGanzhi(text: string, facts: string, daeun: Array<{ ganzhi: string; hanja: string }> = []): string | null {
+  const okH = new Set([...(facts.match(HANJA_GZ) ?? []), ...daeun.map((d) => d.hanja)]);
+  const okK = new Set([...Array.from(facts.matchAll(/([갑을병정무기경신임계][자축인묘진사오미신유술해])\(/g)).map((m) => m[1]), ...daeun.map((d) => d.ganzhi)]);
+  for (const m of text.match(HANJA_GZ) ?? []) if (!okH.has(m)) return m;
+  for (const m of text.matchAll(HANGUL_GZ)) if (!okK.has(m[1])) return m[1];
+  return null;
+}
+
+export function examQualityProblem(text: string): string | null {
+  if (/가능성이\s*(매우\s*|아주\s*)?높/.test(text)) return "결과를 내다보는 말(가능성이 높다)";
+  if (/좋은\s*결과를\s*(얻|거두|이끌|낼)/.test(text)) return "결과를 내다보는 말(좋은 결과)";
+  if (/(^|[\s,.])님(께서|의|은|이|을|에게)\s/.test(text)) return "호칭 '님' 단독 사용";
+  return null;
+}
+
+export function parseExamDeep(
+  raw: string,
+  allowedDaeun: string[],
+  facts?: { text: string; daeun: Array<{ ganzhi: string; hanja: string }> }
+): { summary: string; parts: Array<{ heading: string; body: string }> } {
   const parsed = extractJson(raw) as { summary?: string; parts?: Array<{ heading?: string; body?: string }> };
   const parts = (parsed.parts ?? [])
     .filter((p) => typeof p.heading === "string" && typeof p.body === "string" && p.body.trim().length >= 20)
@@ -63,14 +98,23 @@ export function parseExamDeep(raw: string, allowedDaeun: string[]): { summary: s
   const bad = inventedDaeun(text, allowedDaeun);
   if (bad) throw new Error(`AI가 확정 사실에 없는 대운(${bad})을 썼습니다.`);
   if (/(합격|시험|대학|학교)[^.!?]{0,12}(붙는|붙을|붙습|떨어지|떨어질|떨어집)/.test(text)) throw new Error("AI가 합격·불합격을 단정했습니다.");
+  if (facts) {
+    const all = [typeof parsed.summary === "string" ? parsed.summary : "", ...parts.map((p) => `${p.heading}\n${p.body}`)].join("\n");
+    const gz = inventedGanzhi(all, facts.text, facts.daeun);
+    if (gz) throw new Error(`AI가 확정 사실에 없는 간지(${gz})를 썼습니다.`);
+    const q = examQualityProblem(all);
+    if (q) throw new Error(`풀이 품질 규칙 위반: ${q}`);
+  }
   return { summary: typeof parsed.summary === "string" ? parsed.summary.trim() : "", parts };
 }
 
 export async function generateExamDeep(saju: SajuJson, nickname: string, profile: ExamProfile | null = null, provider: CompletionProvider = getReadingProvider(9000)): Promise<ExamDeep> {
   const today = kstDateString();
   const season = examSeason(today);
-  const allowed = sajuFacts(saju, today).daeunList.map((d) => d.ganzhi);
-  const body = await completeWithRetry(provider, buildExamDeepPrompt(saju, today, profile), (raw) => parseExamDeep(raw, allowed));
+  const sf = sajuFacts(saju, today);
+  const allowed = sf.daeunList.map((d) => d.ganzhi);
+  const facts = { text: examFactsForPrompt(saju, today), daeun: sf.daeunList };
+  const body = await completeWithRetry(provider, buildExamDeepPrompt(saju, today, profile), (raw) => parseExamDeep(raw, allowed, facts));
   return {
     season,
     title: SEASON_INFO[season].title,

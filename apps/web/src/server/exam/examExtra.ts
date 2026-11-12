@@ -2,6 +2,7 @@ import type { SajuJson } from "saju-engine";
 import { NAME_TOKEN } from "@/server/readings/generateReading";
 import { kstDateString } from "@/lib/manseView";
 import { examFactsForPrompt } from "@/lib/suneung";
+import { EXAM_QUALITY_RULES } from "./exam";
 
 /**
  * 수능 심층분석 2~4 (2026-11-12 유샘 확정 상품명·부제) - 풀이 지시문.
@@ -14,7 +15,7 @@ export type ExamExtraKey = "exam_goal" | "exam_focus" | "exam_calm";
 export const EXAM_EXTRA: Record<ExamExtraKey, { title: string; points: string[]; basis: string[]; rules: string[] }> = {
   exam_goal: {
     title: "목표 성취운",
-    points: ["목표 달성을 위한 사주적 흐름", "노력에 따른 성과와 결실의 가능성", "바라는 목표와 타고난 기질의 조화", "남은 작은 빈자리 채우기"],
+    points: ["목표 달성을 위한 사주적 흐름", "노력에 따른 성과와 결실의 가능성", "바라는 목표와 타고난 기질의 조화", "수능까지 남은 날의 목표 점검법"],
     basis: [
       "관성(정관·편관): 목표·자리·책임을 받아들이는 힘",
       "재성(정재·편재): 노력이 결과물로 맺히는 자리",
@@ -28,7 +29,7 @@ export const EXAM_EXTRA: Record<ExamExtraKey, { title: string; points: string[];
   },
   exam_focus: {
     title: "집중과 몰입운",
-    points: ["타고난 집중력과 학습 능력", "몰입을 높이는 환경과 학습 방식", "집중을 방해하는 요소와 극복 방향", "남은 작은 빈자리 채우기"],
+    points: ["타고난 집중력과 학습 능력", "몰입을 높이는 환경과 학습 방식", "집중을 방해하는 요소와 극복 방향", "나에게 맞는 하루 공부 시간표"],
     basis: [
       "인성(정인·편인): 받아들이고 이해하고 기억하는 힘",
       "식신: 한 가지를 꾸준히 파고드는 몰입",
@@ -39,7 +40,7 @@ export const EXAM_EXTRA: Record<ExamExtraKey, { title: string; points: string[];
   },
   exam_calm: {
     title: "시험 컨디션 안정운",
-    points: ["긴장과 불안에 대처하는 심리적 성향", "시험 전후 체력과 컨디션 변화", "예상치 못한 상황에 대한 대처와 안정 방향", "남은 작은 빈자리 채우기"],
+    points: ["긴장과 불안에 대처하는 심리적 성향", "시험 전후 체력과 컨디션 변화", "예상치 못한 상황에 대한 대처와 안정 방향", "시험 전날과 당일 아침 루틴"],
     basis: [
       "관성(특히 편관): 압박을 느끼는 방식과 일간이 그것을 견디는 힘",
       "인성: 마음을 가라앉히고 다시 중심을 잡는 힘",
@@ -76,8 +77,10 @@ ${p.basis.map((x) => `- ${x}`).join("\n")}
 - 합격·불합격이나 점수를 점치거나 단정하지 마세요. "붙는다/떨어진다" 같은 말은 쓰지 마세요. 응원하고, 할 수 있는 행동으로 말하세요.
 ${p.rules.map((x) => `- ${x}`).join("\n")}
 - 소제목마다 위 [확정 사실] 중 근거를 하나 이상 짚으세요. 목록에 없는 합·충·대운 이름은 쓰지 마세요.
-- 마지막 소제목 "남은 작은 빈자리 채우기"는 이 상품 주제에 맞춰, 남은 작은 빈자리(가장 약한 오행)를 행운 꾸러미(색·숫자·방위·물건)로 채우는 법을 써 주세요. 겁주지 마세요.
+- 마지막 소제목은 앞의 풀이를 바탕으로 바로 따라 할 수 있는 실천표처럼 써 주세요 (시간·순서·횟수가 보이게).
+- 행운 꾸러미(색·숫자·방위·물건)는 "수능대박운 심층분석"이 다루니 이 풀이에서는 쓰지 마세요. 다른 상품과 겹치지 않게 이 상품의 주제에만 집중하세요.
 - "부족한"·"모자란"·"결핍" 같은 말 대신 "남은 작은 빈자리"라고 쓰세요.
+${EXAM_QUALITY_RULES}
 - summary: 맨 위에 놓을 두 문장 응원 요약.
 
 JSON 형식:

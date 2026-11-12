@@ -349,6 +349,15 @@ export function getReadingProvider(maxTokens = 3500): CompletionProvider {
   return devReadingProvider();
 }
 
+/** 2026-11-13 유샘: 관상 글은 Gemini 먼저, 실패하면 Claude(Haiku) */
+export function getFaceTextProvider(maxTokens = 6000): CompletionProvider {
+  const chain: CompletionProvider[] = [];
+  if (process.env.GEMINI_API_KEY) chain.push(new GeminiCompletionProvider({ maxOutputTokens: maxTokens }));
+  if (process.env.ANTHROPIC_API_KEY) chain.push(new AnthropicCompletionProvider({ model: process.env.SAJU_READING_MODEL || READING_CLAUDE_MODEL, maxTokens }));
+  if (chain.length === 0) return getReadingProvider(maxTokens);
+  return chain.length === 1 ? chain[0] : fallbackProvider(chain);
+}
+
 /** 앞의 AI가 실패하면 다음 AI가 받는다. modelName 은 마지막으로 성공한(또는 시도한) 모델 */
 export function fallbackProvider(chain: CompletionProvider[]): CompletionProvider {
   let used = chain[0];

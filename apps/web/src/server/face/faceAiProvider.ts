@@ -1,4 +1,5 @@
 import { AnthropicCompletionProvider, GeminiCompletionProvider } from "saju-engine";
+import { READING_CLAUDE_MODEL } from "@/server/readings/generateReading";
 import type { CompletionProvider } from "saju-engine";
 
 /**
@@ -19,12 +20,13 @@ import type { CompletionProvider } from "saju-engine";
  * "Gemini 연동 구조" 중 재사용 가능한 부분이다.
  */
 export function getFaceCompletionProvider(): CompletionProvider {
-  if (process.env.ANTHROPIC_API_KEY) {
-    return new AnthropicCompletionProvider();
-  }
-
+  // 2026-11-13 유샘: 관상은 Gemini가 맡는다 (Claude 키가 있어도 Gemini 먼저)
   if (process.env.GEMINI_API_KEY) {
     return new GeminiCompletionProvider();
+  }
+
+  if (process.env.ANTHROPIC_API_KEY) {
+    return new AnthropicCompletionProvider({ model: READING_CLAUDE_MODEL });
   }
 
   if (process.env.NODE_ENV === "production") {

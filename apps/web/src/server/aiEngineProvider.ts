@@ -34,7 +34,8 @@ import type { CompletionProvider } from "saju-engine";
  */
 export function getInterpretationEngine(): AIInterpretationEngine {
   if (process.env.ANTHROPIC_API_KEY) {
-    return createAnthropicInterpretationEngine();
+    // 2026-11-13 유샘: 기본 모델이 Sonnet이라 비싸다 - Haiku 5.5로 고정 (SAJU_AI_MODEL 로 바꿀 수 있다)
+    return createAnthropicInterpretationEngine({ model: process.env.SAJU_AI_MODEL || "claude-haiku-5-5" });
   }
 
   if (process.env.GEMINI_API_KEY) {
