@@ -57,7 +57,7 @@ const TASTE_GROUPS: TopicKey[][] = [
   ["business", "health", "relationship"],
 ];
 
-const SYSTEM = `당신은 한국 전통 명리학(사주팔자)을 40년 넘게 풀어 온 정통 명리 해석가입니다.
+export const SYSTEM = `당신은 한국 전통 명리학(사주팔자)을 40년 넘게 풀어 온 정통 명리 해석가입니다.
 4070 세대 손님에게 존댓말로, 따뜻하고 품위 있게, 그러나 구체적으로 풀이합니다.
 
 # 데이터 원칙 (절대 규칙)
@@ -328,15 +328,51 @@ export async function generateDeep(
 
 // ───────────────────────── AI 제공자 ─────────────────────────
 
+/** 2026-11-12 유샘: 풀이 AI 기본 모델 - Claude Haiku 5.5 (SAJU_READING_MODEL 로 바꿀 수 있다) */
+export const READING_CLAUDE_MODEL = "claude-haiku-5-5";
+
+/**
+ * 2026-11-12 유샘: 풀이 AI 순서 - Claude(Haiku) 먼저, 실패하면 Gemini가 받는다.
+ *   키가 있는 쪽만 줄에 선다. 정식 오픈 때 GPT-6 Luna 를 둘째로, Gemini 를 셋째로 넣을 예정.
+ */
 export function getReadingProvider(maxTokens = 3500): CompletionProvider {
+  const chain: CompletionProvider[] = [];
   if (process.env.ANTHROPIC_API_KEY) {
-    return new AnthropicCompletionProvider({ model: process.env.SAJU_READING_MODEL || undefined, maxTokens });
+    chain.push(new AnthropicCompletionProvider({ model: process.env.SAJU_READING_MODEL || READING_CLAUDE_MODEL, maxTokens }));
   }
-  if (process.env.GEMINI_API_KEY) return new GeminiCompletionProvider({ maxOutputTokens: maxTokens });
+  if (process.env.GEMINI_API_KEY) chain.push(new GeminiCompletionProvider({ maxOutputTokens: maxTokens }));
+  if (chain.length === 1) return chain[0];
+  if (chain.length > 1) return fallbackProvider(chain);
   if (process.env.NODE_ENV === "production" && process.env.ALLOW_MOCK_IN_PRODUCTION !== "true") {
     throw new Error("ANTHROPIC_API_KEY가 설정되지 않아 유료 풀이를 만들 수 없습니다.");
   }
   return devReadingProvider();
+}
+
+/** 앞의 AI가 실패하면 다음 AI가 받는다. modelName 은 마지막으로 성공한(또는 시도한) 모델 */
+export function fallbackProvider(chain: CompletionProvider[]): CompletionProvider {
+  let used = chain[0];
+  return {
+    get providerName() {
+      return used.providerName;
+    },
+    get modelName() {
+      return used.modelName;
+    },
+    async complete(system: string, user: string): Promise<string> {
+      let last: unknown;
+      for (const p of chain) {
+        used = p;
+        try {
+          return await p.complete(system, user);
+        } catch (e) {
+          last = e;
+          console.error(`[reading] ${p.providerName}/${p.modelName} 실패 - 다음 AI로 넘김`, e instanceof Error ? e.message : e);
+        }
+      }
+      throw last;
+    },
+  };
 }
 
 /** 키가 없는 로컬 개발용 - 실제 풀이가 아님을 분명히 적는다 */

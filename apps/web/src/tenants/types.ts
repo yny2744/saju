@@ -210,6 +210,11 @@ export interface TenantConfig {
   /** 세 길·일곱 운 대문 - 없으면 기존 대문 */
   gate?: TenantGate;
   /**
+   * 판매 잠금 (2026-11-12 유샘): 있으면 여기 적힌 상품만 결제·엽전 구매가 된다. 나머지는 화면에 "곧 열려요".
+   * 값은 상품 종류(PurchaseMode) 또는 "overlay"(재미관 사주 겹쳐 보기). 없으면 모두 판매.
+   */
+  saleOnly?: string[];
+  /**
    * 휴대폰 앱(PWA)으로 설치했을 때 이름 (2026-11-01 유샘) - 없으면 brand.name.
    * 아이콘은 public/icons/<id>/ (scripts/make-app-icons.js 로 만든다).
    */

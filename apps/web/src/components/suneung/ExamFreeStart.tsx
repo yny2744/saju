@@ -16,6 +16,7 @@ import { SajuPillarsCard } from "@/components/SajuPillarsCard";
 import { DaeunTimeline, ElementBalance, NeededEnergySection, RelationsTable } from "@/components/ManseSections";
 import { FillGauge } from "@/components/FillGauge";
 import { DeepCards } from "@/components/suneung/DeepCards";
+import { isOnSale } from "@/lib/sale";
 import { WritingOverlay } from "@/components/yeopjeon/WritingOverlay";
 import { NARRATION_OFF } from "@/components/landing/SuneungHero";
 import { neededEnergy } from "@/lib/neededEnergy";
@@ -60,8 +61,8 @@ type Resume = { resultId: string; name: string; gender: "male" | "female" | ""; 
 /** 결과 맨 아래 "다음에 볼 운세" (2026-11-09 유샘 지시서 문구 그대로) */
 const NEXT_UNSE = [
   // 2026-11-11 유샘: 대문 카드와 같은 그림·같은 글자로 (수능 빼고 나머지 셋). 타로는 그림 22장 전까지 곧 열려요.
-  { title: "2027 신년운", desc: "정미년, 나의 한 해는?", stamp: "年", href: "/go/newyear2027?sound=1", image: "/promo/pv-newyear2027.jpg", soon: false },
-  { title: "크리스마스 연애운", desc: "이번 겨울, 나의 인연은?", stamp: "緣", href: "/go/gunghap?sound=1", image: "/promo/pv-xmas.jpg", soon: false },
+  { title: "2027 신년운", desc: "정미년, 나의 한 해는?", stamp: "年", href: "/go/newyear2027?sound=1", image: "/promo/pv-newyear2027.jpg", soon: !isOnSale("newyear") },
+  { title: "크리스마스 연애운", desc: "이번 겨울, 나의 인연은?", stamp: "緣", href: "/go/gunghap?sound=1", image: "/promo/pv-xmas.jpg", soon: !isOnSale("love") },
   { title: "오늘의 타로", desc: "곧 열려요", stamp: "卜", href: "", image: "/promo/pv-tarot.jpg", soon: true },
 ];
 
@@ -489,7 +490,7 @@ export function ExamFreeStart() {
                     </span>
                     <span className="absolute bottom-[7px] left-[7px] right-[6px]" style={{ textShadow: "0 2px 5px rgba(0,0,0,.75)" }}>
                       <span className="block text-[13px] font-bold leading-tight" style={{ color: "#fff", fontFamily: "var(--font-serif)", wordBreak: "keep-all" }}>{n.title}</span>
-                      <span className="mt-0.5 block text-[10.5px] leading-tight" style={{ color: "#f0e2bf", wordBreak: "keep-all" }}>{n.desc}</span>
+                      <span className="mt-0.5 block text-[10.5px] leading-tight" style={{ color: "#f0e2bf", wordBreak: "keep-all" }}>{n.soon ? "곧 열려요" : n.desc}</span>
                     </span>
                   </>
                 );

@@ -1,3 +1,4 @@
+import { isOnSale, SALE_CLOSED_MESSAGE } from "@/lib/sale";
 import { getCurrentKstYear } from "saju-engine";
 import { loveOn } from "@/lib/love/loveProducts";
 import { listLoveCals, listLovePairs } from "@/server/love/love";
@@ -195,6 +196,7 @@ export async function handlePurchase(token: string | undefined, personId: string
   const body = typeof rawBody === "object" && rawBody !== null ? (rawBody as Record<string, unknown>) : {};
   const mode = body.mode;
   if (!isPurchaseMode(mode)) return err(400, "INVALID_INPUT", "상품 종류가 올바르지 않아요.");
+  if (!isOnSale(mode)) return err(403, "SALE_CLOSED", SALE_CLOSED_MESSAGE);
   try {
     const unlocked = await purchaseTopics({ userId: m.user.id, personId, mode, topics: body.topics });
     return { status: 200, body: { unlocked } };

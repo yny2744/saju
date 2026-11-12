@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { bgm } from "@/components/bgm/bgm";
+import { isOnSale } from "@/lib/sale";
 
 /**
  * 정문 대문 (2026-11-11 유샘 확정 시안 gate_mock 2안)
@@ -17,7 +18,7 @@ import { bgm } from "@/components/bgm/bgm";
 const INTRO = { video: "/gate/mgml/intro-portrait.mp4", poster: "/gate/mgml/intro-portrait.jpg" };
 const SEEN_KEY = "gate-intro-seen";
 
-type Card = { href?: string; img: string; video?: string; stamp: string; title: string; desc: string; badge: string; soon?: boolean };
+type Card = { href?: string; img: string; video?: string; stamp: string; title: string; desc: string; badge: string; soon?: boolean; sale?: string };
 
 const FREE: Card[] = [
   { href: "/start?next=fortune", img: "/promo/free-fortune.jpg", stamp: "日", title: "오늘의 운세", desc: "오늘과 내일, 나의 기운", badge: "무료" },
@@ -30,12 +31,13 @@ function seasonCards(suneung: boolean): Card[] {
   const list: Card[] = [];
   if (suneung) list.push({ href: "/go/suneung", img: "/promo/pv-suneung.jpg", video: "/promo/pv-suneung.mp4", stamp: "試", title: "수능대박운", desc: "시험날, 나의 기운은?", badge: "▶" });
   list.push(
-    { href: "/go/newyear2027", img: "/promo/pv-newyear2027.jpg", video: "/promo/pv-newyear2027.mp4", stamp: "年", title: "2027 신년운", desc: "정미년, 나의 한 해는?", badge: "▶" },
-    { href: "/go/gunghap", img: "/promo/pv-xmas.jpg", video: "/promo/pv-xmas.mp4", stamp: "緣", title: "크리스마스 연애운", desc: "이번 겨울, 나의 인연은?", badge: "▶" },
+    { href: "/go/newyear2027", img: "/promo/pv-newyear2027.jpg", video: "/promo/pv-newyear2027.mp4", stamp: "年", title: "2027 신년운", desc: "정미년, 나의 한 해는?", badge: "▶", sale: "newyear" },
+    { href: "/go/gunghap", img: "/promo/pv-xmas.jpg", video: "/promo/pv-xmas.mp4", stamp: "緣", title: "크리스마스 연애운", desc: "이번 겨울, 나의 인연은?", badge: "▶", sale: "love" },
     // 2026-11-10 유샘: 타로는 카드 그림 22장이 준비될 때까지 열지 않는다
     { img: "/promo/pv-tarot.jpg", stamp: "卜", title: "오늘의 타로", desc: "곧 열려요", badge: "곧 열려요", soon: true },
   );
-  return list;
+  // 2026-11-12 유샘: 판매 잠금(saleOnly) 중인 운세는 보여만 주고 "곧 열려요"
+  return list.map((c) => (c.sale && !isOnSale(c.sale) ? { ...c, soon: true, badge: "곧 열려요", video: undefined } : c));
 }
 
 const GOLD = "#d6b36a";

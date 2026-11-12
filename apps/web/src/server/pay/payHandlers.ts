@@ -1,3 +1,4 @@
+import { isOnSale, SALE_CLOSED_MESSAGE } from "@/lib/sale";
 import { getUserBySessionToken } from "@/server/auth/session";
 import { PurchaseError, isPurchaseMode } from "@/server/readings/readings";
 import { PayError, checkout, confirmOrder, markOrderOpened } from "./payOrders";
@@ -19,6 +20,7 @@ export async function handleCheckout(token: string | undefined, personId: string
   const b = (typeof raw === "object" && raw !== null ? raw : {}) as Record<string, unknown>;
   const mode = b.mode;
   if (!isPurchaseMode(mode)) return err(400, "INVALID_INPUT", "상품 종류가 올바르지 않아요.");
+  if (!isOnSale(mode)) return err(403, "SALE_CLOSED", SALE_CLOSED_MESSAGE);
   try {
     return { status: 200, body: await checkout(m.user.id, personId, mode, b.topics) };
   } catch (e) {
