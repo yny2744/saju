@@ -15,7 +15,7 @@ import type { SajuJson } from "saju-engine";
 import { SajuPillarsCard } from "@/components/SajuPillarsCard";
 import { DaeunTimeline, ElementBalance, NeededEnergySection, RelationsTable } from "@/components/ManseSections";
 import { FillGauge } from "@/components/FillGauge";
-import { SaleNote } from "@/components/SaleNote";
+import { DeepCards } from "@/components/suneung/DeepCards";
 import { WritingOverlay } from "@/components/yeopjeon/WritingOverlay";
 import { NARRATION_OFF } from "@/components/landing/SuneungHero";
 import { neededEnergy } from "@/lib/neededEnergy";
@@ -416,27 +416,8 @@ export function ExamFreeStart() {
                 </section>
               )}
 
-              {/* 깊게 보기 - 유료는 처음부터 가격을 분명히 */}
-              <section className="mt-4 rounded-2xl p-5" style={CARD}>
-                <p className="text-center text-[12px] tracking-[0.2em]" style={{ color: GOLD }}>
-                  깊게 보기
-                </p>
-                <p className="mt-1 text-center text-[19px] font-bold" style={{ fontFamily: "var(--font-serif)" }}>
-                  {pv.title} 깊게 보기 · {formatWon(PRICE.EXAM_DEEP)}
-                </p>
-                <SaleNote k="EXAM_DEEP" unit="원" />
-                <ul className="mx-auto mt-3 max-w-xs space-y-1.5 text-[14.5px]">
-                  {pv.deeper.map((dp) => (
-                    <li key={dp} className="flex gap-2">
-                      <span style={{ color: GOLD }}>◆</span>
-                      <span>{dp}</span>
-                    </li>
-                  ))}
-                </ul>
-                <a href={`/person/${encodeURIComponent(full.personId)}/exam`} className="btn-primary mt-4 block text-center">
-                  깊게 보기 · {formatWon(PRICE.EXAM_DEEP)}
-                </a>
-              </section>
+              {/* 심층분석 카드 네 장 (2026-11-12 유샘) */}
+              <DeepCards personId={full.personId} />
             </>
           ) : (
             <>
