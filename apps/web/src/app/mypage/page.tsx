@@ -8,6 +8,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { readA11yPrefs, saveA11yPrefs, type A11yPrefs } from "@/components/AccessibilityInit";
 import { YeopjeonPanel } from "@/components/yeopjeon/YeopjeonPanel";
+import { MyOrders } from "@/components/mypage/MyOrders";
 
 /**
  * 내 복주머니(마이페이지) — Phase 10.5, 용사주 벤치마킹에서 구조만 차용.
@@ -170,6 +171,9 @@ function MyPageBody() {
             </ul>
           )}
         </section>
+
+        {/* 2026-11-13 유샘: 결제 내역 · 환불 신청 */}
+        <MyOrders />
 
         {/* 알림 설정 (마케팅 수신 동의/철회) */}
         <section className="mb-7">

@@ -33,7 +33,7 @@ type Denied = { kind: "login" } | { kind: "notAdmin"; myId?: string; configured?
 const fmtTime = (iso: string) =>
   new Date(iso).toLocaleString("ko-KR", { timeZone: "Asia/Seoul", month: "numeric", day: "numeric", hour: "2-digit", minute: "2-digit" });
 
-const STATUS_LABEL: Record<string, string> = { pending: "결제창 열림(미결제)", paid: "결제 완료", paid_credit: "결제됨·구매 실패(엽전으로 남음)", failed: "승인 실패" };
+const STATUS_LABEL: Record<string, string> = { pending: "결제창 열림(미결제)", paid: "결제 완료", paid_credit: "결제됨·구매 실패(엽전으로 남음)", failed: "승인 실패", refunded: "환불 완료" };
 
 function StatGrid({ title, s }: { title: string; s: PeriodStats }) {
   const items: Array<[string, string]> = [
@@ -302,6 +302,13 @@ function AdminBody() {
                 <p className="mt-0.5 text-[12px]" style={{ color: "var(--color-ink-faint)" }}>
                   {formatNyang(o.price)} = 엽전 {formatNyang(o.useYeopjeon)} + 결제 {o.amount.toLocaleString("ko-KR")}원 · {fmtTime(o.paidAt ?? o.createdAt)}
                 </p>
+                {/* 2026-11-13 유샘: 환불 신청 표시 + [환불 처리] (포트원 결제 취소까지 한 번에) */}
+                {o.refundRequestedAt && o.status !== "refunded" && (
+                  <p className="mt-1 text-[12px] font-bold" style={{ color: "var(--color-danger)" }}>
+                    환불 신청 {fmtTime(o.refundRequestedAt)} · {o.refundNote}
+                  </p>
+                )}
+                {(o.status === "paid" || o.status === "paid_credit") && <RefundButton orderId={o.id} name={o.orderName} amount={o.amount} />}
               </li>
             ))}
           </ul>
@@ -455,4 +462,32 @@ function AdminBody() {
 
 export default function AdminPage() {
   return isAuthEnabled() ? <AdminBody /> : <ComingSoon title="관리자" />;
+}
+
+function RefundButton({ orderId, name, amount }: { orderId: string; name: string; amount: number }) {
+  const [state, setState] = useState<"idle" | "busy" | "done">("idle");
+  const [msg, setMsg] = useState("");
+  async function go() {
+    if (!window.confirm(`${name} ${amount.toLocaleString("ko-KR")}원을 환불할까요? 포트원 결제가 취소되고 풀이가 다시 잠겨요.`)) return;
+    setState("busy");
+    const res = await fetch("/api/admin/refund", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ orderId }) }).catch(() => null);
+    const j = await res?.json().catch(() => null);
+    if (res?.ok) {
+      setState("done");
+      setMsg(j?.message ?? "환불 처리했어요.");
+    } else {
+      setState("idle");
+      setMsg(j?.error?.message ?? "환불 처리에 실패했어요.");
+    }
+  }
+  return (
+    <div className="mt-1.5 flex items-center gap-2">
+      {state !== "done" && (
+        <button type="button" onClick={go} disabled={state === "busy"} className="rounded-lg px-2.5 py-1 text-[12px] font-bold" style={{ border: "1px solid var(--color-danger)", color: "var(--color-danger)" }}>
+          {state === "busy" ? "처리 중…" : "환불 처리"}
+        </button>
+      )}
+      {msg && <span className="text-[12px]">{msg}</span>}
+    </div>
+  );
 }

@@ -2,6 +2,8 @@ import { isOnSale, SALE_CLOSED_MESSAGE } from "@/lib/sale";
 import { getUserBySessionToken } from "@/server/auth/session";
 import { PurchaseError, isPurchaseMode } from "@/server/readings/readings";
 import { PayError, checkout, confirmOrder, markOrderOpened } from "./payOrders";
+import { myPayOrders, requestRefund, adminRefund } from "./refund";
+import { requireAdmin } from "@/server/admin/admin";
 
 type Out = { status: number; body: unknown };
 const err = (status: number, code: string, message: string): Out => ({ status, body: { error: { code, message } } });
@@ -51,4 +53,32 @@ export async function handleOpened(token: string | undefined, raw: unknown): Pro
   if (typeof b.orderId !== "string" || !b.orderId) return err(400, "INVALID_INPUT", "주문 번호가 없어요.");
   await markOrderOpened(m.user.id, b.orderId);
   return { status: 200, body: { ok: true } };
+}
+
+/** 2026-11-13 유샘: 내 결제 내역 (마이페이지) */
+export async function handleMyOrders(token: string | undefined): Promise<Out> {
+  const m = await member(token);
+  if ("error" in m) return m.error!;
+  return { status: 200, body: { orders: await myPayOrders(m.user.id) } };
+}
+
+/** 2026-11-13 유샘: 손님 환불 신청 */
+export async function handleRefundRequest(token: string | undefined, raw: unknown): Promise<Out> {
+  const m = await member(token);
+  if ("error" in m) return m.error!;
+  const b = (typeof raw === "object" && raw !== null ? raw : {}) as Record<string, unknown>;
+  if (typeof b.orderId !== "string" || !b.orderId) return err(400, "INVALID_INPUT", "주문 번호가 없어요.");
+  const r = await requestRefund(m.user.id, b.orderId, typeof b.reason === "string" ? b.reason : "");
+  if (!r) return err(404, "NOT_FOUND", "환불할 수 있는 결제를 찾지 못했어요.");
+  return { status: 200, body: r };
+}
+
+/** 2026-11-13 유샘: 관리자 [환불 처리] - 포트원 결제 취소 + 기록 변경 */
+export async function handleAdminRefund(token: string | undefined, raw: unknown): Promise<Out> {
+  const a = await requireAdmin(token);
+  if (!a.ok) return a;
+  const b = (typeof raw === "object" && raw !== null ? raw : {}) as Record<string, unknown>;
+  if (typeof b.orderId !== "string" || !b.orderId) return err(400, "INVALID_INPUT", "주문 번호가 없어요.");
+  const r = await adminRefund(b.orderId, typeof b.reason === "string" ? b.reason : "");
+  return { status: r.ok ? 200 : 400, body: r.ok ? r : { error: { code: "REFUND_FAILED", message: r.message } } };
 }

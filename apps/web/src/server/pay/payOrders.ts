@@ -334,6 +334,8 @@ export interface AdminPayOrder {
   status: string;
   createdAt: string;
   paidAt: string | null;
+  refundRequestedAt: string | null;
+  refundNote: string | null;
 }
 
 export async function recentPayOrders(): Promise<AdminPayOrder[]> {
@@ -348,8 +350,10 @@ export async function recentPayOrders(): Promise<AdminPayOrder[]> {
     status: string;
     created_at: Date;
     paid_at: Date | null;
+    refund_requested_at: Date | null;
+    refund_note: string | null;
   }>(
-    `SELECT o.id, u.nickname, o.order_name, o.price, o.use_yeopjeon, o.amount, o.status, o.created_at, o.paid_at
+    `SELECT o.id, u.nickname, o.order_name, o.price, o.use_yeopjeon, o.amount, o.status, o.created_at, o.paid_at, o.refund_requested_at, o.refund_note
        FROM pay_orders o JOIN users u ON u.id = o.user_id
       WHERE o.status <> 'pending' OR o.created_at > now() - interval '1 day'
       ORDER BY o.created_at DESC LIMIT 50`
@@ -364,6 +368,8 @@ export async function recentPayOrders(): Promise<AdminPayOrder[]> {
     status: x.status,
     createdAt: x.created_at.toISOString(),
     paidAt: x.paid_at ? x.paid_at.toISOString() : null,
+    refundRequestedAt: x.refund_requested_at ? x.refund_requested_at.toISOString() : null,
+    refundNote: x.refund_note,
   }));
 }
 

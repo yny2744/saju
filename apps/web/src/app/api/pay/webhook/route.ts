@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { notifyError } from "@/server/alert";
 import { PayError, confirmFromWebhook, verifyPortOneWebhook } from "@/server/pay/payOrders";
+import { refundFromWebhook } from "@/server/pay/refund";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -21,7 +22,10 @@ export async function POST(request: NextRequest) {
   );
   if (!ok) return NextResponse.json({ ok: false }, { status: 401 });
   try {
-    const result = await confirmFromWebhook(JSON.parse(body));
+    const payload = JSON.parse(body);
+    // 2026-11-13 유샘: 포트원에서 결제를 취소하면 우리 기록도 '환불됨'으로
+    const refunded = await refundFromWebhook(payload);
+    const result = refunded === "done" ? "refunded" : await confirmFromWebhook(payload);
     return NextResponse.json({ ok: true, result });
   } catch (e) {
     // 아직 결제 완료가 아닌 경우 등 - 포트원이 다시 보내 준다
