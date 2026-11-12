@@ -19,7 +19,9 @@ export const LAB_PRODUCTS: Record<string, string> = { exam_deep: "수능대박�
 
 function labProviders(): Array<{ id: string; make: () => CompletionProvider }> {
   const out: Array<{ id: string; make: () => CompletionProvider }> = [];
-  if (process.env.ANTHROPIC_API_KEY) out.push({ id: "claude", make: () => new AnthropicCompletionProvider({ model: process.env.SAJU_READING_MODEL || READING_CLAUDE_MODEL, maxTokens: 9000 }) });
+  // 2026-11-13: 운영 사이트에서 시험할 때는 시험 전용 키(LAB_ANTHROPIC_API_KEY)만 쓴다 - 손님 풀이·관상은 그대로 Gemini
+  const claudeKey = process.env.LAB_ANTHROPIC_API_KEY || process.env.ANTHROPIC_API_KEY;
+  if (claudeKey) out.push({ id: "claude", make: () => new AnthropicCompletionProvider({ apiKey: claudeKey, model: process.env.SAJU_READING_MODEL || READING_CLAUDE_MODEL, maxTokens: 9000 }) });
   if (process.env.GEMINI_API_KEY) out.push({ id: "gemini", make: () => new GeminiCompletionProvider({ maxOutputTokens: 9000 }) });
   return out;
 }
