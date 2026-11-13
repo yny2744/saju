@@ -101,7 +101,11 @@ describe("연애 상품 (짧은 궁합 990 · 연애 달력 9,900 · 연인 궁�
     expect(ryugyeol.prices.COUPLE).toBe(19900);
     expect(ryugyeol.prices.LOVE_PAIR).toBeUndefined();
     // 다른 가격은 그대로
-    const { LOVE_PAIR: _a, LOVE_CAL: _b, COUPLE: _c, OVERLAY: _d, NEWYEAR: _e, TAROT3: _f, ...rest } = mgml.prices;
+    // 2026-11-13 유샘 승인: 수능 심층분석 2~4(EXAM_EXTRA)·네 가지 모두 보기(EXAM_ALL)도 명견만리만
+    const { LOVE_PAIR: _a, LOVE_CAL: _b, COUPLE: _c, OVERLAY: _d, NEWYEAR: _e, TAROT3: _f, EXAM_EXTRA: _h, EXAM_ALL: _i, ...rest } = mgml.prices;
+    expect(mgml.prices.EXAM_EXTRA).toBe(5500);
+    expect(mgml.prices.EXAM_ALL).toBe(16500);
+    expect(ryugyeol.prices.EXAM_EXTRA).toBeUndefined();
     const { COUPLE: _g, ...base } = ryugyeol.prices;
     expect(rest).toEqual(base);
   });

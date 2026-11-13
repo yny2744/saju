@@ -78,7 +78,7 @@ export function PayDialog({
   onClose,
 }: {
   personId: string;
-  mode: "basic" | "deep" | "bundle3" | "bundle12" | "naming" | "rename" | "face" | "business" | "corp" | "brand" | "couple" | "p_naming" | "p_business" | "p_corp" | "p_brand" | "wallpaper" | "exam" | "exam_deep" | "ny2027" | "ny2027_full" | "love_pair" | "love_cal" | "love_cal_pair" | "overlay";
+  mode: "basic" | "deep" | "bundle3" | "bundle12" | "naming" | "rename" | "face" | "business" | "corp" | "brand" | "couple" | "p_naming" | "p_business" | "p_corp" | "p_brand" | "wallpaper" | "exam" | "exam_deep" | "exam_goal" | "exam_focus" | "exam_calm" | "exam_all" | "ny2027" | "ny2027_full" | "love_pair" | "love_cal" | "love_cal_pair" | "overlay";
   topics: string[];
   /** 주문 만들 때 보낼 내용 (기본: { mode, topics }) - 2026-11-01 사주 겹쳐 보기는 입력값({ req }) */
   checkoutBody?: Record<string, unknown>;
@@ -280,13 +280,15 @@ export function PayDialog({
               {/* 2026-11-11 유샘: 결제 전에 환불 기준을 분명히 (디지털 콘텐츠 - 전자상거래법 제17조 제2항·제6항) */}
               <b style={{ color: "var(--color-ink-soft)" }}>풀이를 연 뒤에는 환불되지 않아요</b> · 열기 전이면 7일 안에 전액 환불
             </p>
-            {mode === "exam_deep" && (
-              // 2026-11-12 유샘: 수험생 깊게 보기는 보호자 결제
+            {mode.startsWith("exam_") && (
+              // 2026-11-12 유샘: 수험생 깊게 보기는 보호자 결제 (2026-11-13 심층분석 2~4·네 가지 모두 보기도 같이)
               <p className="mt-2 rounded-lg px-3 py-2 text-center text-[12.5px] font-bold" style={{ backgroundColor: "var(--color-paper-soft)", color: "var(--color-ink)", wordBreak: "keep-all" }}>
                 만 19세 미만 수험생은 보호자께 결제를 부탁해 주세요
-                <span className="block text-[11.5px] font-normal" style={{ color: "var(--color-ink-soft)" }}>
-                  풀이 화면의 [부모님께 부탁하기]로 보낼 수 있어요
-                </span>
+                {mode === "exam_deep" && (
+                  <span className="block text-[11.5px] font-normal" style={{ color: "var(--color-ink-soft)" }}>
+                    풀이 화면의 [부모님께 선물 부탁하기]로 보낼 수 있어요
+                  </span>
+                )}
               </p>
             )}
             {/* 2026-10-26 전자상거래법 제13조 제3항 - 미성년자 결제 취소 고지 */}

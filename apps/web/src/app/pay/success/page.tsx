@@ -33,6 +33,11 @@ function SuccessBody() {
     })
       .then(async (r) => {
         const body = await r.json().catch(() => ({}));
+        // 2026-11-13 결제 검수: 결제 앱에서 다른 창으로 돌아와 로그인이 풀린 경우 - 결제는 이미 됐으니 로그인 뒤 이 화면으로 돌아와 마저 연다
+        if (r.status === 401) {
+          window.location.replace(`/login?next=${encodeURIComponent(location.pathname + location.search)}`);
+          return;
+        }
         if (r.ok && typeof body.redirect === "string" && body.redirect.startsWith("/")) {
           notifyYeopjeonChanged();
           try {

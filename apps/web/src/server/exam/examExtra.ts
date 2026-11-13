@@ -1,13 +1,15 @@
-import type { SajuJson } from "saju-engine";
-import { NAME_TOKEN } from "@/server/readings/generateReading";
+import type { CompletionProvider, SajuJson } from "saju-engine";
+import { db } from "@/server/auth/db";
+import { NAME_TOKEN, completeWithRetry, fillName, getReadingProvider } from "@/server/readings/generateReading";
 import { kstDateString } from "@/lib/manseView";
-import { examFactsForPrompt } from "@/lib/suneung";
-import { EXAM_QUALITY_RULES } from "./exam";
+import { sajuFacts } from "@/lib/sajuFacts";
+import { EXAM_EXTRA_TITLE, examExtraTopic, examFactsForPrompt, examSeason, type ExamExtraKind, type ExamSeason } from "@/lib/suneung";
+import { EXAM_QUALITY_RULES, parseExamDeep, type ExamDeep } from "./exam";
 
 /**
  * 수능 심층분석 2~4 (2026-11-12 유샘 확정 상품명·부제) - 풀이 지시문.
  *   계산은 엔진(examFactsForPrompt), 해석은 AI. 근거로 볼 값은 일반 명리 이론으로 지니가 잡은 초안이며 유샘 검수 전이다.
- *   결제 상품은 아직 붙이지 않았다 (관리자 시험 화면에서만 쓴다).
+ *   2026-11-13 유샘 승인: 결제 상품으로 연결 (각 5,500원 · 네 가지 모두 보기 16,500원).
  */
 
 export type ExamExtraKey = "exam_goal" | "exam_focus" | "exam_calm";
@@ -85,4 +87,40 @@ ${EXAM_QUALITY_RULES}
 
 JSON 형식:
 {"summary":"...","parts":[{"heading":"...","body":"..."},...]}`;
+}
+
+// ───────────────────────── 쓰기·저장 (2026-11-13 유샘 승인 - 결제 연결) ─────────────────────────
+
+export async function generateExamExtra(saju: SajuJson, nickname: string, kind: ExamExtraKind, provider: CompletionProvider = getReadingProvider(9000)): Promise<ExamDeep> {
+  const today = kstDateString();
+  const season = examSeason(today);
+  const sf = sajuFacts(saju, today);
+  const facts = { text: examFactsForPrompt(saju, today), daeun: sf.daeunList };
+  const body = await completeWithRetry(provider, buildExamExtraPrompt(saju, `exam_${kind}` as ExamExtraKey, today), (raw) =>
+    parseExamDeep(raw, sf.daeunList.map((d) => d.ganzhi), facts)
+  );
+  return {
+    season,
+    title: EXAM_EXTRA_TITLE[kind],
+    summary: fillName(body.summary, nickname),
+    parts: body.parts.map((p) => ({ heading: fillName(p.heading, nickname), body: fillName(p.body, nickname) })),
+    model: provider.modelName,
+  };
+}
+
+export async function getExamExtra(personId: string, season: ExamSeason, kind: ExamExtraKind): Promise<ExamDeep | null> {
+  const pool = await db();
+  const r = await pool.query<{ content: ExamDeep }>(`SELECT content FROM topic_readings WHERE person_id = $1 AND topic = $2`, [personId, examExtraTopic(season, kind)]);
+  return r.rows[0]?.content ?? null;
+}
+
+export async function saveExamExtra(personId: string, kind: ExamExtraKind, content: ExamDeep): Promise<ExamDeep> {
+  const pool = await db();
+  await pool.query(`INSERT INTO topic_readings (person_id, topic, content, model) VALUES ($1, $2, $3, $4) ON CONFLICT (person_id, topic) DO NOTHING`, [
+    personId,
+    examExtraTopic(content.season, kind),
+    JSON.stringify(content),
+    content.model,
+  ]);
+  return (await getExamExtra(personId, content.season, kind)) ?? content;
 }

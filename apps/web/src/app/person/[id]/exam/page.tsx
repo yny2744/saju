@@ -12,7 +12,8 @@ import { PayDialog } from "@/components/yeopjeon/PayDialog";
 import { GuardianPayNote } from "@/components/yeopjeon/GuardianPayNote";
 import { WritingOverlay } from "@/components/yeopjeon/WritingOverlay";
 import { notifyYeopjeonChanged, reportClientError } from "@/components/yeopjeon/useYeopjeon";
-import { CURRENCY_NAME, formatNyang } from "@/lib/yeopjeon";
+import { CURRENCY_NAME, PRICE, formatNyang } from "@/lib/yeopjeon";
+import { EXAM_EXTRA_TITLE } from "@/lib/suneung";
 import { ELEMENT_TOKEN } from "@/lib/pillarView";
 import type { ExamReading } from "@/lib/suneung";
 import type { ExamDeep } from "@/server/exam/exam";
@@ -339,6 +340,27 @@ function Body({ id }: { id: string }) {
             )
           )}
         </>
+      )}
+
+      {/* 2026-11-13 유샘: 심층분석 2~4 · 네 가지 모두 보기로 가는 길 */}
+      {PRICE.EXAM_EXTRA && open && (
+        <section className="mt-8 rounded-2xl p-5" style={CARD}>
+          <p className="text-center text-[17px] font-bold" style={{ fontFamily: "var(--font-serif)" }}>
+            더 깊이 보고 싶다면
+          </p>
+          <div className="mt-3 space-y-2">
+            {(["goal", "focus", "calm"] as const).map((k) => (
+              <a key={k} href={`/person/${id}/exam/x/${k}`} className="block rounded-xl px-4 py-3 text-[15px] font-bold" style={{ border: "1px solid var(--color-gold-line)" }}>
+                {EXAM_EXTRA_TITLE[k]} ›
+              </a>
+            ))}
+            {!state.owned.deep && PRICE.EXAM_ALL && (
+              <a href={`/person/${id}/exam/x/all`} className="block rounded-xl px-4 py-3 text-center text-[14px] font-bold" style={{ border: `1.5px dashed ${GOLD}` }}>
+                네 가지 모두 보기 · {PRICE.EXAM_ALL.toLocaleString("ko-KR")}원 (3+1) ›
+              </a>
+            )}
+          </div>
+        </section>
       )}
 
       <p className="mt-8 text-center text-[12px] leading-relaxed" style={{ color: "var(--color-ink-faint)" }}>

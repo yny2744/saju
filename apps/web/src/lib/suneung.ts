@@ -33,7 +33,20 @@ export const SEASON_INFO: Record<ExamSeason, { title: string; short: string; han
   start: { title: "새 출발운", short: "새 출발운", hanja: "始", blurb: "새 학기, 새 자리에서 나의 흐름" },
 };
 
+/**
+ * 2026-11-13 유샘 결정("합격운은 서비스 제공하지 말자"): 시즌을 합격운·새 출발운으로 넘기지 않는다.
+ *   넘기면 수능 뒤에 시즌 이름이 바뀌어, 수능대박운을 산 손님이 자기 풀이를 못 보게 된다 (열람 표시가 시즌별).
+ *   다시 켜려면 SEASON_SWITCH 를 true 로 (합격운 상품·문구를 먼저 준비해야 한다).
+ */
+export const SEASON_SWITCH = false;
+
+/** 수능대박운 판매 기간 - 수능 당일까지 (그 뒤엔 새로 팔지 않고, 산 풀이는 계속 볼 수 있다) */
+export function examSaleOpen(today: string = kstDateString()): boolean {
+  return today <= EXAM_DATE;
+}
+
 export function examSeason(today: string = kstDateString()): ExamSeason {
+  if (!SEASON_SWITCH) return "suneung";
   if (today <= EXAM_DATE) return "suneung";
   if (today <= PASS_END) return "pass";
   return "start";
@@ -50,6 +63,35 @@ export function examDday(today: string = kstDateString()): number | null {
 /** 엽전 장부·잠금에 쓰는 이름: exam_suneung / exam_suneung_deep … (시즌마다 따로 산다) */
 export function examUnlockTopic(season: ExamSeason, deep: boolean): string {
   return `exam_${season}${deep ? "_deep" : ""}`;
+}
+
+/**
+ * 수능 심층분석 2~4 (2026-11-13 유샘 승인): 목표 성취운 · 집중과 몰입운 · 시험 컨디션 안정운 각 5,500원,
+ * 네 가지 모두 보기(심층분석 1~4) 16,500원(3+1). 시즌마다 exam_<시즌>_goal 처럼 따로 연다.
+ */
+export const EXAM_EXTRA_KINDS = ["goal", "focus", "calm"] as const;
+export type ExamExtraKind = (typeof EXAM_EXTRA_KINDS)[number];
+export const EXAM_EXTRA_TITLE: Record<ExamExtraKind, string> = { goal: "목표 성취운", focus: "집중과 몰입운", calm: "시험 컨디션 안정운" };
+/** 카드·결제 전 화면에 보이는 부제 (2026-11-12 유샘 확정) */
+export const EXAM_EXTRA_SUB: Record<ExamExtraKind, string[]> = {
+  goal: ["목표 달성을 위한 사주적 흐름", "노력에 따른 성과와 결실의 가능성", "바라는 목표와 타고난 기질의 조화"],
+  focus: ["타고난 집중력과 학습 능력", "몰입을 높이는 환경과 학습 방식", "집중을 방해하는 요소와 극복 방향"],
+  calm: ["긴장과 불안에 대처하는 심리적 성향", "시험 전후 체력과 컨디션 변화", "예상치 못한 상황에 대한 대처와 안정 방향"],
+};
+export const EXAM_DEEP_SUB = ["타고난 공부 체질과 학습 성향", "시기별 공부 리듬과 학습 흐름", "수능 당일 기운과 시간대별 변화", "나만의 행운 색상·숫자·방향·소품"];
+export function isExamExtraKind(v: unknown): v is ExamExtraKind {
+  return typeof v === "string" && (EXAM_EXTRA_KINDS as readonly string[]).includes(v);
+}
+export function examExtraTopic(season: ExamSeason, kind: ExamExtraKind): string {
+  return `exam_${season}_${kind}`;
+}
+/** 상품(결제 mode)이 여는 이름들 */
+export function examModeTopics(season: ExamSeason, mode: string): string[] {
+  if (mode === "exam") return [examUnlockTopic(season, false)];
+  if (mode === "exam_deep") return [examUnlockTopic(season, true)];
+  if (mode === "exam_all") return [examUnlockTopic(season, true), ...EXAM_EXTRA_KINDS.map((k) => examExtraTopic(season, k))];
+  const k = mode.replace(/^exam_/, "");
+  return isExamExtraKind(k) ? [examExtraTopic(season, k)] : [];
 }
 
 // ───────────────────────── 문장 창고 ─────────────────────────

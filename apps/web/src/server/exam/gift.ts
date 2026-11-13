@@ -1,9 +1,10 @@
+import { isOnSale } from "@/lib/sale";
 import { randomBytes } from "crypto";
 import type { PoolClient } from "pg";
 import { db } from "@/server/auth/db";
 import { InsufficientYeopjeonError } from "@/server/yeopjeon/ledger";
 import { inTransaction, lockAndBalance } from "@/server/readings/readings";
-import { EXAM_DEEP_POINTS, SEASON_INFO, examSeason, examUnlockTopic, type ExamSeason } from "@/lib/suneung";
+import { EXAM_DEEP_POINTS, SEASON_INFO, examSaleOpen, examSeason, examUnlockTopic, type ExamSeason } from "@/lib/suneung";
 import { PRICE } from "@/lib/yeopjeon";
 
 /**
@@ -14,7 +15,7 @@ import { PRICE } from "@/lib/yeopjeon";
  */
 
 export class GiftError extends Error {
-  constructor(readonly code: "NOT_FOUND" | "ALREADY_OWNED", message: string) {
+  constructor(readonly code: "NOT_FOUND" | "ALREADY_OWNED" | "SALE_ENDED", message: string) {
     super(message);
     this.name = "GiftError";
   }
@@ -107,5 +108,11 @@ export async function giftWithClient(client: PoolClient, payerId: string, token:
 /** 엽전이 충분할 때 바로 선물 */
 export async function giftExamDeep(payerId: string, token: string): Promise<void> {
   if (!TOKEN_RE.test(token)) throw new GiftError("NOT_FOUND", "선물 링크를 찾을 수 없어요.");
+  assertGiftOnSale();
   await inTransaction((client) => giftWithClient(client, payerId, token));
+}
+
+/** 2026-11-13 결제 검수: 선물 결제도 판매 잠금·판매 기간을 똑같이 지킨다 */
+export function assertGiftOnSale(): void {
+  if (!isOnSale("exam_deep") || !examSaleOpen()) throw new GiftError("SALE_ENDED", "지금은 선물할 수 없어요. 판매 기간이 끝났거나 준비 중이에요.");
 }

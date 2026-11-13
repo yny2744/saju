@@ -1,5 +1,5 @@
 import { calculateDailyGanzhi, calculateSaju } from "saju-engine";
-import { EXAM_DATE, EXAM_DAY, composeExam, examDday, examFactsForPrompt, examSeason, examUnlockTopic } from "@/lib/suneung";
+import { EXAM_DATE, EXAM_DAY, composeExam, examDday, examFactsForPrompt, examSaleOpen, examSeason, examUnlockTopic } from "@/lib/suneung";
 import { isPurchaseMode, planPurchase } from "@/server/readings/readings";
 import { isSuneungOn } from "@/lib/launchMode";
 import { parseExamDeep } from "@/server/exam/exam";
@@ -14,9 +14,11 @@ describe("수능운 (2026-10-17 수정안 17)", () => {
   it("시즌과 D-day", () => {
     expect(examSeason("2026-10-17")).toBe("suneung");
     expect(examSeason("2026-11-19")).toBe("suneung");
-    expect(examSeason("2026-11-20")).toBe("pass");
-    expect(examSeason("2027-02-28")).toBe("pass");
-    expect(examSeason("2027-03-01")).toBe("start");
+    // 2026-11-13 유샘: 합격운으로 넘기지 않는다 (SEASON_SWITCH=false) - 수능 뒤에도 산 풀이가 그대로 보이게
+    expect(examSeason("2026-11-20")).toBe("suneung");
+    expect(examSeason("2027-03-01")).toBe("suneung");
+    expect(examSaleOpen("2026-11-19")).toBe(true);
+    expect(examSaleOpen("2026-11-20")).toBe(false);
     expect(examDday("2026-10-17")).toBe(33);
     expect(examDday("2026-11-19")).toBe(0);
     expect(examDday("2026-11-20")).toBeNull();

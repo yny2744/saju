@@ -62,6 +62,10 @@ export interface TenantPrices {
   WALLPAPER: number;
   EXAM: number;
   EXAM_DEEP: number;
+  /** 수능 심층분석 2~4 (목표 성취운·집중과 몰입운·시험 컨디션 안정운) 한 가지 (2026-11-13 유샘 승인) - 없으면 팔지 않음 */
+  EXAM_EXTRA?: number;
+  /** 수능 심층분석 네 가지 모두 보기 3+1 (2026-11-13 유샘 승인) - 없으면 팔지 않음 */
+  EXAM_ALL?: number;
   /** 사주 겹쳐 보기 열기 (2026-11-01, features.paidOverlay 가 있는 고객사만) */
   OVERLAY?: number;
   /** 2027 신년운 전체 보기 (2026-11-03 유샘 승인, 오픈 특가 9,900원) - 이 값이 있는 고객사만 판다 (lib/newyear2027.ts) */

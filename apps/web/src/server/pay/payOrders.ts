@@ -9,7 +9,7 @@ import { notifyError } from "@/server/alert";
 import { splitPayment } from "@/lib/pay";
 import { formatNyang } from "@/lib/yeopjeon";
 import type { AnyTopicKey } from "@/lib/topics";
-import { GiftError, getExamGift, giftWithClient } from "@/server/exam/gift";
+import { GiftError, assertGiftOnSale, getExamGift, giftWithClient } from "@/server/exam/gift";
 import { PRICE } from "@/lib/yeopjeon";
 
 /**
@@ -170,6 +170,7 @@ async function overlayWithClient(client: import("pg").PoolClient, userId: string
  * 주문의 person_id 는 수험생의 사람, gift_token 이 있으면 승인 뒤 purchase 대신 선물로 처리한다.
  */
 export async function giftCheckout(payerId: string, token: string): Promise<CheckoutResult> {
+  assertGiftOnSale();
   const g = await getExamGift(token, payerId);
   if (!g) throw new GiftError("NOT_FOUND", "선물 링크를 찾을 수 없어요.");
   if (g.owned) throw new GiftError("ALREADY_OWNED", "이미 깊게 보기가 열려 있어요.");
@@ -222,6 +223,9 @@ function destination(o: Pick<OrderRow, "person_id" | "mode" | "topics" | "gift_t
   if (o.mode === "couple") return `/couple/${o.person_id}?paid=1`;
   if (o.mode === "wallpaper") return `/person/${o.person_id}/wallpaper`;
   if (o.mode === "exam" || o.mode === "exam_deep") return `/person/${o.person_id}/exam?paid=1`;
+  // 2026-11-13 유샘: 심층분석 2~4 · 네 가지 모두 보기
+  if (o.mode === "exam_goal" || o.mode === "exam_focus" || o.mode === "exam_calm") return `/person/${o.person_id}/exam/x/${o.mode.slice(5)}?paid=1`;
+  if (o.mode === "exam_all") return `/person/${o.person_id}/exam/x/all?paid=1`;
   if (o.mode === "ny2027" || o.mode === "ny2027_full") return `/person/${o.person_id}/newyear?paid=1`;
   // 2026-11-09 크리스마스 연애운: 짧은 궁합·2027 연애 달력
   if (o.mode === "love_pair" || o.mode === "love_cal" || o.mode === "love_cal_pair") {

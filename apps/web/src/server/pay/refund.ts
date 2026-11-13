@@ -15,7 +15,7 @@ import { payMode } from "./payOrders";
  */
 
 const REFUND_DAYS = 7;
-const REVOCABLE = new Set(["exam", "exam_deep"]);
+const REVOCABLE = new Set(["exam", "exam_deep", "exam_goal", "exam_focus", "exam_calm", "exam_all"]);
 
 export interface MyPayOrder {
   id: string;
@@ -40,9 +40,12 @@ type Row = {
   opened_at: Date | null;
   refund_requested_at: Date | null;
   refunded_at: Date | null;
+  gift_token: string | null;
 };
 
-const COLS = `id, user_id, person_id, mode, price, amount, order_name, status, paid_at, opened_at, refund_requested_at, refunded_at`;
+const COLS = `id, user_id, person_id, mode, price, amount, order_name, status, paid_at, opened_at, refund_requested_at, refunded_at, gift_token`;
+/** 열람 표시에 남은 경로 - 부모님 선물 결제는 'gift' 로 열린다 */
+const viaOf = (o: Pick<Row, "mode" | "gift_token">) => (o.gift_token ? "gift" : o.mode);
 
 export async function myPayOrders(userId: string): Promise<MyPayOrder[]> {
   const pool = await db();
@@ -61,9 +64,13 @@ export async function myPayOrders(userId: string): Promise<MyPayOrder[]> {
 /** 풀이를 이미 열었는지 - 결제 완료 화면에서 연 기록, 또는 수능 깊은 풀이가 이미 쓰였는지 */
 async function wasOpened(o: Row): Promise<boolean> {
   if (o.opened_at) return true;
-  if (o.mode !== "exam_deep") return false;
+  if (!REVOCABLE.has(o.mode) || o.mode === "exam") return false;
+  // 수능 심층분석: 이 주문이 연 풀이가 이미 쓰였으면(손님이 열어 본 것) 연 것으로 본다
   const pool = await db();
-  const r = await pool.query(`SELECT 1 FROM topic_readings WHERE person_id = $1 AND topic LIKE 'exam\\_%\\_deep'`, [o.person_id]);
+  const r = await pool.query(
+    `SELECT 1 FROM topic_readings r JOIN topic_unlocks u ON u.person_id = r.person_id AND u.topic = r.topic WHERE r.person_id = $1 AND u.via = $2`,
+    [o.person_id, viaOf(o)]
+  );
   return (r.rowCount ?? 0) > 0;
 }
 
@@ -117,8 +124,13 @@ export async function markRefunded(orderId: string): Promise<"done" | "already" 
         [o.user_id, o.price, `환불로 구매 취소 ${formatNyang(o.price)} (${o.order_name})`, orderId]
       );
       if (REVOCABLE.has(o.mode)) {
-        await client.query(`DELETE FROM topic_unlocks WHERE person_id = $1 AND via = $2`, [o.person_id, o.mode]);
-        if (o.mode === "exam_deep") await client.query(`DELETE FROM topic_readings WHERE person_id = $1 AND topic LIKE 'exam\\_%\\_deep'`, [o.person_id]);
+        // 이 주문이 연 것만 다시 잠근다 (써 둔 풀이도 지운다 - 다시 사면 새로 쓴다)
+        await client.query(
+          `DELETE FROM topic_readings WHERE person_id = $1 AND topic IN (SELECT topic FROM topic_unlocks WHERE person_id = $1 AND via = $2)`,
+          [o.person_id, viaOf(o)]
+        );
+        await client.query(`DELETE FROM topic_unlocks WHERE person_id = $1 AND via = $2`, [o.person_id, viaOf(o)]);
+        if (o.gift_token) await client.query(`UPDATE exam_gifts SET paid_by = NULL, paid_at = NULL WHERE token = $1`, [o.gift_token]);
       } else {
         manual = o;
       }
