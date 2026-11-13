@@ -86,8 +86,8 @@ export default function SuneungLanding() {
             question="시험날, 나의 기운은?"
             sub="수험생의 이름과 생년월일을 넣어 주세요"
             cards={[
-              { img: "/promo/card-sn1.jpg", stamp: "試", title: "시험날 기운\n무료로 보기", desc: "공부 체질 · 시험날 일진 · 행운 꾸러미" },
-              { img: "/promo/card-sn2.jpg", stamp: "深", title: "시험날\n깊게 보기", desc: "심층분석 네 가지 · 모두 보기 3+1", tag: formatWon(PRICE.EXAM_DEEP) },
+              { img: "/promo/card-sn1.jpg", stamp: "試", title: "시험날 기운\n무료로 보기", desc: "공부 체질 · 시험날 일진\n행운 꾸러미" },
+              { img: "/promo/card-sn2.jpg", stamp: "深", title: "시험날\n깊게 보기", desc: "심층분석 네 가지\n모두 보기 3+1", tag: formatWon(PRICE.EXAM_DEEP) },
             ]}
             foot="생년월일만 있으면 돼요"
           />
