@@ -67,6 +67,8 @@ export const EXAM_QUALITY_RULES = `- 호칭은 늘 "${NAME_TOKEN}님"으로 쓰�
 - 확정 사실에 없는 십신·오행·간지 이야기(예: "재성이 드러나지 않는다")는 쓰지 마세요. 간지를 쓸 때는 확정 사실에 적힌 것만 쓰세요.
 - 같은 문장이나 같은 조언을 소제목마다 되풀이하지 마세요.`;
 
+const STEMS_KO = ["갑", "을", "병", "정", "무", "기", "경", "신", "임", "계"];
+const BRANCHES_KO = ["자", "축", "인", "묘", "진", "사", "오", "미", "신", "유", "술", "해"];
 const STEM_H = "甲乙丙丁戊己庚辛壬癸";
 const BRANCH_H = "子丑寅卯辰巳午未申酉戌亥";
 const HANJA_GZ = new RegExp(`[${STEM_H}][${BRANCH_H}]`, "g");
@@ -92,7 +94,14 @@ export function examCheckFacts(saju: SajuJson, today: string): { text: string; d
     .map((k) => p[k])
     .filter((x): x is { heavenlyStem: string; earthlyBranch: string } => !!x?.heavenlyStem && !!x?.earthlyBranch)
     .map((x) => `${x.heavenlyStem}${x.earthlyBranch}(${STEM_HANJA[x.heavenlyStem] ?? ""}${BRANCH_HANJA[x.earthlyBranch] ?? ""})`);
-  return { text: `${examFactsForPrompt(saju, today)}\n${pillars.join(" ")}`, daeun: sf.daeunList };
+  // 2026-11-14 검수: 앞뒤 해(작년·올해·내년)의 해 간지도 허용 - "내년 정미년" 같은 자연스러운 말로 풀이가 떨어지지 않게 (60갑자 순서 그대로)
+  const y = Number(today.slice(0, 4));
+  const years = [y - 1, y, y + 1].map((yy) => {
+    const st = STEMS_KO[(((yy - 4) % 10) + 10) % 10];
+    const br = BRANCHES_KO[(((yy - 4) % 12) + 12) % 12];
+    return `${st}${br}(${STEM_HANJA[st] ?? ""}${BRANCH_HANJA[br] ?? ""})`;
+  });
+  return { text: `${examFactsForPrompt(saju, today)}\n${pillars.join(" ")}\n${years.join(" ")}`, daeun: sf.daeunList };
 }
 
 export function examQualityProblem(text: string): string | null {
