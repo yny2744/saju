@@ -46,6 +46,8 @@ function Body({ id, kind }: { id: string; kind: ExamExtraKind | "all" }) {
   const [notice, setNotice] = useState<string | null>(null);
   const [pay, setPay] = useState(false);
   const wrote = useRef(false);
+  const [failed, setFailed] = useState(false);
+  const [tick, setTick] = useState(0);
   const mode = kind === "all" ? "exam_all" : (`exam_${kind}` as const);
   const title = kind === "all" ? "심층분석 네 가지 모두 보기" : EXAM_EXTRA_TITLE[kind];
   const back = `/person/${id}/exam/x/${kind}`;
@@ -86,16 +88,19 @@ function Body({ id, kind }: { id: string; kind: ExamExtraKind | "all" }) {
         if (r.ok && body.reading) setState((s) => (s.status === "ready" ? { ...s, reading: body.reading } : s));
         else {
           wrote.current = false;
-          setNotice(body?.error?.message ?? "잠시 후 다시 시도해 주세요. 결제는 그대로 남아 있어요.");
+          setFailed(true);
+          setNotice(body?.error?.message ?? "잠시 후 [다시 쓰기]를 눌러 주세요. 결제는 그대로 남아 있어요.");
+          if (body?.error?.reason) reportClientError(`수능 ${title} 실패`, String(body.error.reason));
         }
       } catch (e) {
         wrote.current = false;
+        setFailed(true);
         reportClientError(`수능 ${title}`, String(e));
-        setNotice("연결이 끊겼어요. 새로고침해 주세요. 결제는 그대로 남아 있어요.");
+        setNotice("연결이 끊겼어요. [다시 쓰기]를 눌러 주세요. 결제는 그대로 남아 있어요.");
       }
       setWriting(false);
     })();
-  }, [state, id, kind, title]);
+  }, [state, id, kind, title, tick]);
 
   async function buy() {
     setBusy(true);
@@ -150,6 +155,12 @@ function Body({ id, kind }: { id: string; kind: ExamExtraKind | "all" }) {
         <p className="mt-5 rounded-xl px-4 py-3 text-center text-[14px]" style={{ backgroundColor: "var(--color-gold-soft)" }}>
           {notice}
         </p>
+      )}
+      {failed && (
+        // 2026-11-13 유샘 실결제 시험: 풀이 쓰기가 실패하면 그 자리에서 다시 쓸 수 있게 (결제·엽전은 다시 빠지지 않는다)
+        <button type="button" onClick={() => { setFailed(false); setNotice(null); setTick((t) => t + 1); }} className="btn-primary mt-3">
+          다시 쓰기
+        </button>
       )}
 
       {kind === "all" ? (

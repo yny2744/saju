@@ -10,7 +10,7 @@ import { sanitizeExamProfile } from "@/lib/examProfile";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
-export const maxDuration = 60;
+export const maxDuration = 120; // 2026-11-13: 수능 심층분석은 한 번에 30초쯤 - 실패하면 한 번 더 쓸 시간
 
 /** 수능대박운 깊게 보기 쓰기 (산 사람만, 한 번 쓰면 저장한 것을 돌려준다) */
 export async function POST(request: NextRequest, { params }: { params: { id: string } }) {
@@ -31,6 +31,6 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
     return NextResponse.json({ deep });
   } catch (e) {
     notifyError("수능대박운 깊게 보기", e);
-    return NextResponse.json({ error: { code: "AI_FAILED", message: "풀이를 쓰는 중에 문제가 생겼어요. 잠시 후 다시 눌러 주세요. 엽전은 그대로예요." } }, { status: 502 });
+    return NextResponse.json({ error: { code: "AI_FAILED", message: "풀이를 쓰는 중에 문제가 생겼어요. 잠시 후 [다시 쓰기]를 눌러 주세요. 결제는 그대로 남아 있어요.", reason: (e instanceof Error ? e.message : String(e)).slice(0, 160) } }, { status: 502 });
   }
 }

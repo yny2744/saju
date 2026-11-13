@@ -4,7 +4,7 @@ import { NAME_TOKEN, completeWithRetry, fillName, getReadingProvider } from "@/s
 import { kstDateString } from "@/lib/manseView";
 import { sajuFacts } from "@/lib/sajuFacts";
 import { EXAM_EXTRA_TITLE, examExtraTopic, examFactsForPrompt, examSeason, type ExamExtraKind, type ExamSeason } from "@/lib/suneung";
-import { EXAM_QUALITY_RULES, parseExamDeep, type ExamDeep } from "./exam";
+import { EXAM_BUDGET_MS, EXAM_QUALITY_RULES, examCheckFacts, parseExamDeep, type ExamDeep } from "./exam";
 
 /**
  * 수능 심층분석 2~4 (2026-11-12 유샘 확정 상품명·부제) - 풀이 지시문.
@@ -95,9 +95,13 @@ export async function generateExamExtra(saju: SajuJson, nickname: string, kind: 
   const today = kstDateString();
   const season = examSeason(today);
   const sf = sajuFacts(saju, today);
-  const facts = { text: examFactsForPrompt(saju, today), daeun: sf.daeunList };
-  const body = await completeWithRetry(provider, buildExamExtraPrompt(saju, `exam_${kind}` as ExamExtraKey, today), (raw) =>
-    parseExamDeep(raw, sf.daeunList.map((d) => d.ganzhi), facts)
+  const facts = examCheckFacts(saju, today);
+  const body = await completeWithRetry(
+    provider,
+    buildExamExtraPrompt(saju, `exam_${kind}` as ExamExtraKey, today),
+    (raw) => parseExamDeep(raw, sf.daeunList.map((d) => d.ganzhi), facts),
+    30_000,
+    EXAM_BUDGET_MS
   );
   return {
     season,

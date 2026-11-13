@@ -162,7 +162,8 @@ export async function completeWithRetry<T>(
   provider: CompletionProvider,
   prompt: string,
   parse: (raw: string) => T,
-  expectedMs = 25_000
+  expectedMs = 25_000,
+  budgetMs = RETRY.budgetMs
 ): Promise<T> {
   const start = Date.now();
   let last: unknown;
@@ -176,7 +177,7 @@ export async function completeWithRetry<T>(
       if (delay === undefined) break;
       // 붐빔 오류는 금방 돌아오므로 다음 시도는 "보통 걸리는 시간", 검사 탈락은 "방금 걸린 시간"만큼 필요하다고 본다
       const need = delay + (isTransientAiError(e) ? expectedMs : Math.max(Date.now() - t0, 1000));
-      if (Date.now() - start + need > RETRY.budgetMs) break;
+      if (Date.now() - start + need > budgetMs) break;
       await sleep(delay);
     }
   }

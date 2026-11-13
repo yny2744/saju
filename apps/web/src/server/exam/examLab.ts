@@ -4,8 +4,7 @@ import { requireAdmin } from "@/server/admin/admin";
 import { READING_CLAUDE_MODEL, SYSTEM } from "@/server/readings/generateReading";
 import { sajuFacts } from "@/lib/sajuFacts";
 import { kstDateString } from "@/lib/manseView";
-import { examFactsForPrompt } from "@/lib/suneung";
-import { buildExamDeepPrompt, parseExamDeep } from "./exam";
+import { buildExamDeepPrompt, examCheckFacts, parseExamDeep } from "./exam";
 import { EXAM_EXTRA, buildExamExtraPrompt, isExamExtraKey } from "./examExtra";
 
 /**
@@ -50,7 +49,7 @@ export async function handleExamLab(token: string | undefined, raw: unknown): Pr
   const prompt = product === "exam_deep" ? buildExamDeepPrompt(saju, today, null) : buildExamExtraPrompt(saju, product, today);
   const sf = sajuFacts(saju, today);
   const allowed = sf.daeunList.map((d) => d.ganzhi);
-  const facts = { text: examFactsForPrompt(saju, today), daeun: sf.daeunList };
+  const facts = examCheckFacts(saju, today);
 
   const providers = labProviders();
   if (providers.length === 0) return { status: 503, body: { error: { message: "이 환경에는 AI 키가 없어요." } } };

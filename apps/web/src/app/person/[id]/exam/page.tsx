@@ -55,6 +55,8 @@ function Body({ id }: { id: string }) {
   const [picker, setPicker] = useState<"buy" | "gift" | null>(null);
   const [giftUrl, setGiftUrl] = useState<string | null>(null);
   const wrote = useRef(false);
+  const [failed, setFailed] = useState(false);
+  const [tick, setTick] = useState(0);
 
   const load = useCallback(async () => {
     const r = await fetch(`/api/persons/${encodeURIComponent(id)}/exam`).catch(() => null);
@@ -99,16 +101,19 @@ function Body({ id }: { id: string }) {
         if (r.ok && body.deep) setState((s) => (s.status === "ready" ? { ...s, deep: body.deep } : s));
         else {
           wrote.current = false;
-          setNotice(body?.error?.message ?? "잠시 후 다시 시도해 주세요.");
+          setFailed(true);
+          setNotice(body?.error?.message ?? "잠시 후 [다시 쓰기]를 눌러 주세요. 결제는 그대로 남아 있어요.");
+          if (body?.error?.reason) reportClientError("수능대박운 깊게 보기 실패", String(body.error.reason));
         }
       } catch (e) {
         wrote.current = false;
+        setFailed(true);
         reportClientError("수능대박운 깊게 보기", String(e));
-        setNotice("연결이 끊겼어요. 새로고침해 주세요. 엽전은 그대로예요.");
+        setNotice("연결이 끊겼어요. [다시 쓰기]를 눌러 주세요. 결제는 그대로 남아 있어요.");
       }
       setWriting(false);
     })();
-  }, [state, id]);
+  }, [state, id, tick]);
 
   function saveProfile(p: ExamProfile | null) {
     try {
@@ -197,6 +202,12 @@ function Body({ id }: { id: string }) {
         <p className="mt-5 rounded-xl px-4 py-3 text-center text-[14px]" style={{ backgroundColor: "var(--color-gold-soft)" }}>
           {notice}
         </p>
+      )}
+      {failed && (
+        // 2026-11-13 유샘 실결제 시험: 풀이 쓰기가 실패하면 그 자리에서 다시 쓸 수 있게 (결제·엽전은 다시 빠지지 않는다)
+        <button type="button" onClick={() => { setFailed(false); setNotice(null); setTick((t) => t + 1); }} className="btn-primary mt-3">
+          다시 쓰기
+        </button>
       )}
 
       {!open ? (

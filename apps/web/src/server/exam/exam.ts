@@ -2,6 +2,7 @@ import type { CompletionProvider, SajuJson } from "saju-engine";
 import { db } from "@/server/auth/db";
 import { NAME_TOKEN, completeWithRetry, extractJson, fillName, getReadingProvider, inventedDaeun } from "@/server/readings/generateReading";
 import { sajuFacts } from "@/lib/sajuFacts";
+import { BRANCH_HANJA, STEM_HANJA } from "@/lib/pillarView";
 import { kstDateString } from "@/lib/manseView";
 import { examProfileLines, type ExamProfile } from "@/lib/examProfile";
 import { EXAM_DEEP_POINTS, SEASON_INFO, examFactsForPrompt, examSeason, examUnlockTopic, type ExamSeason } from "@/lib/suneung";
@@ -57,6 +58,9 @@ JSON 형식:
 /**
  * 풀이 품질 규칙 (2026-11-13 유샘 - 검수 원칙: 모델이 달라도 사실은 같다 · 근거·자연스러움·중복 없음 · 무료와 유료의 깊이 구분 · 엔진 계산을 바꾸지 않는다)
  */
+/** 수능 심층분석 쓰기 시간 한도 - 한 번에 30초쯤 걸려 60초 안에는 다시 쓸 틈이 없다. 라우트 maxDuration 120 (2026-11-13) */
+export const EXAM_BUDGET_MS = 110_000;
+
 export const EXAM_QUALITY_RULES = `- 호칭은 늘 "${NAME_TOKEN}님"으로 쓰세요. "님" 한 글자나 "갑목 일간님" 같은 호칭으로 부르지 마세요.
 - 무료 풀이가 이미 주제마다 결론 한 줄을 보여 주었습니다. 그 결론을 되풀이하지 말고 왜 그런지(근거), 언제 그런지(시기), 그래서 무엇을 하면 되는지(실천법)까지 풀어 쓰세요.
 - "가능성이 높다", "좋은 결과를 얻는다", 점수·등급 상승처럼 결과를 내다보는 말은 쓰지 마세요.
@@ -75,6 +79,20 @@ export function inventedGanzhi(text: string, facts: string, daeun: Array<{ ganzh
   for (const m of text.match(HANJA_GZ) ?? []) if (!okH.has(m)) return m;
   for (const m of text.matchAll(HANGUL_GZ)) if (!okK.has(m[1])) return m[1];
   return null;
+}
+
+/**
+ * 간지 검사에 쓰는 "확정 사실" - 지시문에 준 사실 + 원국 네 기둥(엔진 값). 2026-11-13 실결제 시험에서
+ *   AI가 원국 기둥(예: 일주)을 짚으면 사실 목록에 없다고 떨어져 풀이가 실패해, 엔진이 계산한 원국 기둥은 허용한다.
+ */
+export function examCheckFacts(saju: SajuJson, today: string): { text: string; daeun: Array<{ ganzhi: string; hanja: string }> } {
+  const sf = sajuFacts(saju, today);
+  const p = saju.pillars as unknown as Record<string, { heavenlyStem?: string; earthlyBranch?: string } | null | undefined>;
+  const pillars = ["year", "month", "day", "hour"]
+    .map((k) => p[k])
+    .filter((x): x is { heavenlyStem: string; earthlyBranch: string } => !!x?.heavenlyStem && !!x?.earthlyBranch)
+    .map((x) => `${x.heavenlyStem}${x.earthlyBranch}(${STEM_HANJA[x.heavenlyStem] ?? ""}${BRANCH_HANJA[x.earthlyBranch] ?? ""})`);
+  return { text: `${examFactsForPrompt(saju, today)}\n${pillars.join(" ")}`, daeun: sf.daeunList };
 }
 
 export function examQualityProblem(text: string): string | null {
@@ -113,8 +131,8 @@ export async function generateExamDeep(saju: SajuJson, nickname: string, profile
   const season = examSeason(today);
   const sf = sajuFacts(saju, today);
   const allowed = sf.daeunList.map((d) => d.ganzhi);
-  const facts = { text: examFactsForPrompt(saju, today), daeun: sf.daeunList };
-  const body = await completeWithRetry(provider, buildExamDeepPrompt(saju, today, profile), (raw) => parseExamDeep(raw, allowed, facts));
+  const facts = examCheckFacts(saju, today);
+  const body = await completeWithRetry(provider, buildExamDeepPrompt(saju, today, profile), (raw) => parseExamDeep(raw, allowed, facts), 30_000, EXAM_BUDGET_MS);
   return {
     season,
     title: SEASON_INFO[season].title,
