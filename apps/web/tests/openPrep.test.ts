@@ -5,10 +5,17 @@ import { TENANT } from "@/tenants";
 
 // 2026-11-04 유샘: mgml 정식 오픈 전 정리
 describe("오픈 전 정리", () => {
-  it("아침 운세 알림·유입 경로 쿠키는 꺼 둔다 (코드는 그대로)", () => {
+  it("아침 운세 알림은 꺼 둔다 (코드는 그대로)", () => {
     expect(PUSH_SWITCH).toBe(false);
     expect(PUSH_ON).toBe(false);
-    expect(SRC_COOKIE_ON).toBe(false);
+  });
+  // 2026-11-14 유샘: 개인정보처리방침에 적고 유입 경로 쿠키를 켠다
+  it("유입 경로 쿠키는 켜져 있고, 개인정보처리방침에 적혀 있다", () => {
+    expect(SRC_COOKIE_ON).toBe(true);
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    const fs = require("fs") as typeof import("fs");
+    const policy = fs.readFileSync(require("path").join(__dirname, "../src/app/privacy/page.tsx"), "utf8");
+    expect(policy).toContain("ryugyeol_src");
   });
   it("상품·가격 안내: 파는 고객사에는 타로 겹쳐 보기·2027 신년운 두 상품이 있다", () => {
     const names = paidProducts().map((r) => `${r.name} ${r.price}`);
