@@ -61,17 +61,32 @@ export async function myPayOrders(userId: string): Promise<MyPayOrder[]> {
   }));
 }
 
-/** 풀이를 이미 열었는지 - 결제 완료 화면에서 연 기록, 또는 수능 깊은 풀이가 이미 쓰였는지 */
-async function wasOpened(o: Row): Promise<boolean> {
-  if (o.opened_at) return true;
-  if (!REVOCABLE.has(o.mode) || o.mode === "exam") return false;
-  // 수능 심층분석: 이 주문이 연 풀이가 이미 쓰였으면(손님이 열어 본 것) 연 것으로 본다
+/**
+ * 제공 상태 (2026-11-13 유샘) - 환불 판단용: 열람 전 · 열람 완료 · 제공 실패
+ *   AI가 쓰는 상품(수능 심층분석 등): 풀이가 저장돼 있으면 열람 완료, 열었는데(연 시각) 풀이가 없으면 제공 실패, 둘 다 없으면 열람 전.
+ *   바로 보이는 상품(가볍게 보기 등): 연 시각이 있으면 열람 완료.
+ */
+export type Delivery = "열람 전" | "열람 완료" | "제공 실패";
+export async function deliveryOf(o: Pick<Row, "mode" | "gift_token" | "person_id" | "opened_at">): Promise<Delivery> {
+  const ai = REVOCABLE.has(o.mode) && o.mode !== "exam";
+  if (!ai) return o.opened_at ? "열람 완료" : "열람 전";
   const pool = await db();
   const r = await pool.query(
     `SELECT 1 FROM topic_readings r JOIN topic_unlocks u ON u.person_id = r.person_id AND u.topic = r.topic WHERE r.person_id = $1 AND u.via = $2`,
     [o.person_id, viaOf(o)]
   );
-  return (r.rowCount ?? 0) > 0;
+  if ((r.rowCount ?? 0) > 0) return "열람 완료";
+  return o.opened_at ? "제공 실패" : "열람 전";
+}
+
+/** 관리자 결제 목록에 제공 상태를 붙인다 */
+export async function deliveryForOrders(ids: string[]): Promise<Record<string, Delivery>> {
+  if (ids.length === 0) return {};
+  const pool = await db();
+  const r = await pool.query<Row>(`SELECT ${COLS} FROM pay_orders WHERE id = ANY($1)`, [ids]);
+  const out: Record<string, Delivery> = {};
+  for (const o of r.rows) out[o.id] = await deliveryOf(o);
+  return out;
 }
 
 export type RefundRequestResult = { eligible: boolean; message: string };
@@ -82,10 +97,12 @@ export async function requestRefund(userId: string, orderId: string, reason: str
   const o = r.rows[0];
   if (!o || (o.status !== "paid" && o.status !== "paid_credit")) return null;
   if (o.refund_requested_at) return { eligible: true, message: "이미 환불 신청이 접수되어 있어요. 처리되면 결제 내역에 '환불 완료'로 표시돼요." };
-  const opened = await wasOpened(o);
+  // 2026-11-13 유샘: 열었지만 풀이를 못 받은 경우(제공 실패)는 열람으로 보지 않는다 - 환불해 드릴 건
+  const delivery = await deliveryOf(o);
+  const opened = delivery === "열람 완료";
   const late = !o.paid_at || Date.now() - o.paid_at.getTime() > REFUND_DAYS * 86400_000;
   const eligible = !opened && !late;
-  const note = (eligible ? "요건 충족" : opened ? "풀이 열람 후" : "결제 7일 지남") + (reason ? ` · 사유: ${reason.slice(0, 200)}` : "");
+  const note = `${delivery} · ` + (eligible ? "요건 충족" : opened ? "풀이 열람 후" : "결제 7일 지남") + (reason ? ` · 사유: ${reason.slice(0, 200)}` : "");
   await pool.query(`UPDATE pay_orders SET refund_requested_at = now(), refund_note = $2 WHERE id = $1`, [orderId, note]);
   notifyAdmin(`환불 신청 - ${o.order_name} ${o.amount.toLocaleString("ko-KR")}원 (${note}) · 주문 ${orderId} · 관리자 화면에서 [환불 처리]`);
   return eligible
@@ -164,8 +181,15 @@ export async function adminRefund(orderId: string, reason: string): Promise<{ ok
       return { ok: false, message: "포트원에 연결하지 못했어요. 잠시 뒤 다시 눌러 주세요." };
     }
     const data = (await res.json().catch(() => null)) as { type?: string; message?: string } | null;
-    // 이미 취소된 결제면 기록만 맞춘다
-    if (!res.ok && data?.type !== "PAYMENT_ALREADY_CANCELLED") return { ok: false, message: `포트원 취소 실패: ${data?.message ?? res.status}` };
+    if (!res.ok) {
+      // 2026-11-13 실결제 시험: 포트원 화면에서 먼저 취소한 결제는 "취소 실패"가 난다 - 포트원 상태가 취소면 우리 기록만 맞춘다
+      const st = await fetch(`https://api.portone.io/payments/${encodeURIComponent(orderId)}`, { headers: { Authorization: `PortOne ${secret}` } })
+        .then((r) => (r.ok ? (r.json() as Promise<{ status?: string }>) : null))
+        .catch(() => null);
+      if (st?.status !== "CANCELLED") return { ok: false, message: `포트원 취소 실패: ${data?.message ?? res.status}` };
+      await markRefunded(orderId);
+      return { ok: true, message: "포트원에서 이미 취소된 결제라 사이트 기록을 '환불 완료'로 맞췄어요." };
+    }
   }
   await markRefunded(orderId);
   return { ok: true, message: "환불 처리했어요. 손님 결제 내역에 '환불 완료'로 보여요." };

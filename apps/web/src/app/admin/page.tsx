@@ -308,6 +308,14 @@ function AdminBody() {
                     환불 신청 {fmtTime(o.refundRequestedAt)} · {o.refundNote}
                   </p>
                 )}
+                {"delivery" in o && (o as { delivery?: string | null }).delivery && (
+                  <span
+                    className="mt-1 inline-block rounded-md px-2 py-px text-[11.5px] font-bold"
+                    style={(o as { delivery?: string }).delivery === "제공 실패" ? { backgroundColor: "var(--color-danger)", color: "#fff" } : { border: "1px solid var(--color-line)", color: "var(--color-ink-soft)" }}
+                  >
+                    {(o as { delivery?: string }).delivery}
+                  </span>
+                )}
                 {(o.status === "paid" || o.status === "paid_credit") && <RefundButton orderId={o.id} name={o.orderName} amount={o.amount} />}
               </li>
             ))}

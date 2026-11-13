@@ -1,3 +1,4 @@
+import { deliveryForOrders } from "@/server/pay/refund";
 import { requireAdmin } from "./admin";
 import { adminGrant, adminStats, listMembers, memberLedger, neededDistribution, recentErrors } from "./adminData";
 import { recentPayOrders, payMode } from "@/server/pay/payOrders";
@@ -13,7 +14,10 @@ export async function handleAdminOverview(token: string | undefined): Promise<Ou
   const a = await requireAdmin(token);
   // 관리자 아님: 오류(403) 대신 200 + denied 로 돌려준다 (화면이 "등록 방법"을 보여 줄 상태라서)
   if (!a.ok) return a.status === 403 ? { status: 200, body: { denied: true, ...(a.body as object) } } : a;
-  const [stats, orders, errors, needed, reviews, sources] = await Promise.all([adminStats(), recentPayOrders(), recentErrors(), neededDistribution(), adminReviews(), sourceReport().catch(() => [])]);
+  const [stats, rawOrders, errors, needed, reviews, sources] = await Promise.all([adminStats(), recentPayOrders(), recentErrors(), neededDistribution(), adminReviews(), sourceReport().catch(() => [])]);
+  // 2026-11-13 유샘: 결제마다 제공 상태(열람 전 · 열람 완료 · 제공 실패)
+  const delivery = await deliveryForOrders(rawOrders.filter((o) => o.status === "paid" || o.status === "paid_credit").map((o) => o.id)).catch(() => ({} as Record<string, string>));
+  const orders = rawOrders.map((o) => ({ ...o, delivery: (delivery as Record<string, string>)[o.id] ?? null }));
   return { status: 200, body: { me: { id: a.user.id, nickname: a.user.nickname }, stats, orders, errors, payMode: payMode(), needed, reviews, sources } };
 }
 

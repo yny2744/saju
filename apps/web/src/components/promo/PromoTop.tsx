@@ -163,15 +163,15 @@ export function PromoTop({
             >
               {c.stamp}
             </span>
-            {c.tag && (
-              // 2026-11-13 유샘: 가격이 카드 아래에 가려 안 보여 오른쪽 위로
-              <span className="absolute right-[9px] top-[9px] rounded-full px-[9px] py-[3px] text-[12.5px] font-bold" style={{ backgroundColor: "#a8322a", color: "#fff", border: "1px solid #f2d48a" }}>
-                {c.tag}
-              </span>
-            )}
             <span className="absolute left-[11px] right-[11px] top-[57%]" style={{ color: "#fff", textShadow: "0 2px 6px rgba(0,0,0,.7)" }}>
               <span className="block whitespace-pre-line text-[16px] font-bold leading-[1.3]" style={{ fontFamily: "var(--font-serif)", wordBreak: "keep-all" }}>
                 {c.title}
+                {c.tag && (
+                  // 2026-11-13 유샘: 가격은 빨간 표 대신 제목 옆에 금빛으로 (카드 아래에 가려 안 보이던 것)
+                  <span className="ml-1.5 whitespace-nowrap text-[14px]" style={{ color: "#f6dfa0" }}>
+                    {c.tag}
+                  </span>
+                )}
               </span>
               <span className="mt-1 block whitespace-pre-line text-[11.5px] leading-[1.35]" style={{ color: "#f0e2bf", wordBreak: "keep-all" }}>
                 {c.desc}
@@ -197,6 +197,10 @@ export function PromoReveal({ id, children, when }: { id: string; children: Reac
   const [open, setOpen] = useState(false);
   useEffect(() => {
     if ((when === undefined || when === 0) && new URLSearchParams(location.search).has("resume")) setOpen(true);
+    if (when === 1 && new URLSearchParams(location.search).has("deep")) {
+      setOpen(true);
+      window.setTimeout(() => document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" }), 300);
+    }
     const on = (e: Event) => {
       // when 이 있으면 그 카드를 눌렀을 때만 연다 (2026-11-13: 깊게 보기는 따로)
       const i = (e as CustomEvent<number>).detail;
