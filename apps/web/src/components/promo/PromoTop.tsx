@@ -163,6 +163,12 @@ export function PromoTop({
             >
               {c.stamp}
             </span>
+            {c.tag && (
+              // 2026-11-13 유샘: 가격이 카드 아래에 가려 안 보여 오른쪽 위로
+              <span className="absolute right-[9px] top-[9px] rounded-full px-[9px] py-[3px] text-[12.5px] font-bold" style={{ backgroundColor: "#a8322a", color: "#fff", border: "1px solid #f2d48a" }}>
+                {c.tag}
+              </span>
+            )}
             <span className="absolute left-[11px] right-[11px] top-[57%]" style={{ color: "#fff", textShadow: "0 2px 6px rgba(0,0,0,.7)" }}>
               <span className="block whitespace-pre-line text-[16px] font-bold leading-[1.3]" style={{ fontFamily: "var(--font-serif)", wordBreak: "keep-all" }}>
                 {c.title}
@@ -170,11 +176,7 @@ export function PromoTop({
               <span className="mt-1 block whitespace-pre-line text-[11.5px] leading-[1.35]" style={{ color: "#f0e2bf", wordBreak: "keep-all" }}>
                 {c.desc}
               </span>
-              {c.tag && (
-                <span className="mt-1.5 inline-block rounded-md px-[7px] py-px text-[11px]" style={{ backgroundColor: "#a8322a", color: "#fff", textShadow: "none" }}>
-                  {c.tag}
-                </span>
-              )}
+
             </span>
           </button>
         ))}
@@ -191,17 +193,23 @@ export function PromoTop({
 }
 
 /** 카드를 누르기 전에는 숨겨 두었다가, 누르면(또는 카카오 로그인에서 돌아오면) 열고 그 자리로 내려간다 */
-export function PromoReveal({ id, children }: { id: string; children: React.ReactNode }) {
+export function PromoReveal({ id, children, when }: { id: string; children: React.ReactNode; when?: number }) {
   const [open, setOpen] = useState(false);
   useEffect(() => {
-    if (new URLSearchParams(location.search).has("resume")) setOpen(true);
-    const on = () => {
+    if ((when === undefined || when === 0) && new URLSearchParams(location.search).has("resume")) setOpen(true);
+    const on = (e: Event) => {
+      // when 이 있으면 그 카드를 눌렀을 때만 연다 (2026-11-13: 깊게 보기는 따로)
+      const i = (e as CustomEvent<number>).detail;
+      if (when !== undefined ? i !== when : false) {
+        setOpen(false);
+        return;
+      }
       setOpen(true);
       window.setTimeout(() => document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" }), 60);
     };
     window.addEventListener(PROMO_OPEN, on);
     return () => window.removeEventListener(PROMO_OPEN, on);
-  }, [id]);
+  }, [id, when]);
   return (
     <section id={id} className="scroll-mt-4 pb-8 pt-5" hidden={!open}>
       {open && children}

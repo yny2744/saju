@@ -1,4 +1,6 @@
 import type { SajuJson } from "saju-engine";
+import { EXAM_EXTRA_KINDS, isExamExtraKind, type ExamExtraKind } from "@/lib/examProductsView";
+export { EXAM_DEEP_SUB, EXAM_EXTRA_KINDS, EXAM_EXTRA_SUB, EXAM_EXTRA_TITLE, isExamExtraKind, type ExamExtraKind } from "@/lib/examProductsView";
 import { determineTenGod, STEM_POLARITY } from "saju-engine/dist/src/rules/tenGodTables";
 import { STEM_ELEMENT } from "saju-engine/dist/src/rules/fiveElementTables";
 import { BRANCH_HANJA, STEM_HANJA, type ElementKo } from "@/lib/pillarView";
@@ -69,19 +71,6 @@ export function examUnlockTopic(season: ExamSeason, deep: boolean): string {
  * 수능 심층분석 2~4 (2026-11-13 유샘 승인): 목표 성취운 · 집중과 몰입운 · 시험 컨디션 안정운 각 5,500원,
  * 네 가지 모두 보기(심층분석 1~4) 16,500원(3+1). 시즌마다 exam_<시즌>_goal 처럼 따로 연다.
  */
-export const EXAM_EXTRA_KINDS = ["goal", "focus", "calm"] as const;
-export type ExamExtraKind = (typeof EXAM_EXTRA_KINDS)[number];
-export const EXAM_EXTRA_TITLE: Record<ExamExtraKind, string> = { goal: "목표 성취운", focus: "집중과 몰입운", calm: "시험 컨디션 안정운" };
-/** 카드·결제 전 화면에 보이는 부제 (2026-11-12 유샘 확정) */
-export const EXAM_EXTRA_SUB: Record<ExamExtraKind, string[]> = {
-  goal: ["목표 달성을 위한 사주적 흐름", "노력에 따른 성과와 결실의 가능성", "바라는 목표와 타고난 기질의 조화"],
-  focus: ["타고난 집중력과 학습 능력", "몰입을 높이는 환경과 학습 방식", "집중을 방해하는 요소와 극복 방향"],
-  calm: ["긴장과 불안에 대처하는 심리적 성향", "시험 전후 체력과 컨디션 변화", "예상치 못한 상황에 대한 대처와 안정 방향"],
-};
-export const EXAM_DEEP_SUB = ["타고난 공부 체질과 학습 성향", "시기별 공부 리듬과 학습 흐름", "수능 당일 기운과 시간대별 변화", "나만의 행운 색상·숫자·방향·소품"];
-export function isExamExtraKind(v: unknown): v is ExamExtraKind {
-  return typeof v === "string" && (EXAM_EXTRA_KINDS as readonly string[]).includes(v);
-}
 export function examExtraTopic(season: ExamSeason, kind: ExamExtraKind): string {
   return `exam_${season}_${kind}`;
 }

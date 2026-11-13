@@ -8,6 +8,7 @@ import { ExamFreeStart } from "@/components/suneung/ExamFreeStart";
 import { CURRENCY_NAME, PRICE, formatNyang } from "@/lib/yeopjeon";
 import { formatWon } from "@/lib/pricingList";
 import { PromoBelow, PromoReveal, PromoTop } from "@/components/promo/PromoTop";
+import { ExamDeepPick } from "@/components/suneung/ExamDeepPick";
 
 /**
  * 콘텐츠별 입구 ① 수능대박운 (2026-10-27 유샘 요청: 홍보 영상 주제에 맞춰 첫 화면이 그 콘텐츠로 시작하는 입구).
@@ -86,12 +87,16 @@ export default function SuneungLanding() {
             sub="수험생의 이름과 생년월일을 넣어 주세요"
             cards={[
               { img: "/promo/card-sn1.jpg", stamp: "試", title: "시험날 기운\n무료로 보기", desc: "공부 체질 · 시험날 일진 · 행운 꾸러미" },
-              { img: "/promo/card-sn2.jpg", stamp: "深", title: "시험날\n깊게 보기", desc: "교시별 기운 · 긴장 처방 · 원서 방향", tag: formatWon(PRICE.EXAM_DEEP) },
+              { img: "/promo/card-sn2.jpg", stamp: "深", title: "시험날\n깊게 보기", desc: "심층분석 네 가지 · 모두 보기 3+1", tag: formatWon(PRICE.EXAM_DEEP) },
             ]}
             foot="생년월일만 있으면 돼요"
           />
-          <PromoReveal id="exam-free">
+          <PromoReveal id="exam-free" when={0}>
             <ExamFreeStart />
+          </PromoReveal>
+          {/* 2026-11-13 유샘 시안: [시험날 깊게 보기]는 이름 칸이 아니라 심층분석 네 가지부터 */}
+          <PromoReveal id="exam-deep" when={1}>
+            <ExamDeepPick />
           </PromoReveal>
           <PromoBelow
             see={INSIDE.map((it) => [it.mark, it.title, it.desc] as [string, string, string])}

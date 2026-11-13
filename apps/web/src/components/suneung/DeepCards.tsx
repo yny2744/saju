@@ -25,7 +25,11 @@ const DEEPS: Deep[] = [
   { img: "/promo/deep-4.jpg", stamp: "安", title: "시험 컨디션 안정운", desc: "긴장을 다스리는 나만의 방향", open: extraOpen("exam_calm"), path: "exam/x/calm" },
 ];
 
-export function DeepCards({ personId }: { personId: string }) {
+/**
+ * personId 가 있으면 그 사람의 상품 화면으로 바로 가고(기본 풀이를 본 뒤),
+ * 없으면 onPick(경로) 으로 알린다 - 랜딩의 [시험날 깊게 보기]에서 상품부터 고르고 사람은 그다음에 (2026-11-13 유샘 시안)
+ */
+export function DeepCards({ personId, onPick }: { personId?: string; onPick?: (path: string) => void }) {
   const price = formatWon(PRICE.EXAM_DEEP);
   const extraPrice = formatWon(PRICE.EXAM_EXTRA ?? PRICE.EXAM_DEEP);
   return (
@@ -71,8 +75,14 @@ export function DeepCards({ personId }: { personId: string }) {
           );
           const cls = "relative block aspect-square overflow-hidden rounded-[14px]";
           const style = { border: "1.5px solid #cfa95c", boxShadow: "0 3px 8px rgba(60,40,10,.22)" } as const;
+          if (d.open && !personId)
+            return (
+              <button key={d.stamp} type="button" onClick={() => onPick?.(d.path)} className={`${cls} text-left transition-transform active:scale-[0.98]`} style={style}>
+                {inner}
+              </button>
+            );
           return d.open ? (
-            <Link key={d.stamp} href={`/person/${encodeURIComponent(personId)}/${d.path}`} className={`${cls} transition-transform active:scale-[0.98]`} style={style}>
+            <Link key={d.stamp} href={`/person/${encodeURIComponent(personId ?? "")}/${d.path}`} className={`${cls} transition-transform active:scale-[0.98]`} style={style}>
               {inner}
             </Link>
           ) : (
@@ -82,9 +92,21 @@ export function DeepCards({ personId }: { personId: string }) {
           );
         })}
       </div>
-      {PRICE.EXAM_ALL && isOnSale("exam_all") ? (
+      {PRICE.EXAM_ALL && isOnSale("exam_all") && !personId ? (
+        <button
+          type="button"
+          onClick={() => onPick?.("exam/x/all")}
+          className="mt-2.5 flex w-full items-center justify-center gap-2 rounded-xl px-3 py-3.5 text-[15px] font-bold"
+          style={{ border: `1.5px solid ${GOLD}`, backgroundColor: "#13203f", color: "#f3e7c6", wordBreak: "keep-all" }}
+        >
+          네 가지 모두 보기 · {formatWon(PRICE.EXAM_ALL)}
+          <span className="rounded-[10px] px-[7px] py-px text-[11px] font-normal" style={{ backgroundColor: GOLD, color: "#13203f" }}>
+            3+1
+          </span>
+        </button>
+      ) : PRICE.EXAM_ALL && isOnSale("exam_all") ? (
         <Link
-          href={`/person/${encodeURIComponent(personId)}/exam/x/all`}
+          href={`/person/${encodeURIComponent(personId ?? "")}/exam/x/all`}
           className="mt-2.5 flex items-center justify-center gap-2 rounded-xl px-3 py-3.5 text-[15px] font-bold"
           style={{ border: `1.5px solid ${GOLD}`, backgroundColor: "#13203f", color: "#f3e7c6", wordBreak: "keep-all" }}
         >
