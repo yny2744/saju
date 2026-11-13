@@ -36,6 +36,11 @@ export async function getUserBySessionToken(token: string | undefined): Promise<
   );
   const row = result.rows[0];
   if (!row) return null;
+  // 2026-11-13 유샘: 들어올 때마다 그날부터 다시 30일 (모든 회원). 하루에 한 번만 늘린다
+  await pool.query(
+    `UPDATE sessions SET expires_at = now() + interval '30 days' WHERE token_hash = $1 AND expires_at < now() + interval '29 days'`,
+    [hashToken(token)]
+  );
   return getUserById(row.user_id);
 }
 
