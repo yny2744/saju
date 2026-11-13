@@ -136,8 +136,8 @@ function Body({ id, kind }: { id: string; kind: ExamExtraKind | "all" }) {
         <p className="text-[13px] tracking-[0.2em]" style={{ color: GOLD }}>
           {BRAND} · 수능 심층분석
         </p>
-        <h1 className="mt-1 text-[26px] font-bold" style={{ fontFamily: "var(--font-serif)", color: GOLD_L, wordBreak: "keep-all" }}>
-          {state.nickname}님의 {title}
+        <h1 className="mt-1 whitespace-pre-line text-[26px] font-bold" style={{ fontFamily: "var(--font-serif)", color: GOLD_L, wordBreak: "keep-all" }}>
+          {state.nickname}님의 {kind === "all" ? "\n심층분석 네 가지 모두 보기" : title}
         </h1>
         {state.reading?.summary && (
           <p className="mt-4 text-[15px] leading-relaxed" style={{ color: GOLD_L }}>
