@@ -8,8 +8,9 @@ import { overlayRef } from "@/server/fun/funUnlock";
 const tarotReq = { kind: "tarot", calendarType: "solar", date: "1990-05-15", time: "09:00", card: 7, question: "love" };
 
 describe("겹쳐 보기 유료", () => {
-  it("명견만리 타로관만 유료(990냥), 류결사주는 그대로 무료", () => {
-    expect(mgml.features.paidOverlay).toEqual(["tarot"]);
+  // 2026-11-14 유샘: 재미관 여섯 가지도 겹쳐 보기는 990냥 (기본 풀이는 무료)
+  it("명견만리 타로·재미관 여섯 가지 겹쳐 보기 유료(990냥), 류결사주는 그대로 무료", () => {
+    expect(mgml.features.paidOverlay).toEqual(["tarot", "mbti", "numerology", "zodiac", "blood", "flower", "birthstone"]);
     expect(mgml.prices.OVERLAY).toBe(990);
     expect(ryugyeol.features.paidOverlay).toBeUndefined();
     expect(ryugyeol.prices.OVERLAY).toBeUndefined();
@@ -43,5 +44,25 @@ describe("겹쳐 보기 유료", () => {
     expect(overlayRef("tarot", tarotReq, "2026-11-02")).not.toBe(a);
     expect(overlayRef("tarot", { ...tarotReq, card: 8 }, "2026-11-01")).not.toBe(a);
     expect(a).not.toContain("1990");
+  });
+});
+
+describe("겹쳐 보기 관별 판매 (2026-11-14)", () => {
+  it("saleOnly 의 overlay:<관> 으로 그 관만 판다", () => {
+    jest.isolateModules(() => {
+      jest.doMock("@/tenants", () => ({ TENANT: { saleOnly: ["exam", "overlay:mbti"] } }));
+      // eslint-disable-next-line @typescript-eslint/no-var-requires
+      const { isOverlayOnSale } = require("@/lib/sale") as typeof import("@/lib/sale");
+      expect(isOverlayOnSale("mbti")).toBe(true);
+      expect(isOverlayOnSale("tarot")).toBe(false);
+    });
+  });
+  it("overlay 가 통째로 있으면 전부", () => {
+    jest.isolateModules(() => {
+      jest.doMock("@/tenants", () => ({ TENANT: { saleOnly: ["overlay"] } }));
+      // eslint-disable-next-line @typescript-eslint/no-var-requires
+      const { isOverlayOnSale } = require("@/lib/sale") as typeof import("@/lib/sale");
+      expect(isOverlayOnSale("tarot")).toBe(true);
+    });
   });
 });

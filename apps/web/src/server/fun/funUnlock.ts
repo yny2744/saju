@@ -1,4 +1,4 @@
-import { isOnSale, SALE_CLOSED_MESSAGE } from "@/lib/sale";
+import { isOverlayOnSale, SALE_CLOSED_MESSAGE } from "@/lib/sale";
 import { createHash } from "crypto";
 import { getTodayKstDateString } from "saju-engine";
 import { db } from "@/server/auth/db";
@@ -48,7 +48,7 @@ export async function handleFunUnlock(token: string | undefined, raw: unknown): 
     const balance = await lockAndBalance(client, user.id);
     const paid = await client.query(`SELECT 1 FROM bokchae_ledger WHERE user_id = $1 AND kind = 'spend' AND ref = $2`, [user.id, ref]);
     if ((paid.rowCount ?? 0) === 0) {
-      if (!isOnSale("overlay")) {
+      if (!isOverlayOnSale(body.kind)) {
         await client.query("ROLLBACK");
         return err(403, "SALE_CLOSED", SALE_CLOSED_MESSAGE);
       }
@@ -82,7 +82,7 @@ export async function handleFunCheckout(token: string | undefined, raw: unknown)
   if (out.status !== 200) return out;
   const body = out.body as FunResponse;
   if (!isOverlayPaid(body.kind)) return err(400, "NOT_PAID_ITEM", "무료로 볼 수 있어요.");
-  if (!isOnSale("overlay")) return err(403, "SALE_CLOSED", SALE_CLOSED_MESSAGE);
+  if (!isOverlayOnSale(body.kind)) return err(403, "SALE_CLOSED", SALE_CLOSED_MESSAGE);
   const three = isThreeRequest(req);
   if (three && TAROT3_PRICE <= 0) return err(400, "NOT_SOLD", "준비 중이에요.");
   const { checkoutOverlay, PayError } = await import("@/server/pay/payOrders");

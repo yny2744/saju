@@ -9,9 +9,9 @@ import { isOnSale } from "@/lib/sale";
  * 정문 대문 (2026-11-11 유샘 확정 시안 gate_mock 2안)
  *   ① 대문 영상이 화면을 꽉 채운다 (머리줄 없이). 소리 없이 시작 - 화면을 누르면 소리와 함께 처음부터.
  *      오른쪽 아래 "건너뛰기". 영상이 끝나거나 건너뛰면 ②로.
- *   ② 카드 여덟 장이 휴대폰 한 화면에: 무료로 시작해요 4 (오늘의 운세 · 만세력 · 띠별 운세 · 관상)
- *      + 지금 뜨는 운세 4 (수능대박운 · 2027 신년운 · 크리스마스 연애운 · 오늘의 타로 - 곧 열려요).
- *      지금 뜨는 운세는 유튜브 홈처럼 카드 속 짧은 영상이 소리 없이 하나씩 차례로 돈다.
+ *   ② 2026-11-14 유샘 확정 시안(gate_draft2): 무료로 시작해요 8 (4×2, 배지 없이)
+ *      → 내 사주 겹쳐 보기 6 (3×2, 제목 옆 "각 990냥" 하나) → 지금 뜨는 운세: 수능대박운 긴 카드 + 곧 열려요 3.
+ *      수능대박운 긴 카드는 짧은 영상이 소리 없이 돈다.
  *   같은 창에서 다시 오면(새로 고침·뒤로 가기) 대문 영상은 건너뛴다 (세션 한 번).
  */
 
@@ -21,23 +21,37 @@ const SEEN_KEY = "gate-intro-seen";
 type Card = { href?: string; img: string; video?: string; stamp: string; title: string; desc: string; badge: string; soon?: boolean; sale?: string };
 
 const FREE: Card[] = [
-  { href: "/start?next=fortune", img: "/promo/free-fortune.jpg", stamp: "日", title: "오늘의 운세", desc: "오늘과 내일, 나의 기운", badge: "무료" },
-  { href: "/start", img: "/promo/free-manse.jpg", stamp: "命", title: "만세력", desc: "여덟 글자 · 오행 · 대운", badge: "무료" },
-  { href: "/tti", img: "/promo/free-tti.jpg", stamp: "支", title: "띠별 운세", desc: "띠만 고르면 바로", badge: "무료" },
-  { href: "/face", img: "/promo/free-face.jpg", stamp: "相", title: "관상", desc: "사진 한 장으로 보는 기질", badge: "무료" },
+  { href: "/start?next=fortune", img: "/promo/free-fortune.jpg", stamp: "日", title: "오늘의 운세", desc: "", badge: "" },
+  { href: "/start", img: "/promo/free-manse.jpg", stamp: "命", title: "만세력", desc: "", badge: "" },
+  { href: "/tti", img: "/promo/free-tti.jpg", stamp: "支", title: "띠별 운세", desc: "", badge: "" },
+  { href: "/face", img: "/promo/free-face.jpg", stamp: "相", title: "관상", desc: "", badge: "" },
+  { href: "/fun/mbti", img: "/promo/fun-mbti.jpg", stamp: "型", title: "MBTI", desc: "", badge: "" },
+  { href: "/fun/zodiac", img: "/promo/fun-zodiac.jpg", stamp: "★", title: "별자리", desc: "", badge: "" },
+  { href: "/fun/blood", img: "/promo/fun-blood.jpg", stamp: "血", title: "혈액형", desc: "", badge: "" },
+  { href: "/fun/numerology", img: "/promo/fun-numerology.jpg", stamp: "數", title: "수비학", desc: "", badge: "" },
 ];
 
-function seasonCards(suneung: boolean): Card[] {
-  const list: Card[] = [];
-  if (suneung) list.push({ href: "/go/suneung", img: "/promo/pv-suneung.jpg", video: "/promo/pv-suneung.mp4", stamp: "試", title: "수능대박운", desc: "시험날, 나의 기운은?", badge: "▶" });
-  list.push(
-    { href: "/go/newyear2027", img: "/promo/pv-newyear2027.jpg", video: "/promo/pv-newyear2027.mp4", stamp: "年", title: "2027 신년운", desc: "정미년, 나의 한 해는?", badge: "▶", sale: "newyear" },
-    { href: "/go/gunghap", img: "/promo/pv-xmas.jpg", video: "/promo/pv-xmas.mp4", stamp: "緣", title: "크리스마스 연애운", desc: "이번 겨울, 나의 인연은?", badge: "▶", sale: "love" },
+/** 2026-11-14 유샘: 재미 운세에 내 사주를 겹쳐 보는 990냥 (기본 풀이는 무료, 겹쳐 보기 풀이만 엽전) */
+const OVERLAY: Card[] = [
+  { href: "/fun/mbti", img: "/promo/fun-mbti.jpg", stamp: "型", title: "MBTI × 사주", desc: "유형과 일간을 겹쳐", badge: "" },
+  { href: "/fun/numerology", img: "/promo/fun-numerology.jpg", stamp: "數", title: "수비학 × 사주", desc: "인생 수와 오행", badge: "" },
+  { href: "/fun/zodiac", img: "/promo/fun-zodiac.jpg", stamp: "★", title: "별자리 × 사주", desc: "별과 여덟 글자", badge: "" },
+  { href: "/fun/blood", img: "/promo/fun-blood.jpg", stamp: "血", title: "혈액형 × 사주", desc: "기질 두 겹", badge: "" },
+  { href: "/fun/flower", img: "/promo/fun-flower.jpg", stamp: "花", title: "탄생화 × 사주", desc: "나를 채우는 꽃", badge: "" },
+  { href: "/fun/birthstone", img: "/promo/fun-birthstone.jpg", stamp: "石", title: "탄생석 × 사주", desc: "나를 채우는 돌", badge: "" },
+];
+
+const SUNEUNG: Card = { href: "/go/suneung", img: "/promo/pv-suneung.jpg", video: "/promo/pv-suneung.mp4", stamp: "試", title: "수능대박운", desc: "11월 19일, 나의 기운은?", badge: "무료로 시작" };
+
+function seasonCards(): Card[] {
+  const list: Card[] = [
+    { href: "/go/newyear2027", img: "/promo/pv-newyear2027.jpg", stamp: "年", title: "2027 신년운", desc: "", badge: "▶", sale: "newyear" },
+    { href: "/go/gunghap", img: "/promo/pv-xmas.jpg", stamp: "緣", title: "크리스마스 연애운", desc: "", badge: "▶", sale: "love" },
     // 2026-11-10 유샘: 타로는 카드 그림 22장이 준비될 때까지 열지 않는다
-    { img: "/promo/pv-tarot.jpg", stamp: "卜", title: "오늘의 타로", desc: "곧 열려요", badge: "곧 열려요", soon: true },
-  );
+    { img: "/promo/pv-tarot.jpg", stamp: "卜", title: "오늘의 타로", desc: "", badge: "곧 열려요", soon: true },
+  ];
   // 2026-11-12 유샘: 판매 잠금(saleOnly) 중인 운세는 보여만 주고 "곧 열려요"
-  return list.map((c) => (c.sale && !isOnSale(c.sale) ? { ...c, soon: true, badge: "곧 열려요", video: undefined } : c));
+  return list.map((c) => (c.sale && !isOnSale(c.sale) ? { ...c, soon: true, badge: "곧 열려요" } : c));
 }
 
 const GOLD = "#d6b36a";
@@ -90,7 +104,7 @@ export function GateMain({ suneung }: { suneung: boolean }) {
     });
   };
 
-  const seasons = seasonCards(suneung);
+  const seasons = seasonCards();
 
   return (
     <>
@@ -136,90 +150,117 @@ export function GateMain({ suneung }: { suneung: boolean }) {
       )}
 
       <section className="gm-cards px-[14px] pb-6 pt-px" style={{ backgroundColor: "#0b1226", color: "#f3e7c6" }}>
-        <Group title="무료로 시작해요" sub="로그인 없이 바로 볼 수 있어요" cards={FREE} free />
-        <Group title="지금 뜨는 운세" sub="무료로 맛보고, 로그인하면 끝까지" cards={seasons} preview={!intro} />
+        <Head title="무료로 시작해요" sub="로그인 없이 바로 볼 수 있어요" />
+        <div className="grid grid-cols-4 gap-1.5">
+          {FREE.map((c) => (
+            <Tile key={c.title} c={c} small />
+          ))}
+        </div>
+
+        <Head title="내 사주 겹쳐 보기" sub="재미 운세에 내 사주를 더해 깊게 · 가입 선물 990냥으로 바로" price="각 990냥" />
+        <div className="grid grid-cols-3 gap-[7px]">
+          {OVERLAY.map((c) => (
+            <Tile key={c.title} c={c} />
+          ))}
+        </div>
+
+        <Head title="지금 뜨는 운세" sub="무료로 맛보고, 로그인하면 끝까지" />
+        {suneung && <Wide c={SUNEUNG} play={!intro} />}
+        <div className="mt-[7px] grid grid-cols-3 gap-[7px]">
+          {seasons.map((c) => (
+            <Tile key={c.title} c={c} badge={c.soon ? "곧 열려요" : undefined} />
+          ))}
+        </div>
       </section>
     </>
   );
 }
 
-function Group({ title, sub, cards, free, preview }: { title: string; sub: string; cards: Card[]; free?: boolean; preview?: boolean }) {
-  // 지금 뜨는 운세: 영상이 있는 카드 하나씩 차례로 소리 없이 재생 (4.5초마다 다음 카드)
-  const playable = cards.map((c, i) => (c.video ? i : -1)).filter((i) => i >= 0);
-  const [active, setActive] = useState(playable[0] ?? -1);
-  useEffect(() => {
-    if (!preview || playable.length < 2) return;
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-    const t = window.setInterval(() => {
-      setActive((a) => playable[(playable.indexOf(a) + 1) % playable.length]);
-    }, 4500);
-    return () => window.clearInterval(t);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [preview, playable.join(",")]);
-
+function Head({ title, sub, price }: { title: string; sub: string; price?: string }) {
   return (
-    <div>
-      <h2 className="mb-0.5 mt-4 text-[16.5px] font-bold" style={{ color: "#f6dfa0", fontFamily: "var(--font-serif)" }}>
+    <>
+      <h2 className="mb-0.5 mt-4 flex items-center gap-2 text-[16.5px] font-bold" style={{ color: "#f6dfa0", fontFamily: "var(--font-serif)" }}>
         {title}
+        {price && (
+          <span className="rounded-xl px-2.5 py-px text-[12px] font-black" style={{ background: "linear-gradient(#f2d48a,#c99a3c)", color: "#13203f", border: "1px solid #f6dfa0" }}>
+            {price}
+          </span>
+        )}
       </h2>
-      <p className="mb-2 text-[11.5px]" style={{ color: "#bfae86" }}>
+      <p className="mb-2 text-[11.5px]" style={{ color: "#bfae86", wordBreak: "keep-all" }}>
         {sub}
       </p>
-      <div className="grid grid-cols-2 gap-2">
-        {cards.map((c, i) => {
-          const inner = (
-            <>
-              {preview && i === active && c.video ? (
-                <video className="absolute inset-0 h-full w-full object-cover" src={c.video} poster={c.img} autoPlay muted loop playsInline aria-hidden />
-              ) : (
-                // eslint-disable-next-line @next/next/no-img-element -- 카드 그림
-                <img src={c.img} alt="" className="absolute inset-0 h-full w-full object-cover" style={c.soon ? { filter: "grayscale(.45) brightness(.7)" } : undefined} />
-              )}
-              <span aria-hidden className="absolute inset-0" style={{ background: "linear-gradient(to bottom, rgba(0,0,0,0) 32%, rgba(6,10,24,.62) 56%, rgba(6,10,24,.93) 82%)" }} />
-              <span
-                aria-hidden
-                className="absolute left-[7px] top-[7px] flex h-[27px] w-[27px] items-center justify-center rounded-full text-[13.5px] font-bold"
-                style={{ backgroundColor: "rgba(16,26,52,.88)", border: `1.5px solid ${GOLD}`, color: "#f2d48a", fontFamily: "var(--font-serif)" }}
-              >
-                {c.stamp}
-              </span>
-              <span
-                className="absolute right-[7px] top-[7px] rounded-[10px] px-[7px] py-px text-[10.5px]"
-                style={free ? { backgroundColor: "#2f6b3a", border: "1px solid #7fc08a", color: "#fff" } : { backgroundColor: "rgba(16,26,52,.85)", border: `1px solid ${GOLD}`, color: "#f3e7c6" }}
-              >
-                {c.badge}
-              </span>
-              <span className="absolute bottom-[9px] left-[10px] right-[8px]" style={{ textShadow: "0 2px 5px rgba(0,0,0,.75)" }}>
-                <span className="block text-[15px] font-bold leading-tight" style={{ color: "#fff", fontFamily: "var(--font-serif)", wordBreak: "keep-all" }}>
-                  {c.title}
-                </span>
-                <span className="mt-0.5 block text-[11px]" style={{ color: "#f0e2bf", wordBreak: "keep-all" }}>
-                  {c.desc}
-                </span>
-              </span>
-            </>
-          );
-          const cls = "gm-card relative block overflow-hidden rounded-[13px]";
-          const style = { border: "1px solid #cfa95c" } as const;
-          return c.href && !c.soon ? (
-            // 2026-11-11 유샘: 지금 뜨는 운세를 누르면 랜딩 영상이 나레이션과 함께 바로 나온다.
-            //   같은 창 안에서 넘어가야(Link) 누른 손길이 이어져 휴대폰이 소리를 허락한다 - 랜딩은 ?sound=1 을 보고 소리를 켠다.
-            <Link key={c.title} href={c.video ? `${c.href}?sound=1` : c.href} className={`${cls} transition-transform active:scale-[0.98]`} style={style}>
-              {inner}
-            </Link>
-          ) : (
-            <div key={c.title} className={cls} style={style} aria-disabled>
-              {inner}
-            </div>
-          );
-        })}
-      </div>
-      {/* 카드 여덟 장이 휴대폰 한 화면에 들어오게: 화면 높이에 맞춰 카드 높이를 정한다 */}
-      <style
-        dangerouslySetInnerHTML={{
-          __html: `.gm-card{height:clamp(108px,calc((100svh - 240px) / 4),190px)}`,
-        }}
-      />
+    </>
+  );
+}
+
+const STAMP = { backgroundColor: "rgba(16,26,52,.9)", border: `1.3px solid ${GOLD}`, color: "#f2d48a", fontFamily: "var(--font-serif)" } as const;
+
+/** 정사각에 가까운 칸 - small 은 4칸 줄(무료), 아니면 3칸 줄 */
+function Tile({ c, small, badge }: { c: Card; small?: boolean; badge?: string }) {
+  const inner = (
+    <>
+      {/* eslint-disable-next-line @next/next/no-img-element -- 카드 그림 */}
+      <img src={c.img} alt="" className="absolute inset-0 h-full w-full object-cover" style={c.soon ? { filter: "grayscale(.5) brightness(.65)" } : undefined} />
+      <span aria-hidden className="absolute inset-0" style={{ background: "linear-gradient(to bottom, rgba(0,0,0,0) 35%, rgba(6,10,24,.9) 82%)" }} />
+      <span aria-hidden className={`absolute left-1 top-1 flex items-center justify-center rounded-full font-bold ${small ? "h-[21px] w-[21px] text-[11px]" : "h-[24px] w-[24px] text-[12px]"}`} style={STAMP}>
+        {c.stamp}
+      </span>
+      {badge && (
+        <span className="absolute right-1 top-1 rounded-lg px-[5px] text-[9.5px]" style={{ backgroundColor: "rgba(16,26,52,.85)", border: `1px solid ${GOLD}`, color: "#f3e7c6" }}>
+          {badge}
+        </span>
+      )}
+      <span className="absolute bottom-1.5 left-1.5 right-1" style={{ textShadow: "0 2px 4px rgba(0,0,0,.8)" }}>
+        <span className={`block font-bold leading-tight ${small ? "text-[12.5px]" : "text-[13.5px]"}`} style={{ color: "#fff", fontFamily: "var(--font-serif)", wordBreak: "keep-all" }}>
+          {c.title}
+        </span>
+        {c.desc && (
+          <span className="mt-px block text-[9.5px]" style={{ color: "#f0e2bf", wordBreak: "keep-all" }}>
+            {c.desc}
+          </span>
+        )}
+      </span>
+    </>
+  );
+  const cls = "relative block overflow-hidden rounded-[11px]";
+  const style = { border: "1px solid #cfa95c", aspectRatio: small ? "1 / 1.12" : "1 / 1.05" } as const;
+  return c.href && !c.soon ? (
+    <Link href={c.href} className={`${cls} transition-transform active:scale-[0.98]`} style={style}>
+      {inner}
+    </Link>
+  ) : (
+    <div className={cls} style={style} aria-disabled>
+      {inner}
     </div>
+  );
+}
+
+/** 수능대박운 긴 카드 - 짧은 영상이 소리 없이 돈다. 누르면 랜딩이 나레이션과 함께 (?sound=1, 같은 창 Link) */
+function Wide({ c, play }: { c: Card; play: boolean }) {
+  return (
+    <Link href={`${c.href}?sound=1`} className="relative block h-[150px] overflow-hidden rounded-[13px] transition-transform active:scale-[0.99]" style={{ border: `1.5px solid ${GOLD}` }}>
+      {play && c.video ? (
+        <video className="absolute inset-0 h-full w-full object-cover" style={{ objectPosition: "50% 25%" }} src={c.video} poster={c.img} autoPlay muted loop playsInline aria-hidden />
+      ) : (
+        // eslint-disable-next-line @next/next/no-img-element -- 카드 그림
+        <img src={c.img} alt="" className="absolute inset-0 h-full w-full object-cover" style={{ objectPosition: "50% 25%" }} />
+      )}
+      <span aria-hidden className="absolute inset-0" style={{ background: "linear-gradient(to right, rgba(6,10,24,.9) 0%, rgba(6,10,24,.55) 48%, rgba(0,0,0,0) 75%)" }} />
+      <span className="absolute right-2 top-2 rounded-[10px] px-[7px] py-px text-[10.5px]" style={{ backgroundColor: "#2f6b3a", border: "1px solid #7fc08a", color: "#fff" }}>
+        {c.badge}
+      </span>
+      <span className="absolute left-3.5 top-[18px]">
+        <span className="block text-[24px] font-bold" style={{ color: "#f6dfa0", fontFamily: "var(--font-serif)" }}>
+          {c.title}
+        </span>
+        <span className="mt-1 block text-[12px]" style={{ color: "#f3e7c6" }}>
+          {c.desc}
+        </span>
+      </span>
+      <span className="absolute bottom-3.5 left-3.5 rounded-full px-3 py-1.5 text-[12.5px] font-black" style={{ background: "linear-gradient(#f2d48a,#c99a3c)", color: "#13203f" }}>
+        ▶ 시험날 기운 보기
+      </span>
+    </Link>
   );
 }

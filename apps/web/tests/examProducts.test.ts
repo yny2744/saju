@@ -15,8 +15,9 @@ describe("수능 심층분석 상품", () => {
     expect(mgml.prices.EXAM_ALL).toBe((mgml.prices.EXAM_EXTRA ?? 0) * 3);
     expect(mgml.prices.EXAM_EXTRA).toBe(mgml.prices.EXAM_DEEP);
   });
-  test("판매 잠금에 수능 상품만 들어 있다 (명견만리 베타)", () => {
-    expect(mgml.saleOnly).toEqual(["exam", "exam_deep", "exam_goal", "exam_focus", "exam_calm", "exam_all"]);
+  // 2026-11-14 유샘: 수능 상품 + 재미관 겹쳐 보기 여섯 가지 (타로 겹쳐 보기는 수능 뒤)
+  test("판매 잠금: 수능 상품과 겹쳐 보기 여섯 가지만 (명견만리 베타)", () => {
+    expect(mgml.saleOnly).toEqual(["exam", "exam_deep", "exam_goal", "exam_focus", "exam_calm", "exam_all", "overlay:mbti", "overlay:numerology", "overlay:zodiac", "overlay:blood", "overlay:flower", "overlay:birthstone"]);
     expect(ryugyeol.saleOnly).toBeUndefined();
   });
 });

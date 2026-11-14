@@ -21,12 +21,12 @@ const mgml: TenantConfig = {
   /** 2026-11-01 유샘: 가입 선물 990냥은 앱으로 열어서 가입(또는 가입 뒤 앱으로 열기)할 때 */
   /** 2026-11-01 유샘: 겹쳐 보기 유료화 1단계 - 타로관 먼저 (잘 되면 나머지 재미관도) */
   // 2026-11-04 유샘 승인: 가입 선물 990냥을 웹으로 로그인해도 준다 (한 사람에게 한 번 규칙은 그대로). true 로 바꾸면 다시 앱으로 열었을 때만.
-  features: { ...ryugyeol.features, appWelcomeGift: false, paidOverlay: ["tarot"] },
+  features: { ...ryugyeol.features, appWelcomeGift: false, paidOverlay: ["tarot", "mbti", "numerology", "zodiac", "blood", "flower", "birthstone"] }, // 2026-11-14 유샘: 재미관 여섯 가지도 사주 겹쳐 보기는 990냥 (기본 풀이는 무료)
   prices: { ...ryugyeol.prices, OVERLAY: 990, NEWYEAR: 9900, TAROT3: 5500, LOVE_PAIR: 990, LOVE_CAL: 9900, COUPLE: 19800, EXAM_EXTRA: 5500, EXAM_ALL: 16500 }, // LOVE_PAIR 짧은 궁합 · LOVE_CAL 2027 연애 달력 · COUPLE 연인 궁합 긴 풀이 19,900→19,800 (2026-11-09 유샘 승인, 부가세 18,000+1,800) // TAROT3: 타로 세 장 + 사주 겹쳐 보기 (2026-11-09 유샘 승인) // NEWYEAR: 2027 신년운 전체 보기 오픈 특가 (2026-11-03 유샘 승인)
   /** 정식 주소 (2026-11-09 유샘: KCP 대표·서비스 URL ryugyeol.com) - Vercel 환경변수 SITE_URL 이 있으면 그쪽이 먼저 */
   siteUrl: "https://ryugyeol.com",
   /** 2026-11-12 유샘: 수능대박운 베타 오픈 - 수능만 팔고 나머지는 곧 열려요 (결제 잠금). 다 열 때는 이 줄을 지운다 */
-  saleOnly: ["exam", "exam_deep", "exam_goal", "exam_focus", "exam_calm", "exam_all"],
+  saleOnly: ["exam", "exam_deep", "exam_goal", "exam_focus", "exam_calm", "exam_all", "overlay:mbti", "overlay:numerology", "overlay:zodiac", "overlay:blood", "overlay:flower", "overlay:birthstone"], // 2026-11-14 유샘: 겹쳐 보기 여섯 가지 판매 (타로는 수능 뒤)
   gate: {
     title: "류결의 명견만리",
     sideLeft: "三道",
