@@ -7,6 +7,27 @@ import { CURRENCY_NAME, INVITEE_GIFT, REF_CODE_RE, WELCOME_GIFT, displayLedgerLa
  * 지급은 (user_id, kind, ref) 유니크라 같은 선물·보상이 두 번 들어가지 않는다(멱등).
  */
 
+/**
+ * 구매 사용 기록 한 줄 (2026-11-14 유샘 실결제 시험).
+ * 환불하면 열람은 다시 잠기지만 처음 산 사용 기록은 장부에 남는다. 같은 사람이 같은 상품을 다시 사면
+ * 이름표(ref)가 겹쳐 장부가 거절하고 결제 처리 전체가 취소되던 문제 - 겹치면 뒤에 #2, #3 … 을 붙여 새 줄로 남긴다.
+ * (중복 구매는 장부가 아니라 열람 표시 확인(planForPerson 등)이 막는다)
+ */
+export async function insertSpend(
+  client: { query: (sql: string, params: unknown[]) => Promise<{ rowCount: number | null }> },
+  userId: string,
+  amount: number,
+  label: string,
+  ref: string
+): Promise<void> {
+  const sql = `INSERT INTO bokchae_ledger (user_id, amount, kind, label, ref) VALUES ($1, $2, 'spend', $3, $4) ON CONFLICT (user_id, kind, ref) DO NOTHING`;
+  for (let n = 1; n <= 50; n++) {
+    const r = await client.query(sql, [userId, amount, label, n === 1 ? ref : `${ref}#${n}`]);
+    if ((r.rowCount ?? 0) > 0) return;
+  }
+  throw new Error(`엽전 장부 기록 실패: 같은 구매가 너무 많아요 (${ref})`);
+}
+
 export interface LedgerEntry {
   amount: number;
   kind: string;

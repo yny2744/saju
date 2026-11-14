@@ -2,7 +2,7 @@ import { createHash } from "crypto";
 import type { PoolClient } from "pg";
 import type { SajuJson } from "saju-engine";
 import { db } from "@/server/auth/db";
-import { InsufficientYeopjeonError } from "@/server/yeopjeon/ledger";
+import { InsufficientYeopjeonError, insertSpend } from "@/server/yeopjeon/ledger";
 import { PREMIUM_ON, PRICE } from "@/lib/yeopjeon";
 import { isSuneungOn } from "@/lib/launchMode";
 import { isFocus, type Focus } from "@/lib/focus";
@@ -463,22 +463,12 @@ export async function purchaseWithClient(
   if (balance < plan.price) throw new InsufficientYeopjeonError(balance);
   if (args.mode === COUPLE_MODE) {
     await client.query(`UPDATE couple_readings SET paid_at = now() WHERE id = $1 AND user_id = $2`, [args.personId, args.userId]);
-    await client.query(`INSERT INTO bokchae_ledger (user_id, amount, kind, label, ref) VALUES ($1, $2, 'spend', $3, $4)`, [
-      args.userId,
-      -plan.price,
-      `[${MODE_LABEL.couple}] ${plan.nickname}`,
-      `couple:${args.personId}`,
-    ]);
+    await insertSpend(client, args.userId, -plan.price, `[${MODE_LABEL.couple}] ${plan.nickname}`, `couple:${args.personId}`);
     return [];
   }
   if (args.mode === FACE_MODE) {
     await client.query(`UPDATE face_readings SET paid_at = now() WHERE id = $1 AND user_id = $2`, [args.personId, args.userId]);
-    await client.query(`INSERT INTO bokchae_ledger (user_id, amount, kind, label, ref) VALUES ($1, $2, 'spend', $3, $4)`, [
-      args.userId,
-      -plan.price,
-      `[${MODE_LABEL.face}] ${plan.nickname}`,
-      `face:${args.personId}`,
-    ]);
+    await insertSpend(client, args.userId, -plan.price, `[${MODE_LABEL.face}] ${plan.nickname}`, `face:${args.personId}`);
     return [];
   }
   if (isExamMode(args.mode)) {
@@ -487,12 +477,7 @@ export async function purchaseWithClient(
       await client.query(`INSERT INTO topic_unlocks (person_id, topic, via) VALUES ($1, $2, $3)`, [args.personId, t, args.mode]);
     }
     if (plan.price > 0) {
-      await client.query(`INSERT INTO bokchae_ledger (user_id, amount, kind, label, ref) VALUES ($1, $2, 'spend', $3, $4)`, [
-        args.userId,
-        -plan.price,
-        `[${SEASON_INFO[season].title} ${EXAM_MODE_NAME[args.mode]}] ${plan.nickname}`,
-        `${args.mode}:${args.personId}:${season}`,
-      ]);
+      await insertSpend(client, args.userId, -plan.price, `[${SEASON_INFO[season].title} ${EXAM_MODE_NAME[args.mode]}] ${plan.nickname}`, `${args.mode}:${args.personId}:${season}`);
     }
     return [];
   }
@@ -500,12 +485,7 @@ export async function purchaseWithClient(
     // 2026-11-03 2027 신년운: 열람 표시 하나 + 이용내역 한 줄
     await client.query(`INSERT INTO topic_unlocks (person_id, topic, via) VALUES ($1, $2, $3)`, [args.personId, args.mode, args.mode]);
     if (plan.price > 0) {
-      await client.query(`INSERT INTO bokchae_ledger (user_id, amount, kind, label, ref) VALUES ($1, $2, 'spend', $3, $4)`, [
-        args.userId,
-        -plan.price,
-        `[${NY_PRODUCT[args.mode]}] ${plan.nickname}`,
-        `${args.mode}:${args.personId}`,
-      ]);
+      await insertSpend(client, args.userId, -plan.price, `[${NY_PRODUCT[args.mode]}] ${plan.nickname}`, `${args.mode}:${args.personId}`);
     }
     return [];
   }
@@ -518,12 +498,7 @@ export async function purchaseWithClient(
       await client.query(`INSERT INTO topic_unlocks (person_id, topic, via) VALUES ($1, $2, $3)`, [args.personId, loveCalTopic(partner), args.mode]);
     }
     if (plan.price > 0) {
-      await client.query(`INSERT INTO bokchae_ledger (user_id, amount, kind, label, ref) VALUES ($1, $2, 'spend', $3, $4)`, [
-        args.userId,
-        -plan.price,
-        `[${LOVE_PRODUCT[args.mode]}] ${plan.nickname}`,
-        `${args.mode}:${args.personId}${partner ? `:${partner}` : ""}`,
-      ]);
+      await insertSpend(client, args.userId, -plan.price, `[${LOVE_PRODUCT[args.mode]}] ${plan.nickname}`, `${args.mode}:${args.personId}${partner ? `:${partner}` : ""}`);
     }
     return [];
   }
@@ -543,12 +518,7 @@ export async function purchaseWithClient(
   const names = args.mode === "bundle12" || isNameProductMode(args.mode) || isPremiumMode(args.mode) ? "" : ` · ${plan.topics.map((t) => TOPICS[t].title).join(", ")}`;
   const ref = `${args.mode}:${args.personId}:${isNameProductMode(args.mode) || isPremiumMode(args.mode) ? args.mode : [...plan.topics].sort().join(",")}`;
   if (plan.price > 0) {
-    await client.query(`INSERT INTO bokchae_ledger (user_id, amount, kind, label, ref) VALUES ($1, $2, 'spend', $3, $4)`, [
-      args.userId,
-      -plan.price,
-      `[${MODE_LABEL[args.mode]}] ${plan.nickname}${names}`,
-      ref,
-    ]);
+    await insertSpend(client, args.userId, -plan.price, `[${MODE_LABEL[args.mode]}] ${plan.nickname}${names}`, ref);
   }
   return plan.topics;
 }

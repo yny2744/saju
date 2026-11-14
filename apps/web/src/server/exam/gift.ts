@@ -2,7 +2,7 @@ import { isOnSale } from "@/lib/sale";
 import { randomBytes } from "crypto";
 import type { PoolClient } from "pg";
 import { db } from "@/server/auth/db";
-import { InsufficientYeopjeonError } from "@/server/yeopjeon/ledger";
+import { InsufficientYeopjeonError, insertSpend } from "@/server/yeopjeon/ledger";
 import { inTransaction, lockAndBalance } from "@/server/readings/readings";
 import { EXAM_DEEP_POINTS, SEASON_INFO, examSaleOpen, examSeason, examUnlockTopic, type ExamSeason } from "@/lib/suneung";
 import { PRICE } from "@/lib/yeopjeon";
@@ -96,12 +96,7 @@ export async function giftWithClient(client: PoolClient, payerId: string, token:
   const balance = await lockAndBalance(client, payerId);
   if (balance < price) throw new InsufficientYeopjeonError(balance);
   await client.query(`INSERT INTO topic_unlocks (person_id, topic, via) VALUES ($1, $2, 'gift')`, [gift.person_id, examUnlockTopic(gift.season, true)]);
-  await client.query(`INSERT INTO bokchae_ledger (user_id, amount, kind, label, ref) VALUES ($1, $2, 'spend', $3, $4)`, [
-    payerId,
-    -price,
-    `[${SEASON_INFO[gift.season].title} 깊게 보기 선물] ${gift.nickname}`,
-    `exam_deep_gift:${gift.person_id}:${gift.season}`,
-  ]);
+  await insertSpend(client, payerId, -price, `[${SEASON_INFO[gift.season].title} 깊게 보기 선물] ${gift.nickname}`, `exam_deep_gift:${gift.person_id}:${gift.season}`);
   await client.query(`UPDATE exam_gifts SET paid_by = $2, paid_at = now() WHERE token = $1`, [token, payerId]);
 }
 

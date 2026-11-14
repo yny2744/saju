@@ -284,10 +284,12 @@ export async function confirmOrder(userId: string | null, input: { paymentKey: u
       else await purchaseWithClient(client, { userId: uid, personId: order.person_id, mode: order.mode, topics: order.topics });
     } catch (e) {
       await client.query("ROLLBACK TO SAVEPOINT buy");
-      if (!(e instanceof PurchaseError || e instanceof InsufficientYeopjeonError || e instanceof GiftError)) throw e;
+      // 2026-11-14 유샘: 예상 못 한 오류(장부 충돌 등)여도 결제 기록 전체를 되돌리지 않는다 - 돈만 빠지고 기록이 없는 상태를 막는다.
+      //   결제 금액은 엽전으로 남기고(paid_credit) 관리자에게 알린다 → 관리자 화면에서 바로 환불할 수 있다.
+      const expected = e instanceof PurchaseError || e instanceof InsufficientYeopjeonError || e instanceof GiftError;
       credited = true;
       await client.query(`UPDATE pay_orders SET status = 'paid_credit' WHERE id = $1`, [orderId]);
-      notifyError("결제 후 구매 실패 - 결제 금액은 엽전으로 남김", e);
+      notifyError(expected ? "결제 후 구매 실패 - 결제 금액은 엽전으로 남김" : "결제 후 구매 중 예상 못 한 오류 - 결제 금액은 엽전으로 남김, 확인 필요", e);
     }
   });
   return { redirect: destination(order), credited };
