@@ -30,6 +30,12 @@ type Data = {
   personId: string;
 };
 
+/** 받침 여부로 이/가 */
+const iGa = (w: string) => {
+  const c = w.charCodeAt(w.length - 1);
+  return c >= 0xac00 && c <= 0xd7a3 && (c - 0xac00) % 28 !== 0 ? "이" : "가";
+};
+
 const NAVY = "#16213a";
 const GOLD = "#d4b265";
 const GOLD_L = "#f3e7c6";
@@ -119,7 +125,7 @@ function Body({ token }: { token: string }) {
         </h1>
         <p className="mt-3 text-[14.5px] leading-relaxed" style={{ color: GOLD_L, wordBreak: "keep-all" }}>
           {done
-            ? `${data.nickname}님 화면에서 ${data.title}이 바로 열려요. 시험날 응원 한마디도 함께 건네 주세요.`
+            ? `${data.nickname}님 화면에서 ${data.title}${iGa(data.title)} 바로 열려요. 시험날 응원 한마디도 함께 건네 주세요.`
             : "사주로 보는 시험날 흐름과 응원이에요. 합격·불합격을 점치지 않아요."}
         </p>
       </header>
