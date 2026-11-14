@@ -105,6 +105,7 @@ cd apps/saju-engine && npm install && npm test && npm run build
 cd apps/web && npm install && npm test && npm run typecheck && npm run build
 ```
 
+- **검사 범위 (2026-11-14 유샘):** 엔진·결제·엽전·환불·로그인·개인정보를 건드리면 전체 검사(테스트 전부 + 타입 검사 + 빌드)를 돌린다. 디자인·문구·화면 배치 같은 가벼운 변경은 그 화면과 관련된 테스트만 + 타입 검사 + 빌드로 줄인다.
 - 웹은 엔진의 `dist`를 쓰므로 엔진을 고친 뒤에는 엔진을 다시 빌드하고, 바뀐 `dist`도 함께 커밋한다.
 - `apps/web/.next`와 `tsconfig.tsbuildinfo`는 예전에 커밋되어 추적 중이다. 빌드·타입 체크로 바뀌어도 **커밋하지 않는다** (심사 후 한 번에 정리). 빌드 확인은 임시 복사본(git worktree)에서 한다.
 - 특정 고객사로 확인할 때는 `NEXT_PUBLIC_TENANT=<id>`를 붙여서 빌드·테스트한다.
