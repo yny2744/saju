@@ -37,6 +37,9 @@ class BgmController {
   private started = false;
   private fadeTimer: ReturnType<typeof setInterval> | null = null;
   private listeners = new Set<Listener>();
+  /** 2026-11-14 유샘: 영상 나레이션이 나오는 동안은 배경음악을 틀지 않는다 (첫 터치가 소리 켜기 버튼이어도) */
+  private held = false;
+  private hiddenTab = false;
   off = false;
 
   constructor() {
@@ -119,6 +122,11 @@ class BgmController {
     a.play()
       .then(() => {
         this.started = true;
+        if (this.held || this.hiddenTab) {
+          a.pause();
+          this.emit();
+          return;
+        }
         this.fadeTo(VOLUME);
         try {
           sessionStorage.setItem(LIVE_KEY, "1");
@@ -196,12 +204,28 @@ class BgmController {
     }
   }
 
-  /** 다른 탭으로 가면 멈추고, 돌아오면 다시 */
+  /** 다른 탭으로 가면 멈추고, 돌아오면 다시 (영상 나레이션 중이면 돌아와도 멈춘 채로) */
   pauseForHidden(hidden: boolean) {
+    this.hiddenTab = hidden;
+    this.resync();
+  }
+
+  /** 영상 소리(나레이션)를 켜면 멈추고, 끄면 다시 */
+  holdForVideo(on: boolean) {
+    this.held = on;
+    this.resync();
+  }
+
+  private resync() {
     const a = this.audio;
-    if (!a || this.off || !this.started) return;
-    if (hidden) a.pause();
-    else a.play().catch(() => {});
+    if (this.off || !this.started) return;
+    const quiet = this.held || this.hiddenTab;
+    if (quiet) {
+      a?.pause();
+      return;
+    }
+    if (!a) this.play(this.wanted());
+    else if (a.paused) a.play().catch(() => {});
   }
 }
 

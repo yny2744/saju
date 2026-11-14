@@ -74,7 +74,7 @@ export function GateMain({ suneung }: { suneung: boolean }) {
     }
     const v = vRef.current;
     if (v) v.muted = true;
-    bgm().pauseForHidden(false);
+    bgm().holdForVideo(false);
     window.setTimeout(() => setIntro(false), 550);
   }, []);
 
@@ -83,7 +83,7 @@ export function GateMain({ suneung }: { suneung: boolean }) {
     if (!v || !v.muted) return;
     v.currentTime = 0;
     v.muted = false;
-    bgm().pauseForHidden(true);
+    bgm().holdForVideo(true);
     v.play().catch(() => {
       v.muted = true;
       v.play().catch(() => {});

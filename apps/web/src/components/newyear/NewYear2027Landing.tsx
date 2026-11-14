@@ -101,7 +101,7 @@ export function NewYear2027Landing() {
   useEffect(() => {
     const v = vid.current;
     if (!v) return;
-    const off = () => bgm().pauseForHidden(false);
+    const off = () => bgm().holdForVideo(false);
     v.addEventListener("ended", off);
     return () => {
       v.removeEventListener("ended", off);
@@ -139,7 +139,7 @@ export function NewYear2027Landing() {
     const v = vid.current;
     window.setTimeout(() => setRise(true), RISE_MS);
     if (!v) return;
-    bgm().pauseForHidden(true);
+    bgm().holdForVideo(true);
     v.muted = false;
     v.currentTime = 0;
     v.play().catch(() => {

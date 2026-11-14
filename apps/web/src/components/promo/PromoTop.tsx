@@ -67,7 +67,7 @@ export function PromoTop({
       v.play()
         .then(() => {
           setSound(true);
-          bgm().pauseForHidden(true);
+          bgm().holdForVideo(true);
         })
         .catch(() => {
           v.muted = true;
@@ -81,14 +81,14 @@ export function PromoTop({
       if (v.currentTime + 0.5 < last && !v.muted) {
         v.muted = true;
         setSound(false);
-        bgm().pauseForHidden(false);
+        bgm().holdForVideo(false);
       }
       last = v.currentTime;
     };
     v.addEventListener("timeupdate", onTime);
     return () => {
       v.removeEventListener("timeupdate", onTime);
-      bgm().pauseForHidden(false);
+      bgm().holdForVideo(false);
     };
   }, []);
 
@@ -101,7 +101,7 @@ export function PromoTop({
       v.currentTime = 0;
       v.play().catch(() => {});
     }
-    bgm().pauseForHidden(next);
+    bgm().holdForVideo(next);
     setSound(next);
   };
 
@@ -110,7 +110,7 @@ export function PromoTop({
     if (v && !v.muted) {
       v.muted = true;
       setSound(false);
-      bgm().pauseForHidden(false);
+      bgm().holdForVideo(false);
     }
     if (onPick) onPick(i);
     else openPromo(i);

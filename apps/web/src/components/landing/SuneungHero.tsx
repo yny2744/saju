@@ -68,7 +68,7 @@ export function SuneungHero({
       if (t + 0.5 < last && !v.muted) {
         v.muted = true;
         setSound(false);
-        bgm().pauseForHidden(false);
+        bgm().holdForVideo(false);
       }
       last = t;
       setCaption(CAPTIONS.find((c) => t >= c.start && t <= c.end)?.text ?? "");
@@ -92,7 +92,7 @@ export function SuneungHero({
       v.play().catch(() => {});
       setSound(false);
       setHint(true);
-      bgm().pauseForHidden(false);
+      bgm().holdForVideo(false);
     };
     const start = () => {
       v.muted = false;
@@ -105,7 +105,7 @@ export function SuneungHero({
             if (v.paused || v.muted) return fallback();
             done = true;
             setSound(true);
-            bgm().pauseForHidden(true);
+            bgm().holdForVideo(true);
           }, 300);
         })
         .catch(fallback);
@@ -139,14 +139,14 @@ export function SuneungHero({
       if (v) v.muted = true;
       setSound(false);
       setHint(false);
-      bgm().pauseForHidden(false);
+      bgm().holdForVideo(false);
     };
     window.addEventListener(NARRATION_OFF, off);
     return () => window.removeEventListener(NARRATION_OFF, off);
   }, []);
 
   // 화면을 떠나면 배경음을 돌려놓는다
-  useEffect(() => () => bgm().pauseForHidden(false), []);
+  useEffect(() => () => bgm().holdForVideo(false), []);
 
   function toggleSound() {
     const v = ref.current;
@@ -156,8 +156,8 @@ export function SuneungHero({
     if (next) {
       v.currentTime = 0;
       v.play().catch(() => {});
-      bgm().pauseForHidden(true);
-    } else bgm().pauseForHidden(false);
+      bgm().holdForVideo(true);
+    } else bgm().holdForVideo(false);
     setSound(next);
     setHint(false);
   }
