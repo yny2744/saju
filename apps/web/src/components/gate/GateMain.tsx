@@ -149,34 +149,72 @@ export function GateMain({ suneung }: { suneung: boolean }) {
         </div>
       )}
 
-      <section className="gm-cards px-[14px] pb-6 pt-px" style={{ backgroundColor: "#0b1226", color: "#f3e7c6" }}>
-        <Head title="무료로 시작해요" sub="로그인 없이 바로 볼 수 있어요" />
-        <div className="grid grid-cols-4 gap-1.5">
-          {FREE.map((c) => (
-            <Tile key={c.title} c={c} small />
-          ))}
+      {/* 2026-11-14 유샘 시안 3: 수능 긴 카드 맨 위 → 무료 8(큰 카드 2×2, 옆으로 밀어 4장 더) → 겹쳐 보기 6(같은 크기, 밀어 2장 더) → 곧 열려요 */}
+      <section className="gm-cards pb-6 pt-px" style={{ backgroundColor: "#0b1226", color: "#f3e7c6" }}>
+        <div className="px-[14px]">
+          <Head title="지금 뜨는 운세" sub="무료로 맛보고, 로그인하면 끝까지" />
+          {suneung && <Wide c={SUNEUNG} play={!intro} />}
         </div>
 
-        <Head title="내 사주 겹쳐 보기" sub="재미 운세에 내 사주를 더해 깊게 · 가입 선물 990냥으로 바로" price="각 990냥" />
-        <div className="grid grid-cols-3 gap-[7px]">
-          {OVERLAY.map((c) => (
-            <Tile key={c.title} c={c} />
-          ))}
+        <div className="px-[14px]">
+          <Head title="무료로 시작해요" sub="로그인 없이 바로 볼 수 있어요" swipe />
         </div>
+        <Rail cards={FREE} />
 
-        <Head title="지금 뜨는 운세" sub="무료로 맛보고, 로그인하면 끝까지" />
-        {suneung && <Wide c={SUNEUNG} play={!intro} />}
-        <div className="mt-[7px] grid grid-cols-3 gap-[7px]">
-          {seasons.map((c) => (
-            <Tile key={c.title} c={c} badge={c.soon ? "곧 열려요" : undefined} />
-          ))}
+        <div className="px-[14px]">
+          <Head title="내 사주 겹쳐 보기" sub="재미 운세에 내 사주를 더해 깊게" price="각 990냥" swipe />
+        </div>
+        <Rail cards={OVERLAY} />
+
+        <div className="px-[14px]">
+          <Head title="곧 열려요" sub="준비 중인 운세" />
+          <div className="grid grid-cols-3 gap-[7px]">
+            {seasons.map((c) => (
+              <Tile key={c.title} c={c} badge={c.soon ? "곧 열려요" : undefined} />
+            ))}
+          </div>
         </div>
       </section>
     </>
   );
 }
 
-function Head({ title, sub, price }: { title: string; sub: string; price?: string }) {
+/** 큰 카드 네 장(2×2)씩 한 장면, 옆으로 밀어 다음 장면 - 오른쪽에 다음 카드가 살짝 보이고 아래 점이 따라간다 */
+function Rail({ cards }: { cards: Card[] }) {
+  const pages: Card[][] = [];
+  for (let i = 0; i < cards.length; i += 4) pages.push(cards.slice(i, i + 4));
+  const ref = useRef<HTMLDivElement>(null);
+  const [at, setAt] = useState(0);
+  const onScroll = () => {
+    const el = ref.current;
+    if (!el) return;
+    const w = el.scrollWidth - el.clientWidth;
+    setAt(w > 0 ? Math.round((el.scrollLeft / w) * (pages.length - 1)) : 0);
+  };
+  return (
+    <>
+      <div ref={ref} onScroll={onScroll} className="gm-rail flex gap-2 overflow-x-auto px-[14px]" style={{ scrollSnapType: "x mandatory", scrollPadding: "0 14px", scrollbarWidth: "none" }}>
+        {pages.map((pg, i) => (
+          <div key={i} className="grid shrink-0 grid-cols-2 gap-2" style={{ width: "calc(100% - 20px)", scrollSnapAlign: "start", alignContent: "start" }}>
+            {pg.map((c) => (
+              <Tile key={c.title} c={c} big />
+            ))}
+          </div>
+        ))}
+      </div>
+      {pages.length > 1 && (
+        <div className="mt-2 flex justify-center gap-1.5" aria-hidden>
+          {pages.map((_, i) => (
+            <span key={i} className="h-[7px] rounded-full transition-all" style={{ width: i === at ? 18 : 7, backgroundColor: i === at ? GOLD : "#4a5370" }} />
+          ))}
+        </div>
+      )}
+      <style dangerouslySetInnerHTML={{ __html: `.gm-rail::-webkit-scrollbar{display:none}` }} />
+    </>
+  );
+}
+
+function Head({ title, sub, price, swipe }: { title: string; sub: string; price?: string; swipe?: boolean }) {
   return (
     <>
       <h2 className="mb-0.5 mt-4 flex items-center gap-2 text-[16.5px] font-bold" style={{ color: "#f6dfa0", fontFamily: "var(--font-serif)" }}>
@@ -187,8 +225,9 @@ function Head({ title, sub, price }: { title: string; sub: string; price?: strin
           </span>
         )}
       </h2>
-      <p className="mb-2 text-[11.5px]" style={{ color: "#bfae86", wordBreak: "keep-all" }}>
-        {sub}
+      <p className="mb-2 flex justify-between gap-2 text-[11.5px]" style={{ color: "#bfae86", wordBreak: "keep-all" }}>
+        <span>{sub}</span>
+        {swipe && <span style={{ color: "#e6c77b" }}>밀어 보기 ›</span>}
       </p>
     </>
   );
@@ -197,13 +236,13 @@ function Head({ title, sub, price }: { title: string; sub: string; price?: strin
 const STAMP = { backgroundColor: "rgba(16,26,52,.9)", border: `1.3px solid ${GOLD}`, color: "#f2d48a", fontFamily: "var(--font-serif)" } as const;
 
 /** 정사각에 가까운 칸 - small 은 4칸 줄(무료), 아니면 3칸 줄 */
-function Tile({ c, small, badge }: { c: Card; small?: boolean; badge?: string }) {
+function Tile({ c, small, big, badge }: { c: Card; small?: boolean; big?: boolean; badge?: string }) {
   const inner = (
     <>
       {/* eslint-disable-next-line @next/next/no-img-element -- 카드 그림 */}
       <img src={c.img} alt="" className="absolute inset-0 h-full w-full object-cover" style={c.soon ? { filter: "grayscale(.5) brightness(.65)" } : undefined} />
       <span aria-hidden className="absolute inset-0" style={{ background: "linear-gradient(to bottom, rgba(0,0,0,0) 35%, rgba(6,10,24,.9) 82%)" }} />
-      <span aria-hidden className={`absolute left-1 top-1 flex items-center justify-center rounded-full font-bold ${small ? "h-[21px] w-[21px] text-[11px]" : "h-[24px] w-[24px] text-[12px]"}`} style={STAMP}>
+      <span aria-hidden className={`absolute flex items-center justify-center rounded-full font-bold ${big ? "left-[7px] top-[7px] h-[28px] w-[28px] text-[14px]" : small ? "left-1 top-1 h-[21px] w-[21px] text-[11px]" : "left-1 top-1 h-[24px] w-[24px] text-[12px]"}`} style={STAMP}>
         {c.stamp}
       </span>
       {badge && (
@@ -211,20 +250,20 @@ function Tile({ c, small, badge }: { c: Card; small?: boolean; badge?: string })
           {badge}
         </span>
       )}
-      <span className="absolute bottom-1.5 left-1.5 right-1" style={{ textShadow: "0 2px 4px rgba(0,0,0,.8)" }}>
-        <span className={`block font-bold leading-tight ${small ? "text-[12.5px]" : "text-[13.5px]"}`} style={{ color: "#fff", fontFamily: "var(--font-serif)", wordBreak: "keep-all" }}>
+      <span className={`absolute ${big ? "bottom-[9px] left-2.5 right-2" : "bottom-1.5 left-1.5 right-1"}`} style={{ textShadow: "0 2px 4px rgba(0,0,0,.8)" }}>
+        <span className={`block font-bold leading-tight ${big ? "text-[17px]" : small ? "text-[12.5px]" : "text-[13.5px]"}`} style={{ color: "#fff", fontFamily: "var(--font-serif)", wordBreak: "keep-all" }}>
           {c.title}
         </span>
         {c.desc && (
-          <span className="mt-px block text-[9.5px]" style={{ color: "#f0e2bf", wordBreak: "keep-all" }}>
+          <span className={`mt-px block ${big ? "text-[11.5px]" : "text-[9.5px]"}`} style={{ color: "#f0e2bf", wordBreak: "keep-all" }}>
             {c.desc}
           </span>
         )}
       </span>
     </>
   );
-  const cls = "relative block overflow-hidden rounded-[11px]";
-  const style = { border: "1px solid #cfa95c", aspectRatio: small ? "1 / 1.12" : "1 / 1.05" } as const;
+  const cls = `relative block overflow-hidden ${big ? "rounded-[13px]" : "rounded-[11px]"}`;
+  const style = { border: "1px solid #cfa95c", aspectRatio: big ? "1 / 1.02" : small ? "1 / 1.12" : "1 / 1.05" } as const;
   return c.href && !c.soon ? (
     <Link href={c.href} className={`${cls} transition-transform active:scale-[0.98]`} style={style}>
       {inner}
