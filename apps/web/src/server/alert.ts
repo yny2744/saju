@@ -33,13 +33,39 @@ export function notifyAdmin(message: string): void {
   sendWebhook(text);
 }
 
+/**
+ * 2026-11-14 유샘 시험에서 환불 신청 알림이 디스코드에 오지 않음 - 원인(지니 판단): 보내 놓고 기다리지 않아서
+ * 베셀이 응답을 마친 뒤 작업을 멈추면 보내던 알림이 사라진다. 베셀의 "응답 뒤에도 마저 하기"(waitUntil)에 맡긴다.
+ * (@vercel/functions 의 waitUntil 과 같은 방식 - 베셀 밖에서는 없어서 그냥 보낸다)
+ */
+function keepAlive(p: Promise<unknown>): void {
+  try {
+    const ctx = (globalThis as unknown as Record<symbol, { get?: () => { waitUntil?: (p: Promise<unknown>) => void } | undefined } | undefined>)[
+      Symbol.for("@vercel/request-context")
+    ];
+    ctx?.get?.()?.waitUntil?.(p);
+  } catch {
+    /* 없으면 그냥 보낸다 */
+  }
+}
+
 function sendWebhook(text: string): void {
-  const url = process.env.ERROR_ALERT_WEBHOOK_URL;
+  const url = process.env.ERROR_ALERT_WEBHOOK_URL?.trim();
   if (!url || !/^https:\/\//.test(url)) return;
   // 디스코드는 content, 슬랙은 text를 읽는다 - 둘 다 담아 보낸다
-  fetch(url, {
+  const p = fetch(url, {
     method: "POST",
     headers: { "content-type": "application/json" },
     body: JSON.stringify({ text, content: text }),
-  }).catch(() => {});
+    signal: AbortSignal.timeout(8000),
+  })
+    .then((r) => {
+      // eslint-disable-next-line no-console
+      if (!r.ok) console.error(`[알림 보내기 실패] HTTP ${r.status}`);
+    })
+    .catch((e) => {
+      // eslint-disable-next-line no-console
+      console.error(`[알림 보내기 실패] ${e instanceof Error ? e.message : String(e)}`);
+    });
+  keepAlive(p);
 }
