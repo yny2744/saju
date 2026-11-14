@@ -21,6 +21,7 @@ export async function GET(request: NextRequest, { params }: { params: { token: s
     return NextResponse.json(
       {
         nickname: g.nickname,
+        mode: g.mode,
         title: g.title,
         points: g.points,
         price: g.price,

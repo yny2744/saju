@@ -44,8 +44,11 @@ type Row = {
 };
 
 const COLS = `id, user_id, person_id, mode, price, amount, order_name, status, paid_at, opened_at, refund_requested_at, refunded_at, gift_token`;
-/** 열람 표시에 남은 경로 - 부모님 선물 결제는 'gift' 로 열린다 */
-const viaOf = (o: Pick<Row, "mode" | "gift_token">) => (o.gift_token ? "gift" : o.mode);
+/**
+ * 열람 표시에 남은 경로 - 보호자(지인) 결제 부탁은 'gift:<토큰>' 으로 열린다 (2026-11-14, 그 링크가 연 풀이만 다시 잠그려고).
+ * 그 전에 결제된 부탁 링크는 'gift' 로 열려 있어 둘 다 본다.
+ */
+const viasOf = (o: Pick<Row, "mode" | "gift_token">): string[] => (o.gift_token ? (o.mode === "exam_deep" ? [`gift:${o.gift_token}`, "gift"] : [`gift:${o.gift_token}`]) : [o.mode]);
 
 export async function myPayOrders(userId: string): Promise<MyPayOrder[]> {
   const pool = await db();
@@ -72,8 +75,8 @@ export async function deliveryOf(o: Pick<Row, "mode" | "gift_token" | "person_id
   if (!ai) return o.opened_at ? "열람 완료" : "열람 전";
   const pool = await db();
   const r = await pool.query(
-    `SELECT 1 FROM topic_readings r JOIN topic_unlocks u ON u.person_id = r.person_id AND u.topic = r.topic WHERE r.person_id = $1 AND u.via = $2`,
-    [o.person_id, viaOf(o)]
+    `SELECT 1 FROM topic_readings r JOIN topic_unlocks u ON u.person_id = r.person_id AND u.topic = r.topic WHERE r.person_id = $1 AND u.via = ANY($2::text[])`,
+    [o.person_id, viasOf(o)]
   );
   if ((r.rowCount ?? 0) > 0) return "열람 완료";
   return o.opened_at ? "제공 실패" : "열람 전";
@@ -143,10 +146,10 @@ export async function markRefunded(orderId: string): Promise<"done" | "already" 
       if (REVOCABLE.has(o.mode)) {
         // 이 주문이 연 것만 다시 잠근다 (써 둔 풀이도 지운다 - 다시 사면 새로 쓴다)
         await client.query(
-          `DELETE FROM topic_readings WHERE person_id = $1 AND topic IN (SELECT topic FROM topic_unlocks WHERE person_id = $1 AND via = $2)`,
-          [o.person_id, viaOf(o)]
+          `DELETE FROM topic_readings WHERE person_id = $1 AND topic IN (SELECT topic FROM topic_unlocks WHERE person_id = $1 AND via = ANY($2::text[]))`,
+          [o.person_id, viasOf(o)]
         );
-        await client.query(`DELETE FROM topic_unlocks WHERE person_id = $1 AND via = $2`, [o.person_id, viaOf(o)]);
+        await client.query(`DELETE FROM topic_unlocks WHERE person_id = $1 AND via = ANY($2::text[])`, [o.person_id, viasOf(o)]);
         if (o.gift_token) await client.query(`UPDATE exam_gifts SET paid_by = NULL, paid_at = NULL WHERE token = $1`, [o.gift_token]);
       } else {
         manual = o;

@@ -191,7 +191,7 @@ function Body({ id, kind }: { id: string; kind: ExamExtraKind | "all" }) {
                 이미 연 심층분석이 있어서 네 가지 모두 보기는 열 수 없어요. 남은 것을 하나씩 열어 주세요.
               </p>
             ) : (
-              <BuyBox busy={busy} onSale={state.onSale} price={price} label={`네 가지 모두 보기 · ${price ? formatWon(price) : ""}`} sub="세 가지 값으로 네 가지 (3+1)" onBuy={buy} />
+              <BuyBox busy={busy} onSale={state.onSale} price={price} label={`네 가지 모두 보기 · ${price ? formatWon(price) : ""}`} sub="세 가지 값으로 네 가지 (3+1)" onBuy={buy} personId={id} mode={mode} product={`수능대박운 ${title}`} />
             ))}
         </section>
       ) : state.reading ? (
@@ -221,7 +221,7 @@ function Body({ id, kind }: { id: string; kind: ExamExtraKind | "all" }) {
                 </li>
               ))}
             </ul>
-            <BuyBox busy={busy} onSale={state.onSale} price={price} label={`${title} 열기 · ${price ? formatWon(price) : ""}`} onBuy={buy} />
+            <BuyBox busy={busy} onSale={state.onSale} price={price} label={`${title} 열기 · ${price ? formatWon(price) : ""}`} onBuy={buy} personId={id} mode={mode} product={`수능대박운 ${title}`} />
           </section>
         )
       )}
@@ -256,7 +256,7 @@ function Body({ id, kind }: { id: string; kind: ExamExtraKind | "all" }) {
   );
 }
 
-function BuyBox({ busy, onSale, price, label, sub, onBuy }: { busy: boolean; onSale: boolean; price: number | null; label: string; sub?: string; onBuy: () => void }) {
+function BuyBox({ busy, onSale, price, label, sub, onBuy, personId, mode, product }: { busy: boolean; onSale: boolean; price: number | null; label: string; sub?: string; onBuy: () => void; personId: string; mode: string; product: string }) {
   if (!onSale || !price) {
     return (
       <p className="mt-5 rounded-xl py-3.5 text-center text-[15px] font-bold" style={{ border: "1px dashed var(--color-gold-line)", color: "var(--color-ink-soft)" }}>
@@ -274,7 +274,8 @@ function BuyBox({ busy, onSale, price, label, sub, onBuy }: { busy: boolean; onS
           {sub}
         </p>
       )}
-      <GuardianPayNote title="수능대박운" />
+      {/* 2026-11-14 유샘: 이 상품 전용 보호자(지인) 결제 부탁 링크 */}
+      <GuardianPayNote personId={personId} mode={mode} product={product} />
     </>
   );
 }

@@ -83,13 +83,13 @@ export function isExamMode(v: unknown): v is ExamMode {
 export function isExamNewMode(v: unknown): boolean {
   return v === "exam_goal" || v === "exam_focus" || v === "exam_calm" || v === "exam_all";
 }
-function examModePrice(mode: ExamMode): number {
+export function examModePrice(mode: ExamMode): number {
   if (mode === "exam") return PRICE.EXAM;
   if (mode === "exam_deep") return PRICE.EXAM_DEEP;
   if (mode === "exam_all") return PRICE.EXAM_ALL ?? 0;
   return PRICE.EXAM_EXTRA ?? 0;
 }
-const EXAM_MODE_NAME: Record<ExamMode, string> = {
+export const EXAM_MODE_NAME: Record<ExamMode, string> = {
   exam: "가볍게 보기",
   exam_deep: "깊게 보기",
   exam_goal: "목표 성취운",

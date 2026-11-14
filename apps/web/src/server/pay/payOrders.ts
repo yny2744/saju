@@ -170,23 +170,24 @@ async function overlayWithClient(client: import("pg").PoolClient, userId: string
  * 주문의 person_id 는 수험생의 사람, gift_token 이 있으면 승인 뒤 purchase 대신 선물로 처리한다.
  */
 export async function giftCheckout(payerId: string, token: string): Promise<CheckoutResult> {
-  assertGiftOnSale();
   const g = await getExamGift(token, payerId);
-  if (!g) throw new GiftError("NOT_FOUND", "선물 링크를 찾을 수 없어요.");
-  if (g.owned) throw new GiftError("ALREADY_OWNED", "이미 깊게 보기가 열려 있어요.");
-  const price = PRICE.EXAM_DEEP;
+  if (!g) throw new GiftError("NOT_FOUND", "결제 부탁 링크를 찾을 수 없어요.");
+  assertGiftOnSale(g.mode);
+  if (g.owned) throw new GiftError("ALREADY_OWNED", "이미 열려 있어요.");
+  // 2026-11-14 유샘: 링크마다 상품(깊게 보기·2~4·네 가지 모두 보기)이 있다 - 가격도 그 상품 가격
+  const price = g.price;
   const balance = await getBalance(payerId);
   if (balance >= price) return { status: "enough", price, balance };
   const pm = payMode();
   if (pm === "off") throw new PayError("PAY_NOT_READY", "결제를 준비하고 있어요. 곧 열려요.");
   const split = splitPayment(price, balance);
   const orderId = newOrderId();
-  const orderName = `${g.title} 깊게 보기 선물`;
+  const orderName = `${g.title} (결제 부탁)`;
   const pool = await db();
   await pool.query(
     `INSERT INTO pay_orders (id, user_id, person_id, mode, topics, price, use_yeopjeon, amount, order_name, src, gift_token)
-     VALUES ($1, $2, $3, 'exam_deep', '[]', $4, $5, $6, $7, $8, $9)`,
-    [orderId, payerId, g.personId, price, split.useYeopjeon, split.cash, orderName, await requestSource(), token]
+     VALUES ($1, $2, $3, $4, '[]', $5, $6, $7, $8, $9, $10)`,
+    [orderId, payerId, g.personId, g.mode, price, split.useYeopjeon, split.cash, orderName, await requestSource(), token]
   );
   return {
     status: "pay",

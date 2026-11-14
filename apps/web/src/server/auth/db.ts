@@ -247,6 +247,8 @@ async function ensureSchema(): Promise<void> {
       paid_at TIMESTAMPTZ
     );
   `);
+  // 2026-11-14 유샘: 보호자(지인) 결제 부탁 링크를 심층분석 2~4·네 가지 모두 보기까지 - 링크마다 상품을 남긴다 (예전 링크는 깊게 보기)
+  await db.query(`ALTER TABLE exam_gifts ADD COLUMN IF NOT EXISTS mode TEXT NOT NULL DEFAULT 'exam_deep';`);
   // 2026-10-12 수정안 46: 작명·개명 결과 - 사람 하나에 상품 하나. redo_count: 7일 안 1회 다시 추천
   await db.query(`
     CREATE TABLE IF NOT EXISTS name_reports (

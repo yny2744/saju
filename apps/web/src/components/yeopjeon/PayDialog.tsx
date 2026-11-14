@@ -283,10 +283,11 @@ export function PayDialog({
             {mode.startsWith("exam_") && (
               // 2026-11-12 유샘: 수험생 깊게 보기는 보호자 결제 (2026-11-13 심층분석 2~4·네 가지 모두 보기도 같이)
               <p className="mt-2 rounded-lg px-3 py-2 text-center text-[12.5px] font-bold" style={{ backgroundColor: "var(--color-paper-soft)", color: "var(--color-ink)", wordBreak: "keep-all" }}>
-                만 19세 미만 수험생은 보호자께 결제를 부탁해 주세요
-                {mode === "exam_deep" && (
+                만 19세 미만 수험생은 보호자(지인)께 결제를 부탁해 주세요
+                {/* 2026-11-14 유샘: 모든 수능 유료 상품에 결제 부탁 링크 - 버튼 이름도 같게 */}
+                {mode !== "exam" && (
                   <span className="block text-[11.5px] font-normal" style={{ color: "var(--color-ink-soft)" }}>
-                    풀이 화면의 [부모님께 선물 부탁하기]로 보낼 수 있어요
+                    풀이 화면의 [보호자(지인)께 결제 부탁하기]로 보낼 수 있어요
                   </span>
                 )}
               </p>
