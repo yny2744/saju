@@ -13,6 +13,8 @@ import { RefCapture } from "@/components/yeopjeon/RefCapture";
 import { VisitBeacon } from "@/components/VisitBeacon";
 import { BgmStarter } from "@/components/bgm/BgmPlayer";
 import { AppInstallInit, InstallBar } from "@/components/app/AppInstall";
+import { GiftOpenedNotice } from "@/components/suneung/GiftOpenedNotice";
+import { isAuthEnabled, isSuneungOn } from "@/lib/launchMode";
 
 export const metadata: Metadata = {
   title: BRAND,
@@ -36,6 +38,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <VisitBeacon />
         <BgmStarter />
         <AppInstallInit />
+        {/* 2026-11-14 유샘: 보호자(지인)가 결제해 준 풀이가 열렸으면 학생에게 한 번 알림 띠 */}
+        {isSuneungOn() && isAuthEnabled() && <GiftOpenedNotice />}
         {/* 사이트 액자: PC에서는 가운데 한 장, 폰에서는 화면 전체 (양옆 금색 뇌문 띠 포함) */}
         {/* 2026-10-30 유샘: 대문이 있는 고객사(명견만리)는 한지 질감 바탕 */}
         <div className={TENANT.gate ? "site-frame paper-hanji" : "site-frame"}>

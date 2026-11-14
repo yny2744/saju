@@ -75,6 +75,24 @@ function Body({ token }: { token: string }) {
     setBusy(false);
   }
 
+  /** 결제한 분 → 학생: 열렸다는 소식과 학생 풀이 주소를 카카오톡 등으로 */
+  async function tellChild() {
+    if (!data) return;
+    const path = data.mode === "exam_deep" ? `/person/${encodeURIComponent(data.personId)}/exam` : `/person/${encodeURIComponent(data.personId)}/exam/x/${data.mode === "exam_all" ? "all" : data.mode.replace(/^exam_/, "")}`;
+    const url = `${window.location.origin}${path}`;
+    const text = `${data.nickname}님, ${data.title} 결제했어요! 지금 열어 보세요 🙌 시험날까지 힘내요.`;
+    const nav = navigator as Navigator & { share?: (d: { title?: string; text?: string; url?: string }) => Promise<void> };
+    try {
+      if (nav.share) await nav.share({ title: data.title, text, url });
+      else {
+        await navigator.clipboard.writeText(`${text}\n${url}`);
+        setNotice("알림 글을 복사했어요. 카카오톡에 붙여 넣어 보내 주세요.");
+      }
+    } catch (e) {
+      if (!(e instanceof Error && e.name === "AbortError")) setNotice(`이 주소를 보내 주세요: ${url}`);
+    }
+  }
+
   // 로그인·약관 동의 뒤 돌아오면(?go=1) 결제를 바로 이어 간다 (한 번만)
   useEffect(() => {
     if (autoTried.current || !data || q.get("go") !== "1") return;
@@ -110,6 +128,12 @@ function Body({ token }: { token: string }) {
         <p className="mt-5 rounded-xl px-4 py-3 text-center text-[14px]" style={{ backgroundColor: "var(--color-gold-soft)" }}>
           결제가 끝나 {data.nickname}님께 전해졌어요.
         </p>
+      )}
+      {/* 2026-11-14 유샘: 결제한 분이 학생에게 "열렸어" 하고 바로 알릴 수 있게 */}
+      {done && (data.paidByMe || q.get("paid") === "1") && (
+        <button type="button" onClick={tellChild} className="btn-primary mt-4 block w-full text-center">
+          {data.nickname}님께 알리기
+        </button>
       )}
       {notice && (
         <p className="mt-5 rounded-xl px-4 py-3 text-center text-[14px]" style={{ backgroundColor: "var(--color-gold-soft)" }}>

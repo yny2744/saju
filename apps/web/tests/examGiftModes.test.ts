@@ -17,3 +17,13 @@ describe("결제 부탁 링크 상품", () => {
     expect(giftVia("abc")).toBe("gift:abc");
   });
 });
+
+describe("학생 알림 띠 - 보러 가기 주소", () => {
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  const { giftPath } = require("@/server/exam/gift") as typeof import("@/server/exam/gift");
+  it("상품마다 학생이 보는 화면으로", () => {
+    expect(giftPath("p1", "exam_deep")).toBe("/person/p1/exam");
+    expect(giftPath("p1", "exam_goal")).toBe("/person/p1/exam/x/goal");
+    expect(giftPath("p1", "exam_all")).toBe("/person/p1/exam/x/all");
+  });
+});

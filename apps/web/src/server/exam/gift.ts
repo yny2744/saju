@@ -23,6 +23,13 @@ export function isGiftMode(v: unknown): v is GiftMode {
 }
 export const giftVia = (token: string) => `gift:${token}`;
 
+/** 학생이 그 상품을 보는 화면 주소 */
+export function giftPath(personId: string, mode: GiftMode): string {
+  const id = encodeURIComponent(personId);
+  if (mode === "exam_deep") return `/person/${id}/exam`;
+  return `/person/${id}/exam/x/${mode === "exam_all" ? "all" : mode.replace(/^exam_/, "")}`;
+}
+
 /** 상품 이름 (받는 사람 화면·카톡 미리보기) */
 export function giftProductTitle(season: ExamSeason, mode: GiftMode): string {
   return `${SEASON_INFO[season].title} ${mode === "exam_deep" ? "심층분석" : EXAM_MODE_NAME[mode as ExamMode]}`;
@@ -141,4 +148,24 @@ export async function giftExamDeep(payerId: string, token: string): Promise<void
 /** 2026-11-13 결제 검수: 부탁 링크 결제도 판매 잠금·판매 기간을 똑같이 지킨다 (2026-11-14 상품별) */
 export function assertGiftOnSale(mode: GiftMode = "exam_deep"): void {
   if (!isOnSale(mode) || !examSaleOpen() || !examModePrice(mode)) throw new GiftError("SALE_ENDED", "지금은 결제할 수 없어요. 판매 기간이 끝났거나 준비 중이에요.");
+}
+
+/** 2026-11-14 유샘: 학생 알림 띠 - 결제됐는데 아직 못 본 부탁 (환불되면 paid_at 이 지워져 빠진다) */
+export async function myOpenedGifts(childUserId: string): Promise<Array<{ token: string; nickname: string; title: string; href: string }>> {
+  const pool = await db();
+  const r = await pool.query<{ token: string; person_id: string; season: ExamSeason; mode: string; nickname: string }>(
+    `SELECT g.token, g.person_id, g.season, g.mode, p.nickname
+       FROM exam_gifts g JOIN persons p ON p.id = g.person_id
+      WHERE g.child_user_id = $1 AND g.paid_at IS NOT NULL AND g.seen_at IS NULL AND g.paid_at > now() - interval '30 days'
+      ORDER BY g.paid_at DESC LIMIT 5`,
+    [childUserId]
+  );
+  return r.rows.filter((g) => isGiftMode(g.mode)).map((g) => ({ token: g.token, nickname: g.nickname, title: giftProductTitle(g.season, g.mode as GiftMode), href: giftPath(g.person_id, g.mode as GiftMode) }));
+}
+
+export async function markGiftsSeen(childUserId: string, tokens: string[]): Promise<void> {
+  const ok = tokens.filter((t) => TOKEN_RE.test(t)).slice(0, 10);
+  if (ok.length === 0) return;
+  const pool = await db();
+  await pool.query(`UPDATE exam_gifts SET seen_at = now() WHERE child_user_id = $1 AND token = ANY($2::text[]) AND seen_at IS NULL`, [childUserId, ok]);
 }
